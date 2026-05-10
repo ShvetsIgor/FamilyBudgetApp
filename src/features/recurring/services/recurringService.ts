@@ -81,6 +81,23 @@ export async function addRecurring(input: AddRecurringInput): Promise<Serializab
   });
 }
 
+export async function updateRecurring(
+  userId: string,
+  id: string,
+  input: Omit<AddRecurringInput, 'userId'>
+): Promise<void> {
+  const { startDate, comment, ...rest } = input;
+  const patch = Object.fromEntries(
+    Object.entries({
+      ...rest,
+      comment,
+      startDate: Timestamp.fromDate(startDate),
+      nextDueDate: Timestamp.fromDate(nextDue(startDate, input.frequency)),
+    }).filter(([, v]) => v !== undefined)
+  );
+  await updateDoc(doc(getDb(), 'recurringPayments', userId, 'items', id), patch);
+}
+
 export async function deleteRecurring(userId: string, id: string): Promise<void> {
   await deleteDoc(doc(getDb(), 'recurringPayments', userId, 'items', id));
 }

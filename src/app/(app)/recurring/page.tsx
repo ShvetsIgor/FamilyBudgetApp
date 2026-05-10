@@ -4,10 +4,10 @@ import { useEffect, useState, useCallback } from 'react';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import {
-  setRecurring, addRecurringItem, removeRecurringItem, toggleRecurringItem,
+  setRecurring, addRecurringItem, removeRecurringItem, updateRecurringItem, toggleRecurringItem,
 } from '@/features/recurring/store/recurringSlice';
 import {
-  fetchRecurring, addRecurring, deleteRecurring, toggleRecurring,
+  fetchRecurring, addRecurring, updateRecurring, deleteRecurring, toggleRecurring,
   type AddRecurringInput,
 } from '@/features/recurring/services/recurringService';
 import { CategoryPicker } from '@/features/categories/components/CategoryPicker';
@@ -35,13 +35,15 @@ function daysUntil(dateStr: string): number {
   return differenceInDays(parseISO(dateStr), new Date());
 }
 
+type FormMode = { mode: 'add' } | { mode: 'edit'; item: SerializableRecurringPayment };
+
 export default function RecurringPage() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const categories = useAppSelector((s) => s.categories.expense);
   const { list, status } = useAppSelector((s) => s.recurring);
-  const [showForm, setShowForm] = useState(false);
+  const [formMode, setFormMode] = useState<FormMode | null>(null);
   const [loading, setLoading] = useState(false);
 
   const load = useCallback(async () => {
@@ -57,11 +59,22 @@ export default function RecurringPage() {
 
   useEffect(() => { if (status === 'idle') load(); }, [status, load]);
 
-  async function handleAdd(data: Omit<AddRecurringInput, 'userId'>) {
+  async function handleSave(data: Omit<AddRecurringInput, 'userId'>) {
     if (!user) return;
-    const saved = await addRecurring({ ...data, userId: user.id });
-    dispatch(addRecurringItem(saved));
-    setShowForm(false);
+    if (formMode?.mode === 'edit') {
+      await updateRecurring(user.id, formMode.item.id, data);
+      dispatch(updateRecurringItem({
+        ...formMode.item,
+        ...data,
+        startDate: data.startDate.toISOString(),
+        nextDueDate: new Date(data.startDate).toISOString(),
+        currency: data.currency,
+      }));
+    } else {
+      const saved = await addRecurring({ ...data, userId: user.id });
+      dispatch(addRecurringItem(saved));
+    }
+    setFormMode(null);
   }
 
   async function handleDelete(item: SerializableRecurringPayment) {
@@ -77,14 +90,21 @@ export default function RecurringPage() {
     dispatch(toggleRecurringItem({ id: item.id, isActive: next }));
   }
 
-  if (showForm) {
+  if (formMode) {
     return (
       <div className="flex flex-col">
         <div className="px-4 pt-5 pb-3 flex items-center gap-3">
-          <button onClick={() => setShowForm(false)} className="text-sm text-muted-foreground">← Back</button>
-          <h1 className="text-xl font-bold">New Recurring</h1>
+          <button onClick={() => setFormMode(null)} className="text-sm text-muted-foreground">← Back</button>
+          <h1 className="text-xl font-bold">
+            {formMode.mode === 'edit' ? 'Edit Recurring' : 'New Recurring'}
+          </h1>
         </div>
-        <RecurringForm onSave={handleAdd} onCancel={() => setShowForm(false)} currency={currency} />
+        <RecurringForm
+          initial={formMode.mode === 'edit' ? formMode.item : undefined}
+          onSave={handleSave}
+          onCancel={() => setFormMode(null)}
+          currency={currency}
+        />
       </div>
     );
   }
@@ -101,14 +121,13 @@ export default function RecurringPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">Recurring</h1>
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => setFormMode({ mode: 'add' })}
           className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-medium"
         >
           + Add
         </button>
       </div>
 
-      {/* Monthly summary */}
       {list.length > 0 && (
         <div className="rounded-2xl border border-border bg-card p-4">
           <p className="text-xs text-muted-foreground">Monthly total (active)</p>
@@ -118,14 +137,12 @@ export default function RecurringPage() {
         </div>
       )}
 
-      {/* Loading */}
       {loading && (
         <div className="flex justify-center py-12">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-primary" />
         </div>
       )}
 
-      {/* Empty */}
       {!loading && list.length === 0 && (
         <div className="flex flex-col items-center py-12 text-center">
           <p className="text-4xl mb-3">🔄</p>
@@ -134,7 +151,6 @@ export default function RecurringPage() {
         </div>
       )}
 
-      {/* List */}
       {list.length > 0 && (
         <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
           {list.map((item) => {
@@ -142,11 +158,15 @@ export default function RecurringPage() {
             const days = daysUntil(item.nextDueDate);
             const typeObj = TYPES.find((t) => t.value === item.type);
             return (
-              <div key={item.id} className={`flex items-center gap-3 px-4 py-3 ${!item.isActive ? 'opacity-50' : ''}`}>
+              <button
+                key={item.id}
+                onClick={() => setFormMode({ mode: 'edit', item })}
+                className={`flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors ${!item.isActive ? 'opacity-50' : ''}`}
+              >
                 {cat ? (
                   <CategoryIcon icon={cat.icon} color={cat.color} size="md" />
                 ) : (
-                  <span className="text-2xl">{typeObj?.icon ?? '🔄'}</span>
+                  <span className="text-2xl shrink-0">{typeObj?.icon ?? '🔄'}</span>
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{item.name}</p>
@@ -162,7 +182,7 @@ export default function RecurringPage() {
                     )}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                   <span className="text-sm font-semibold tabular-nums">
                     {formatAmount(item.amount, item.currency)}
                   </span>
@@ -172,9 +192,14 @@ export default function RecurringPage() {
                   >
                     <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${item.isActive ? 'left-[18px]' : 'left-0.5'}`} />
                   </button>
-                  <button onClick={() => handleDelete(item)} className="text-muted-foreground hover:text-destructive text-xs">✕</button>
+                  <button
+                    onClick={() => handleDelete(item)}
+                    className="text-muted-foreground hover:text-destructive text-xs"
+                  >
+                    ✕
+                  </button>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -184,16 +209,23 @@ export default function RecurringPage() {
 }
 
 function RecurringForm({
-  onSave, onCancel, currency,
-}: { onSave: (d: Omit<AddRecurringInput, 'userId'>) => Promise<void>; onCancel: () => void; currency: string }) {
-  const [name, setName] = useState('');
-  const [amount, setAmount] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [frequency, setFrequency] = useState<RecurringFrequency>('monthly');
-  const [type, setType] = useState<RecurringType>('subscription');
-  const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [reminderDays, setReminderDays] = useState(3);
-  const [comment, setComment] = useState('');
+  initial, onSave, onCancel, currency,
+}: {
+  initial?: SerializableRecurringPayment;
+  onSave: (d: Omit<AddRecurringInput, 'userId'>) => Promise<void>;
+  onCancel: () => void;
+  currency: string;
+}) {
+  const [name, setName] = useState(initial?.name ?? '');
+  const [amount, setAmount] = useState(initial?.amount.toString() ?? '');
+  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? '');
+  const [frequency, setFrequency] = useState<RecurringFrequency>(initial?.frequency ?? 'monthly');
+  const [type, setType] = useState<RecurringType>(initial?.type ?? 'subscription');
+  const [startDate, setStartDate] = useState(
+    initial ? format(parseISO(initial.startDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')
+  );
+  const [reminderDays, setReminderDays] = useState(initial?.reminderDays ?? 3);
+  const [comment, setComment] = useState(initial?.comment ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -223,7 +255,6 @@ function RecurringForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-4 pb-8">
-      {/* Name */}
       <div className="rounded-2xl border border-border bg-card p-4">
         <label className="text-xs text-muted-foreground mb-1 block">Name</label>
         <input
@@ -235,77 +266,55 @@ function RecurringForm({
         />
       </div>
 
-      {/* Amount */}
       <div className="rounded-2xl border border-border bg-card p-4">
         <label className="text-xs text-muted-foreground mb-1 block">Amount ({currency})</label>
         <input
-          type="number"
-          min="0"
-          step="0.01"
-          placeholder="0.00"
+          type="number" min="0" step="0.01" placeholder="0.00"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           className="w-full bg-transparent text-2xl font-bold outline-none tabular-nums text-destructive"
         />
       </div>
 
-      {/* Type */}
       <div className="rounded-2xl border border-border bg-card p-4">
         <label className="text-xs text-muted-foreground mb-2 block">Type</label>
         <div className="grid grid-cols-3 gap-2">
           {TYPES.map((t) => (
-            <button
-              key={t.value}
-              type="button"
-              onClick={() => setType(t.value)}
+            <button key={t.value} type="button" onClick={() => setType(t.value)}
               className={`flex flex-col items-center gap-1 rounded-xl py-2 text-xs border transition-colors ${
                 type === t.value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'
-              }`}
-            >
-              <span>{t.icon}</span>
-              <span>{t.label}</span>
+              }`}>
+              <span>{t.icon}</span><span>{t.label}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Frequency */}
       <div className="rounded-2xl border border-border bg-card p-4">
         <label className="text-xs text-muted-foreground mb-2 block">Frequency</label>
         <div className="grid grid-cols-2 gap-2">
           {FREQ.map((f) => (
-            <button
-              key={f.value}
-              type="button"
-              onClick={() => setFrequency(f.value)}
+            <button key={f.value} type="button" onClick={() => setFrequency(f.value)}
               className={`rounded-xl py-2 text-sm font-medium border transition-colors ${
                 frequency === f.value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'
-              }`}
-            >
+              }`}>
               {f.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Category */}
       <div className="rounded-2xl border border-border bg-card p-4">
         <label className="text-xs text-muted-foreground mb-2 block">Category (optional)</label>
         <CategoryPicker type="expense" value={categoryId} onChange={setCategoryId} parentsOnly />
       </div>
 
-      {/* Start date */}
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-1 block">Start / Next due</label>
-        <input
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          className="w-full bg-transparent text-sm font-medium outline-none"
-        />
+        <label className="text-xs text-muted-foreground mb-1 block">Next due date</label>
+        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
+          className="w-full bg-transparent text-sm font-medium outline-none" />
       </div>
 
-      {/* Reminder */}
       <div className="rounded-2xl border border-border bg-card p-4 flex items-center justify-between">
         <label className="text-sm font-medium">Remind me before</label>
         <div className="flex items-center gap-2">
@@ -317,15 +326,11 @@ function RecurringForm({
         </div>
       </div>
 
-      {/* Comment */}
       <div className="rounded-2xl border border-border bg-card p-4">
         <label className="text-xs text-muted-foreground mb-1 block">Comment</label>
-        <input
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
+        <input value={comment} onChange={(e) => setComment(e.target.value)}
           placeholder="Optional…"
-          className="w-full bg-transparent text-sm outline-none"
-        />
+          className="w-full bg-transparent text-sm outline-none" />
       </div>
 
       {error && <p className="text-xs text-destructive px-1">{error}</p>}
@@ -337,7 +342,7 @@ function RecurringForm({
         </button>
         <button type="submit" disabled={saving}
           className="flex-1 rounded-2xl bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-          {saving ? 'Saving…' : 'Save'}
+          {saving ? 'Saving…' : initial ? 'Save Changes' : 'Save'}
         </button>
       </div>
     </form>

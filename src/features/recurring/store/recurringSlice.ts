@@ -20,6 +20,10 @@ const recurringSlice = createSlice({
     removeRecurringItem(state, action: PayloadAction<string>) {
       state.list = state.list.filter((r) => r.id !== action.payload);
     },
+    updateRecurringItem(state, action: PayloadAction<SerializableRecurringPayment>) {
+      const idx = state.list.findIndex((r) => r.id === action.payload.id);
+      if (idx !== -1) state.list[idx] = action.payload;
+    },
     toggleRecurringItem(state, action: PayloadAction<{ id: string; isActive: boolean }>) {
       const item = state.list.find((r) => r.id === action.payload.id);
       if (item) item.isActive = action.payload.isActive;
@@ -27,5 +31,5 @@ const recurringSlice = createSlice({
   },
 });
 
-export const { setRecurring, addRecurringItem, removeRecurringItem, toggleRecurringItem } = recurringSlice.actions;
+export const { setRecurring, addRecurringItem, removeRecurringItem, updateRecurringItem, toggleRecurringItem } = recurringSlice.actions;
 export default recurringSlice.reducer;

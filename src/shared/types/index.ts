@@ -214,6 +214,7 @@ export interface SerializableExpense {
   splits: SplitItem[];
   isRecurring: boolean;
   recurringId?: string;
+  goalId?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -94,6 +94,25 @@ export async function addContribution(
   return { ...goal, currentAmount: newCurrent, contributions: updatedContribs };
 }
 
+export async function reverseContribution(
+  userId: string,
+  goal: SavingsGoal,
+  amount: number,
+): Promise<SavingsGoal> {
+  const newCurrent = Math.max(0, goal.currentAmount - amount);
+  // Remove the most recent contribution matching this amount
+  const idx = [...goal.contributions].reverse().findIndex((c) => c.amount === amount);
+  const updatedContribs = idx === -1
+    ? goal.contributions
+    : goal.contributions.filter((_, i) => i !== goal.contributions.length - 1 - idx);
+
+  await updateDoc(doc(getDb(), 'savingsGoals', userId, 'goals', goal.id), {
+    currentAmount: newCurrent,
+    contributions: updatedContribs,
+  });
+  return { ...goal, currentAmount: newCurrent, contributions: updatedContribs };
+}
+
 export async function deleteGoal(userId: string, goalId: string): Promise<void> {
   await deleteDoc(doc(getDb(), 'savingsGoals', userId, 'goals', goalId));
 }

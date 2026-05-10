@@ -86,6 +86,7 @@ export default function SavingsPage() {
         tags: ['savings'],
         privacy: 'regular',
         splits: [],
+        goalId: goal.id,
       });
       dispatch(prependExpense(expense));
     }

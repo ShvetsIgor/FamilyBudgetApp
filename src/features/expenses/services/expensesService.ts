@@ -53,6 +53,7 @@ function toSerializable(id: string, data: Record<string, unknown>): Serializable
     splits: (data.splits as SplitItem[]) ?? [],
     isRecurring: (data.isRecurring as boolean) ?? false,
     recurringId: data.recurringId as string | undefined,
+    goalId: data.goalId as string | undefined,
     createdAt: toISO(data.createdAt),
     updatedAt: toISO(data.updatedAt),
   };
@@ -100,6 +101,7 @@ export interface AddExpenseInput {
   comment?: string;
   privacy: Privacy;
   splits: SplitItem[];
+  goalId?: string;
 }
 
 export async function addExpense(input: AddExpenseInput): Promise<SerializableExpense> {

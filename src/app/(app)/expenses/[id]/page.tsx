@@ -6,6 +6,8 @@ import { format, parseISO } from 'date-fns';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { removeExpense } from '@/features/expenses/store/expensesSlice';
 import { deleteExpense } from '@/features/expenses/services/expensesService';
+import { reverseContribution } from '@/features/savings/services/savingsService';
+import { updateGoalItem } from '@/features/savings/store/savingsSlice';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { formatAmount } from '@/shared/utils/currency';
 
@@ -34,12 +36,23 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
 
   const category = categories.find((c) => c.id === expense.categoryId);
   const subcategory = categories.find((c) => c.id === expense.subcategoryId);
+  const goals = useAppSelector((s) => s.savings.list);
 
   async function handleDelete() {
     if (!user) return;
     if (!confirm('Delete this expense?')) return;
     await deleteExpense(user.id, expense!);
     dispatch(removeExpense(expense!.id));
+
+    // If this expense was created from a savings contribution, reverse it
+    if (expense!.goalId) {
+      const goal = goals.find((g) => g.id === expense!.goalId);
+      if (goal) {
+        const updated = await reverseContribution(user.id, goal, expense!.amount);
+        dispatch(updateGoalItem(updated));
+      }
+    }
+
     router.back();
   }
 

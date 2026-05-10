@@ -11,7 +11,9 @@
       "Bash(pkill -f \"next dev\")",
       "Bash(curl *)",
       "Bash(git add *)",
-      "Bash(git reset *)"
+      "Bash(git reset *)",
+      "Bash(git commit *)",
+      "Bash(npx next *)"
     ]
   }
 }

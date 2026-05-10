@@ -139,7 +139,7 @@ export default function StatisticsPage() {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number) => formatAmount(value, currency)}
+                    formatter={(value) => formatAmount(value as number, currency)}
                     contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))' }}
                   />
                 </PieChart>
@@ -173,7 +173,7 @@ export default function StatisticsPage() {
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} width={45} />
                   <Tooltip
-                    formatter={(value: number) => formatAmount(value, currency)}
+                    formatter={(value) => formatAmount(value as number, currency)}
                     contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))' }}
                   />
                   <Bar dataKey="expenses" name="Expenses" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />

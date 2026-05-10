@@ -45,11 +45,12 @@ export default function CategoriesPage() {
     setResetting(true);
     try {
       await resetCategoriesToDefaults(user.id);
-      const [expense, income] = await Promise.all([
+      const [expenseCats, incomeCats] = await Promise.all([
         fetchCategories(user.id, 'expense'),
         fetchCategories(user.id, 'income'),
       ]);
-      dispatch(setCategories({ expense, income }));
+      dispatch(setCategories({ type: 'expense', categories: expenseCats }));
+      dispatch(setCategories({ type: 'income', categories: incomeCats }));
     } finally {
       setResetting(false);
     }
@@ -71,9 +72,9 @@ export default function CategoriesPage() {
         <button
           onClick={handleReset}
           disabled={resetting}
-          className="text-xs text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50"
+          className="text-xs px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:border-destructive hover:text-destructive transition-colors disabled:opacity-50"
         >
-          {resetting ? 'Resetting…' : 'Reset to defaults'}
+          {resetting ? 'Resetting…' : '↺ Reset'}
         </button>
       </div>
 

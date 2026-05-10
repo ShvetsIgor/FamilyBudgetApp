@@ -23,7 +23,11 @@ export async function fetchCategories(userId: string, type: CategoryType): Promi
 }
 
 export async function addCategory(userId: string, data: Omit<Category, 'id' | 'userId'>): Promise<Category> {
-  const ref = await addDoc(colRef(userId, data.type), { ...data, userId });
+  // Strip undefined fields — Firestore rejects them
+  const clean = Object.fromEntries(
+    Object.entries({ ...data, userId }).filter(([, v]) => v !== undefined)
+  );
+  const ref = await addDoc(colRef(userId, data.type), clean);
   return { id: ref.id, userId, ...data };
 }
 
@@ -42,21 +46,24 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
 
   const parentIdMap: Record<string, string> = {};
 
-  // Parents first
+  // Parents first — strip parentId entirely (Firestore rejects undefined)
   for (const cat of DEFAULT_EXPENSE_CATEGORIES.filter((c) => !c.parentId)) {
-    const ref = await addDoc(colRef(userId, 'expense'), { ...cat, userId });
+    const { parentId: _omit, ...catData } = cat;
+    const ref = await addDoc(colRef(userId, 'expense'), { ...catData, userId });
     const key = `__${cat.name.toLowerCase().replace(/[\s/]+/g, '_')}__`;
     parentIdMap[key] = ref.id;
   }
 
-  // Children
+  // Children — resolve temp key to real Firestore ID
   for (const cat of DEFAULT_EXPENSE_CATEGORIES.filter((c) => c.parentId)) {
-    const realParentId = cat.parentId ? parentIdMap[cat.parentId] : undefined;
-    await addDoc(colRef(userId, 'expense'), { ...cat, parentId: realParentId ?? null, userId });
+    const realParentId = parentIdMap[cat.parentId!] ?? null;
+    const { parentId: _omit, ...catData } = cat;
+    await addDoc(colRef(userId, 'expense'), { ...catData, parentId: realParentId, userId });
   }
 
-  // Income (flat, no children)
+  // Income (flat)
   for (const cat of DEFAULT_INCOME_CATEGORIES) {
-    await addDoc(colRef(userId, 'income'), { ...cat, userId });
+    const { parentId: _omit, ...catData } = cat;
+    await addDoc(colRef(userId, 'income'), { ...catData, userId });
   }
 }

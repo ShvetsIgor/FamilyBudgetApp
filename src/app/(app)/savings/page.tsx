@@ -11,7 +11,6 @@ import {
 import { formatAmount } from '@/shared/utils/currency';
 import { addExpense } from '@/features/expenses/services/expensesService';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
-import { CategoryPicker } from '@/features/categories/components/CategoryPicker';
 import type { SavingsGoal, Currency } from '@/shared/types';
 
 const GOAL_ICONS = ['🎯', '🏠', '🚗', '✈️', '💻', '📱', '👶', '💍', '🎓', '🏖️', '💰', '🛋️'];
@@ -398,7 +397,6 @@ function ContributeForm({ goal, currency, onSave, onCancel }: {
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
   const [recordAsExpense, setRecordAsExpense] = useState(true);
-  const [categoryId, setCategoryId] = useState(savingsCat?.id ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -406,10 +404,9 @@ function ContributeForm({ goal, currency, onSave, onCancel }: {
     e.preventDefault();
     const num = parseFloat(amount);
     if (!num || num <= 0) { setError('Enter a valid amount'); return; }
-    if (recordAsExpense && !categoryId) { setError('Select a category'); return; }
     setError('');
     setSaving(true);
-    try { await onSave(num, note, recordAsExpense, categoryId); } finally { setSaving(false); }
+    try { await onSave(num, note, recordAsExpense, savingsCat?.id ?? ''); } finally { setSaving(false); }
   }
 
   const remaining = goal.targetAmount - goal.currentAmount;
@@ -446,7 +443,9 @@ function ContributeForm({ goal, currency, onSave, onCancel }: {
       <div className="rounded-2xl border border-border bg-card px-4 py-3 flex items-center justify-between">
         <div>
           <p className="text-sm font-medium">Record as expense</p>
-          <p className="text-xs text-muted-foreground">Shows in expenses list & stats</p>
+          <p className="text-xs text-muted-foreground">
+            Category: 🐷 Savings · shows in stats
+          </p>
         </div>
         <button
           type="button"
@@ -456,19 +455,6 @@ function ContributeForm({ goal, currency, onSave, onCancel }: {
           <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${recordAsExpense ? 'left-[22px]' : 'left-0.5'}`} />
         </button>
       </div>
-
-      {/* Category picker — shown when recording as expense */}
-      {recordAsExpense && (
-        <div className="rounded-2xl border border-border bg-card p-4">
-          <label className="text-xs text-muted-foreground mb-2 block">Expense category</label>
-          <CategoryPicker
-            type="expense"
-            value={categoryId}
-            onChange={setCategoryId}
-            parentsOnly
-          />
-        </div>
-      )}
 
       {error && <p className="text-xs text-destructive px-1">{error}</p>}
 

@@ -57,7 +57,7 @@ export default function HomePage() {
   const balance = Math.abs(rawBalance) < 0.005 ? 0 : rawBalance;
   const recent = expenses.slice(0, 5);
 
-  const activeGoals = goals.filter((g) => g.savedAmount < g.targetAmount).slice(0, 3);
+  const activeGoals = goals.filter((g) => g.currentAmount < g.targetAmount).slice(0, 3);
 
   return (
     <div className="flex flex-col items-center px-4 pt-8 gap-6 pb-8">
@@ -128,7 +128,7 @@ export default function HomePage() {
           </div>
           <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
             {activeGoals.map((g) => {
-              const pct = Math.min(100, (g.savedAmount / g.targetAmount) * 100);
+              const pct = Math.min(100, (g.currentAmount / g.targetAmount) * 100);
               return (
                 <div key={g.id} className="px-4 py-3">
                   <div className="flex items-center justify-between mb-1.5">
@@ -137,7 +137,7 @@ export default function HomePage() {
                       <span>{g.name}</span>
                     </span>
                     <span className="text-xs text-muted-foreground tabular-nums">
-                      {formatAmount(g.savedAmount, currency)} / {formatAmount(g.targetAmount, currency)}
+                      {formatAmount(g.currentAmount, currency)} / {formatAmount(g.targetAmount, currency)}
                     </span>
                   </div>
                   <div className="h-1.5 rounded-full bg-muted overflow-hidden">

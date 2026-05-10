@@ -13,7 +13,9 @@
       "Bash(git add *)",
       "Bash(git reset *)",
       "Bash(git commit *)",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(node -e ' *)",
+      "Bash(node *)"
     ]
   }
 }

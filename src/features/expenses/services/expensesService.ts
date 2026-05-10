@@ -150,23 +150,41 @@ async function updateMonthlyStats(
 ) {
   const splitTotal = splits.reduce((s, sp) => s + sp.amount, 0);
   const mainAmount = amount - splitTotal;
+  const ref = statsDoc(userId, month);
 
-  const byCategoryUpdate: Record<string, unknown> = {
+  // updateDoc supports dot notation → creates proper nested map byCategory.{id}
+  // setDoc with merge:true does NOT support dot notation (creates flat fields)
+  const updates: Record<string, unknown> = {
+    totalExpenses: increment(sign * amount),
+    updatedAt: serverTimestamp(),
     [`byCategory.${categoryId}`]: increment(sign * mainAmount),
   };
   for (const sp of splits) {
-    byCategoryUpdate[`byCategory.${sp.categoryId}`] = increment(sign * sp.amount);
+    if (sp.categoryId && sp.amount > 0) {
+      updates[`byCategory.${sp.categoryId}`] = increment(sign * sp.amount);
+    }
   }
 
-  await setDoc(
-    statsDoc(userId, month),
-    {
-      userId,
-      month,
-      totalExpenses: increment(sign * amount),
-      ...byCategoryUpdate,
-      updatedAt: serverTimestamp(),
-    },
-    { merge: true }
-  );
+  try {
+    await updateDoc(ref, updates);
+  } catch (e: unknown) {
+    // Document doesn't exist yet — create it with proper nested structure
+    if ((e as { code?: string }).code === 'not-found') {
+      const byCategory: Record<string, number> = { [categoryId]: sign * mainAmount };
+      for (const sp of splits) {
+        if (sp.categoryId && sp.amount > 0) {
+          byCategory[sp.categoryId] = (byCategory[sp.categoryId] ?? 0) + sign * sp.amount;
+        }
+      }
+      await setDoc(ref, {
+        userId,
+        month,
+        totalExpenses: sign * amount,
+        byCategory,
+        updatedAt: serverTimestamp(),
+      });
+    } else {
+      throw e;
+    }
+  }
 }

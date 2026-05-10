@@ -74,10 +74,8 @@ export function IncomeForm({ onSave, onCancel }: Props) {
       </div>
 
       {/* Category */}
-      <div className="rounded-2xl border border-border bg-card overflow-hidden">
-        <div className="px-4 pt-3 pb-1">
-          <label className="text-xs text-muted-foreground">Category</label>
-        </div>
+      <div className="rounded-2xl border border-border bg-card p-4">
+        <label className="text-xs text-muted-foreground mb-2 block">Category</label>
         <CategoryPicker
           type="income"
           value={categoryId}
@@ -136,12 +134,12 @@ export function IncomeForm({ onSave, onCancel }: Props) {
         <button
           type="button"
           onClick={() => setPrivacy(privacy === 'secret' ? 'regular' : 'secret')}
-          className={`relative h-6 w-11 rounded-full transition-colors ${
+          className={`relative h-6 w-11 rounded-full transition-colors flex-shrink-0 ${
             privacy === 'secret' ? 'bg-primary' : 'bg-muted'
           }`}
         >
-          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-            privacy === 'secret' ? 'translate-x-5' : 'translate-x-0.5'
+          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${
+            privacy === 'secret' ? 'left-[22px]' : 'left-0.5'
           }`} />
         </button>
       </div>

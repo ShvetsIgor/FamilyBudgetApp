@@ -54,11 +54,11 @@ export function Header() {
             <UserCircle className="h-5 w-5" />
           </Link>
 
-          {/* Settings */}
+          {/* Categories */}
           <Link
-            href="/account"
+            href="/categories"
             className="rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground"
-            aria-label="Settings"
+            aria-label="Categories"
           >
             <Settings className="h-5 w-5" />
           </Link>

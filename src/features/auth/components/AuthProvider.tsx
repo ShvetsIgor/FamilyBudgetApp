@@ -7,6 +7,8 @@ import { getFirebaseApp } from '@/shared/lib/firebase';
 import { useAppDispatch } from '@/store/store';
 import { setUser, setLoading } from '@/features/auth/store/authSlice';
 import { setCurrency, setLanguage, setTheme } from '@/features/ui/store/uiSlice';
+import { setCategories } from '@/features/categories/store/categoriesSlice';
+import { fetchCategories, seedDefaultCategories } from '@/features/categories/services/categoriesService';
 import type { UserProfile } from '@/shared/types';
 
 function getDb() {
@@ -39,6 +41,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           dispatch(setCurrency(profile.currency));
           dispatch(setLanguage(profile.language));
           dispatch(setTheme(profile.theme));
+
+          // Seed + load categories
+          await seedDefaultCategories(firebaseUser.uid);
+          const [expenseCats, incomeCats] = await Promise.all([
+            fetchCategories(firebaseUser.uid, 'expense'),
+            fetchCategories(firebaseUser.uid, 'income'),
+          ]);
+          dispatch(setCategories({ type: 'expense', categories: expenseCats }));
+          dispatch(setCategories({ type: 'income', categories: incomeCats }));
         } else {
           dispatch(setLoading(false));
         }

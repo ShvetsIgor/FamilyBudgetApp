@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
-import { addCategory, updateCategory, removeCategory } from '@/features/categories/store/categoriesSlice';
+import { addCategory, updateCategory, removeCategory, setCategories } from '@/features/categories/store/categoriesSlice';
 import {
   addCategory as addCategoryToDb,
   updateCategory as updateCategoryInDb,
   deleteCategory as deleteCategoryFromDb,
+  resetCategoriesToDefaults,
+  fetchCategories,
 } from '@/features/categories/services/categoriesService';
 import { CategoryTree } from '@/features/categories/components/CategoryTree';
 import { CategoryForm } from '@/features/categories/components/CategoryForm';
@@ -20,6 +22,7 @@ export default function CategoriesPage() {
   const { expense, income } = useAppSelector((s) => s.categories);
   const [tab, setTab] = useState<CategoryType>('expense');
   const [sheet, setSheet] = useState<Sheet>(null);
+  const [resetting, setResetting] = useState(false);
 
   if (!user) return null;
 
@@ -36,6 +39,22 @@ export default function CategoriesPage() {
     setSheet(null);
   }
 
+  async function handleReset() {
+    if (!user) return;
+    if (!confirm('Reset all categories to defaults? Your custom categories will be deleted.')) return;
+    setResetting(true);
+    try {
+      await resetCategoriesToDefaults(user.id);
+      const [expense, income] = await Promise.all([
+        fetchCategories(user.id, 'expense'),
+        fetchCategories(user.id, 'income'),
+      ]);
+      dispatch(setCategories({ expense, income }));
+    } finally {
+      setResetting(false);
+    }
+  }
+
   async function handleDelete(category: Category) {
     if (!user) return;
     if (!confirm(`Delete "${category.name}"?`)) return;
@@ -47,7 +66,16 @@ export default function CategoriesPage() {
 
   return (
     <div className="px-4 pt-6 pb-4">
-      <h1 className="text-xl font-bold mb-4">Categories</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-bold">Categories</h1>
+        <button
+          onClick={handleReset}
+          disabled={resetting}
+          className="text-xs text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50"
+        >
+          {resetting ? 'Resetting…' : 'Reset to defaults'}
+        </button>
+      </div>
 
       {/* Tab switcher */}
       <div className="flex rounded-xl bg-muted p-1 mb-4">

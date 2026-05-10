@@ -40,6 +40,37 @@ export async function deleteCategory(userId: string, categoryId: string, type: C
   await deleteDoc(doc(getDb(), 'categories', userId, type, categoryId));
 }
 
+export async function resetCategoriesToDefaults(userId: string): Promise<void> {
+  // Delete all existing categories
+  for (const type of ['expense', 'income'] as CategoryType[]) {
+    const snap = await getDocs(colRef(userId, type));
+    await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
+  }
+  await seedDefaultCategoriesForce(userId);
+}
+
+async function seedDefaultCategoriesForce(userId: string): Promise<void> {
+  const parentIdMap: Record<string, string> = {};
+
+  for (const cat of DEFAULT_EXPENSE_CATEGORIES.filter((c) => !c.parentId)) {
+    const { parentId: _omit, ...catData } = cat;
+    const ref = await addDoc(colRef(userId, 'expense'), { ...catData, userId });
+    const key = `__${cat.name.toLowerCase().replace(/[\s/]+/g, '_')}__`;
+    parentIdMap[key] = ref.id;
+  }
+
+  for (const cat of DEFAULT_EXPENSE_CATEGORIES.filter((c) => c.parentId)) {
+    const realParentId = parentIdMap[cat.parentId!] ?? null;
+    const { parentId: _omit, ...catData } = cat;
+    await addDoc(colRef(userId, 'expense'), { ...catData, parentId: realParentId, userId });
+  }
+
+  for (const cat of DEFAULT_INCOME_CATEGORIES) {
+    const { parentId: _omit, ...catData } = cat;
+    await addDoc(colRef(userId, 'income'), { ...catData, userId });
+  }
+}
+
 export async function seedDefaultCategories(userId: string): Promise<void> {
   const existing = await fetchCategories(userId, 'expense');
   if (existing.length > 0) return;
@@ -67,3 +98,4 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
     await addDoc(colRef(userId, 'income'), { ...catData, userId });
   }
 }
+

@@ -148,6 +148,10 @@ export default function AccountPage() {
 
       {/* Quick links */}
       <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
+        <Link href="/savings" className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/50 transition-colors">
+          <span className="text-sm font-medium">🎯 Savings Goals</span>
+          <span className="text-muted-foreground text-sm">→</span>
+        </Link>
         <Link href="/recurring" className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/50 transition-colors">
           <span className="text-sm font-medium">🔄 Recurring Payments</span>
           <span className="text-muted-foreground text-sm">→</span>

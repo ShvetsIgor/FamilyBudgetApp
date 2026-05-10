@@ -165,7 +165,7 @@ export interface SerializableRecurringPayment {
 
 export interface SavingsContribution {
   amount: number;
-  date: Timestamp;
+  date: string; // ISO string
   note?: string;
 }
 
@@ -173,15 +173,15 @@ export interface SavingsGoal {
   id: string;
   userId: string;
   name: string;
+  icon: string;
+  color: string;
   targetAmount: number;
   currentAmount: number;
   currency: Currency;
   monthlyContribution?: number;
-  deadline?: Timestamp;
-  isFamily: boolean;
-  participantIds: string[];
+  deadline?: string; // ISO string
   contributions: SavingsContribution[];
-  createdAt: Timestamp;
+  createdAt: string; // ISO string
 }
 
 // ─── Statistics ───────────────────────────────────────────────────────────────

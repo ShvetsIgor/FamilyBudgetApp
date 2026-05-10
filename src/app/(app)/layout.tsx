@@ -15,6 +15,7 @@ import { LoadingScreen } from '@/shared/components/LoadingScreen';
 import { requestNotificationPermission } from '@/shared/hooks/useNotifications';
 import { useRecurringNotifications } from '@/features/recurring/hooks/useRecurringNotifications';
 import { OnboardingFlow } from '@/features/onboarding/components/OnboardingFlow';
+import { UpdateBanner } from '@/shared/components/UpdateBanner';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
@@ -80,6 +81,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <UpdateBanner />
       <Header />
       <main className="flex-1 pb-20">{children}</main>
       <BottomNav />

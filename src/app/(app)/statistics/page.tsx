@@ -5,7 +5,6 @@ import { format, subMonths } from 'date-fns';
 import { useAppSelector } from '@/store/store';
 import { fetchMonthStats, fetchLastNMonths, type MonthStats } from '@/features/stats/services/statsService';
 import { formatAmount } from '@/shared/utils/currency';
-import { adjustColor } from '@/shared/utils/colors';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
@@ -68,21 +67,16 @@ export default function StatisticsPage() {
   useEffect(() => { load(); }, [load]);
 
   // Pie chart data — top categories
-  const pieDataRaw = stats
+  const pieData = stats
     ? Object.entries(stats.byCategory)
         .map(([catId, amount]) => {
           const cat = categories.find((c) => c.id === catId);
-          return { catId, name: cat?.name ?? 'Other', amount, baseColor: cat?.color ?? '#6b7280', icon: cat?.icon ?? '📦' };
+          return { catId, name: cat?.name ?? 'Other', amount, color: cat?.color ?? '#6b7280', icon: cat?.icon ?? '📦' };
         })
         .filter((d) => d.amount > 0)
         .sort((a, b) => b.amount - a.amount)
         .slice(0, 8)
     : [];
-
-  const pieData = pieDataRaw.map((d, i) => ({
-    ...d,
-    color: adjustColor(d.baseColor, i, pieDataRaw.length),
-  }));
 
   // Bar chart data
   const barData = history.map((m) => ({

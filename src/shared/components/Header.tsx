@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { Settings, UserCircle, Users, WifiOff, RefreshCw, Repeat2 } from 'lucide-react';
+import { Settings, UserCircle, WifiOff, RefreshCw, Repeat2 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
-import { cn } from '@/shared/utils/cn';
+
 
 export function Header() {
   const { isOffline, isSyncing } = useAppSelector((s) => s.ui);
@@ -32,18 +32,6 @@ export function Header() {
           {isSyncing && !isOffline && (
             <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
           )}
-
-          {/* Family icon */}
-          <Link
-            href={user?.familyId ? '/family' : '/family'}
-            className={cn(
-              'rounded-full p-2 transition-colors hover:bg-muted',
-              user?.familyId ? 'text-primary' : 'text-muted-foreground'
-            )}
-            aria-label="Family"
-          >
-            <Users className="h-5 w-5" />
-          </Link>
 
           {/* Account */}
           <Link

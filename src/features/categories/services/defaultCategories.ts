@@ -52,6 +52,9 @@ export const DEFAULT_EXPENSE_CATEGORIES: DefaultCategory[] = [
   { name: 'Kindergarten', icon: '🏫', color: '#d97706', parentId: '__kids__', isPrivate: false, order: 0, type: 'expense' },
   { name: 'Toys', icon: '🧸', color: '#fcd34d', parentId: '__kids__', isPrivate: false, order: 1, type: 'expense' },
 
+  // Savings
+  { name: 'Savings', icon: '🐷', color: '#10b981', parentId: undefined, isPrivate: false, order: 8, type: 'expense' },
+
   // Other
   { name: 'Other', icon: '📦', color: '#6b7280', parentId: undefined, isPrivate: false, order: 99, type: 'expense' },
 ];

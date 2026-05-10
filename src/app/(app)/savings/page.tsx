@@ -9,6 +9,9 @@ import {
   type AddGoalInput,
 } from '@/features/savings/services/savingsService';
 import { formatAmount } from '@/shared/utils/currency';
+import { addExpense } from '@/features/expenses/services/expensesService';
+import { prependExpense } from '@/features/expenses/store/expensesSlice';
+import { CategoryPicker } from '@/features/categories/components/CategoryPicker';
 import type { SavingsGoal, Currency } from '@/shared/types';
 
 const GOAL_ICONS = ['🎯', '🏠', '🚗', '✈️', '💻', '📱', '👶', '💍', '🎓', '🏖️', '💰', '🛋️'];
@@ -44,10 +47,33 @@ export default function SavingsPage() {
     setMode('list');
   }
 
-  async function handleContribute(goal: SavingsGoal, amount: number, note: string) {
+  async function handleContribute(
+    goal: SavingsGoal,
+    amount: number,
+    note: string,
+    recordAsExpense: boolean,
+    expenseCategoryId: string,
+  ) {
     if (!user) return;
     const updated = await addContribution(user.id, goal, { amount, note: note || undefined });
     dispatch(updateGoalItem(updated));
+
+    if (recordAsExpense && expenseCategoryId) {
+      const expense = await addExpense({
+        userId: user.id,
+        amount,
+        currency: goal.currency,
+        categoryId: expenseCategoryId,
+        date: new Date(),
+        paymentMethod: 'other',
+        comment: `Savings: ${goal.name}${note ? ' · ' + note : ''}`,
+        tags: ['savings'],
+        privacy: 'regular',
+        splits: [],
+      });
+      dispatch(prependExpense(expense));
+    }
+
     setMode('list');
   }
 
@@ -82,7 +108,9 @@ export default function SavingsPage() {
         <ContributeForm
           goal={mode.goal}
           currency={currency}
-          onSave={(amount, note) => handleContribute(mode.goal, amount, note)}
+          onSave={(amount, note, recordAsExpense, catId) =>
+            handleContribute(mode.goal, amount, note, recordAsExpense, catId)
+          }
           onCancel={() => setMode('list')}
         />
       </div>
@@ -361,11 +389,16 @@ function GoalForm({ currency, onSave, onCancel }: {
 function ContributeForm({ goal, currency, onSave, onCancel }: {
   goal: SavingsGoal;
   currency: string;
-  onSave: (amount: number, note: string) => Promise<void>;
+  onSave: (amount: number, note: string, recordAsExpense: boolean, categoryId: string) => Promise<void>;
   onCancel: () => void;
 }) {
+  const categories = useAppSelector((s) => s.categories.expense);
+  const savingsCat = categories.find((c) => c.name === 'Savings' && !c.parentId);
+
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
+  const [recordAsExpense, setRecordAsExpense] = useState(true);
+  const [categoryId, setCategoryId] = useState(savingsCat?.id ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -373,15 +406,17 @@ function ContributeForm({ goal, currency, onSave, onCancel }: {
     e.preventDefault();
     const num = parseFloat(amount);
     if (!num || num <= 0) { setError('Enter a valid amount'); return; }
+    if (recordAsExpense && !categoryId) { setError('Select a category'); return; }
     setError('');
     setSaving(true);
-    try { await onSave(num, note); } finally { setSaving(false); }
+    try { await onSave(num, note, recordAsExpense, categoryId); } finally { setSaving(false); }
   }
 
   const remaining = goal.targetAmount - goal.currentAmount;
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-4 pb-8">
+      {/* Goal info */}
       <div className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3">
         <span className="text-3xl">{goal.icon}</span>
         <div>
@@ -392,6 +427,7 @@ function ContributeForm({ goal, currency, onSave, onCancel }: {
         </div>
       </div>
 
+      {/* Amount */}
       <div className="rounded-2xl border border-border bg-card p-4">
         <label className="text-xs text-muted-foreground mb-1 block">Amount ({currency})</label>
         <input autoFocus type="number" min="0" step="0.01" placeholder="0.00" value={amount}
@@ -399,11 +435,40 @@ function ContributeForm({ goal, currency, onSave, onCancel }: {
           className="w-full bg-transparent text-2xl font-bold outline-none tabular-nums text-emerald-500" />
       </div>
 
+      {/* Note */}
       <div className="rounded-2xl border border-border bg-card p-4">
         <label className="text-xs text-muted-foreground mb-1 block">Note (optional)</label>
         <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Monthly deposit…"
           className="w-full bg-transparent text-sm outline-none" />
       </div>
+
+      {/* Record as expense toggle */}
+      <div className="rounded-2xl border border-border bg-card px-4 py-3 flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium">Record as expense</p>
+          <p className="text-xs text-muted-foreground">Shows in expenses list & stats</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setRecordAsExpense(!recordAsExpense)}
+          className={`relative h-6 w-11 rounded-full transition-colors flex-shrink-0 ${recordAsExpense ? 'bg-primary' : 'bg-muted'}`}
+        >
+          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${recordAsExpense ? 'left-[22px]' : 'left-0.5'}`} />
+        </button>
+      </div>
+
+      {/* Category picker — shown when recording as expense */}
+      {recordAsExpense && (
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <label className="text-xs text-muted-foreground mb-2 block">Expense category</label>
+          <CategoryPicker
+            type="expense"
+            value={categoryId}
+            onChange={setCategoryId}
+            parentsOnly
+          />
+        </div>
+      )}
 
       {error && <p className="text-xs text-destructive px-1">{error}</p>}
 

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Settings, UserCircle, Users, WifiOff, RefreshCw } from 'lucide-react';
+import { Settings, UserCircle, Users, WifiOff, RefreshCw, Repeat2 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
 import { cn } from '@/shared/utils/cn';
 
@@ -52,6 +52,15 @@ export function Header() {
             aria-label="Account"
           >
             <UserCircle className="h-5 w-5" />
+          </Link>
+
+          {/* Recurring */}
+          <Link
+            href="/recurring"
+            className="rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground"
+            aria-label="Recurring payments"
+          >
+            <Repeat2 className="h-5 w-5" />
           </Link>
 
           {/* Categories */}

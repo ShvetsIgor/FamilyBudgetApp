@@ -144,6 +144,23 @@ export interface RecurringPayment {
   isActive: boolean;
 }
 
+export interface SerializableRecurringPayment {
+  id: string;
+  userId: string;
+  name: string;
+  amount: number;
+  currency: Currency;
+  categoryId: string;
+  frequency: RecurringFrequency;
+  startDate: string;
+  endDate?: string;
+  nextDueDate: string;
+  type: RecurringType;
+  reminderDays: number;
+  comment?: string;
+  isActive: boolean;
+}
+
 // ─── Savings ─────────────────────────────────────────────────────────────────
 
 export interface SavingsContribution {

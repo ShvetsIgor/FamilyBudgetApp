@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setTheme, setCurrency, setLanguage } from '@/features/ui/store/uiSlice';
 import { signOut } from '@/features/auth/services/authService';
@@ -143,6 +144,18 @@ export default function AccountPage() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Quick links */}
+      <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
+        <Link href="/recurring" className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/50 transition-colors">
+          <span className="text-sm font-medium">🔄 Recurring Payments</span>
+          <span className="text-muted-foreground text-sm">→</span>
+        </Link>
+        <Link href="/categories" className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/50 transition-colors">
+          <span className="text-sm font-medium">🏷️ Categories</span>
+          <span className="text-muted-foreground text-sm">→</span>
+        </Link>
       </div>
 
       {/* Sign out */}

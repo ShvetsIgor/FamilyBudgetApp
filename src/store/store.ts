@@ -5,6 +5,7 @@ import uiReducer from '@/features/ui/store/uiSlice';
 import categoriesReducer from '@/features/categories/store/categoriesSlice';
 import expensesReducer from '@/features/expenses/store/expensesSlice';
 import incomeReducer from '@/features/income/store/incomeSlice';
+import recurringReducer from '@/features/recurring/store/recurringSlice';
 
 export const store = configureStore({
   reducer: {
@@ -13,6 +14,7 @@ export const store = configureStore({
     categories: categoriesReducer,
     expenses: expensesReducer,
     income: incomeReducer,
+    recurring: recurringReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

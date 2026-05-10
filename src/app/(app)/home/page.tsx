@@ -94,7 +94,7 @@ export default function HomePage() {
               <TrendingUp className="h-6 w-6" />
             </div>
           </Link>
-          <p className="text-xs text-muted-foreground">Income</p>
+          <p className="text-xs text-muted-foreground">{t('home.income')}</p>
         </div>
 
         <div className="flex flex-col items-center gap-2">
@@ -103,7 +103,7 @@ export default function HomePage() {
               <Plus className="h-9 w-9" />
             </div>
           </Link>
-          <p className="text-sm text-muted-foreground">Expense</p>
+          <p className="text-sm text-muted-foreground">{t('home.expenses')}</p>
         </div>
 
         <div className="flex flex-col items-center gap-2">
@@ -112,7 +112,7 @@ export default function HomePage() {
               <PiggyBank className="h-6 w-6" />
             </div>
           </Link>
-          <p className="text-xs text-muted-foreground">Savings</p>
+          <p className="text-xs text-muted-foreground">{t('home.savingsGoals')}</p>
         </div>
       </div>
 

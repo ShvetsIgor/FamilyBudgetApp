@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { format, parseISO, differenceInDays, differenceInMonths } from 'date-fns';
-import { useAppSelector, useAppDispatch, store } from '@/store/store';
+import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setGoals, addGoalItem, updateGoalItem, removeGoalItem } from '@/features/savings/store/savingsSlice';
 import {
   fetchGoals, addGoal, addContribution, deleteGoal,
@@ -11,6 +11,8 @@ import {
 import { formatAmount } from '@/shared/utils/currency';
 import { addExpense } from '@/features/expenses/services/expensesService';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
+import { addCategory } from '@/features/categories/services/categoriesService';
+import { addCategory as addCategoryRedux } from '@/features/categories/store/categoriesSlice';
 import type { SavingsGoal, Currency } from '@/shared/types';
 
 const GOAL_ICONS = ['🎯', '🏠', '🚗', '✈️', '💻', '📱', '👶', '💍', '🎓', '🏖️', '💰', '🛋️'];
@@ -58,12 +60,21 @@ export default function SavingsPage() {
     dispatch(updateGoalItem(updated));
 
     if (recordAsExpense) {
-      const allExpCats = (store.getState() as { categories: { expense: { id: string; name: string }[] } }).categories.expense;
-      const catId = expenseCategoryId
-        || allExpCats.find((c) => c.name === 'Savings')?.id
-        || allExpCats.find((c) => c.name === 'Other')?.id
-        || allExpCats[0]?.id
-        || '';
+      // Find or create the Savings category
+      let catId = expenseCategoryId;
+      if (!catId) {
+        const created = await addCategory(user.id, {
+          name: 'Savings',
+          icon: '🐷',
+          color: '#10b981',
+          type: 'expense',
+          isPrivate: false,
+          order: 8,
+          parentId: undefined,
+        });
+        dispatch(addCategoryRedux(created));
+        catId = created.id;
+      }
       const expense = await addExpense({
         userId: user.id,
         amount,

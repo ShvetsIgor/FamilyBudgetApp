@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { format, parseISO, differenceInDays, differenceInMonths } from 'date-fns';
-import { useAppSelector, useAppDispatch } from '@/store/store';
+import { useAppSelector, useAppDispatch, store } from '@/store/store';
 import { setGoals, addGoalItem, updateGoalItem, removeGoalItem } from '@/features/savings/store/savingsSlice';
 import {
   fetchGoals, addGoal, addContribution, deleteGoal,
@@ -57,12 +57,18 @@ export default function SavingsPage() {
     const updated = await addContribution(user.id, goal, { amount, note: note || undefined });
     dispatch(updateGoalItem(updated));
 
-    if (recordAsExpense && expenseCategoryId) {
+    if (recordAsExpense) {
+      const allExpCats = (store.getState() as { categories: { expense: { id: string; name: string }[] } }).categories.expense;
+      const catId = expenseCategoryId
+        || allExpCats.find((c) => c.name === 'Savings')?.id
+        || allExpCats.find((c) => c.name === 'Other')?.id
+        || allExpCats[0]?.id
+        || '';
       const expense = await addExpense({
         userId: user.id,
         amount,
         currency: goal.currency,
-        categoryId: expenseCategoryId,
+        categoryId: catId,
         date: new Date(),
         paymentMethod: 'other',
         comment: `Savings: ${goal.name}${note ? ' · ' + note : ''}`,

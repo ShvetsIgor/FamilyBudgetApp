@@ -11,37 +11,30 @@ import { SplitEditor } from './SplitEditor';
 import { calculateSplit } from '@/features/expenses/utils/splitAlgorithm';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { cn } from '@/shared/utils/cn';
-import type { Currency, Privacy, PaymentMethod, SplitItem } from '@/shared/types';
+import type { Privacy, PaymentMethod, SplitItem } from '@/shared/types';
 
-const CURRENCIES: Currency[] = ['ILS', 'USD', 'CAD', 'RUB'];
 const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
   { value: 'card', label: '💳 Card' },
   { value: 'cash', label: '💵 Cash' },
   { value: 'other', label: '🔄 Other' },
-];
-const PRIVACY_OPTIONS: { value: Privacy; label: string; desc: string }[] = [
-  { value: 'personal', label: '👤 Personal', desc: 'Only you' },
-  { value: 'family', label: '👨‍👩‍👧 Family', desc: 'Visible in family stats' },
-  { value: 'secret', label: '🔒 Secret', desc: 'Hidden from everyone' },
 ];
 
 export function ExpenseForm() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
-  const defaultCurrency = useAppSelector((s) => s.ui.currency);
+  const currency = useAppSelector((s) => s.ui.currency);
+  const symbol = getCurrencySymbol(currency);
 
   const [amount, setAmount] = useState('');
-  const [currency, setCurrency] = useState<Currency>(defaultCurrency);
   const [categoryId, setCategoryId] = useState('');
-  const [subcategoryId, setSubcategoryId] = useState('');
+  const [splits, setSplits] = useState<SplitItem[]>([]);
+  const [splitOpen, setSplitOpen] = useState(false);
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
   const [store, setStore] = useState('');
   const [comment, setComment] = useState('');
-  const [privacy, setPrivacy] = useState<Privacy>('personal');
-  const [splits, setSplits] = useState<SplitItem[]>([]);
-  const [splitOpen, setSplitOpen] = useState(false);
+  const [privacy, setPrivacy] = useState<Privacy>('regular');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -51,6 +44,13 @@ export function ExpenseForm() {
   const { isValid: splitValid } = calculateSplit(numAmount, splits);
   const canSave = numAmount > 0 && categoryId && splitValid;
 
+  // Reset splits when category changes
+  function handleCategoryChange(id: string) {
+    setCategoryId(id);
+    setSplits([]);
+    setSplitOpen(false);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSave) return;
@@ -58,19 +58,19 @@ export function ExpenseForm() {
     setError('');
 
     try {
+      const validSplits = splits.filter((s) => s.categoryId && s.amount > 0);
       const expense = await addExpense({
         userId: user!.id,
         amount: numAmount,
         currency,
         categoryId,
-        subcategoryId: subcategoryId || undefined,
         date: new Date(date),
         paymentMethod,
         store: store || undefined,
         tags: [],
         comment: comment || undefined,
         privacy,
-        splits: splits.filter((s) => s.categoryId && s.amount > 0),
+        splits: validSplits,
       });
       dispatch(prependExpense(expense));
       router.replace('/expenses');
@@ -82,61 +82,53 @@ export function ExpenseForm() {
     }
   }
 
-  const symbol = getCurrencySymbol(currency);
-
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-4 pt-4 pb-8">
 
-      {/* ── Amount + Currency ── */}
+      {/* ── Amount ── */}
       <div className="rounded-2xl bg-primary/5 border border-primary/20 p-4">
-        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Amount</label>
-        <div className="flex items-center gap-3 mt-2">
-          {/* Currency selector */}
-          <div className="flex gap-1">
-            {CURRENCIES.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setCurrency(c)}
-                className={cn(
-                  'rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors',
-                  currency === c ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                )}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-          {/* Amount input */}
-          <div className="flex flex-1 items-center gap-1">
-            <span className="text-2xl font-bold text-muted-foreground">{symbol}</span>
-            <input
-              autoFocus
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="0.01"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-              className="flex-1 bg-transparent text-3xl font-bold outline-none placeholder:text-muted-foreground/40"
-            />
-          </div>
+        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          Amount · {currency}
+        </label>
+        <div className="flex items-center gap-2 mt-2">
+          <span className="text-3xl font-bold text-muted-foreground">{symbol}</span>
+          <input
+            autoFocus
+            type="number"
+            inputMode="decimal"
+            min="0"
+            step="0.01"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="0.00"
+            className="flex-1 bg-transparent text-4xl font-bold outline-none placeholder:text-muted-foreground/30"
+          />
         </div>
       </div>
 
       {/* ── Category ── */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium">Category</label>
-        <CategoryPicker type="expense" value={categoryId || undefined} onChange={setCategoryId} placeholder="Select category" />
+        <CategoryPicker
+          type="expense"
+          value={categoryId || undefined}
+          onChange={handleCategoryChange}
+          placeholder="Select category"
+          parentsOnly
+        />
       </div>
 
-      {/* ── Subcategory ── */}
-      {categoryId && (
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-muted-foreground">Subcategory <span className="text-xs">(optional)</span></label>
-          <CategoryPicker type="expense" value={subcategoryId || undefined} onChange={setSubcategoryId} placeholder="Select subcategory" />
-        </div>
+      {/* ── Split (right after category, only when both amount + category set) ── */}
+      {numAmount > 0 && categoryId && (
+        <SplitEditor
+          total={numAmount}
+          currency={currency}
+          parentCategoryId={categoryId}
+          splits={splits}
+          onChange={setSplits}
+          open={splitOpen}
+          onToggle={() => setSplitOpen(!splitOpen)}
+        />
       )}
 
       {/* ── Date ── */}
@@ -174,7 +166,9 @@ export function ExpenseForm() {
 
       {/* ── Store ── */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">Store / Place <span className="text-xs text-muted-foreground">(optional)</span></label>
+        <label className="text-sm font-medium">
+          Store / Place <span className="text-xs text-muted-foreground font-normal">(optional)</span>
+        </label>
         <input
           type="text"
           value={store}
@@ -186,7 +180,9 @@ export function ExpenseForm() {
 
       {/* ── Comment ── */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">Comment <span className="text-xs text-muted-foreground">(optional)</span></label>
+        <label className="text-sm font-medium">
+          Comment <span className="text-xs text-muted-foreground font-normal">(optional)</span>
+        </label>
         <input
           type="text"
           value={comment}
@@ -200,36 +196,36 @@ export function ExpenseForm() {
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium">Privacy</label>
         <div className="flex gap-2">
-          {PRIVACY_OPTIONS.map(({ value, label }) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setPrivacy(value)}
-              className={cn(
-                'flex-1 rounded-xl border py-2.5 text-xs font-medium transition-colors',
-                privacy === value
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-border bg-card text-muted-foreground hover:bg-muted'
-              )}
-            >
-              {label}
-            </button>
-          ))}
+          <button
+            type="button"
+            onClick={() => setPrivacy('regular')}
+            className={cn(
+              'flex-1 flex flex-col items-center rounded-xl border py-3 text-sm transition-colors',
+              privacy === 'regular'
+                ? 'border-primary bg-primary/10 text-primary'
+                : 'border-border bg-card text-muted-foreground hover:bg-muted'
+            )}
+          >
+            <span className="text-base">👤</span>
+            <span className="font-medium mt-0.5">Regular</span>
+            <span className="text-xs opacity-70">In family stats</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setPrivacy('secret')}
+            className={cn(
+              'flex-1 flex flex-col items-center rounded-xl border py-3 text-sm transition-colors',
+              privacy === 'secret'
+                ? 'border-primary bg-primary/10 text-primary'
+                : 'border-border bg-card text-muted-foreground hover:bg-muted'
+            )}
+          >
+            <span className="text-base">🔒</span>
+            <span className="font-medium mt-0.5">Secret</span>
+            <span className="text-xs opacity-70">Hidden from family</span>
+          </button>
         </div>
       </div>
-
-      {/* ── Split Expense ── */}
-      {numAmount > 0 && categoryId && (
-        <SplitEditor
-          total={numAmount}
-          currency={currency}
-          mainCategoryId={categoryId}
-          splits={splits}
-          onChange={setSplits}
-          open={splitOpen}
-          onToggle={() => setSplitOpen(!splitOpen)}
-        />
-      )}
 
       {error && (
         <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">{error}</p>
@@ -241,7 +237,9 @@ export function ExpenseForm() {
         disabled={!canSave || loading}
         className={cn(
           'w-full rounded-2xl py-4 text-base font-semibold text-primary-foreground transition-all',
-          canSave ? 'bg-primary shadow-lg shadow-primary/25 active:scale-[0.98]' : 'bg-muted text-muted-foreground cursor-not-allowed',
+          canSave
+            ? 'bg-primary shadow-lg shadow-primary/25 active:scale-[0.98]'
+            : 'bg-muted text-muted-foreground cursor-not-allowed',
           loading && 'opacity-70'
         )}
       >

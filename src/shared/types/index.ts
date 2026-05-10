@@ -1,7 +1,7 @@
 import { Timestamp } from 'firebase/firestore';
 
 export type Currency = 'ILS' | 'USD' | 'CAD' | 'RUB';
-export type Privacy = 'personal' | 'family' | 'secret';
+export type Privacy = 'regular' | 'secret';
 export type PaymentMethod = 'cash' | 'card' | 'other';
 export type Theme = 'light' | 'dark';
 export type Language = 'en' | 'ru' | 'he';

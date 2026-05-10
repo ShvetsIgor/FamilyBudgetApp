@@ -1,51 +1,57 @@
 'use client';
 
 import { Plus, Trash2, ChevronDown } from 'lucide-react';
-import { CategoryPicker } from '@/features/categories/components/CategoryPicker';
+import { useAppSelector } from '@/store/store';
 import { calculateSplit } from '@/features/expenses/utils/splitAlgorithm';
 import { getCurrencySymbol } from '@/shared/utils/currency';
+import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { cn } from '@/shared/utils/cn';
 import type { SplitItem, Currency } from '@/shared/types';
 
 interface Props {
   total: number;
   currency: Currency;
-  mainCategoryId: string;
+  parentCategoryId: string;
   splits: SplitItem[];
   onChange: (splits: SplitItem[]) => void;
   open: boolean;
   onToggle: () => void;
 }
 
-export function SplitEditor({ total, currency, mainCategoryId, splits, onChange, open, onToggle }: Props) {
+export function SplitEditor({ total, currency, parentCategoryId, splits, onChange, open, onToggle }: Props) {
+  const allCategories = useAppSelector((s) => s.categories.expense);
+  const subcategories = allCategories.filter((c) => c.parentId === parentCategoryId);
   const { mainAmount, isValid } = calculateSplit(total, splits);
   const symbol = getCurrencySymbol(currency);
 
-  function addRow() {
-    onChange([...splits, { categoryId: '', amount: 0 }]);
+  // No subcategories — nothing to split
+  if (subcategories.length === 0) return null;
+
+  function toggleSubcategory(catId: string) {
+    const exists = splits.find((s) => s.categoryId === catId);
+    if (exists) {
+      onChange(splits.filter((s) => s.categoryId !== catId));
+    } else {
+      onChange([...splits, { categoryId: catId, amount: 0 }]);
+    }
   }
 
-  function updateRow(idx: number, patch: Partial<SplitItem>) {
-    onChange(splits.map((s, i) => (i === idx ? { ...s, ...patch } : s)));
-  }
-
-  function removeRow(idx: number) {
-    onChange(splits.filter((_, i) => i !== idx));
+  function updateAmount(catId: string, amount: number) {
+    onChange(splits.map((s) => (s.categoryId === catId ? { ...s, amount } : s)));
   }
 
   return (
     <div className="rounded-xl border border-border overflow-hidden">
-      {/* Toggle header */}
       <button
         type="button"
         onClick={onToggle}
         className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted transition-colors"
       >
         <span className="flex items-center gap-2">
-          Split Expense
+          <span>Split by subcategory</span>
           {splits.length > 0 && (
             <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary font-semibold">
-              {splits.length}
+              {splits.length} selected
             </span>
           )}
         </span>
@@ -53,63 +59,62 @@ export function SplitEditor({ total, currency, mainCategoryId, splits, onChange,
       </button>
 
       {open && (
-        <div className="border-t border-border p-3 flex flex-col gap-3">
-          {/* Remainder display */}
+        <div className="border-t border-border p-3 flex flex-col gap-2">
+          {/* Remainder */}
           <div className={cn(
-            'flex items-center justify-between rounded-lg px-3 py-2 text-sm',
+            'flex items-center justify-between rounded-lg px-3 py-2 text-sm mb-1',
             isValid ? 'bg-muted' : 'bg-destructive/10'
           )}>
-            <span className="text-muted-foreground">Remaining in main category</span>
-            <span className={cn('font-semibold', !isValid && 'text-destructive')}>
-              {symbol}{mainAmount.toFixed(2)}
+            <span className="text-muted-foreground">Unassigned (main category)</span>
+            <span className={cn('font-semibold tabular-nums', !isValid && 'text-destructive')}>
+              {symbol}{mainAmount % 1 === 0 ? mainAmount : mainAmount.toFixed(2)}
             </span>
           </div>
 
-          {/* Split rows */}
-          {splits.map((split, idx) => (
-            <div key={idx} className="flex gap-2 items-start">
-              <div className="flex-1 min-w-0">
-                <CategoryPicker
-                  type="expense"
-                  value={split.categoryId || undefined}
-                  onChange={(id) => updateRow(idx, { categoryId: id })}
-                  placeholder="Category"
-                />
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <span className="text-sm text-muted-foreground">{symbol}</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={split.amount || ''}
-                  onChange={(e) => updateRow(idx, { amount: parseFloat(e.target.value) || 0 })}
-                  placeholder="0"
-                  className="w-20 rounded-xl border border-border bg-card px-3 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-right"
-                />
+          {/* Subcategory rows */}
+          {subcategories.map((sub) => {
+            const split = splits.find((s) => s.categoryId === sub.id);
+            const active = !!split;
+
+            return (
+              <div key={sub.id} className={cn(
+                'flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors',
+                active ? 'border-primary/40 bg-primary/5' : 'border-border bg-card'
+              )}>
                 <button
                   type="button"
-                  onClick={() => removeRow(idx)}
-                  className="rounded-lg p-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                  onClick={() => toggleSubcategory(sub.id)}
+                  className="flex items-center gap-2 flex-1 min-w-0 text-left"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <CategoryIcon icon={sub.icon} color={sub.color} size="sm" />
+                  <span className={cn('text-sm truncate', active ? 'font-medium' : 'text-muted-foreground')}>
+                    {sub.name}
+                  </span>
                 </button>
-              </div>
-            </div>
-          ))}
 
-          <button
-            type="button"
-            onClick={addRow}
-            className="flex items-center gap-2 rounded-xl border border-dashed border-border px-4 py-2.5 text-sm text-muted-foreground hover:border-primary hover:text-primary transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            Add split
-          </button>
+                {active && (
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span className="text-sm text-muted-foreground">{symbol}</span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      step="0.01"
+                      value={split.amount || ''}
+                      onChange={(e) => updateAmount(sub.id, parseFloat(e.target.value) || 0)}
+                      placeholder="0"
+                      className="w-20 rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-right outline-none focus:border-primary"
+                      autoFocus
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
           {!isValid && (
-            <p className="text-xs text-destructive">
-              Split total exceeds the expense amount. Reduce split amounts.
+            <p className="text-xs text-destructive px-1">
+              Total split amount exceeds the expense amount.
             </p>
           )}
         </div>

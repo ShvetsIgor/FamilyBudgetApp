@@ -17,7 +17,7 @@ import {
   type DocumentSnapshot,
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
-import type { Expense, SplitItem, Currency, Privacy, PaymentMethod } from '@/shared/types';
+import type { Expense, SerializableExpense, SplitItem, Currency, Privacy, PaymentMethod } from '@/shared/types';
 import { format } from 'date-fns';
 
 const PAGE_SIZE = 20;
@@ -30,22 +30,51 @@ function statsDoc(userId: string, month: string) {
   return doc(getDb(), 'monthlyStats', userId, 'months', month);
 }
 
-// ─── Fetch ───────────────────────────────────────────────────────────────────
+// ─── Converter: Firestore doc → Redux-safe object ─────────────────────────────
+
+function toSerializable(id: string, data: Record<string, unknown>): SerializableExpense {
+  const toISO = (v: unknown) =>
+    v instanceof Timestamp ? v.toDate().toISOString() : (v as string) ?? new Date().toISOString();
+
+  return {
+    id,
+    userId: data.userId as string,
+    amount: data.amount as number,
+    currency: data.currency as Currency,
+    categoryId: data.categoryId as string,
+    subcategoryId: data.subcategoryId as string | undefined,
+    date: toISO(data.date),
+    paymentMethod: data.paymentMethod as PaymentMethod,
+    store: data.store as string | undefined,
+    tags: (data.tags as string[]) ?? [],
+    comment: data.comment as string | undefined,
+    photoUrl: data.photoUrl as string | undefined,
+    privacy: data.privacy as Privacy,
+    splits: (data.splits as SplitItem[]) ?? [],
+    isRecurring: (data.isRecurring as boolean) ?? false,
+    recurringId: data.recurringId as string | undefined,
+    createdAt: toISO(data.createdAt),
+    updatedAt: toISO(data.updatedAt),
+  };
+}
+
+// ─── Fetch ────────────────────────────────────────────────────────────────────
 
 export async function fetchExpenses(
   userId: string,
   cursor?: DocumentSnapshot
-): Promise<{ expenses: Expense[]; cursor: DocumentSnapshot | null }> {
-  const constraints = [orderBy('date', 'desc'), limit(PAGE_SIZE)];
-  if (cursor) constraints.push(startAfter(cursor) as any);
+): Promise<{ expenses: SerializableExpense[]; cursor: DocumentSnapshot | null }> {
+  const q = cursor
+    ? query(expCol(userId), orderBy('date', 'desc'), limit(PAGE_SIZE), startAfter(cursor))
+    : query(expCol(userId), orderBy('date', 'desc'), limit(PAGE_SIZE));
 
-  const snap = await getDocs(query(expCol(userId), ...constraints));
-  const expenses = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Expense));
+  const snap = await getDocs(q);
+  const expenses = snap.docs.map((d) => toSerializable(d.id, d.data()));
   const nextCursor = snap.docs.length === PAGE_SIZE ? snap.docs[snap.docs.length - 1] : null;
   return { expenses, cursor: nextCursor };
 }
 
-export async function fetchMonthExpenses(userId: string, month: string): Promise<Expense[]> {
+export async function fetchMonthExpenses(userId: string, month: string): Promise<SerializableExpense[]> {
   const [year, m] = month.split('-').map(Number);
   const from = Timestamp.fromDate(new Date(year, m - 1, 1));
   const to = Timestamp.fromDate(new Date(year, m, 1));
@@ -53,7 +82,7 @@ export async function fetchMonthExpenses(userId: string, month: string): Promise
   const snap = await getDocs(
     query(expCol(userId), where('date', '>=', from), where('date', '<', to), orderBy('date', 'desc'))
   );
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Expense));
+  return snap.docs.map((d) => toSerializable(d.id, d.data()));
 }
 
 // ─── Write ────────────────────────────────────────────────────────────────────
@@ -73,13 +102,16 @@ export interface AddExpenseInput {
   splits: SplitItem[];
 }
 
-export async function addExpense(input: AddExpenseInput): Promise<Expense> {
-  const { userId, date, ...rest } = input;
+export async function addExpense(input: AddExpenseInput): Promise<SerializableExpense> {
+  const { userId, date, subcategoryId, store, comment, ...rest } = input;
 
   const data = Object.fromEntries(
     Object.entries({
       ...rest,
       userId,
+      subcategoryId,
+      store,
+      comment,
       date: Timestamp.fromDate(date),
       isRecurring: false,
       createdAt: serverTimestamp(),
@@ -89,30 +121,20 @@ export async function addExpense(input: AddExpenseInput): Promise<Expense> {
 
   const ref = await addDoc(expCol(userId), data);
 
-  // Update monthlyStats — pre-aggregate
   const month = format(date, 'yyyy-MM');
   await updateMonthlyStats(userId, month, input.categoryId, input.amount, input.splits, 1);
 
-  return { id: ref.id, ...data } as unknown as Expense;
+  return toSerializable(ref.id, {
+    ...data,
+    date: Timestamp.fromDate(date),
+    createdAt: Timestamp.fromDate(new Date()),
+    updatedAt: Timestamp.fromDate(new Date()),
+  });
 }
 
-export async function updateExpense(userId: string, expense: Expense, oldExpense: Expense): Promise<void> {
-  const { id, ...data } = expense;
-  const clean = Object.fromEntries(
-    Object.entries({ ...data, updatedAt: serverTimestamp() }).filter(([, v]) => v !== undefined)
-  );
-  await updateDoc(doc(getDb(), 'expenses', userId, 'items', id), clean);
-
-  // Reverse old stats, apply new
-  const oldMonth = format(oldExpense.date.toDate(), 'yyyy-MM');
-  const newMonth = format(expense.date.toDate(), 'yyyy-MM');
-  await updateMonthlyStats(userId, oldMonth, oldExpense.categoryId, oldExpense.amount, oldExpense.splits, -1);
-  await updateMonthlyStats(userId, newMonth, expense.categoryId, expense.amount, expense.splits, 1);
-}
-
-export async function deleteExpense(userId: string, expense: Expense): Promise<void> {
+export async function deleteExpense(userId: string, expense: SerializableExpense): Promise<void> {
   await deleteDoc(doc(getDb(), 'expenses', userId, 'items', expense.id));
-  const month = format(expense.date.toDate(), 'yyyy-MM');
+  const month = format(new Date(expense.date), 'yyyy-MM');
   await updateMonthlyStats(userId, month, expense.categoryId, expense.amount, expense.splits, -1);
 }
 
@@ -126,9 +148,6 @@ async function updateMonthlyStats(
   splits: SplitItem[],
   sign: 1 | -1
 ) {
-  const ref = statsDoc(userId, month);
-
-  // Main category amount = total - splits
   const splitTotal = splits.reduce((s, sp) => s + sp.amount, 0);
   const mainAmount = amount - splitTotal;
 
@@ -140,7 +159,7 @@ async function updateMonthlyStats(
   }
 
   await setDoc(
-    ref,
+    statsDoc(userId, month),
     {
       userId,
       month,

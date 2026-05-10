@@ -1,8 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { Expense } from '@/shared/types';
+import type { SerializableExpense } from '@/shared/types';
 
 interface ExpensesState {
-  list: Expense[];
+  list: SerializableExpense[];
   status: 'idle' | 'loading' | 'ready' | 'error';
   hasMore: boolean;
   error: string | null;
@@ -19,14 +19,14 @@ const expensesSlice = createSlice({
   name: 'expenses',
   initialState,
   reducers: {
-    setExpenses(state, action: PayloadAction<Expense[]>) {
+    setExpenses(state, action: PayloadAction<SerializableExpense[]>) {
       state.list = action.payload;
       state.status = 'ready';
     },
-    prependExpense(state, action: PayloadAction<Expense>) {
+    prependExpense(state, action: PayloadAction<SerializableExpense>) {
       state.list.unshift(action.payload);
     },
-    updateExpense(state, action: PayloadAction<Expense>) {
+    updateExpense(state, action: PayloadAction<SerializableExpense>) {
       const idx = state.list.findIndex((e) => e.id === action.payload.id);
       if (idx !== -1) state.list[idx] = action.payload;
     },

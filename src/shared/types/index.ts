@@ -163,6 +163,29 @@ export interface MonthlyStats {
   updatedAt: Timestamp;
 }
 
+// ─── Serializable versions for Redux (dates as ISO strings) ──────────────────
+
+export interface SerializableExpense {
+  id: string;
+  userId: string;
+  amount: number;
+  currency: Currency;
+  categoryId: string;
+  subcategoryId?: string;
+  date: string; // ISO string
+  paymentMethod: PaymentMethod;
+  store?: string;
+  tags: string[];
+  comment?: string;
+  photoUrl?: string;
+  privacy: Privacy;
+  splits: SplitItem[];
+  isRecurring: boolean;
+  recurringId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ─── UI helpers ───────────────────────────────────────────────────────────────
 
 export type DateRange =

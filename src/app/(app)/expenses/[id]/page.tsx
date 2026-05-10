@@ -21,6 +21,7 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
   const currency = useAppSelector((s) => s.ui.currency);
   const expense = useAppSelector((s) => s.expenses.list.find((e) => e.id === id));
   const categories = useAppSelector((s) => s.categories.expense);
+  const goals = useAppSelector((s) => s.savings.list);
 
   if (!expense) {
     return (
@@ -36,7 +37,6 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
 
   const category = categories.find((c) => c.id === expense.categoryId);
   const subcategory = categories.find((c) => c.id === expense.subcategoryId);
-  const goals = useAppSelector((s) => s.savings.list);
 
   async function handleDelete() {
     if (!user) return;

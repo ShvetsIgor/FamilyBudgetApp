@@ -5,15 +5,18 @@ import { useRouter } from 'next/navigation';
 import { useAppDispatch } from '@/store/store';
 import { setUser } from '@/features/auth/store/authSlice';
 import { signInWithGoogle } from '@/features/auth/services/authService';
+import { useT } from '@/shared/hooks/useT';
 import { cn } from '@/shared/utils/cn';
 
 interface Props {
   label?: string;
 }
 
-export function GoogleButton({ label = 'Continue with Google' }: Props) {
+export function GoogleButton({ label }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const t = useT();
+  const buttonLabel = label ?? t('auth.withGoogle');
   const dispatch = useAppDispatch();
   const router = useRouter();
 
@@ -26,7 +29,7 @@ export function GoogleButton({ label = 'Continue with Google' }: Props) {
       router.replace('/home');
     } catch (e: unknown) {
       if (e instanceof Error && e.message.includes('popup-closed')) return;
-      setError('Google sign-in failed. Try again.');
+      setError(t('auth.googleFailed'));
     } finally {
       setLoading(false);
     }
@@ -61,7 +64,7 @@ export function GoogleButton({ label = 'Continue with Google' }: Props) {
             fill="#EA4335"
           />
         </svg>
-        {loading ? 'Signing in...' : label}
+        {loading ? t('auth.signingIn') : buttonLabel}
       </button>
       {error && <p className="mt-2 text-center text-xs text-destructive">{error}</p>}
     </div>

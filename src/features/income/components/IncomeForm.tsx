@@ -5,17 +5,11 @@ import { format, parseISO } from 'date-fns';
 import { useAppSelector } from '@/store/store';
 import { CategoryPicker } from '@/features/categories/components/CategoryPicker';
 import { blockInvalidAmountKeys, parseLocalDate } from '@/shared/utils/currency';
+import { useT } from '@/shared/hooks/useT';
 import type { AddIncomeInput } from '../services/incomeService';
 import type { SerializableIncome } from '@/shared/types';
 
 type IncomeMethod = 'cash' | 'card' | 'bank' | 'other';
-
-const METHODS: { value: IncomeMethod; label: string; icon: string }[] = [
-  { value: 'card', label: 'Card', icon: '💳' },
-  { value: 'cash', label: 'Cash', icon: '💵' },
-  { value: 'bank', label: 'Bank', icon: '🏦' },
-  { value: 'other', label: 'Other', icon: '🔄' },
-];
 
 interface Props {
   initialIncome?: SerializableIncome;
@@ -25,7 +19,15 @@ interface Props {
 
 export function IncomeForm({ initialIncome, onSave, onCancel }: Props) {
   const currency = useAppSelector((s) => s.ui.currency);
+  const t = useT();
   const isEdit = !!initialIncome;
+
+  const METHODS: { value: IncomeMethod; label: string; icon: string }[] = [
+    { value: 'card', label: t('income.card'), icon: '💳' },
+    { value: 'cash', label: t('income.cash'), icon: '💵' },
+    { value: 'bank', label: t('income.bank'), icon: '🏦' },
+    { value: 'other', label: t('income.other'), icon: '🔄' },
+  ];
 
   const [amount, setAmount] = useState(initialIncome?.amount.toString() ?? '');
   const [categoryId, setCategoryId] = useState(initialIncome?.categoryId ?? '');
@@ -41,8 +43,8 @@ export function IncomeForm({ initialIncome, onSave, onCancel }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const num = parseFloat(amount);
-    if (!num || num <= 0) { setError('Enter a valid amount'); return; }
-    if (!categoryId) { setError('Select a category'); return; }
+    if (!num || num <= 0) { setError(t('common.error')); return; }
+    if (!categoryId) { setError(t('common.error')); return; }
     setError('');
     setSaving(true);
     try {
@@ -64,7 +66,7 @@ export function IncomeForm({ initialIncome, onSave, onCancel }: Props) {
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4">
       {/* Amount */}
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-1 block">Amount</label>
+        <label className="text-xs text-muted-foreground mb-1 block">{t('income.amount')}</label>
         <div className="flex items-center gap-2">
           <span className="text-lg font-semibold text-muted-foreground">{currency}</span>
           <input
@@ -83,13 +85,13 @@ export function IncomeForm({ initialIncome, onSave, onCancel }: Props) {
 
       {/* Category */}
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-2 block">Category</label>
+        <label className="text-xs text-muted-foreground mb-2 block">{t('income.category')}</label>
         <CategoryPicker type="income" value={categoryId} onChange={setCategoryId} />
       </div>
 
       {/* Date */}
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-1 block">Date</label>
+        <label className="text-xs text-muted-foreground mb-1 block">{t('income.date')}</label>
         <input
           type="date"
           value={date}
@@ -100,7 +102,7 @@ export function IncomeForm({ initialIncome, onSave, onCancel }: Props) {
 
       {/* Method */}
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-2 block">Method</label>
+        <label className="text-xs text-muted-foreground mb-2 block">{t('income.method')}</label>
         <div className="flex gap-2">
           {METHODS.map((m) => (
             <button
@@ -122,10 +124,10 @@ export function IncomeForm({ initialIncome, onSave, onCancel }: Props) {
 
       {/* Comment */}
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-1 block">Comment</label>
+        <label className="text-xs text-muted-foreground mb-1 block">{t('income.comment')}</label>
         <input
           type="text"
-          placeholder="Optional note…"
+          placeholder={t('income.commentPlaceholder')}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           className="w-full bg-transparent text-sm outline-none"
@@ -134,7 +136,7 @@ export function IncomeForm({ initialIncome, onSave, onCancel }: Props) {
 
       {/* Privacy */}
       <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3">
-        <span className="text-sm font-medium">Secret</span>
+        <span className="text-sm font-medium">{t('income.secret')}</span>
         <button
           type="button"
           onClick={() => setPrivacy(privacy === 'secret' ? 'regular' : 'secret')}
@@ -156,14 +158,14 @@ export function IncomeForm({ initialIncome, onSave, onCancel }: Props) {
           onClick={onCancel}
           className="flex-1 rounded-2xl border border-border py-3 text-sm font-medium text-muted-foreground"
         >
-          Cancel
+          {t('income.cancel')}
         </button>
         <button
           type="submit"
           disabled={saving}
           className="flex-1 rounded-2xl bg-emerald-500 py-3 text-sm font-semibold text-white disabled:opacity-50"
         >
-          {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Save Income'}
+          {saving ? t('income.saving') : isEdit ? t('income.saveChanges') : t('income.save')}
         </button>
       </div>
     </form>

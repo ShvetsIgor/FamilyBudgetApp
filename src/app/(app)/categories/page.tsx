@@ -12,6 +12,7 @@ import {
 } from '@/features/categories/services/categoriesService';
 import { CategoryTree } from '@/features/categories/components/CategoryTree';
 import { CategoryForm } from '@/features/categories/components/CategoryForm';
+import { useT } from '@/shared/hooks/useT';
 import type { Category, CategoryType } from '@/shared/types';
 
 type Sheet = { mode: 'add'; parentId?: string } | { mode: 'edit'; category: Category } | null;
@@ -23,6 +24,7 @@ export default function CategoriesPage() {
   const [tab, setTab] = useState<CategoryType>('expense');
   const [sheet, setSheet] = useState<Sheet>(null);
   const [resetting, setResetting] = useState(false);
+  const t = useT();
 
   if (!user) return null;
 
@@ -41,7 +43,7 @@ export default function CategoriesPage() {
 
   async function handleReset() {
     if (!user) return;
-    if (!confirm('Reset all categories to defaults? Your custom categories will be deleted.')) return;
+    if (!confirm(t('categories.confirmDelete'))) return;
     setResetting(true);
     try {
       await resetCategoriesToDefaults(user.id);
@@ -58,37 +60,42 @@ export default function CategoriesPage() {
 
   async function handleDelete(category: Category) {
     if (!user) return;
-    if (!confirm(`Delete "${category.name}"?`)) return;
+    if (!confirm(t('categories.confirmDelete'))) return;
     await deleteCategoryFromDb(user.id, category.id, category.type);
     dispatch(removeCategory({ id: category.id, type: category.type }));
   }
 
   const categories = tab === 'expense' ? expense : income;
 
+  const TAB_LABELS: Record<CategoryType, string> = {
+    expense: t('categories.expense'),
+    income: t('categories.income'),
+  };
+
   return (
     <div className="px-4 pt-6 pb-4">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold">Categories</h1>
+        <h1 className="text-xl font-bold">{t('categories.title')}</h1>
         <button
           onClick={handleReset}
           disabled={resetting}
           className="text-xs px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:border-destructive hover:text-destructive transition-colors disabled:opacity-50"
         >
-          {resetting ? 'Resetting…' : '↺ Reset'}
+          {resetting ? t('categories.resetting') : t('categories.reset')}
         </button>
       </div>
 
       {/* Tab switcher */}
       <div className="flex rounded-xl bg-muted p-1 mb-4">
-        {(['expense', 'income'] as CategoryType[]).map((t) => (
+        {(['expense', 'income'] as CategoryType[]).map((tp) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tp}
+            onClick={() => setTab(tp)}
             className={`flex-1 rounded-lg py-2 text-sm font-medium capitalize transition-colors ${
-              tab === t ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'
+              tab === tp ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'
             }`}
           >
-            {t}
+            {TAB_LABELS[tp]}
           </button>
         ))}
       </div>
@@ -98,7 +105,7 @@ export default function CategoriesPage() {
         <div className="rounded-2xl border border-border bg-card overflow-hidden">
           <div className="border-b border-border px-4 py-3">
             <h2 className="text-sm font-semibold">
-              {sheet.mode === 'add' ? 'New Category' : `Edit "${sheet.category.name}"`}
+              {sheet.mode === 'add' ? t('categories.newCategory') : `${t('categories.edit')} "${sheet.category.name}"`}
             </h2>
           </div>
           <CategoryForm

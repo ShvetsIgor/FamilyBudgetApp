@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useT } from '@/shared/hooks/useT';
 
 export function UpdateBanner() {
   const [show, setShow] = useState(false);
+  const t = useT();
 
   useEffect(() => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
@@ -36,12 +38,12 @@ export function UpdateBanner() {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between gap-3 bg-primary px-4 py-3 text-primary-foreground shadow-lg">
-      <p className="text-sm font-medium">🆕 Доступно обновление</p>
+      <p className="text-sm font-medium">{t('common.updateAvailable')}</p>
       <button
         onClick={() => window.location.reload()}
         className="shrink-0 rounded-lg bg-primary-foreground/20 px-3 py-1.5 text-xs font-semibold hover:bg-primary-foreground/30 transition-colors"
       >
-        Обновить
+        {t('common.update')}
       </button>
     </div>
   );

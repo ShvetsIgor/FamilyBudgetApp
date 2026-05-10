@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ChevronDown, ChevronRight, Plus, Pencil, Trash2 } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { CategoryIcon } from './CategoryIcon';
+import { useT } from '@/shared/hooks/useT';
 import type { Category } from '@/shared/types';
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
 
 export function CategoryTree({ categories, onAdd, onEdit, onDelete }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const t = useT();
 
   const parents = categories.filter((c) => !c.parentId);
 
@@ -121,7 +123,7 @@ export function CategoryTree({ categories, onAdd, onEdit, onDelete }: Props) {
         className="flex items-center gap-2 rounded-xl border border-dashed border-border px-4 py-3 text-sm text-muted-foreground hover:border-primary hover:text-primary transition-colors mt-2"
       >
         <Plus className="h-4 w-4" />
-        Add category
+        {t('categories.add')}
       </button>
     </div>
   );

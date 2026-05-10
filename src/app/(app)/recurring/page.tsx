@@ -13,23 +13,8 @@ import {
 import { CategoryPicker } from '@/features/categories/components/CategoryPicker';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { formatAmount, blockInvalidAmountKeys, parseLocalDate } from '@/shared/utils/currency';
+import { useT } from '@/shared/hooks/useT';
 import type { RecurringFrequency, RecurringType, SerializableRecurringPayment } from '@/shared/types';
-
-const FREQ: { value: RecurringFrequency; label: string }[] = [
-  { value: 'monthly', label: 'Monthly' },
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'yearly', label: 'Yearly' },
-  { value: 'daily', label: 'Daily' },
-];
-
-const TYPES: { value: RecurringType; label: string; icon: string }[] = [
-  { value: 'subscription', label: 'Subscription', icon: '📺' },
-  { value: 'rent', label: 'Rent', icon: '🏠' },
-  { value: 'utility', label: 'Utility', icon: '💡' },
-  { value: 'credit', label: 'Credit', icon: '💳' },
-  { value: 'mortgage', label: 'Mortgage', icon: '🏦' },
-  { value: 'custom', label: 'Custom', icon: '🔄' },
-];
 
 function daysUntil(dateStr: string): number {
   return differenceInDays(parseISO(dateStr), new Date());
@@ -45,6 +30,23 @@ export default function RecurringPage() {
   const { list, status } = useAppSelector((s) => s.recurring);
   const [formMode, setFormMode] = useState<FormMode | null>(null);
   const [loading, setLoading] = useState(false);
+  const t = useT();
+
+  const FREQ: { value: RecurringFrequency; label: string }[] = [
+    { value: 'monthly', label: t('recurring.monthly') },
+    { value: 'weekly', label: t('recurring.weekly') },
+    { value: 'yearly', label: t('recurring.yearly') },
+    { value: 'daily', label: t('recurring.daily') },
+  ];
+
+  const TYPES: { value: RecurringType; label: string; icon: string }[] = [
+    { value: 'subscription', label: t('recurring.subscription'), icon: '📺' },
+    { value: 'rent', label: t('recurring.rent'), icon: '🏠' },
+    { value: 'utility', label: t('recurring.utility'), icon: '💡' },
+    { value: 'credit', label: t('recurring.credit'), icon: '💳' },
+    { value: 'mortgage', label: t('recurring.mortgage'), icon: '🏦' },
+    { value: 'custom', label: t('recurring.custom'), icon: '🔄' },
+  ];
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -78,7 +80,7 @@ export default function RecurringPage() {
   }
 
   async function handleDelete(item: SerializableRecurringPayment) {
-    if (!user || !confirm(`Delete "${item.name}"?`)) return;
+    if (!user || !confirm(`${t('recurring.confirmDelete')} "${item.name}"?`)) return;
     await deleteRecurring(user.id, item.id);
     dispatch(removeRecurringItem(item.id));
   }
@@ -94,9 +96,9 @@ export default function RecurringPage() {
     return (
       <div className="flex flex-col">
         <div className="px-4 pt-5 pb-3 flex items-center gap-3">
-          <button onClick={() => setFormMode(null)} className="text-sm text-muted-foreground">← Back</button>
+          <button onClick={() => setFormMode(null)} className="text-sm text-muted-foreground">{t('recurring.back')}</button>
           <h1 className="text-xl font-bold">
-            {formMode.mode === 'edit' ? 'Edit Recurring' : 'New Recurring'}
+            {formMode.mode === 'edit' ? t('recurring.editTitle') : t('recurring.newTitle')}
           </h1>
         </div>
         <RecurringForm
@@ -104,6 +106,9 @@ export default function RecurringPage() {
           onSave={handleSave}
           onCancel={() => setFormMode(null)}
           currency={currency}
+          freq={FREQ}
+          types={TYPES}
+          t={t}
         />
       </div>
     );
@@ -119,18 +124,18 @@ export default function RecurringPage() {
   return (
     <div className="flex flex-col gap-4 px-4 pt-5 pb-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Recurring</h1>
+        <h1 className="text-xl font-bold">{t('recurring.title')}</h1>
         <button
           onClick={() => setFormMode({ mode: 'add' })}
           className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-medium"
         >
-          + Add
+          {t('recurring.add')}
         </button>
       </div>
 
       {list.length > 0 && (
         <div className="rounded-2xl border border-border bg-card p-4">
-          <p className="text-xs text-muted-foreground">Monthly total (active)</p>
+          <p className="text-xs text-muted-foreground">{t('recurring.monthlyTotal')}</p>
           <p className="text-2xl font-bold tabular-nums mt-1 text-destructive">
             {monthlyTotal > 0 ? '-' : ''}{formatAmount(monthlyTotal, currency)}
           </p>
@@ -146,8 +151,8 @@ export default function RecurringPage() {
       {!loading && list.length === 0 && (
         <div className="flex flex-col items-center py-12 text-center">
           <p className="text-4xl mb-3">🔄</p>
-          <p className="font-medium">No recurring payments</p>
-          <p className="text-sm text-muted-foreground mt-1">Add subscriptions, rent, utilities…</p>
+          <p className="font-medium">{t('recurring.noItems')}</p>
+          <p className="text-sm text-muted-foreground mt-1">{t('recurring.noItemsHint')}</p>
         </div>
       )}
 
@@ -156,7 +161,7 @@ export default function RecurringPage() {
           {list.map((item) => {
             const cat = categories.find((c) => c.id === item.categoryId);
             const days = daysUntil(item.nextDueDate);
-            const typeObj = TYPES.find((t) => t.value === item.type);
+            const typeObj = TYPES.find((tp) => tp.value === item.type);
             return (
               <div
                 key={item.id}
@@ -174,11 +179,11 @@ export default function RecurringPage() {
                       {FREQ.find((f) => f.value === item.frequency)?.label}
                       {' · '}
                       {days <= 0 ? (
-                        <span className="text-destructive font-medium">Due today!</span>
+                        <span className="text-destructive font-medium">{t('recurring.dueToday')}</span>
                       ) : days <= 3 ? (
-                        <span className="text-amber-500 font-medium">In {days}d</span>
+                        <span className="text-amber-500 font-medium">{t('recurring.inDays').replace('{n}', String(days))}</span>
                       ) : (
-                        <span>Next: {format(parseISO(item.nextDueDate), 'MMM d')}</span>
+                        <span>{t('recurring.due')}: {format(parseISO(item.nextDueDate), 'MMM d')}</span>
                       )}
                     </p>
                   </div>
@@ -210,12 +215,15 @@ export default function RecurringPage() {
 }
 
 function RecurringForm({
-  initial, onSave, onCancel, currency,
+  initial, onSave, onCancel, currency, freq, types, t,
 }: {
   initial?: SerializableRecurringPayment;
   onSave: (d: Omit<AddRecurringInput, 'userId'>) => Promise<void>;
   onCancel: () => void;
   currency: string;
+  freq: { value: RecurringFrequency; label: string }[];
+  types: { value: RecurringType; label: string; icon: string }[];
+  t: (key: string) => string;
 }) {
   const [name, setName] = useState(initial?.name ?? '');
   const [amount, setAmount] = useState(initial?.amount.toString() ?? '');
@@ -233,8 +241,8 @@ function RecurringForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const num = parseFloat(amount);
-    if (!name.trim()) { setError('Enter a name'); return; }
-    if (!num || num <= 0) { setError('Enter a valid amount'); return; }
+    if (!name.trim()) { setError(t('common.error')); return; }
+    if (!num || num <= 0) { setError(t('common.error')); return; }
     setError('');
     setSaving(true);
     try {
@@ -257,18 +265,18 @@ function RecurringForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-4 pb-8">
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-1 block">Name</label>
+        <label className="text-xs text-muted-foreground mb-1 block">{t('recurring.name')}</label>
         <input
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Netflix, Rent…"
+          placeholder={t('recurring.namePlaceholder')}
           className="w-full bg-transparent text-sm font-medium outline-none"
         />
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-1 block">Amount ({currency})</label>
+        <label className="text-xs text-muted-foreground mb-1 block">{t('recurring.amount')} ({currency})</label>
         <input
           type="number" min="0" step="0.01" placeholder="0.00"
           value={amount}
@@ -279,23 +287,23 @@ function RecurringForm({
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-2 block">Type</label>
+        <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.type')}</label>
         <div className="grid grid-cols-3 gap-2">
-          {TYPES.map((t) => (
-            <button key={t.value} type="button" onClick={() => setType(t.value)}
+          {types.map((tp) => (
+            <button key={tp.value} type="button" onClick={() => setType(tp.value)}
               className={`flex flex-col items-center gap-1 rounded-xl py-2 text-xs border transition-colors ${
-                type === t.value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'
+                type === tp.value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'
               }`}>
-              <span>{t.icon}</span><span>{t.label}</span>
+              <span>{tp.icon}</span><span>{tp.label}</span>
             </button>
           ))}
         </div>
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-2 block">Frequency</label>
+        <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.frequency')}</label>
         <div className="grid grid-cols-2 gap-2">
-          {FREQ.map((f) => (
+          {freq.map((f) => (
             <button key={f.value} type="button" onClick={() => setFrequency(f.value)}
               className={`rounded-xl py-2 text-sm font-medium border transition-colors ${
                 frequency === f.value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'
@@ -307,31 +315,33 @@ function RecurringForm({
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-2 block">Category (optional)</label>
+        <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.category')}</label>
         <CategoryPicker type="expense" value={categoryId} onChange={setCategoryId} parentsOnly />
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-1 block">Next due date</label>
+        <label className="text-xs text-muted-foreground mb-1 block">{t('recurring.nextDue')}</label>
         <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
           className="w-full bg-transparent text-sm font-medium outline-none" />
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-4 flex items-center justify-between">
-        <label className="text-sm font-medium">Remind me before</label>
+        <label className="text-sm font-medium">{t('recurring.remind')}</label>
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => setReminderDays(Math.max(0, reminderDays - 1))}
             className="h-8 w-8 rounded-lg border border-border text-muted-foreground">−</button>
-          <span className="w-12 text-center text-sm font-semibold">{reminderDays}d</span>
+          <span className="w-12 text-center text-sm font-semibold">
+            {t('recurring.remindDays').replace('{n}', String(reminderDays))}
+          </span>
           <button type="button" onClick={() => setReminderDays(Math.min(14, reminderDays + 1))}
             className="h-8 w-8 rounded-lg border border-border text-muted-foreground">+</button>
         </div>
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-1 block">Comment</label>
+        <label className="text-xs text-muted-foreground mb-1 block">{t('recurring.comment')}</label>
         <input value={comment} onChange={(e) => setComment(e.target.value)}
-          placeholder="Optional…"
+          placeholder={t('recurring.commentPlaceholder')}
           className="w-full bg-transparent text-sm outline-none" />
       </div>
 
@@ -340,11 +350,11 @@ function RecurringForm({
       <div className="flex gap-3">
         <button type="button" onClick={onCancel}
           className="flex-1 rounded-2xl border border-border py-3 text-sm font-medium text-muted-foreground">
-          Cancel
+          {t('recurring.cancel')}
         </button>
         <button type="submit" disabled={saving}
           className="flex-1 rounded-2xl bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-          {saving ? 'Saving…' : initial ? 'Save Changes' : 'Save'}
+          {saving ? t('recurring.saving') : initial ? t('recurring.saveChanges') : t('recurring.save')}
         </button>
       </div>
     </form>

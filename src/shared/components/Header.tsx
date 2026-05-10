@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import { Settings, UserCircle, WifiOff, RefreshCw, Repeat2 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
+import { useT } from '@/shared/hooks/useT';
 
 
 export function Header() {
   const { isOffline, isSyncing } = useAppSelector((s) => s.ui);
   const { user } = useAppSelector((s) => s.auth);
+  const t = useT();
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -26,7 +28,7 @@ export function Header() {
           {isOffline && (
             <div className="flex items-center gap-1 rounded-full bg-muted px-2 py-1">
               <WifiOff className="h-3 w-3 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Offline</span>
+              <span className="text-xs text-muted-foreground">{t('common.offline')}</span>
             </div>
           )}
           {isSyncing && !isOffline && (

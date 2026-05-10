@@ -5,6 +5,7 @@ import { format, parseISO, differenceInDays } from 'date-fns';
 import { useAppSelector } from '@/store/store';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { formatAmount } from '@/shared/utils/currency';
+import { useT } from '@/shared/hooks/useT';
 
 const TYPE_ICONS: Record<string, string> = {
   subscription: '📺', rent: '🏠', utility: '💡',
@@ -12,15 +13,16 @@ const TYPE_ICONS: Record<string, string> = {
 };
 
 interface Props {
-  withinDays?: number; // show items due within N days (default 30)
+  withinDays?: number;
   maxItems?: number;
-  compact?: boolean;   // compact mode for home page
+  compact?: boolean;
 }
 
 export function UpcomingBills({ withinDays = 30, maxItems, compact = false }: Props) {
   const currency = useAppSelector((s) => s.ui.currency);
   const categories = useAppSelector((s) => s.categories.expense);
   const { list } = useAppSelector((s) => s.recurring);
+  const t = useT();
 
   const upcoming = list
     .filter((r) => {
@@ -37,8 +39,8 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false }: Pr
     return (
       <div className="w-full">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-sm font-semibold text-muted-foreground">Upcoming bills</h2>
-          <Link href="/recurring" className="text-xs text-primary hover:underline">See all</Link>
+          <h2 className="text-sm font-semibold text-muted-foreground">{t('recurring.upcomingBills')}</h2>
+          <Link href="/recurring" className="text-xs text-primary hover:underline">{t('recurring.seeAll')}</Link>
         </div>
         <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
           {upcoming.map((item) => {
@@ -54,7 +56,7 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false }: Pr
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{item.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {days === 0 ? 'Today' : `In ${days}d · ${format(parseISO(item.nextDueDate), 'MMM d')}`}
+                    {days === 0 ? t('common.today') : `${t('recurring.inDays').replace('{n}', String(days))} · ${format(parseISO(item.nextDueDate), 'MMM d')}`}
                   </p>
                 </div>
                 <span className="text-sm font-semibold tabular-nums text-muted-foreground">
@@ -71,7 +73,7 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false }: Pr
   return (
     <div className="flex flex-col gap-1 mx-4 mb-2">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1 mb-1">
-        Upcoming
+        {t('recurring.upcomingBills')}
       </p>
       <div className="rounded-2xl border border-dashed border-border bg-muted/30 divide-y divide-border overflow-hidden">
         {upcoming.map((item) => {
@@ -88,9 +90,9 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false }: Pr
                 <p className="text-sm font-medium truncate">{item.name}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {days === 0 ? (
-                    <span className="text-amber-500 font-medium">Due today</span>
+                    <span className="text-amber-500 font-medium">{t('recurring.dueToday')}</span>
                   ) : days <= 3 ? (
-                    <span className="text-amber-500 font-medium">In {days} days</span>
+                    <span className="text-amber-500 font-medium">{t('recurring.inDays').replace('{n}', String(days))}</span>
                   ) : (
                     <span>{format(parseISO(item.nextDueDate), 'MMM d')}</span>
                   )}

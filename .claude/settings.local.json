@@ -15,7 +15,13 @@
       "Bash(git commit *)",
       "Bash(npx next *)",
       "Bash(node -e ' *)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(gh --version)",
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(vercel --version)",
+      "Bash(firebase --version)"
     ]
   }
 }

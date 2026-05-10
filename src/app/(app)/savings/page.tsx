@@ -13,6 +13,7 @@ import { addExpense } from '@/features/expenses/services/expensesService';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
 import { addCategory } from '@/features/categories/services/categoriesService';
 import { addCategory as addCategoryRedux } from '@/features/categories/store/categoriesSlice';
+import { useT } from '@/shared/hooks/useT';
 import type { SavingsGoal, Currency } from '@/shared/types';
 
 const GOAL_ICONS = ['🎯', '🏠', '🚗', '✈️', '💻', '📱', '👶', '💍', '🎓', '🏖️', '💰', '🛋️'];
@@ -27,6 +28,7 @@ export default function SavingsPage() {
   const { list, status } = useAppSelector((s) => s.savings);
   const [mode, setMode] = useState<Mode>('list');
   const [loading, setLoading] = useState(false);
+  const t = useT();
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -60,7 +62,6 @@ export default function SavingsPage() {
     dispatch(updateGoalItem(updated));
 
     if (recordAsExpense) {
-      // Find or create the Savings category
       let catId = expenseCategoryId;
       if (!catId) {
         const created = await addCategory(user.id, {
@@ -95,7 +96,7 @@ export default function SavingsPage() {
   }
 
   async function handleDelete(goal: SavingsGoal) {
-    if (!user || !confirm(`Delete "${goal.name}"?`)) return;
+    if (!user || !confirm(t('savings.confirmDelete'))) return;
     await deleteGoal(user.id, goal.id);
     dispatch(removeGoalItem(goal.id));
     setMode('list');
@@ -106,10 +107,10 @@ export default function SavingsPage() {
     return (
       <div className="flex flex-col">
         <div className="px-4 pt-5 pb-3 flex items-center gap-3">
-          <button onClick={() => setMode('list')} className="text-sm text-muted-foreground">← Back</button>
-          <h1 className="text-xl font-bold">New Goal</h1>
+          <button onClick={() => setMode('list')} className="text-sm text-muted-foreground">{t('savings.back')}</button>
+          <h1 className="text-xl font-bold">{t('savings.newGoal')}</h1>
         </div>
-        <GoalForm currency={currency} onSave={handleAddGoal} onCancel={() => setMode('list')} />
+        <GoalForm currency={currency} onSave={handleAddGoal} onCancel={() => setMode('list')} t={t} />
       </div>
     );
   }
@@ -119,8 +120,8 @@ export default function SavingsPage() {
     return (
       <div className="flex flex-col">
         <div className="px-4 pt-5 pb-3 flex items-center gap-3">
-          <button onClick={() => setMode('list')} className="text-sm text-muted-foreground">← Back</button>
-          <h1 className="text-xl font-bold">Add Contribution</h1>
+          <button onClick={() => setMode('list')} className="text-sm text-muted-foreground">{t('savings.back')}</button>
+          <h1 className="text-xl font-bold">{t('savings.addContribution')}</h1>
         </div>
         <ContributeForm
           goal={mode.goal}
@@ -129,6 +130,7 @@ export default function SavingsPage() {
             handleContribute(mode.goal, amount, note, recordAsExpense, catId)
           }
           onCancel={() => setMode('list')}
+          t={t}
         />
       </div>
     );
@@ -146,7 +148,7 @@ export default function SavingsPage() {
     return (
       <div className="flex flex-col gap-4 px-4 pt-5 pb-8">
         <div className="flex items-center gap-3">
-          <button onClick={() => setMode('list')} className="text-sm text-muted-foreground">← Back</button>
+          <button onClick={() => setMode('list')} className="text-sm text-muted-foreground">{t('savings.back')}</button>
         </div>
 
         {/* Goal card */}
@@ -165,16 +167,16 @@ export default function SavingsPage() {
             </span>
           </div>
           <p className="text-2xl font-bold">{pct.toFixed(0)}%</p>
-          {!done && <p className="text-sm text-muted-foreground">{formatAmount(remaining, goal.currency)} to go</p>}
-          {done && <p className="text-sm text-emerald-500 font-semibold">🎉 Goal reached!</p>}
+          {!done && <p className="text-sm text-muted-foreground">{formatAmount(remaining, goal.currency)} {t('savings.toGo')}</p>}
+          {done && <p className="text-sm text-emerald-500 font-semibold">{t('savings.achieved')}</p>}
           {daysLeft !== null && !done && (
             <p className="text-xs text-muted-foreground">
-              {daysLeft > 0 ? `${daysLeft} days left · ${format(parseISO(goal.deadline!), 'MMM d, yyyy')}` : 'Deadline passed'}
+              {daysLeft > 0 ? `${daysLeft} ${t('savings.remaining')} · ${format(parseISO(goal.deadline!), 'MMM d, yyyy')}` : t('savings.remaining')}
             </p>
           )}
           {monthsLeft !== null && !done && monthsLeft > 0 && remaining > 0 && (
             <p className="text-xs text-muted-foreground">
-              Need ~{formatAmount(remaining / monthsLeft, goal.currency)}/month
+              ~{formatAmount(remaining / monthsLeft, goal.currency)}/{t('recurring.monthly').toLowerCase()}
             </p>
           )}
         </div>
@@ -183,13 +185,13 @@ export default function SavingsPage() {
           onClick={() => setMode({ goal, action: 'contribute' })}
           className="rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground"
         >
-          + Add Contribution
+          {t('savings.addContribution')}
         </button>
 
         {/* History */}
         {goal.contributions.length > 0 && (
           <div className="rounded-2xl border border-border bg-card overflow-hidden">
-            <p className="px-4 pt-3 pb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">History</p>
+            <p className="px-4 pt-3 pb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('savings.history')}</p>
             <div className="divide-y divide-border">
               {[...goal.contributions].reverse().map((c, i) => (
                 <div key={i} className="flex items-center justify-between px-4 py-3">
@@ -208,7 +210,7 @@ export default function SavingsPage() {
           onClick={() => handleDelete(goal)}
           className="rounded-2xl border border-destructive/40 bg-destructive/5 py-3 text-sm font-semibold text-destructive"
         >
-          Delete Goal
+          {t('savings.delete')}
         </button>
       </div>
     );
@@ -220,18 +222,18 @@ export default function SavingsPage() {
   return (
     <div className="flex flex-col gap-4 px-4 pt-5 pb-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Savings Goals</h1>
+        <h1 className="text-xl font-bold">{t('savings.title')}</h1>
         <button
           onClick={() => setMode('add')}
           className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-medium"
         >
-          + Add
+          {t('savings.add')}
         </button>
       </div>
 
       {list.length > 0 && (
         <div className="rounded-2xl border border-border bg-card p-4">
-          <p className="text-xs text-muted-foreground">Total saved</p>
+          <p className="text-xs text-muted-foreground">{t('savings.totalSaved')}</p>
           <p className="text-2xl font-bold tabular-nums mt-1 text-emerald-500">
             {formatAmount(totalSaved, currency)}
           </p>
@@ -247,8 +249,8 @@ export default function SavingsPage() {
       {!loading && list.length === 0 && (
         <div className="flex flex-col items-center py-16 text-center">
           <p className="text-5xl mb-3">🎯</p>
-          <p className="font-medium">No savings goals yet</p>
-          <p className="text-sm text-muted-foreground mt-1">Set a goal and track your progress</p>
+          <p className="font-medium">{t('savings.noGoals')}</p>
+          <p className="text-sm text-muted-foreground mt-1">{t('savings.noGoalsHint')}</p>
         </div>
       )}
 
@@ -274,7 +276,7 @@ export default function SavingsPage() {
                   <p className="text-lg font-bold" style={{ color: done ? '#10b981' : goal.color }}>
                     {pct.toFixed(0)}%
                   </p>
-                  {done && <p className="text-xs text-emerald-500">Done!</p>}
+                  {done && <p className="text-xs text-emerald-500">{t('savings.done')}</p>}
                 </div>
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -282,7 +284,7 @@ export default function SavingsPage() {
               </div>
               {goal.deadline && !done && (
                 <p className="text-xs text-muted-foreground mt-2">
-                  Due {format(parseISO(goal.deadline), 'MMM d, yyyy')}
+                  {format(parseISO(goal.deadline), 'MMM d, yyyy')}
                 </p>
               )}
             </button>
@@ -293,10 +295,11 @@ export default function SavingsPage() {
   );
 }
 
-function GoalForm({ currency, onSave, onCancel }: {
+function GoalForm({ currency, onSave, onCancel, t }: {
   currency: string;
   onSave: (d: Omit<AddGoalInput, 'userId'>) => Promise<void>;
   onCancel: () => void;
+  t: (key: string) => string;
 }) {
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('🎯');
@@ -309,10 +312,10 @@ function GoalForm({ currency, onSave, onCancel }: {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim()) { setError('Enter a name'); return; }
+    if (!name.trim()) { setError(t('common.error')); return; }
     const num = parseFloat(target);
-    if (!num || num <= 0) { setError('Enter a target amount'); return; }
-    if (deadline && parseLocalDate(deadline) <= new Date()) { setError('Deadline must be in the future'); return; }
+    if (!num || num <= 0) { setError(t('common.error')); return; }
+    if (deadline && parseLocalDate(deadline) <= new Date()) { setError(t('common.error')); return; }
     setError('');
     setSaving(true);
     try {
@@ -334,15 +337,15 @@ function GoalForm({ currency, onSave, onCancel }: {
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-4 pb-8">
       {/* Name */}
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-1 block">Goal name</label>
+        <label className="text-xs text-muted-foreground mb-1 block">{t('savings.name')}</label>
         <input autoFocus value={name} onChange={(e) => setName(e.target.value)}
-          placeholder="New car, Vacation…"
+          placeholder={t('savings.namePlaceholder')}
           className="w-full bg-transparent text-sm font-medium outline-none" />
       </div>
 
       {/* Icon picker */}
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-2 block">Icon</label>
+        <label className="text-xs text-muted-foreground mb-2 block">{t('savings.icon')}</label>
         <div className="flex flex-wrap gap-2">
           {GOAL_ICONS.map((i) => (
             <button key={i} type="button" onClick={() => setIcon(i)}
@@ -353,21 +356,9 @@ function GoalForm({ currency, onSave, onCancel }: {
         </div>
       </div>
 
-      {/* Color picker */}
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-2 block">Color</label>
-        <div className="flex gap-2">
-          {GOAL_COLORS.map((c) => (
-            <button key={c} type="button" onClick={() => setColor(c)}
-              className={`h-8 w-8 rounded-full transition-transform ${color === c ? 'scale-125 ring-2 ring-offset-2 ring-border' : ''}`}
-              style={{ backgroundColor: c }} />
-          ))}
-        </div>
-      </div>
-
       {/* Target */}
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-1 block">Target amount ({currency})</label>
+        <label className="text-xs text-muted-foreground mb-1 block">{t('savings.target')} ({currency})</label>
         <input type="number" min="0" step="0.01" placeholder="0.00" value={target}
           onChange={(e) => setTarget(e.target.value)}
           onKeyDown={blockInvalidAmountKeys}
@@ -376,7 +367,7 @@ function GoalForm({ currency, onSave, onCancel }: {
 
       {/* Monthly plan */}
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-1 block">Monthly contribution plan ({currency}, optional)</label>
+        <label className="text-xs text-muted-foreground mb-1 block">{t('savings.monthlyPlan')} ({currency})</label>
         <input type="number" min="0" step="0.01" placeholder="0.00" value={monthly}
           onChange={(e) => setMonthly(e.target.value)}
           onKeyDown={blockInvalidAmountKeys}
@@ -385,7 +376,7 @@ function GoalForm({ currency, onSave, onCancel }: {
 
       {/* Deadline */}
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-1 block">Deadline (optional)</label>
+        <label className="text-xs text-muted-foreground mb-1 block">{t('savings.deadline')}</label>
         <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)}
           min={format(new Date(), 'yyyy-MM-dd')}
           className="w-full bg-transparent text-sm font-medium outline-none" />
@@ -396,22 +387,23 @@ function GoalForm({ currency, onSave, onCancel }: {
       <div className="flex gap-3">
         <button type="button" onClick={onCancel}
           className="flex-1 rounded-2xl border border-border py-3 text-sm font-medium text-muted-foreground">
-          Cancel
+          {t('savings.cancel')}
         </button>
         <button type="submit" disabled={saving}
           className="flex-1 rounded-2xl bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-          {saving ? 'Saving…' : 'Create Goal'}
+          {saving ? t('savings.creating') : t('savings.createGoal')}
         </button>
       </div>
     </form>
   );
 }
 
-function ContributeForm({ goal, currency, onSave, onCancel }: {
+function ContributeForm({ goal, currency, onSave, onCancel, t }: {
   goal: SavingsGoal;
   currency: string;
   onSave: (amount: number, note: string, recordAsExpense: boolean, categoryId: string) => Promise<void>;
   onCancel: () => void;
+  t: (key: string) => string;
 }) {
   const categories = useAppSelector((s) => s.categories.expense);
   const savingsCat = categories.find((c) => c.name === 'Savings' && !c.parentId);
@@ -425,7 +417,7 @@ function ContributeForm({ goal, currency, onSave, onCancel }: {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const num = parseFloat(amount);
-    if (!num || num <= 0) { setError('Enter a valid amount'); return; }
+    if (!num || num <= 0) { setError(t('common.error')); return; }
     setError('');
     setSaving(true);
     try { await onSave(num, note, recordAsExpense, savingsCat?.id ?? ''); } finally { setSaving(false); }
@@ -441,14 +433,14 @@ function ContributeForm({ goal, currency, onSave, onCancel }: {
         <div>
           <p className="font-semibold">{goal.name}</p>
           <p className="text-xs text-muted-foreground">
-            {formatAmount(goal.currentAmount, goal.currency)} saved · {formatAmount(remaining, goal.currency)} to go
+            {formatAmount(goal.currentAmount, goal.currency)} {t('savings.saved')} · {formatAmount(remaining, goal.currency)} {t('savings.toGo')}
           </p>
         </div>
       </div>
 
       {/* Amount */}
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-1 block">Amount ({currency})</label>
+        <label className="text-xs text-muted-foreground mb-1 block">{t('savings.contribute')} ({currency})</label>
         <input autoFocus type="number" min="0" step="0.01" placeholder="0.00" value={amount}
           onChange={(e) => setAmount(e.target.value)}
           onKeyDown={blockInvalidAmountKeys}
@@ -457,17 +449,18 @@ function ContributeForm({ goal, currency, onSave, onCancel }: {
 
       {/* Note */}
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-1 block">Note (optional)</label>
-        <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Monthly deposit…"
+        <label className="text-xs text-muted-foreground mb-1 block">{t('savings.note')}</label>
+        <input value={note} onChange={(e) => setNote(e.target.value)}
+          placeholder={t('savings.contributePlaceholder')}
           className="w-full bg-transparent text-sm outline-none" />
       </div>
 
       {/* Record as expense toggle */}
       <div className="rounded-2xl border border-border bg-card px-4 py-3 flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium">Record as expense</p>
+          <p className="text-sm font-medium">{t('savings.recordAsExpense')}</p>
           <p className="text-xs text-muted-foreground">
-            Category: 🐷 Savings · shows in stats
+            🐷 {t('savings.savingsCategory')} · {t('savings.showsInStats')}
           </p>
         </div>
         <button
@@ -484,11 +477,11 @@ function ContributeForm({ goal, currency, onSave, onCancel }: {
       <div className="flex gap-3">
         <button type="button" onClick={onCancel}
           className="flex-1 rounded-2xl border border-border py-3 text-sm font-medium text-muted-foreground">
-          Cancel
+          {t('savings.cancel')}
         </button>
         <button type="submit" disabled={saving}
           className="flex-1 rounded-2xl bg-emerald-500 py-3 text-sm font-semibold text-white disabled:opacity-50">
-          {saving ? 'Saving…' : 'Add'}
+          {saving ? t('savings.adding') : t('savings.add2')}
         </button>
       </div>
     </form>

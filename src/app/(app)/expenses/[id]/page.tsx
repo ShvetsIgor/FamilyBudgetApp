@@ -10,8 +10,7 @@ import { reverseContribution } from '@/features/savings/services/savingsService'
 import { updateGoalItem } from '@/features/savings/store/savingsSlice';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { formatAmount } from '@/shared/utils/currency';
-
-const PAYMENT_LABELS: Record<string, string> = { card: '💳 Card', cash: '💵 Cash', other: '🔄 Other' };
+import { useT } from '@/shared/hooks/useT';
 
 export default function ExpenseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -22,14 +21,21 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
   const expense = useAppSelector((s) => s.expenses.list.find((e) => e.id === id));
   const categories = useAppSelector((s) => s.categories.expense);
   const goals = useAppSelector((s) => s.savings.list);
+  const t = useT();
+
+  const PAYMENT_LABELS: Record<string, string> = {
+    card: `💳 ${t('expense.card')}`,
+    cash: `💵 ${t('expense.cash')}`,
+    other: `🔄 ${t('expense.other')}`,
+  };
 
   if (!expense) {
     return (
       <div className="flex flex-col items-center py-20 px-4 text-center">
         <p className="text-4xl mb-3">🔍</p>
-        <p className="font-medium">Expense not found</p>
+        <p className="font-medium">{t('expense.notFound')}</p>
         <button onClick={() => router.back()} className="mt-4 text-sm text-primary hover:underline">
-          ← Go back
+          {t('expense.goBack')}
         </button>
       </div>
     );
@@ -40,11 +46,10 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
 
   async function handleDelete() {
     if (!user) return;
-    if (!confirm('Delete this expense?')) return;
+    if (!confirm(t('expense.confirmDelete'))) return;
     await deleteExpense(user.id, expense!);
     dispatch(removeExpense(expense!.id));
 
-    // If this expense was created from a savings contribution, reverse it
     if (expense!.goalId) {
       const goal = goals.find((g) => g.id === expense!.goalId);
       if (goal) {
@@ -61,13 +66,13 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
       {/* Back + Edit */}
       <div className="flex items-center justify-between">
         <button onClick={() => router.back()} className="flex items-center gap-1 text-sm text-muted-foreground">
-          ← Back
+          {t('expense.back')}
         </button>
         <button
           onClick={() => router.push(`/expenses/${id}/edit`)}
           className="text-sm font-medium text-primary hover:underline"
         >
-          Edit
+          {t('expense.edit')}
         </button>
       </div>
 
@@ -84,19 +89,19 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
 
       {/* Details */}
       <div className="rounded-2xl border border-border bg-card divide-y divide-border">
-        <Row label="Category" value={category?.name ?? '—'} />
-        {subcategory && <Row label="Subcategory" value={subcategory.name} />}
-        {expense.store && <Row label="Store" value={expense.store} />}
-        <Row label="Payment" value={PAYMENT_LABELS[expense.paymentMethod] ?? expense.paymentMethod} />
-        <Row label="Privacy" value={expense.privacy === 'secret' ? '🔒 Secret' : 'Regular'} />
-        {expense.comment && <Row label="Comment" value={expense.comment} />}
-        {expense.tags.length > 0 && <Row label="Tags" value={expense.tags.join(', ')} />}
+        <Row label={t('expense.category')} value={category?.name ?? '—'} />
+        {subcategory && <Row label={t('expense.subcategory')} value={subcategory.name} />}
+        {expense.store && <Row label={t('expense.store')} value={expense.store} />}
+        <Row label={t('expense.payment')} value={PAYMENT_LABELS[expense.paymentMethod] ?? expense.paymentMethod} />
+        <Row label={t('expense.privacy2')} value={expense.privacy === 'secret' ? `🔒 ${t('expense.secret')}` : t('expense.regular')} />
+        {expense.comment && <Row label={t('expense.comment')} value={expense.comment} />}
+        {expense.tags.length > 0 && <Row label={t('expense.tags')} value={expense.tags.join(', ')} />}
       </div>
 
       {/* Splits */}
       {expense.splits.length > 0 && (
         <div className="rounded-2xl border border-border bg-card p-4">
-          <p className="text-xs text-muted-foreground mb-3">Split</p>
+          <p className="text-xs text-muted-foreground mb-3">{t('expense.split2')}</p>
           <div className="flex flex-col gap-2">
             {expense.splits.map((sp, i) => {
               const spCat = categories.find((c) => c.id === sp.categoryId);
@@ -119,7 +124,7 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
         onClick={handleDelete}
         className="rounded-2xl border border-destructive/40 bg-destructive/5 py-3.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors"
       >
-        Delete Expense
+        {t('expense.delete')}
       </button>
     </div>
   );

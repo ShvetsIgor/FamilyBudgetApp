@@ -13,13 +13,8 @@ import { SplitEditor } from './SplitEditor';
 import { calculateSplit } from '@/features/expenses/utils/splitAlgorithm';
 import { getCurrencySymbol, blockInvalidAmountKeys, parseLocalDate } from '@/shared/utils/currency';
 import { cn } from '@/shared/utils/cn';
+import { useT } from '@/shared/hooks/useT';
 import type { Privacy, PaymentMethod, SplitItem, SerializableExpense } from '@/shared/types';
-
-const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
-  { value: 'card', label: '💳 Card' },
-  { value: 'cash', label: '💵 Cash' },
-  { value: 'other', label: '🔄 Other' },
-];
 
 interface Props {
   initialExpense?: SerializableExpense;
@@ -33,6 +28,7 @@ export function ExpenseForm({ initialExpense }: Props) {
   const symbol = getCurrencySymbol(currency);
   const expenseCategories = useAppSelector((s) => s.categories.expense);
   const goals = useAppSelector((s) => s.savings.list);
+  const t = useT();
 
   const isEdit = !!initialExpense;
 
@@ -52,6 +48,12 @@ export function ExpenseForm({ initialExpense }: Props) {
   const [error, setError] = useState('');
 
   if (!user) return null;
+
+  const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
+    { value: 'card', label: `💳 ${t('expense.card')}` },
+    { value: 'cash', label: `💵 ${t('expense.cash')}` },
+    { value: 'other', label: `🔄 ${t('expense.other')}` },
+  ];
 
   const numAmount = parseFloat(amount) || 0;
   const { isValid: splitValid } = calculateSplit(numAmount, splits);
@@ -122,7 +124,7 @@ export function ExpenseForm({ initialExpense }: Props) {
       }
     } catch (err) {
       console.error(err);
-      setError('Failed to save. Try again.');
+      setError(t('common.error'));
     } finally {
       setLoading(false);
     }
@@ -134,7 +136,7 @@ export function ExpenseForm({ initialExpense }: Props) {
       {/* ── Amount ── */}
       <div className="rounded-2xl bg-primary/5 border border-primary/20 p-4">
         <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Amount · {currency}
+          {t('expense.amount')} · {currency}
         </label>
         <div className="flex items-center gap-2 mt-2">
           <span className="text-3xl font-bold text-muted-foreground">{symbol}</span>
@@ -155,12 +157,12 @@ export function ExpenseForm({ initialExpense }: Props) {
 
       {/* ── Category ── */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">Category</label>
+        <label className="text-sm font-medium">{t('expense.category')}</label>
         <CategoryPicker
           type="expense"
           value={categoryId || undefined}
           onChange={handleCategoryChange}
-          placeholder="Select category"
+          placeholder={t('categories.selectCategory')}
           parentsOnly
         />
       </div>
@@ -169,11 +171,11 @@ export function ExpenseForm({ initialExpense }: Props) {
       {isSavingsCategory && (
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium">
-            Savings Goal <span className="text-xs text-destructive">*</span>
+            {t('expense.savingGoal')} <span className="text-xs text-destructive">*</span>
           </label>
           {goals.length === 0 ? (
             <p className="text-sm text-muted-foreground rounded-xl border border-border bg-card px-4 py-3">
-              No savings goals yet. Create one in the Savings tab first.
+              {t('expense.noGoalsYet')}
             </p>
           ) : (
             <div className="flex flex-col gap-2">
@@ -216,7 +218,7 @@ export function ExpenseForm({ initialExpense }: Props) {
 
       {/* ── Date ── */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">Date</label>
+        <label className="text-sm font-medium">{t('expense.date')}</label>
         <input
           type="date"
           value={date}
@@ -227,7 +229,7 @@ export function ExpenseForm({ initialExpense }: Props) {
 
       {/* ── Payment method ── */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">Payment Method</label>
+        <label className="text-sm font-medium">{t('expense.paymentMethod')}</label>
         <div className="flex gap-2">
           {PAYMENT_METHODS.map(({ value, label }) => (
             <button
@@ -250,13 +252,13 @@ export function ExpenseForm({ initialExpense }: Props) {
       {/* ── Store ── */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium">
-          Store / Place <span className="text-xs text-muted-foreground font-normal">(optional)</span>
+          {t('expense.store')} <span className="text-xs text-muted-foreground font-normal">({t('expense.optional')})</span>
         </label>
         <input
           type="text"
           value={store}
           onChange={(e) => setStore(e.target.value)}
-          placeholder="Shufersal, Amazon..."
+          placeholder={t('expense.storePlaceholder')}
           className="rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
         />
       </div>
@@ -264,20 +266,20 @@ export function ExpenseForm({ initialExpense }: Props) {
       {/* ── Comment ── */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium">
-          Comment <span className="text-xs text-muted-foreground font-normal">(optional)</span>
+          {t('expense.comment')} <span className="text-xs text-muted-foreground font-normal">({t('expense.optional')})</span>
         </label>
         <input
           type="text"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder="Note..."
+          placeholder={t('expense.commentPlaceholder')}
           className="rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
         />
       </div>
 
       {/* ── Privacy ── */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">Privacy</label>
+        <label className="text-sm font-medium">{t('expense.privacy')}</label>
         <div className="flex gap-2">
           <button
             type="button"
@@ -290,8 +292,8 @@ export function ExpenseForm({ initialExpense }: Props) {
             )}
           >
             <span className="text-base">👤</span>
-            <span className="font-medium mt-0.5">Regular</span>
-            <span className="text-xs opacity-70">In family stats</span>
+            <span className="font-medium mt-0.5">{t('expense.regular')}</span>
+            <span className="text-xs opacity-70">{t('expense.inFamilyStats')}</span>
           </button>
           <button
             type="button"
@@ -304,8 +306,8 @@ export function ExpenseForm({ initialExpense }: Props) {
             )}
           >
             <span className="text-base">🔒</span>
-            <span className="font-medium mt-0.5">Secret</span>
-            <span className="text-xs opacity-70">Hidden from family</span>
+            <span className="font-medium mt-0.5">{t('expense.secret')}</span>
+            <span className="text-xs opacity-70">{t('expense.hiddenFromFamily')}</span>
           </button>
         </div>
       </div>
@@ -326,7 +328,7 @@ export function ExpenseForm({ initialExpense }: Props) {
           loading && 'opacity-70'
         )}
       >
-        {loading ? 'Saving...' : isEdit ? 'Save Changes' : 'Save Expense'}
+        {loading ? t('expense.saving') : isEdit ? t('expense.saveChanges') : t('expense.save')}
       </button>
     </form>
   );

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { cn } from '@/shared/utils/cn';
+import { useT } from '@/shared/hooks/useT';
 import type { Category, CategoryType } from '@/shared/types';
 
 const PRESET_ICONS = ['🍽️','🛒','🏠','🚗','❤️','🛍️','🎬','📚','👶','💼','📱','✈️','🎁','🐾','⚽','🎵','💅','🔧','📦','💡','☕','🍷','💊','🏋️','🎮','📺','🎓','📖','🧹','⛽'];
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function CategoryForm({ type, parentId, initial, onSave, onCancel }: Props) {
+  const t = useT();
   const [name, setName] = useState(initial?.name ?? '');
   const [icon, setIcon] = useState(initial?.icon ?? '📦');
   const [color, setColor] = useState(initial?.color ?? '#6b7280');
@@ -25,12 +27,12 @@ export function CategoryForm({ type, parentId, initial, onSave, onCancel }: Prop
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim()) { setError('Name is required'); return; }
+    if (!name.trim()) { setError(t('common.error')); return; }
     setLoading(true);
     try {
       await onSave({ name: name.trim(), icon, color, isPrivate, parentId, order: initial?.order ?? 99, type });
     } catch {
-      setError('Failed to save. Try again.');
+      setError(t('common.error'));
     } finally {
       setLoading(false);
     }
@@ -40,19 +42,19 @@ export function CategoryForm({ type, parentId, initial, onSave, onCancel }: Prop
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4">
       {/* Name */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">Name</label>
+        <label className="text-sm font-medium">{t('categories.name')}</label>
         <input
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Category name"
+          placeholder={t('categories.namePlaceholder')}
           className="rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
       </div>
 
       {/* Icon picker */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">Icon</label>
+        <label className="text-sm font-medium">{t('categories.icon')}</label>
         <div className="flex flex-wrap gap-2">
           {PRESET_ICONS.map((i) => (
             <button
@@ -72,7 +74,7 @@ export function CategoryForm({ type, parentId, initial, onSave, onCancel }: Prop
 
       {/* Color picker */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">Color</label>
+        <label className="text-sm font-medium">{t('categories.color')}</label>
         <div className="flex flex-wrap gap-2">
           {PRESET_COLORS.map((c) => (
             <button
@@ -103,7 +105,7 @@ export function CategoryForm({ type, parentId, initial, onSave, onCancel }: Prop
             isPrivate ? 'translate-x-5' : 'translate-x-0.5'
           )} />
         </div>
-        <span className="text-sm">Private (hidden from family)</span>
+        <span className="text-sm">{t('categories.private')}</span>
       </label>
 
       {error && <p className="text-xs text-destructive">{error}</p>}
@@ -114,14 +116,14 @@ export function CategoryForm({ type, parentId, initial, onSave, onCancel }: Prop
           onClick={onCancel}
           className="flex-1 rounded-xl border border-border py-3 text-sm font-medium transition-colors hover:bg-muted"
         >
-          Cancel
+          {t('categories.cancel')}
         </button>
         <button
           type="submit"
           disabled={loading}
           className="flex-1 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
         >
-          {loading ? 'Saving...' : 'Save'}
+          {loading ? t('categories.saving') : t('categories.save')}
         </button>
       </div>
     </form>

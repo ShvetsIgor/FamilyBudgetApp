@@ -4,7 +4,7 @@ import { useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { Plus, TrendingUp } from 'lucide-react';
+import { Plus, TrendingUp, PiggyBank } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setExpenses } from '@/features/expenses/store/expensesSlice';
 import { fetchMonthExpenses } from '@/features/expenses/services/expensesService';
@@ -73,7 +73,15 @@ export default function HomePage() {
           <p className="text-sm text-muted-foreground">Expense</p>
         </div>
 
-        <div className="w-14" />
+        {/* Savings */}
+        <div className="flex flex-col items-center gap-2">
+          <Link href="/savings">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-500 text-white shadow-md active:scale-95 transition-transform">
+              <PiggyBank className="h-6 w-6" />
+            </div>
+          </Link>
+          <p className="text-xs text-muted-foreground">Savings</p>
+        </div>
       </div>
 
       {/* Upcoming bills */}

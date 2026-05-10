@@ -8,6 +8,7 @@ import type { SerializableIncome } from '@/shared/types';
 interface Props {
   income: SerializableIncome;
   onDelete?: () => void;
+  onEdit?: () => void;
 }
 
 const METHOD_ICONS: Record<string, string> = {
@@ -17,7 +18,7 @@ const METHOD_ICONS: Record<string, string> = {
   other: '🔄',
 };
 
-export function IncomeCard({ income, onDelete }: Props) {
+export function IncomeCard({ income, onDelete, onEdit }: Props) {
   const categories = useAppSelector((s) => s.categories.income);
   const category = categories.find((c) => c.id === income.categoryId);
 
@@ -45,6 +46,14 @@ export function IncomeCard({ income, onDelete }: Props) {
         <span className="text-sm font-semibold tabular-nums text-emerald-500">
           +{formatAmount(income.amount, income.currency)}
         </span>
+        {onEdit && (
+          <button
+            onClick={onEdit}
+            className="text-muted-foreground hover:text-primary transition-colors text-xs px-1"
+          >
+            ✎
+          </button>
+        )}
         {onDelete && (
           <button
             onClick={onDelete}

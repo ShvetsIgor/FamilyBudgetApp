@@ -6,6 +6,7 @@ import { useAppSelector } from '@/store/store';
 import { fetchLastNMonths, type MonthStats } from '@/features/stats/services/statsService';
 import { fetchMonthExpenses } from '@/features/expenses/services/expensesService';
 import { formatAmount } from '@/shared/utils/currency';
+import { useT } from '@/shared/hooks/useT';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -21,6 +22,7 @@ export default function AnalyticsPage() {
 
   const [months, setMonths] = useState<MonthStats[]>([]);
   const [dowData, setDowData] = useState<{ name: string; amount: number }[]>([]);
+  const t = useT();
   const [loading, setLoading] = useState(false);
 
   const load = useCallback(async () => {
@@ -97,16 +99,16 @@ export default function AnalyticsPage() {
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-5 pb-8">
-      <h1 className="text-xl font-bold">Analytics</h1>
+      <h1 className="text-xl font-bold">{t('analytics.title')}</h1>
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-2xl border border-border bg-card p-4">
-          <p className="text-xs text-muted-foreground">Avg / month</p>
+          <p className="text-xs text-muted-foreground">{t('analytics.avgMonth')}</p>
           <p className="text-lg font-bold tabular-nums mt-1">{formatAmount(avgMonthly, currency)}</p>
         </div>
         <div className="rounded-2xl border border-border bg-card p-4">
-          <p className="text-xs text-muted-foreground">vs last month</p>
+          <p className="text-xs text-muted-foreground">{t('analytics.vsLastMonth')}</p>
           {momChange !== null ? (
             <p className={`text-lg font-bold mt-1 ${momChange > 0 ? 'text-destructive' : 'text-emerald-500'}`}>
               {momChange > 0 ? '+' : ''}{momChange.toFixed(1)}%
@@ -120,7 +122,7 @@ export default function AnalyticsPage() {
       {/* 6-month trend */}
       {trendData.some((d) => d.expenses > 0 || d.income > 0) && (
         <div className="rounded-2xl border border-border bg-card p-4">
-          <h2 className="text-sm font-semibold mb-3">6-Month Trend</h2>
+          <h2 className="text-sm font-semibold mb-3">{t('analytics.trend')}</h2>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={trendData} barGap={2}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -140,7 +142,7 @@ export default function AnalyticsPage() {
       {/* Top categories */}
       {topCats.length > 0 && (
         <div className="rounded-2xl border border-border bg-card p-4">
-          <h2 className="text-sm font-semibold mb-3">Top Categories (6 months)</h2>
+          <h2 className="text-sm font-semibold mb-3">{t('analytics.topCategories')}</h2>
           <div className="flex flex-col gap-3">
             {topCats.map(({ id, total, cat }) => {
               const pct = totalSpend > 0 ? (total / totalSpend) * 100 : 0;
@@ -168,7 +170,7 @@ export default function AnalyticsPage() {
       {/* Day of week */}
       {dowData.some((d) => d.amount > 0) && (
         <div className="rounded-2xl border border-border bg-card p-4">
-          <h2 className="text-sm font-semibold mb-3">Spending by Day of Week</h2>
+          <h2 className="text-sm font-semibold mb-3">{t('analytics.byDow')}</h2>
           <ResponsiveContainer width="100%" height={150}>
             <BarChart data={dowData}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -187,8 +189,8 @@ export default function AnalyticsPage() {
       {topCats.length === 0 && !loading && (
         <div className="flex flex-col items-center py-12 text-center">
           <p className="text-4xl mb-3">📈</p>
-          <p className="font-medium">Not enough data yet</p>
-          <p className="text-sm text-muted-foreground mt-1">Add expenses to see analytics</p>
+          <p className="font-medium">{t('analytics.noData')}</p>
+          <p className="text-sm text-muted-foreground mt-1">{t('analytics.addMore')}</p>
         </div>
       )}
     </div>

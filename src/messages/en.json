@@ -56,6 +56,25 @@
     "name": "Full Name",
     "forgotPassword": "Forgot password?"
   },
+  "notifications": {
+    "title": "Notifications",
+    "description": "Reminders for upcoming recurring payments",
+    "enable": "Enable notifications",
+    "enabled": "✓ Notifications enabled",
+    "denied": "Access denied in browser settings",
+    "unsupported": "Browser does not support notifications"
+  },
+  "export": {
+    "title": "Export Data",
+    "month": "Month",
+    "type": "Data",
+    "expenses": "Expenses",
+    "income": "Income",
+    "both": "Both",
+    "exportBtn": "Download CSV",
+    "exporting": "Exporting…",
+    "noData": "No data for this period"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Something went wrong",

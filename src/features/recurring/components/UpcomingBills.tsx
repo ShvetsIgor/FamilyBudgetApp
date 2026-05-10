@@ -58,7 +58,7 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false }: Pr
                   </p>
                 </div>
                 <span className="text-sm font-semibold tabular-nums text-muted-foreground">
-                  -{formatAmount(item.amount, item.currency)}
+                  {item.amount > 0 ? '-' : ''}{formatAmount(item.amount, item.currency)}
                 </span>
               </div>
             );

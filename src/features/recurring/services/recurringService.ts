@@ -68,7 +68,7 @@ export async function addRecurring(input: AddRecurringInput): Promise<Serializab
       userId,
       comment,
       startDate: Timestamp.fromDate(startDate),
-      nextDueDate: Timestamp.fromDate(nextDue(startDate, input.frequency)),
+      nextDueDate: Timestamp.fromDate(startDate),
       isActive: true,
       createdAt: serverTimestamp(),
     }).filter(([, v]) => v !== undefined)
@@ -77,7 +77,7 @@ export async function addRecurring(input: AddRecurringInput): Promise<Serializab
   return toSerializable(ref.id, {
     ...data,
     startDate: Timestamp.fromDate(startDate),
-    nextDueDate: Timestamp.fromDate(nextDue(startDate, input.frequency)),
+    nextDueDate: Timestamp.fromDate(startDate),
   });
 }
 
@@ -92,7 +92,7 @@ export async function updateRecurring(
       ...rest,
       comment,
       startDate: Timestamp.fromDate(startDate),
-      nextDueDate: Timestamp.fromDate(nextDue(startDate, input.frequency)),
+      nextDueDate: Timestamp.fromDate(startDate),
     }).filter(([, v]) => v !== undefined)
   );
   await updateDoc(doc(getDb(), 'recurringPayments', userId, 'items', id), patch);

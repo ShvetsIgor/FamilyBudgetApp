@@ -19,6 +19,10 @@ const incomeSlice = createSlice({
     prependIncome(state, action: PayloadAction<SerializableIncome>) {
       state.list.unshift(action.payload);
     },
+    updateIncome(state, action: PayloadAction<SerializableIncome>) {
+      const idx = state.list.findIndex((i) => i.id === action.payload.id);
+      if (idx !== -1) state.list[idx] = action.payload;
+    },
     removeIncome(state, action: PayloadAction<string>) {
       state.list = state.list.filter((i) => i.id !== action.payload);
     },
@@ -28,5 +32,5 @@ const incomeSlice = createSlice({
   },
 });
 
-export const { setIncome, prependIncome, removeIncome, setIncomeStatus } = incomeSlice.actions;
+export const { setIncome, prependIncome, updateIncome, removeIncome, setIncomeStatus } = incomeSlice.actions;
 export default incomeSlice.reducer;

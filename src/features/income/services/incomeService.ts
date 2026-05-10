@@ -97,6 +97,26 @@ export async function addIncome(input: AddIncomeInput): Promise<SerializableInco
   });
 }
 
+export async function updateIncome(input: AddIncomeInput & { id: string }): Promise<SerializableIncome> {
+  const { userId, id, date, comment, ...rest } = input;
+  const data = Object.fromEntries(
+    Object.entries({
+      ...rest,
+      userId,
+      comment,
+      date: Timestamp.fromDate(date),
+      updatedAt: serverTimestamp(),
+    }).filter(([, v]) => v !== undefined)
+  );
+  await updateDoc(doc(getDb(), 'incomes', userId, 'items', id), data);
+  return toSerializable(id, {
+    ...data,
+    date: Timestamp.fromDate(date),
+    createdAt: Timestamp.fromDate(new Date()),
+    updatedAt: Timestamp.fromDate(new Date()),
+  });
+}
+
 export async function deleteIncome(userId: string, income: SerializableIncome): Promise<void> {
   await deleteDoc(doc(getDb(), 'incomes', userId, 'items', income.id));
   const month = format(new Date(income.date), 'yyyy-MM');

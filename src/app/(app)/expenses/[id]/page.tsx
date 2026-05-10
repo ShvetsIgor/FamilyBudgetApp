@@ -58,16 +58,24 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-5 pb-8">
-      {/* Back */}
-      <button onClick={() => router.back()} className="flex items-center gap-1 text-sm text-muted-foreground w-fit">
-        ← Back
-      </button>
+      {/* Back + Edit */}
+      <div className="flex items-center justify-between">
+        <button onClick={() => router.back()} className="flex items-center gap-1 text-sm text-muted-foreground">
+          ← Back
+        </button>
+        <button
+          onClick={() => router.push(`/expenses/${id}/edit`)}
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          Edit
+        </button>
+      </div>
 
       {/* Amount card */}
       <div className="rounded-2xl border border-border bg-card p-6 flex flex-col items-center gap-3">
         {category && <CategoryIcon icon={category.icon} color={category.color} size="lg" />}
         <p className="text-3xl font-bold tabular-nums text-destructive">
-          -{formatAmount(expense.amount, expense.currency)}
+          {expense.amount > 0 ? '-' : ''}{formatAmount(expense.amount, expense.currency)}
         </p>
         <p className="text-sm text-muted-foreground">
           {format(parseISO(expense.date), 'EEEE, MMMM d, yyyy')}

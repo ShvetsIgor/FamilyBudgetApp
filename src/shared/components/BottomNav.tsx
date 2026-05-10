@@ -4,16 +4,18 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Plus, List, BarChart2, Lightbulb } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
-
-const NAV_ITEMS = [
-  { href: '/home', icon: Plus, label: 'Add', activeOn: ['/home'] },
-  { href: '/expenses', icon: List, label: 'Expenses', activeOn: ['/expenses'] },
-  { href: '/statistics', icon: BarChart2, label: 'Stats', activeOn: ['/statistics'] },
-  { href: '/analytics', icon: Lightbulb, label: 'Analytics', activeOn: ['/analytics'] },
-] as const;
+import { useT } from '@/shared/hooks/useT';
 
 export function BottomNav() {
   const pathname = usePathname();
+  const t = useT();
+
+  const NAV_ITEMS = [
+    { href: '/home', icon: Plus, label: t('nav.add'), activeOn: ['/home'] },
+    { href: '/expenses', icon: List, label: t('nav.expenses'), activeOn: ['/expenses'] },
+    { href: '/statistics', icon: BarChart2, label: t('nav.statistics'), activeOn: ['/statistics'] },
+    { href: '/analytics', icon: Lightbulb, label: t('nav.analytics'), activeOn: ['/analytics'] },
+  ] as const;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background pb-safe">
@@ -21,7 +23,6 @@ export function BottomNav() {
         {NAV_ITEMS.map(({ href, icon: Icon, label, activeOn }) => {
           const isActive = activeOn.some((path) => pathname.startsWith(path));
 
-          /* Center "Add" button — visually prominent */
           if (href === '/home') {
             return (
               <Link key={href} href={href} aria-label={label}>

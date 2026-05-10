@@ -51,7 +51,7 @@ export function ExpenseCard({ expense, onClick }: Props) {
       </div>
 
       <span className={cn('text-sm font-semibold shrink-0 tabular-nums')}>
-        -{formatAmount(expense.amount, expense.currency)}
+        {expense.amount > 0 ? '-' : ''}{formatAmount(expense.amount, expense.currency)}
       </span>
     </button>
   );

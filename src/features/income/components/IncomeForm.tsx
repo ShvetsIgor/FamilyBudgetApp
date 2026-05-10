@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { useAppSelector } from '@/store/store';
 import { CategoryPicker } from '@/features/categories/components/CategoryPicker';
+import { blockInvalidAmountKeys, parseLocalDate } from '@/shared/utils/currency';
 import type { AddIncomeInput } from '../services/incomeService';
+import type { SerializableIncome } from '@/shared/types';
 
 type IncomeMethod = 'cash' | 'card' | 'bank' | 'other';
 
@@ -16,18 +18,23 @@ const METHODS: { value: IncomeMethod; label: string; icon: string }[] = [
 ];
 
 interface Props {
+  initialIncome?: SerializableIncome;
   onSave: (data: Omit<AddIncomeInput, 'userId'>) => Promise<void>;
   onCancel: () => void;
 }
 
-export function IncomeForm({ onSave, onCancel }: Props) {
+export function IncomeForm({ initialIncome, onSave, onCancel }: Props) {
   const currency = useAppSelector((s) => s.ui.currency);
-  const [amount, setAmount] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [method, setMethod] = useState<IncomeMethod>('card');
-  const [comment, setComment] = useState('');
-  const [privacy, setPrivacy] = useState<'regular' | 'secret'>('regular');
+  const isEdit = !!initialIncome;
+
+  const [amount, setAmount] = useState(initialIncome?.amount.toString() ?? '');
+  const [categoryId, setCategoryId] = useState(initialIncome?.categoryId ?? '');
+  const [date, setDate] = useState(
+    initialIncome ? format(parseISO(initialIncome.date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')
+  );
+  const [method, setMethod] = useState<IncomeMethod>((initialIncome?.method as IncomeMethod) ?? 'card');
+  const [comment, setComment] = useState(initialIncome?.comment ?? '');
+  const [privacy, setPrivacy] = useState<'regular' | 'secret'>(initialIncome?.privacy ?? 'regular');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -43,7 +50,7 @@ export function IncomeForm({ onSave, onCancel }: Props) {
         amount: num,
         currency,
         categoryId,
-        date: new Date(date),
+        date: parseLocalDate(date),
         method,
         comment: comment.trim() || undefined,
         privacy,
@@ -67,6 +74,7 @@ export function IncomeForm({ onSave, onCancel }: Props) {
             placeholder="0.00"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
+            onKeyDown={blockInvalidAmountKeys}
             className="flex-1 bg-transparent text-2xl font-bold outline-none tabular-nums text-emerald-500"
             autoFocus
           />
@@ -76,11 +84,7 @@ export function IncomeForm({ onSave, onCancel }: Props) {
       {/* Category */}
       <div className="rounded-2xl border border-border bg-card p-4">
         <label className="text-xs text-muted-foreground mb-2 block">Category</label>
-        <CategoryPicker
-          type="income"
-          value={categoryId}
-          onChange={setCategoryId}
-        />
+        <CategoryPicker type="income" value={categoryId} onChange={setCategoryId} />
       </div>
 
       {/* Date */}
@@ -146,7 +150,6 @@ export function IncomeForm({ onSave, onCancel }: Props) {
 
       {error && <p className="text-xs text-destructive px-1">{error}</p>}
 
-      {/* Actions */}
       <div className="flex gap-3 pt-1">
         <button
           type="button"
@@ -160,7 +163,7 @@ export function IncomeForm({ onSave, onCancel }: Props) {
           disabled={saving}
           className="flex-1 rounded-2xl bg-emerald-500 py-3 text-sm font-semibold text-white disabled:opacity-50"
         >
-          {saving ? 'Saving…' : 'Save Income'}
+          {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Save Income'}
         </button>
       </div>
     </form>

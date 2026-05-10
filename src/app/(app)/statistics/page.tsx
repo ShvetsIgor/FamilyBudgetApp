@@ -2,10 +2,14 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { format, subMonths } from 'date-fns';
-import { useAppSelector } from '@/store/store';
+import { useAppSelector, useAppDispatch } from '@/store/store';
 import { fetchMonthStats, fetchLastNMonths, type MonthStats } from '@/features/stats/services/statsService';
-import { formatAmount } from '@/shared/utils/currency';
+import { saveBudget } from '@/features/budget/services/budgetService';
+import { setBudgetLimit } from '@/features/budget/store/budgetSlice';
+import { formatAmount, blockInvalidAmountKeys } from '@/shared/utils/currency';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
+import { cn } from '@/shared/utils/cn';
+import { useT } from '@/shared/hooks/useT';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -13,22 +17,30 @@ import {
 
 type Range = 'month' | 'last' | '3m' | '6m';
 
-const RANGES: { value: Range; label: string }[] = [
-  { value: 'month', label: 'This month' },
-  { value: 'last', label: 'Last month' },
-  { value: '3m', label: '3 months' },
-  { value: '6m', label: '6 months' },
-];
-
 export default function StatisticsPage() {
+  const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const categories = useAppSelector((s) => s.categories.expense);
+  const budgetLimits = useAppSelector((s) => s.budget.limits);
+  const t = useT();
+
+  const RANGES: { value: Range; label: string }[] = [
+    { value: 'month', label: t('stats.currentMonth') },
+    { value: 'last', label: t('stats.lastMonth') },
+    { value: '3m', label: t('stats.threeMonths') },
+    { value: '6m', label: t('stats.year') },
+  ];
 
   const [range, setRange] = useState<Range>('month');
   const [stats, setStats] = useState<MonthStats | null>(null);
   const [history, setHistory] = useState<MonthStats[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Budget editing state
+  const [editingCatId, setEditingCatId] = useState<string | null>(null);
+  const [limitInput, setLimitInput] = useState('');
+  const [savingBudget, setSavingBudget] = useState(false);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -66,7 +78,6 @@ export default function StatisticsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Pie chart data — top categories
   const pieData = stats
     ? Object.entries(stats.byCategory)
         .map(([catId, amount]) => {
@@ -78,18 +89,40 @@ export default function StatisticsPage() {
         .slice(0, 8)
     : [];
 
-  // Bar chart data
   const barData = history.map((m) => ({
-    name: m.month.slice(5), // 'MM'
+    name: m.month.slice(5),
     expenses: m.totalExpenses,
     income: m.totalIncome,
   }));
 
-  const balance = (stats?.totalIncome ?? 0) - (stats?.totalExpenses ?? 0);
+  const rawBalance = (stats?.totalIncome ?? 0) - (stats?.totalExpenses ?? 0);
+  const balance = Math.abs(rawBalance) < 0.005 ? 0 : rawBalance;
+
+  // Budget only makes sense for single-month views
+  const showBudget = range === 'month' || range === 'last';
+
+  async function handleSaveBudget(catId: string) {
+    if (!user) return;
+    const limit = parseFloat(limitInput) || 0;
+    setSavingBudget(true);
+    try {
+      await saveBudget(user.id, catId, limit);
+      dispatch(setBudgetLimit({ categoryId: catId, limit }));
+      setEditingCatId(null);
+      setLimitInput('');
+    } finally {
+      setSavingBudget(false);
+    }
+  }
+
+  function openBudgetEdit(catId: string) {
+    setEditingCatId(catId);
+    setLimitInput(budgetLimits[catId]?.toString() ?? '');
+  }
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-5 pb-8">
-      <h1 className="text-xl font-bold">Statistics</h1>
+      <h1 className="text-xl font-bold">{t('stats.title')}</h1>
 
       {/* Range selector */}
       <div className="flex rounded-xl bg-muted p-1 gap-1">
@@ -114,15 +147,17 @@ export default function StatisticsPage() {
         <>
           {/* Summary cards */}
           <div className="grid grid-cols-3 gap-2">
-            <SummaryCard label="Expenses" value={formatAmount(stats?.totalExpenses ?? 0, currency)} color="text-destructive" />
-            <SummaryCard label="Income" value={formatAmount(stats?.totalIncome ?? 0, currency)} color="text-emerald-500" />
-            <SummaryCard label="Balance" value={formatAmount(Math.abs(balance), currency)} color={balance >= 0 ? 'text-emerald-500' : 'text-destructive'} prefix={balance >= 0 ? '+' : '-'} />
+            <SummaryCard label={t('stats.expenses')} value={formatAmount(stats?.totalExpenses ?? 0, currency)} color="text-destructive" />
+            <SummaryCard label={t('stats.income')} value={formatAmount(stats?.totalIncome ?? 0, currency)} color="text-emerald-500" />
+            <SummaryCard label={t('stats.balance')} value={formatAmount(Math.abs(balance), currency)} color={balance >= 0 ? 'text-emerald-500' : 'text-destructive'} prefix={balance > 0 ? '+' : balance < 0 ? '-' : ''} />
           </div>
 
-          {/* Pie chart */}
+          {/* Category breakdown + budgets */}
           {pieData.length > 0 && (
             <div className="rounded-2xl border border-border bg-card p-4">
-              <h2 className="text-sm font-semibold mb-3">By Category</h2>
+              <h2 className="text-sm font-semibold mb-3">{t('stats.byCategory')}</h2>
+
+              {/* Pie chart */}
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
                   <Pie
@@ -145,28 +180,94 @@ export default function StatisticsPage() {
                 </PieChart>
               </ResponsiveContainer>
 
-              {/* Legend */}
-              <div className="flex flex-col gap-2 mt-3">
-                {pieData.map((d) => (
-                  <div key={d.catId} className="flex items-center gap-2">
-                    <CategoryIcon icon={d.icon} color={d.color} size="sm" />
-                    <span className="flex-1 text-sm">{d.name}</span>
-                    <span className="text-sm font-semibold tabular-nums">{formatAmount(d.amount, currency)}</span>
-                    <span className="text-xs text-muted-foreground tabular-nums w-10 text-right">
-                      {stats && stats.totalExpenses > 0
-                        ? `${Math.round((d.amount / stats.totalExpenses) * 100)}%`
-                        : ''}
-                    </span>
-                  </div>
-                ))}
+              {/* Category list with budget bars */}
+              <div className="flex flex-col gap-3 mt-3">
+                {pieData.map((d) => {
+                  const limit = showBudget ? (budgetLimits[d.catId] ?? 0) : 0;
+                  const pct = limit > 0 ? Math.min(100, (d.amount / limit) * 100) : 0;
+                  const overBudget = limit > 0 && d.amount > limit;
+                  const isEditing = editingCatId === d.catId;
+
+                  return (
+                    <div key={d.catId}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <CategoryIcon icon={d.icon} color={d.color} size="sm" />
+                        <span className="flex-1 text-sm">{d.name}</span>
+                        <span className="text-sm font-semibold tabular-nums">{formatAmount(d.amount, currency)}</span>
+                        {showBudget && (
+                          <button
+                            onClick={() => isEditing ? setEditingCatId(null) : openBudgetEdit(d.catId)}
+                            className={cn(
+                              'text-xs px-2 py-0.5 rounded-full transition-colors',
+                              overBudget
+                                ? 'bg-destructive/10 text-destructive'
+                                : limit > 0
+                                ? 'bg-muted text-muted-foreground hover:text-foreground'
+                                : 'bg-muted text-muted-foreground hover:text-foreground'
+                            )}
+                          >
+                            {overBudget ? t('stats.over') : limit > 0 ? `/ ${formatAmount(limit, currency)}` : t('stats.addLimit')}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Budget progress bar */}
+                      {limit > 0 && !isEditing && (
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-1">
+                          <div
+                            className={cn(
+                              'h-full rounded-full transition-all',
+                              pct >= 100 ? 'bg-destructive' : pct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'
+                            )}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      )}
+
+                      {/* Inline budget editor */}
+                      {isEditing && (
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <input
+                            autoFocus
+                            type="number"
+                            min="0"
+                            step="1"
+                            placeholder="Monthly limit (0 to remove)"
+                            value={limitInput}
+                            onChange={(e) => setLimitInput(e.target.value)}
+                            onKeyDown={blockInvalidAmountKeys}
+                            className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                          />
+                          <button
+                            onClick={() => handleSaveBudget(d.catId)}
+                            disabled={savingBudget}
+                            className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-50"
+                          >
+                            {savingBudget ? '…' : t('stats.save')}
+                          </button>
+                          <button
+                            onClick={() => setEditingCatId(null)}
+                            className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground"
+                          >
+                            {t('common.cancel')}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
+
+              {showBudget && (
+                <p className="text-xs text-muted-foreground mt-3">Tap a category limit to edit</p>
+              )}
             </div>
           )}
 
           {/* Bar chart — multi-month only */}
           {barData.length > 1 && (
             <div className="rounded-2xl border border-border bg-card p-4">
-              <h2 className="text-sm font-semibold mb-3">Monthly Comparison</h2>
+              <h2 className="text-sm font-semibold mb-3">{t('analytics.trend')}</h2>
               <ResponsiveContainer width="100%" height={180}>
                 <BarChart data={barData} barGap={4}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -187,8 +288,7 @@ export default function StatisticsPage() {
           {pieData.length === 0 && (
             <div className="flex flex-col items-center py-12 text-center">
               <p className="text-4xl mb-3">📊</p>
-              <p className="font-medium">No data for this period</p>
-              <p className="text-sm text-muted-foreground mt-1">Add expenses to see statistics</p>
+              <p className="font-medium">{t('stats.noData')}</p>
             </div>
           )}
         </>

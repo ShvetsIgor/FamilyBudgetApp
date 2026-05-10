@@ -15,9 +15,10 @@ export async function createUserProfile(uid: string, data: { name: string; email
     name: data.name,
     email: data.email,
     currency: 'ILS' as const,
-    language: 'en' as const,
+    language: 'ru' as const,
     theme: 'light' as const,
     accountType: 'personal' as const,
+    onboarded: false,
     createdAt: serverTimestamp(),
   };
   await setDoc(doc(getDb(), 'users', uid), profile);

@@ -134,6 +134,36 @@ export async function addExpense(input: AddExpenseInput): Promise<SerializableEx
   });
 }
 
+export interface UpdateExpenseInput extends AddExpenseInput {
+  id: string;
+}
+
+export async function updateExpense(input: UpdateExpenseInput): Promise<SerializableExpense> {
+  const { userId, id, date, subcategoryId, store, comment, goalId, ...rest } = input;
+
+  const data = Object.fromEntries(
+    Object.entries({
+      ...rest,
+      userId,
+      subcategoryId,
+      store,
+      comment,
+      goalId,
+      date: Timestamp.fromDate(date),
+      updatedAt: serverTimestamp(),
+    }).filter(([, v]) => v !== undefined)
+  );
+
+  await updateDoc(doc(getDb(), 'expenses', userId, 'items', id), data);
+
+  return toSerializable(id, {
+    ...data,
+    date: Timestamp.fromDate(date),
+    createdAt: Timestamp.fromDate(new Date()),
+    updatedAt: Timestamp.fromDate(new Date()),
+  });
+}
+
 export async function deleteExpense(userId: string, expense: SerializableExpense): Promise<void> {
   await deleteDoc(doc(getDb(), 'expenses', userId, 'items', expense.id));
   const month = format(new Date(expense.date), 'yyyy-MM');

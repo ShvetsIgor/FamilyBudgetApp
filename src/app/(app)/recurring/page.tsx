@@ -12,7 +12,7 @@ import {
 } from '@/features/recurring/services/recurringService';
 import { CategoryPicker } from '@/features/categories/components/CategoryPicker';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
-import { formatAmount } from '@/shared/utils/currency';
+import { formatAmount, blockInvalidAmountKeys, parseLocalDate } from '@/shared/utils/currency';
 import type { RecurringFrequency, RecurringType, SerializableRecurringPayment } from '@/shared/types';
 
 const FREQ: { value: RecurringFrequency; label: string }[] = [
@@ -132,7 +132,7 @@ export default function RecurringPage() {
         <div className="rounded-2xl border border-border bg-card p-4">
           <p className="text-xs text-muted-foreground">Monthly total (active)</p>
           <p className="text-2xl font-bold tabular-nums mt-1 text-destructive">
-            -{formatAmount(monthlyTotal, currency)}
+            {monthlyTotal > 0 ? '-' : ''}{formatAmount(monthlyTotal, currency)}
           </p>
         </div>
       )}
@@ -158,33 +158,34 @@ export default function RecurringPage() {
             const days = daysUntil(item.nextDueDate);
             const typeObj = TYPES.find((t) => t.value === item.type);
             return (
-              <button
+              <div
                 key={item.id}
-                onClick={() => setFormMode({ mode: 'edit', item })}
-                className={`flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors ${!item.isActive ? 'opacity-50' : ''}`}
+                className={`flex w-full items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors ${!item.isActive ? 'opacity-50' : ''}`}
               >
-                {cat ? (
-                  <CategoryIcon icon={cat.icon} color={cat.color} size="md" />
-                ) : (
-                  <span className="text-2xl shrink-0">{typeObj?.icon ?? '🔄'}</span>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{item.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {FREQ.find((f) => f.value === item.frequency)?.label}
-                    {' · '}
-                    {days <= 0 ? (
-                      <span className="text-destructive font-medium">Due today!</span>
-                    ) : days <= 3 ? (
-                      <span className="text-amber-500 font-medium">In {days}d</span>
-                    ) : (
-                      <span>Next: {format(parseISO(item.nextDueDate), 'MMM d')}</span>
-                    )}
-                  </p>
+                <div className="flex flex-1 items-center gap-3 min-w-0 cursor-pointer" onClick={() => setFormMode({ mode: 'edit', item })}>
+                  {cat ? (
+                    <CategoryIcon icon={cat.icon} color={cat.color} size="md" />
+                  ) : (
+                    <span className="text-2xl shrink-0">{typeObj?.icon ?? '🔄'}</span>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{item.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {FREQ.find((f) => f.value === item.frequency)?.label}
+                      {' · '}
+                      {days <= 0 ? (
+                        <span className="text-destructive font-medium">Due today!</span>
+                      ) : days <= 3 ? (
+                        <span className="text-amber-500 font-medium">In {days}d</span>
+                      ) : (
+                        <span>Next: {format(parseISO(item.nextDueDate), 'MMM d')}</span>
+                      )}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center gap-2 shrink-0">
                   <span className="text-sm font-semibold tabular-nums">
-                    {formatAmount(item.amount, item.currency)}
+                    {item.amount > 0 ? '-' : ''}{formatAmount(item.amount, item.currency)}
                   </span>
                   <button
                     onClick={() => handleToggle(item)}
@@ -199,7 +200,7 @@ export default function RecurringPage() {
                     ✕
                   </button>
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>
@@ -243,7 +244,7 @@ function RecurringForm({
         currency: currency as never,
         categoryId,
         frequency,
-        startDate: new Date(startDate),
+        startDate: parseLocalDate(startDate),
         type,
         reminderDays,
         comment: comment.trim() || undefined,
@@ -272,6 +273,7 @@ function RecurringForm({
           type="number" min="0" step="0.01" placeholder="0.00"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
+          onKeyDown={blockInvalidAmountKeys}
           className="w-full bg-transparent text-2xl font-bold outline-none tabular-nums text-destructive"
         />
       </div>

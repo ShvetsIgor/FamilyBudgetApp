@@ -2,16 +2,18 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { useAppSelector, useAppDispatch } from '@/store/store';
-import { prependExpense } from '@/features/expenses/store/expensesSlice';
-import { addExpense } from '@/features/expenses/services/expensesService';
+import { prependExpense, updateExpense as updateExpenseAction } from '@/features/expenses/store/expensesSlice';
+import { addExpense, updateExpense } from '@/features/expenses/services/expensesService';
+import { addContribution } from '@/features/savings/services/savingsService';
+import { updateGoalItem } from '@/features/savings/store/savingsSlice';
 import { CategoryPicker } from '@/features/categories/components/CategoryPicker';
 import { SplitEditor } from './SplitEditor';
 import { calculateSplit } from '@/features/expenses/utils/splitAlgorithm';
-import { getCurrencySymbol } from '@/shared/utils/currency';
+import { getCurrencySymbol, blockInvalidAmountKeys, parseLocalDate } from '@/shared/utils/currency';
 import { cn } from '@/shared/utils/cn';
-import type { Privacy, PaymentMethod, SplitItem } from '@/shared/types';
+import type { Privacy, PaymentMethod, SplitItem, SerializableExpense } from '@/shared/types';
 
 const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
   { value: 'card', label: '💳 Card' },
@@ -19,22 +21,33 @@ const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
   { value: 'other', label: '🔄 Other' },
 ];
 
-export function ExpenseForm() {
+interface Props {
+  initialExpense?: SerializableExpense;
+}
+
+export function ExpenseForm({ initialExpense }: Props) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const symbol = getCurrencySymbol(currency);
+  const expenseCategories = useAppSelector((s) => s.categories.expense);
+  const goals = useAppSelector((s) => s.savings.list);
 
-  const [amount, setAmount] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [splits, setSplits] = useState<SplitItem[]>([]);
+  const isEdit = !!initialExpense;
+
+  const [amount, setAmount] = useState(initialExpense?.amount.toString() ?? '');
+  const [categoryId, setCategoryId] = useState(initialExpense?.categoryId ?? '');
+  const [goalId, setGoalId] = useState(initialExpense?.goalId ?? '');
+  const [splits, setSplits] = useState<SplitItem[]>(initialExpense?.splits ?? []);
   const [splitOpen, setSplitOpen] = useState(false);
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
-  const [store, setStore] = useState('');
-  const [comment, setComment] = useState('');
-  const [privacy, setPrivacy] = useState<Privacy>('regular');
+  const [date, setDate] = useState(
+    initialExpense ? format(parseISO(initialExpense.date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')
+  );
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(initialExpense?.paymentMethod ?? 'card');
+  const [store, setStore] = useState(initialExpense?.store ?? '');
+  const [comment, setComment] = useState(initialExpense?.comment ?? '');
+  const [privacy, setPrivacy] = useState<Privacy>(initialExpense?.privacy ?? 'regular');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -42,11 +55,13 @@ export function ExpenseForm() {
 
   const numAmount = parseFloat(amount) || 0;
   const { isValid: splitValid } = calculateSplit(numAmount, splits);
-  const canSave = numAmount > 0 && categoryId && splitValid;
+  const selectedCategory = expenseCategories.find((c) => c.id === categoryId);
+  const isSavingsCategory = selectedCategory?.name?.toLowerCase() === 'savings';
+  const canSave = numAmount > 0 && categoryId && splitValid && (!isSavingsCategory || goalId !== '');
 
-  // Reset splits when category changes
   function handleCategoryChange(id: string) {
     setCategoryId(id);
+    setGoalId('');
     setSplits([]);
     setSplitOpen(false);
   }
@@ -59,21 +74,52 @@ export function ExpenseForm() {
 
     try {
       const validSplits = splits.filter((s) => s.categoryId && s.amount > 0);
-      const expense = await addExpense({
-        userId: user!.id,
-        amount: numAmount,
-        currency,
-        categoryId,
-        date: new Date(date),
-        paymentMethod,
-        store: store || undefined,
-        tags: [],
-        comment: comment || undefined,
-        privacy,
-        splits: validSplits,
-      });
-      dispatch(prependExpense(expense));
-      router.replace('/expenses');
+
+      if (isEdit && initialExpense) {
+        const updated = await updateExpense({
+          id: initialExpense.id,
+          userId: user!.id,
+          amount: numAmount,
+          currency,
+          categoryId,
+          date: parseLocalDate(date),
+          paymentMethod,
+          store: store || undefined,
+          tags: initialExpense.tags,
+          comment: comment || undefined,
+          privacy,
+          splits: validSplits,
+          goalId: goalId || undefined,
+        });
+        dispatch(updateExpenseAction(updated));
+        router.replace(`/expenses/${initialExpense.id}`);
+      } else {
+        const expense = await addExpense({
+          userId: user!.id,
+          amount: numAmount,
+          currency,
+          categoryId,
+          date: parseLocalDate(date),
+          paymentMethod,
+          store: store || undefined,
+          tags: [],
+          comment: comment || undefined,
+          privacy,
+          splits: validSplits,
+          goalId: goalId || undefined,
+        });
+        dispatch(prependExpense(expense));
+
+        if (goalId) {
+          const goal = goals.find((g) => g.id === goalId);
+          if (goal) {
+            const updated = await addContribution(user!.id, goal, { amount: numAmount });
+            dispatch(updateGoalItem(updated));
+          }
+        }
+
+        router.replace('/expenses');
+      }
     } catch (err) {
       console.error(err);
       setError('Failed to save. Try again.');
@@ -100,6 +146,7 @@ export function ExpenseForm() {
             step="0.01"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
+            onKeyDown={blockInvalidAmountKeys}
             placeholder="0.00"
             className="flex-1 bg-transparent text-4xl font-bold outline-none placeholder:text-muted-foreground/30"
           />
@@ -118,7 +165,43 @@ export function ExpenseForm() {
         />
       </div>
 
-      {/* ── Split (right after category, only when both amount + category set) ── */}
+      {/* ── Savings goal picker ── */}
+      {isSavingsCategory && (
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium">
+            Savings Goal <span className="text-xs text-destructive">*</span>
+          </label>
+          {goals.length === 0 ? (
+            <p className="text-sm text-muted-foreground rounded-xl border border-border bg-card px-4 py-3">
+              No savings goals yet. Create one in the Savings tab first.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {goals.map((g) => (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => setGoalId(g.id)}
+                  className={cn(
+                    'flex items-center gap-3 rounded-xl border px-4 py-3 text-sm transition-colors text-left',
+                    goalId === g.id
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border bg-card text-foreground hover:bg-muted'
+                  )}
+                >
+                  <span className="text-xl">{g.icon}</span>
+                  <span className="flex-1 font-medium">{g.name}</span>
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {g.currentAmount} / {g.targetAmount}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Split ── */}
       {numAmount > 0 && categoryId && (
         <SplitEditor
           total={numAmount}
@@ -243,7 +326,7 @@ export function ExpenseForm() {
           loading && 'opacity-70'
         )}
       >
-        {loading ? 'Saving...' : 'Save Expense'}
+        {loading ? 'Saving...' : isEdit ? 'Save Changes' : 'Save Expense'}
       </button>
     </form>
   );

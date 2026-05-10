@@ -28,6 +28,7 @@ export interface UserProfile {
   theme: Theme;
   accountType: AccountType;
   familyId?: string;
+  onboarded?: boolean;
   createdAt: Timestamp;
 }
 

@@ -8,7 +8,7 @@ import {
   fetchGoals, addGoal, addContribution, deleteGoal,
   type AddGoalInput,
 } from '@/features/savings/services/savingsService';
-import { formatAmount } from '@/shared/utils/currency';
+import { formatAmount, blockInvalidAmountKeys, parseLocalDate } from '@/shared/utils/currency';
 import { addExpense } from '@/features/expenses/services/expensesService';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
 import { addCategory } from '@/features/categories/services/categoriesService';
@@ -312,6 +312,7 @@ function GoalForm({ currency, onSave, onCancel }: {
     if (!name.trim()) { setError('Enter a name'); return; }
     const num = parseFloat(target);
     if (!num || num <= 0) { setError('Enter a target amount'); return; }
+    if (deadline && parseLocalDate(deadline) <= new Date()) { setError('Deadline must be in the future'); return; }
     setError('');
     setSaving(true);
     try {
@@ -322,7 +323,7 @@ function GoalForm({ currency, onSave, onCancel }: {
         targetAmount: num,
         currency: currency as Currency,
         monthlyContribution: monthly ? parseFloat(monthly) : undefined,
-        deadline: deadline ? new Date(deadline) : undefined,
+        deadline: deadline ? parseLocalDate(deadline) : undefined,
       });
     } finally {
       setSaving(false);
@@ -369,6 +370,7 @@ function GoalForm({ currency, onSave, onCancel }: {
         <label className="text-xs text-muted-foreground mb-1 block">Target amount ({currency})</label>
         <input type="number" min="0" step="0.01" placeholder="0.00" value={target}
           onChange={(e) => setTarget(e.target.value)}
+          onKeyDown={blockInvalidAmountKeys}
           className="w-full bg-transparent text-2xl font-bold outline-none tabular-nums text-emerald-500" />
       </div>
 
@@ -377,6 +379,7 @@ function GoalForm({ currency, onSave, onCancel }: {
         <label className="text-xs text-muted-foreground mb-1 block">Monthly contribution plan ({currency}, optional)</label>
         <input type="number" min="0" step="0.01" placeholder="0.00" value={monthly}
           onChange={(e) => setMonthly(e.target.value)}
+          onKeyDown={blockInvalidAmountKeys}
           className="w-full bg-transparent text-sm font-medium outline-none tabular-nums" />
       </div>
 
@@ -384,6 +387,7 @@ function GoalForm({ currency, onSave, onCancel }: {
       <div className="rounded-2xl border border-border bg-card p-4">
         <label className="text-xs text-muted-foreground mb-1 block">Deadline (optional)</label>
         <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)}
+          min={format(new Date(), 'yyyy-MM-dd')}
           className="w-full bg-transparent text-sm font-medium outline-none" />
       </div>
 
@@ -447,6 +451,7 @@ function ContributeForm({ goal, currency, onSave, onCancel }: {
         <label className="text-xs text-muted-foreground mb-1 block">Amount ({currency})</label>
         <input autoFocus type="number" min="0" step="0.01" placeholder="0.00" value={amount}
           onChange={(e) => setAmount(e.target.value)}
+          onKeyDown={blockInvalidAmountKeys}
           className="w-full bg-transparent text-2xl font-bold outline-none tabular-nums text-emerald-500" />
       </div>
 

@@ -10,6 +10,7 @@ import { fetchMonthExpenses } from '@/features/expenses/services/expensesService
 import { fetchMonthIncome, addIncome, deleteIncome } from '@/features/income/services/incomeService';
 import { ExpenseCard } from '@/features/expenses/components/ExpenseCard';
 import { IncomeCard } from '@/features/income/components/IncomeCard';
+import { UpcomingBills } from '@/features/recurring/components/UpcomingBills';
 import { IncomeForm } from '@/features/income/components/IncomeForm';
 import { formatAmount } from '@/shared/utils/currency';
 import type { SerializableExpense, SerializableIncome } from '@/shared/types';
@@ -165,6 +166,9 @@ export default function ExpensesPage() {
           <p className="text-sm text-muted-foreground mt-1">Tap + to add your first expense</p>
         </div>
       )}
+
+      {/* Upcoming recurring — shown only in expenses tab */}
+      {tab === 'expenses' && <UpcomingBills withinDays={30} />}
 
       {tab === 'expenses' && (
         <div className="flex flex-col gap-2 pb-4">

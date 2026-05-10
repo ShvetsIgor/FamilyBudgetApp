@@ -9,6 +9,7 @@ import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setExpenses } from '@/features/expenses/store/expensesSlice';
 import { fetchMonthExpenses } from '@/features/expenses/services/expensesService';
 import { ExpenseCard } from '@/features/expenses/components/ExpenseCard';
+import { UpcomingBills } from '@/features/recurring/components/UpcomingBills';
 import { formatAmount, getCurrencySymbol } from '@/shared/utils/currency';
 
 export default function HomePage() {
@@ -74,6 +75,9 @@ export default function HomePage() {
 
         <div className="w-14" />
       </div>
+
+      {/* Upcoming bills */}
+      <UpcomingBills withinDays={7} maxItems={3} compact />
 
       {/* Recent expenses */}
       <div className="w-full">

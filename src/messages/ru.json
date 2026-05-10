@@ -1,0 +1,70 @@
+{
+  "nav": {
+    "add": "Добавить",
+    "expenses": "Расходы",
+    "statistics": "Статистика",
+    "analytics": "Аналитика"
+  },
+  "home": {
+    "addExpense": "Добавить расход",
+    "recentExpenses": "Последние расходы",
+    "thisMonth": "Этот месяц"
+  },
+  "expense": {
+    "title": "Новый расход",
+    "editTitle": "Редактировать расход",
+    "amount": "Сумма",
+    "category": "Категория",
+    "subcategory": "Подкатегория",
+    "date": "Дата",
+    "paymentMethod": "Способ оплаты",
+    "store": "Магазин / Место",
+    "tags": "Теги",
+    "comment": "Комментарий",
+    "privacy": "Приватность",
+    "split": "Разделить расход",
+    "addSplit": "Добавить строку",
+    "remaining": "Остаток",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "cash": "Наличные",
+    "card": "Карта",
+    "other": "Другое",
+    "personal": "Личный",
+    "family": "Семейный",
+    "secret": "Скрытый"
+  },
+  "stats": {
+    "title": "Статистика",
+    "income": "Доходы",
+    "expenses": "Расходы",
+    "balance": "Баланс",
+    "saved": "Отложено",
+    "currentMonth": "Этот месяц",
+    "lastMonth": "Прошлый месяц",
+    "threeMonths": "3 месяца",
+    "year": "Год",
+    "custom": "Выбрать"
+  },
+  "auth": {
+    "signIn": "Войти",
+    "signUp": "Регистрация",
+    "signOut": "Выйти",
+    "withGoogle": "Войти через Google",
+    "email": "Email",
+    "password": "Пароль",
+    "name": "Имя",
+    "forgotPassword": "Забыли пароль?"
+  },
+  "common": {
+    "loading": "Загрузка...",
+    "error": "Что-то пошло не так",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "back": "Назад",
+    "offline": "Офлайн",
+    "syncing": "Синхронизация..."
+  }
+}

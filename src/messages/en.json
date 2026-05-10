@@ -1,0 +1,70 @@
+{
+  "nav": {
+    "add": "Add",
+    "expenses": "Expenses",
+    "statistics": "Statistics",
+    "analytics": "Analytics"
+  },
+  "home": {
+    "addExpense": "Add Expense",
+    "recentExpenses": "Recent Expenses",
+    "thisMonth": "This Month"
+  },
+  "expense": {
+    "title": "Add Expense",
+    "editTitle": "Edit Expense",
+    "amount": "Amount",
+    "category": "Category",
+    "subcategory": "Subcategory",
+    "date": "Date",
+    "paymentMethod": "Payment Method",
+    "store": "Store / Place",
+    "tags": "Tags",
+    "comment": "Comment",
+    "privacy": "Privacy",
+    "split": "Split Expense",
+    "addSplit": "Add Split",
+    "remaining": "Remaining",
+    "save": "Save",
+    "cancel": "Cancel",
+    "cash": "Cash",
+    "card": "Card",
+    "other": "Other",
+    "personal": "Personal",
+    "family": "Family",
+    "secret": "Secret"
+  },
+  "stats": {
+    "title": "Statistics",
+    "income": "Income",
+    "expenses": "Expenses",
+    "balance": "Balance",
+    "saved": "Saved",
+    "currentMonth": "This Month",
+    "lastMonth": "Last Month",
+    "threeMonths": "3 Months",
+    "year": "Year",
+    "custom": "Custom"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign Out",
+    "withGoogle": "Continue with Google",
+    "email": "Email",
+    "password": "Password",
+    "name": "Full Name",
+    "forgotPassword": "Forgot password?"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "offline": "Offline",
+    "syncing": "Syncing..."
+  }
+}

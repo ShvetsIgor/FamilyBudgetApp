@@ -1,0 +1,70 @@
+{
+  "nav": {
+    "add": "הוסף",
+    "expenses": "הוצאות",
+    "statistics": "סטטיסטיקה",
+    "analytics": "אנליטיקה"
+  },
+  "home": {
+    "addExpense": "הוסף הוצאה",
+    "recentExpenses": "הוצאות אחרונות",
+    "thisMonth": "החודש"
+  },
+  "expense": {
+    "title": "הוצאה חדשה",
+    "editTitle": "ערוך הוצאה",
+    "amount": "סכום",
+    "category": "קטגוריה",
+    "subcategory": "תת-קטגוריה",
+    "date": "תאריך",
+    "paymentMethod": "אמצעי תשלום",
+    "store": "חנות / מקום",
+    "tags": "תגיות",
+    "comment": "הערה",
+    "privacy": "פרטיות",
+    "split": "פיצול הוצאה",
+    "addSplit": "הוסף שורה",
+    "remaining": "יתרה",
+    "save": "שמור",
+    "cancel": "ביטול",
+    "cash": "מזומן",
+    "card": "כרטיס",
+    "other": "אחר",
+    "personal": "אישי",
+    "family": "משפחתי",
+    "secret": "סודי"
+  },
+  "stats": {
+    "title": "סטטיסטיקה",
+    "income": "הכנסות",
+    "expenses": "הוצאות",
+    "balance": "יתרה",
+    "saved": "חסכון",
+    "currentMonth": "החודש",
+    "lastMonth": "חודש שעבר",
+    "threeMonths": "3 חודשים",
+    "year": "שנה",
+    "custom": "בחר"
+  },
+  "auth": {
+    "signIn": "כניסה",
+    "signUp": "הרשמה",
+    "signOut": "יציאה",
+    "withGoogle": "המשך עם Google",
+    "email": "אימייל",
+    "password": "סיסמה",
+    "name": "שם מלא",
+    "forgotPassword": "שכחת סיסמה?"
+  },
+  "common": {
+    "loading": "טוען...",
+    "error": "משהו השתבש",
+    "save": "שמור",
+    "cancel": "ביטול",
+    "delete": "מחק",
+    "edit": "ערוך",
+    "back": "חזור",
+    "offline": "לא מחובר",
+    "syncing": "מסנכרן..."
+  }
+}

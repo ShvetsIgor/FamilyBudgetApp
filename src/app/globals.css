@@ -4,51 +4,83 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
+    /* ── Brand palette (LIGHT) — Warm & Friendly ── */
+    --background: 38 60% 96%;          /* cream #FBF6EE */
+    --foreground: 24 33% 18%;          /* deep brown #3D2C1F */
+
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --primary: 221 83% 53%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 11%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 221 83% 53%;
-    --radius: 0.75rem;
+    --card-foreground: 24 33% 18%;
+
+    --primary: 13 67% 63%;             /* terracotta #E07A5F */
+    --primary-foreground: 38 60% 96%;
+
+    --secondary: 150 21% 60%;          /* sage #81B29A */
+    --secondary-foreground: 38 60% 96%;
+
+    --muted: 35 35% 90%;               /* warm beige */
+    --muted-foreground: 28 16% 45%;    /* #8E7A66 */
+
+    --accent: 38 78% 75%;              /* warm yellow #F2CC8F */
+    --accent-foreground: 24 33% 18%;
+
+    --destructive: 13 67% 55%;
+    --destructive-foreground: 38 60% 96%;
+
+    --border: 35 28% 86%;
+    --input: 35 28% 86%;
+    --ring: 13 67% 63%;
+
+    --radius: 1rem;                    /* 16 px base */
+
+    /* ── Radii tokens ── */
+    --radius-sm: 0.75rem;              /* 12 px — chips */
+    --radius-md: 1rem;                 /* 16 px — inputs / buttons */
+    --radius-lg: 1.375rem;             /* 22 px — cards */
+    --radius-xl: 2rem;                 /* 32 px — hero */
+    --radius-pill: 9999px;
+
+    /* ── Shadows — brown-tinted ── */
+    --shadow-sm: 0 1px 2px rgba(61, 44, 31, .04);
+    --shadow-md: 0 6px 16px rgba(61, 44, 31, .06);
+    --shadow-lg: 0 16px 30px rgba(61, 44, 31, .12);
+
+    /* ── Category accent palette ── */
+    --cat-food:          #E07A5F;
+    --cat-home:          #81B29A;
+    --cat-transport:     #F2CC8F;
+    --cat-health:        #C97B84;
+    --cat-shopping:      #8AA9D6;
+    --cat-entertainment: #D4A574;
+    --cat-education:     #A8B89C;
+    --cat-kids:          #E9B384;
+    --cat-savings:       #81B29A;
+    --cat-other:         #8E7A66;
   }
 
   .dark {
-    --background: 222 47% 8%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 63% 50%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 217 91% 60%;
+    --background: 24 25% 12%;          /* #241B14 warm brown */
+    --foreground: 38 60% 94%;
+    --card: 24 22% 16%;
+    --card-foreground: 38 60% 94%;
+    --primary: 13 67% 63%;
+    --primary-foreground: 38 60% 96%;
+    --secondary: 150 21% 60%;
+    --secondary-foreground: 38 60% 96%;
+    --muted: 24 18% 22%;
+    --muted-foreground: 35 20% 65%;
+    --accent: 38 78% 75%;
+    --accent-foreground: 24 33% 18%;
+    --destructive: 13 67% 55%;
+    --destructive-foreground: 38 60% 96%;
+    --border: 24 18% 22%;
+    --input: 24 18% 22%;
+    --ring: 13 67% 63%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
@@ -60,7 +92,7 @@
   direction: rtl;
 }
 
-/* Mobile-first: prevent zoom on input focus on iOS */
+/* Prevent iOS zoom on input focus */
 input[type="text"],
 input[type="number"],
 input[type="email"],

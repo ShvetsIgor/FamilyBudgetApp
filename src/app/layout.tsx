@@ -1,9 +1,14 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Nunito } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 
-const inter = Inter({ subsets: ['latin', 'cyrillic'] });
+const nunito = Nunito({
+  subsets: ['latin', 'cyrillic'],
+  weight: ['400', '600', '700', '800', '900'],
+  display: 'swap',
+  variable: '--font-nunito',
+});
 
 export const metadata: Metadata = {
   title: 'Family Budget',
@@ -21,8 +26,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#2563eb' },
-    { media: '(prefers-color-scheme: dark)', color: '#1e3a8a' },
+    { media: '(prefers-color-scheme: light)', color: '#E07A5F' },
+    { media: '(prefers-color-scheme: dark)', color: '#241B14' },
   ],
 };
 
@@ -33,7 +38,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${nunito.className} ${nunito.variable}`}>
         <Providers>{children}</Providers>
       </body>
     </html>

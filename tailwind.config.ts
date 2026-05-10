@@ -43,9 +43,22 @@ const config: Config = {
         },
       },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        // Design system tokens: 12 / 16 / 22 / 32 px
+        sm:    '0.75rem',   // 12 px — chips, badges
+        md:    '1rem',      // 16 px — inputs, buttons  (= --radius)
+        lg:    '1.375rem',  // 22 px — cards, list containers
+        xl:    '1.375rem',  // alias → same as cards (most xl usage in code)
+        '2xl': '1.375rem',  // 22 px — primary card class used throughout
+        '3xl': '2rem',      // 32 px — hero balance card
+        pill:  '9999px',
+      },
+      fontFamily: {
+        sans: ['var(--font-nunito)', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+      },
+      boxShadow: {
+        sm: '0 1px 2px rgba(61,44,31,.04)',
+        md: '0 6px 16px rgba(61,44,31,.06)',
+        lg: '0 16px 30px rgba(61,44,31,.12)',
       },
     },
   },

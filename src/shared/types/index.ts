@@ -110,6 +110,21 @@ export interface Income {
   updatedAt: Timestamp;
 }
 
+export interface SerializableIncome {
+  id: string;
+  userId: string;
+  amount: number;
+  currency: Currency;
+  categoryId: string;
+  date: string;
+  method: PaymentMethod | 'bank';
+  comment?: string;
+  tags: string[];
+  privacy: Privacy;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ─── Recurring ───────────────────────────────────────────────────────────────
 
 export interface RecurringPayment {

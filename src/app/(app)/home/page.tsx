@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
+import { Plus, TrendingUp } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 
@@ -28,16 +28,31 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Quick add button */}
-      <Link href="/expenses/new">
-        <button
-          className="flex h-20 w-20 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 active:scale-95 transition-transform"
-          aria-label="Add expense"
-        >
-          <Plus className="h-9 w-9" />
-        </button>
-      </Link>
-      <p className="text-sm text-muted-foreground -mt-4">Add Expense</p>
+      {/* Quick add buttons */}
+      <div className="flex items-end gap-8">
+        {/* Income */}
+        <div className="flex flex-col items-center gap-2">
+          <Link href="/expenses?tab=income">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md active:scale-95 transition-transform">
+              <TrendingUp className="h-6 w-6" />
+            </div>
+          </Link>
+          <p className="text-xs text-muted-foreground">Add Income</p>
+        </div>
+
+        {/* Expense — center, larger */}
+        <div className="flex flex-col items-center gap-2">
+          <Link href="/expenses/new">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 active:scale-95 transition-transform">
+              <Plus className="h-9 w-9" />
+            </div>
+          </Link>
+          <p className="text-sm text-muted-foreground">Add Expense</p>
+        </div>
+
+        {/* Placeholder for symmetry */}
+        <div className="w-14" />
+      </div>
 
       {/* Recent */}
       <div className="w-full max-w-sm">

@@ -40,6 +40,16 @@
             "if": "Bash(git commit *)"
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /c/Users/Shvets/Desktop/FamilyBudgetApp && node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const f=(JSON.parse(d).tool_input||{}).file_path||'';process.stdout.write(f)})\" | { read -r f; [ -n \"$f\" ] && git add \"$f\" && git diff --cached --quiet || git commit -m \"auto: save $(basename -- \"$f\")\"; } 2>/dev/null || true",
+            "async": true
+          }
+        ]
       }
     ]
   }

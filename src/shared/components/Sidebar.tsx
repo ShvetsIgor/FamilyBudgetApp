@@ -116,7 +116,7 @@ export function Sidebar() {
           className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
         >
           <LogOut className="h-4 w-4 flex-shrink-0" />
-          {t('account.logout')}
+          {t('account.signOut')}
         </button>
       </div>
     </aside>

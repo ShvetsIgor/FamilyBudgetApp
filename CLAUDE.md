@@ -192,3 +192,7 @@ monthlyStats/{userId}/{YYYY-MM}
 - **2026-05-10** — Steps 3–11: Categories, Expense form+split, Expenses list, Income, Statistics, Analytics, Recurring payments, Savings goals, Account page, Home with real data.
 - **2026-05-11** — Steps 12–20: PWA update banner, full i18n, design system tokens, logo integration (SVG logo-mark + wordmark, favicon, PWA icons), category color fixes, auth screens polished.
 - **2026-05-12** — Logo SVG fixes: pig scaled 1.14×, shekel/pig removed from coin/wordmark, wordmark text centered in viewBox.
+- **2026-05-12** — Desktop shell: Sidebar (260px, section nav, profile card), TopBar (page title, theme toggle, CTA), AppShell (mobile/desktop responsive wrapper), lg:hidden on Header/BottomNav, i18n keys for sidebar/topbar/new nav items.
+- **2026-05-12** — Desktop Home dashboard: 3 stat cards (balance/income/expenses), 2-col layout (transaction table + sidebar with upcoming bills and savings goals).
+- **2026-05-12** — Desktop layouts for Expenses (2-col list+form panel), Statistics (pie+budgets left, bar chart right), Analytics (4 stat cards + 2-col charts), Account (2-col profile+family vs prefs+export).
+- **2026-05-12** — Desktop layouts for Auth (split branded panel), Categories (2-col tree+form), Savings (2-col goals grid+detail panel), Recurring (2-col list+form panel).

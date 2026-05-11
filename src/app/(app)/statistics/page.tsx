@@ -36,8 +36,6 @@ export default function StatisticsPage() {
   const [stats, setStats] = useState<MonthStats | null>(null);
   const [history, setHistory] = useState<MonthStats[]>([]);
   const [loading, setLoading] = useState(false);
-
-  // Budget editing state
   const [editingCatId, setEditingCatId] = useState<string | null>(null);
   const [limitInput, setLimitInput] = useState('');
   const [savingBudget, setSavingBudget] = useState(false);
@@ -47,33 +45,26 @@ export default function StatisticsPage() {
     setLoading(true);
     try {
       if (range === 'month') {
-        const s = await fetchMonthStats(user.id, format(new Date(), 'yyyy-MM'));
-        setStats(s);
+        setStats(await fetchMonthStats(user.id, format(new Date(), 'yyyy-MM')));
         setHistory([]);
       } else if (range === 'last') {
-        const s = await fetchMonthStats(user.id, format(subMonths(new Date(), 1), 'yyyy-MM'));
-        setStats(s);
+        setStats(await fetchMonthStats(user.id, format(subMonths(new Date(), 1), 'yyyy-MM')));
         setHistory([]);
       } else {
         const n = range === '3m' ? 3 : 6;
         const months = await fetchLastNMonths(user.id, n);
-        const merged: MonthStats = {
+        setStats({
           month: `${months[0].month} – ${months[months.length - 1].month}`,
           totalExpenses: months.reduce((s, m) => s + m.totalExpenses, 0),
           totalIncome: months.reduce((s, m) => s + m.totalIncome, 0),
           byCategory: months.reduce((acc, m) => {
-            for (const [k, v] of Object.entries(m.byCategory)) {
-              acc[k] = (acc[k] ?? 0) + v;
-            }
+            for (const [k, v] of Object.entries(m.byCategory)) acc[k] = (acc[k] ?? 0) + v;
             return acc;
           }, {} as Record<string, number>),
-        };
-        setStats(merged);
+        });
         setHistory(months);
       }
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }, [user, range]);
 
   useEffect(() => { load(); }, [load]);
@@ -97,8 +88,6 @@ export default function StatisticsPage() {
 
   const rawBalance = (stats?.totalIncome ?? 0) - (stats?.totalExpenses ?? 0);
   const balance = Math.abs(rawBalance) < 0.005 ? 0 : rawBalance;
-
-  // Budget only makes sense for single-month views
   const showBudget = range === 'month' || range === 'last';
 
   async function handleSaveBudget(catId: string) {
@@ -110,9 +99,7 @@ export default function StatisticsPage() {
       dispatch(setBudgetLimit({ categoryId: catId, limit }));
       setEditingCatId(null);
       setLimitInput('');
-    } finally {
-      setSavingBudget(false);
-    }
+    } finally { setSavingBudget(false); }
   }
 
   function openBudgetEdit(catId: string) {
@@ -120,9 +107,100 @@ export default function StatisticsPage() {
     setLimitInput(budgetLimits[catId]?.toString() ?? '');
   }
 
+  const summaryCards = (
+    <div className="grid grid-cols-3 gap-2">
+      <SummaryCard label={t('stats.expenses')} value={formatAmount(stats?.totalExpenses ?? 0, currency)} color="text-destructive" />
+      <SummaryCard label={t('stats.income')} value={formatAmount(stats?.totalIncome ?? 0, currency)} color="text-emerald-500" />
+      <SummaryCard label={t('stats.balance')} value={formatAmount(Math.abs(balance), currency)} color={balance >= 0 ? 'text-emerald-500' : 'text-destructive'} prefix={balance > 0 ? '+' : balance < 0 ? '-' : ''} />
+    </div>
+  );
+
+  const categoryList = (
+    <div className="flex flex-col gap-3">
+      {pieData.map((d) => {
+        const limit = showBudget ? (budgetLimits[d.catId] ?? 0) : 0;
+        const pct = limit > 0 ? Math.min(100, (d.amount / limit) * 100) : 0;
+        const overBudget = limit > 0 && d.amount > limit;
+        const isEditing = editingCatId === d.catId;
+        return (
+          <div key={d.catId}>
+            <div className="flex items-center gap-2 mb-1">
+              <CategoryIcon icon={d.icon} color={d.color} size="sm" />
+              <span className="flex-1 text-sm">{d.name}</span>
+              <span className="text-sm font-semibold tabular-nums">{formatAmount(d.amount, currency)}</span>
+              {showBudget && (
+                <button
+                  onClick={() => isEditing ? setEditingCatId(null) : openBudgetEdit(d.catId)}
+                  className={cn(
+                    'text-xs px-2 py-0.5 rounded-full transition-colors',
+                    overBudget ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {overBudget ? t('stats.over') : limit > 0 ? `/ ${formatAmount(limit, currency)}` : t('stats.addLimit')}
+                </button>
+              )}
+            </div>
+            {limit > 0 && !isEditing && (
+              <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-1">
+                <div
+                  className={cn('h-full rounded-full transition-all', pct >= 100 ? 'bg-destructive' : pct >= 80 ? 'bg-amber-500' : 'bg-emerald-500')}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            )}
+            {isEditing && (
+              <div className="flex items-center gap-2 mt-1.5">
+                <input
+                  autoFocus
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="Monthly limit (0 to remove)"
+                  value={limitInput}
+                  onChange={(e) => setLimitInput(e.target.value)}
+                  onKeyDown={blockInvalidAmountKeys}
+                  className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+                <button
+                  onClick={() => handleSaveBudget(d.catId)}
+                  disabled={savingBudget}
+                  className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-50"
+                >
+                  {savingBudget ? '…' : t('stats.save')}
+                </button>
+                <button onClick={() => setEditingCatId(null)} className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground">
+                  {t('common.cancel')}
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+      {showBudget && pieData.length > 0 && (
+        <p className="text-xs text-muted-foreground mt-1">Tap a category limit to edit</p>
+      )}
+    </div>
+  );
+
+  const barChart = barData.length > 1 && (
+    <div className="rounded-2xl border border-border bg-card p-4">
+      <h2 className="text-sm font-semibold mb-3">{t('analytics.trend')}</h2>
+      <ResponsiveContainer width="100%" height={180}>
+        <BarChart data={barData} barGap={4}>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+          <YAxis tick={{ fontSize: 11 }} width={45} />
+          <Tooltip formatter={(value) => formatAmount(value as number, currency)} contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))' }} />
+          <Bar dataKey="expenses" name="Expenses" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="income" name="Income" fill="#10b981" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+
   return (
-    <div className="flex flex-col gap-4 px-4 pt-5 pb-8">
-      <h1 className="text-xl font-bold">{t('stats.title')}</h1>
+    <div className="flex flex-col gap-4 px-4 pt-5 pb-8 lg:px-0 lg:pt-0">
+      <h1 className="text-xl font-bold lg:hidden">{t('stats.title')}</h1>
 
       {/* Range selector */}
       <div className="flex rounded-xl bg-muted p-1 gap-1">
@@ -130,9 +208,7 @@ export default function StatisticsPage() {
           <button
             key={r.value}
             onClick={() => setRange(r.value)}
-            className={`flex-1 rounded-lg py-2 text-xs font-medium transition-colors ${
-              range === r.value ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'
-            }`}
+            className={`flex-1 rounded-lg py-2 text-xs font-medium transition-colors ${range === r.value ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'}`}
           >
             {r.label}
           </button>
@@ -145,152 +221,88 @@ export default function StatisticsPage() {
         </div>
       ) : (
         <>
-          {/* Summary cards */}
-          <div className="grid grid-cols-3 gap-2">
-            <SummaryCard label={t('stats.expenses')} value={formatAmount(stats?.totalExpenses ?? 0, currency)} color="text-destructive" />
-            <SummaryCard label={t('stats.income')} value={formatAmount(stats?.totalIncome ?? 0, currency)} color="text-emerald-500" />
-            <SummaryCard label={t('stats.balance')} value={formatAmount(Math.abs(balance), currency)} color={balance >= 0 ? 'text-emerald-500' : 'text-destructive'} prefix={balance > 0 ? '+' : balance < 0 ? '-' : ''} />
+          {/* ── MOBILE layout ── */}
+          <div className="lg:hidden flex flex-col gap-4">
+            {summaryCards}
+            {pieData.length > 0 && (
+              <div className="rounded-2xl border border-border bg-card p-4">
+                <h2 className="text-sm font-semibold mb-3">{t('stats.byCategory')}</h2>
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie data={pieData} dataKey="amount" nameKey="name" cx="50%" cy="50%" outerRadius={80} innerRadius={50}>
+                      {pieData.map((entry) => <Cell key={entry.catId} fill={entry.color} />)}
+                    </Pie>
+                    <Tooltip formatter={(value) => formatAmount(value as number, currency)} contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="mt-3">{categoryList}</div>
+              </div>
+            )}
+            {barChart}
+            {pieData.length === 0 && (
+              <div className="flex flex-col items-center py-12 text-center">
+                <p className="text-4xl mb-3">📊</p>
+                <p className="font-medium">{t('stats.noData')}</p>
+              </div>
+            )}
           </div>
 
-          {/* Category breakdown + budgets */}
-          {pieData.length > 0 && (
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <h2 className="text-sm font-semibold mb-3">{t('stats.byCategory')}</h2>
-
-              {/* Pie chart */}
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    dataKey="amount"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    innerRadius={50}
-                  >
-                    {pieData.map((entry) => (
-                      <Cell key={entry.catId} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value) => formatAmount(value as number, currency)}
-                    contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-
-              {/* Category list with budget bars */}
-              <div className="flex flex-col gap-3 mt-3">
-                {pieData.map((d) => {
-                  const limit = showBudget ? (budgetLimits[d.catId] ?? 0) : 0;
-                  const pct = limit > 0 ? Math.min(100, (d.amount / limit) * 100) : 0;
-                  const overBudget = limit > 0 && d.amount > limit;
-                  const isEditing = editingCatId === d.catId;
-
-                  return (
-                    <div key={d.catId}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <CategoryIcon icon={d.icon} color={d.color} size="sm" />
-                        <span className="flex-1 text-sm">{d.name}</span>
-                        <span className="text-sm font-semibold tabular-nums">{formatAmount(d.amount, currency)}</span>
-                        {showBudget && (
-                          <button
-                            onClick={() => isEditing ? setEditingCatId(null) : openBudgetEdit(d.catId)}
-                            className={cn(
-                              'text-xs px-2 py-0.5 rounded-full transition-colors',
-                              overBudget
-                                ? 'bg-destructive/10 text-destructive'
-                                : limit > 0
-                                ? 'bg-muted text-muted-foreground hover:text-foreground'
-                                : 'bg-muted text-muted-foreground hover:text-foreground'
-                            )}
-                          >
-                            {overBudget ? t('stats.over') : limit > 0 ? `/ ${formatAmount(limit, currency)}` : t('stats.addLimit')}
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Budget progress bar */}
-                      {limit > 0 && !isEditing && (
-                        <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-1">
-                          <div
-                            className={cn(
-                              'h-full rounded-full transition-all',
-                              pct >= 100 ? 'bg-destructive' : pct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'
-                            )}
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                      )}
-
-                      {/* Inline budget editor */}
-                      {isEditing && (
-                        <div className="flex items-center gap-2 mt-1.5">
-                          <input
-                            autoFocus
-                            type="number"
-                            min="0"
-                            step="1"
-                            placeholder="Monthly limit (0 to remove)"
-                            value={limitInput}
-                            onChange={(e) => setLimitInput(e.target.value)}
-                            onKeyDown={blockInvalidAmountKeys}
-                            className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                          />
-                          <button
-                            onClick={() => handleSaveBudget(d.catId)}
-                            disabled={savingBudget}
-                            className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-50"
-                          >
-                            {savingBudget ? '…' : t('stats.save')}
-                          </button>
-                          <button
-                            onClick={() => setEditingCatId(null)}
-                            className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground"
-                          >
-                            {t('common.cancel')}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+          {/* ── DESKTOP layout ── */}
+          <div className="hidden lg:flex flex-col gap-4">
+            {summaryCards}
+            {pieData.length === 0 && (
+              <div className="flex flex-col items-center py-16 text-center">
+                <p className="text-4xl mb-3">📊</p>
+                <p className="font-medium">{t('stats.noData')}</p>
               </div>
+            )}
+            {pieData.length > 0 && (
+              <div className="grid grid-cols-2 gap-4 items-start">
+                {/* Left: pie + category list */}
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <h2 className="text-sm font-semibold mb-3">{t('stats.byCategory')}</h2>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <PieChart>
+                      <Pie data={pieData} dataKey="amount" nameKey="name" cx="50%" cy="50%" outerRadius={90} innerRadius={55}>
+                        {pieData.map((entry) => <Cell key={entry.catId} fill={entry.color} />)}
+                      </Pie>
+                      <Tooltip formatter={(value) => formatAmount(value as number, currency)} contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="mt-4">{categoryList}</div>
+                </div>
 
-              {showBudget && (
-                <p className="text-xs text-muted-foreground mt-3">Tap a category limit to edit</p>
-              )}
-            </div>
-          )}
-
-          {/* Bar chart — multi-month only */}
-          {barData.length > 1 && (
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <h2 className="text-sm font-semibold mb-3">{t('analytics.trend')}</h2>
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={barData} barGap={4}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} width={45} />
-                  <Tooltip
-                    formatter={(value) => formatAmount(value as number, currency)}
-                    contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))' }}
-                  />
-                  <Bar dataKey="expenses" name="Expenses" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="income" name="Income" fill="#10b981" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
-          {/* Empty state */}
-          {pieData.length === 0 && (
-            <div className="flex flex-col items-center py-12 text-center">
-              <p className="text-4xl mb-3">📊</p>
-              <p className="font-medium">{t('stats.noData')}</p>
-            </div>
-          )}
+                {/* Right: bar chart (if available) or category totals */}
+                <div className="flex flex-col gap-4">
+                  {barChart || (
+                    <div className="rounded-2xl border border-border bg-card p-5">
+                      <h2 className="text-sm font-semibold mb-4">{t('stats.byCategory')}</h2>
+                      <div className="flex flex-col gap-3">
+                        {pieData.map((d) => {
+                          const pct = stats && stats.totalExpenses > 0 ? (d.amount / stats.totalExpenses) * 100 : 0;
+                          return (
+                            <div key={d.catId} className="flex items-center gap-3">
+                              <CategoryIcon icon={d.icon} color={d.color} size="sm" />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-sm truncate">{d.name}</span>
+                                  <span className="text-sm font-semibold tabular-nums ml-2">{formatAmount(d.amount, currency)}</span>
+                                </div>
+                                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                                  <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: d.color }} />
+                                </div>
+                              </div>
+                              <span className="text-xs text-muted-foreground w-9 text-right shrink-0">{pct.toFixed(0)}%</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </>
       )}
     </div>

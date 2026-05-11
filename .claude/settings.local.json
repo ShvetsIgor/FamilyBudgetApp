@@ -26,7 +26,11 @@
       "Read(//c/Users/Shvets/**)",
       "Read(//c/Users/Shvets/Desktop/**)",
       "Skill(update-config)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(npx tsc *)",
+      "Bash(python3)",
+      "Bash(echo \"PID: $!\")",
+      "Bash(vercel whoami *)"
     ]
   },
   "hooks": {

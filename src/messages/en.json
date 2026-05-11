@@ -138,6 +138,8 @@
     "byDow": "Spending by Day of Week",
     "noData": "Not enough data yet",
     "addMore": "Add expenses to see analytics",
+    "totalSpend6m": "Total spend (6m)",
+    "bestMonth": "Best month",
     "dow": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
   },
   "account": {
@@ -212,6 +214,7 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "confirmDelete": "Delete this payment?",
+    "selectToEdit": "Click an item to edit or add a new one",
     "markPaid": "Mark paid",
     "upcomingBills": "Upcoming bills",
     "seeAll": "See all",
@@ -247,6 +250,7 @@
     "cancel": "Cancel",
     "delete": "Delete Goal",
     "confirmDelete": "Delete this goal?",
+    "selectGoal": "Select a goal to see details or add a new one",
     "achieved": "🎉 Goal reached!",
     "remaining": "remaining",
     "createGoal": "Create Goal",
@@ -275,7 +279,8 @@
     "saving": "Saving…",
     "cancel": "Cancel",
     "delete": "Delete",
-    "confirmDelete": "Delete this category?"
+    "confirmDelete": "Delete this category?",
+    "selectToEdit": "Select a category to edit or add a new one"
   },
   "auth": {
     "signIn": "Sign In",

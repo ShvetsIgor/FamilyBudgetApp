@@ -35,3 +35,10 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+
+.vercel
+
+tsconfig.tsbuildinfo
+compare_translations.js
+Family Budget Design System/
+HANDOFF.md

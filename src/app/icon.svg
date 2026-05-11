@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  
+  <rect width="200" height="200" rx="44" fill="#FBF6EE"></rect>
+
+  
+  <circle cx="95" cy="46" r="18" fill="#F2CC8F"></circle>
+  <text x="95" y="55" text-anchor="middle" font-family="Nunito, system-ui, sans-serif" font-weight="900" font-size="22" fill="#3D2C1F">₪</text>
+
+  
+  <path d="M 42 118 q -10 -6 -3 -16" stroke="#C9684E" stroke-width="7" fill="none" stroke-linecap="round"></path>
+
+  
+  <ellipse cx="104" cy="124" rx="62" ry="46" fill="#E07A5F"></ellipse>
+
+  
+  <path d="M 70 84 L 92 76 L 86 102 Z" fill="#C9684E"></path>
+
+  
+  <ellipse cx="150" cy="122" rx="22" ry="18" fill="#C9684E"></ellipse>
+  <circle cx="144" cy="120" r="2.6" fill="#3D2C1F"></circle>
+  <circle cx="156" cy="120" r="2.6" fill="#3D2C1F"></circle>
+
+  
+  <circle cx="118" cy="110" r="4.5" fill="#3D2C1F"></circle>
+  <circle cx="119.5" cy="108.5" r="1.4" fill="#FBF6EE"></circle>
+
+  
+  <rect x="86" y="92" width="22" height="5.5" rx="2.75" fill="#3D2C1F"></rect>
+
+  
+  <rect x="76" y="162" width="14" height="14" rx="4" fill="#C9684E"></rect>
+  <rect x="122" y="162" width="14" height="14" rx="4" fill="#C9684E"></rect>
+
+  
+  <circle cx="132" cy="138" r="6" fill="#F2A790" opacity="0.7"></circle>
+</svg>

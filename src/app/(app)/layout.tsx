@@ -9,13 +9,11 @@ import { setFamily, setMembers, setPendingInvite } from '@/features/family/store
 import { setBudgets } from '@/features/budget/store/budgetSlice';
 import { fetchBudgets } from '@/features/budget/services/budgetService';
 import { fetchFamily, fetchFamilyMembers, fetchPendingInvite } from '@/features/family/services/familyService';
-import { Header } from '@/shared/components/Header';
-import { BottomNav } from '@/shared/components/BottomNav';
+import { AppShell } from '@/shared/components/AppShell';
 import { LoadingScreen } from '@/shared/components/LoadingScreen';
 import { requestNotificationPermission } from '@/shared/hooks/useNotifications';
 import { useRecurringNotifications } from '@/features/recurring/hooks/useRecurringNotifications';
 import { OnboardingFlow } from '@/features/onboarding/components/OnboardingFlow';
-import { UpdateBanner } from '@/shared/components/UpdateBanner';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
@@ -80,12 +78,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (!user) return null;
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <UpdateBanner />
-      <Header />
-      <main className="flex-1 pb-20">{children}</main>
-      <BottomNav />
+    <AppShell>
+      {children}
       {showOnboarding && <OnboardingFlow onComplete={() => setShowOnboarding(false)} />}
-    </div>
+    </AppShell>
   );
 }

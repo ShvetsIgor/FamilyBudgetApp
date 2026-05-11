@@ -4,7 +4,18 @@
     "expenses": "Expenses",
     "statistics": "Statistics",
     "analytics": "Analytics",
-    "account": "Account"
+    "account": "Account",
+    "categories": "Categories",
+    "savings": "Savings",
+    "recurring": "Recurring"
+  },
+  "sidebar": {
+    "budget": "Budget",
+    "planning": "Planning",
+    "family": "Family"
+  },
+  "topbar": {
+    "addTransaction": "Add Transaction"
   },
   "home": {
     "addExpense": "Add Expense",

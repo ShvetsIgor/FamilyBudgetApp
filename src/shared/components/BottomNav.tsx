@@ -18,7 +18,7 @@ export function BottomNav() {
   ] as const;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background pb-safe">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background pb-safe">
       <div className="flex h-16 items-center justify-around">
         {NAV_ITEMS.map(({ href, icon: Icon, label, activeOn }) => {
           const isActive = activeOn.some((path) => pathname.startsWith(path));

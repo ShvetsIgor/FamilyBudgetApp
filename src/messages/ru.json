@@ -4,7 +4,18 @@
     "expenses": "Расходы",
     "statistics": "Статистика",
     "analytics": "Аналитика",
-    "account": "Аккаунт"
+    "account": "Аккаунт",
+    "categories": "Категории",
+    "savings": "Накопления",
+    "recurring": "Регулярные"
+  },
+  "sidebar": {
+    "budget": "Бюджет",
+    "planning": "Планирование",
+    "family": "Семья"
+  },
+  "topbar": {
+    "addTransaction": "Добавить"
   },
   "home": {
     "addExpense": "Добавить расход",

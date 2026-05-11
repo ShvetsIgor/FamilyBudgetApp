@@ -7,7 +7,6 @@
 
     <!-- coin -->
     <circle cx="95" cy="46" r="18" fill="#F2CC8F"/>
-    <text x="95" y="55" text-anchor="middle" font-family="Nunito, system-ui, sans-serif" font-weight="900" font-size="22" fill="#3D2C1F">₪</text>
 
     <!-- tail -->
     <path d="M 42 118 q -10 -6 -3 -16" stroke="#C9684E" stroke-width="7" fill="none" stroke-linecap="round"/>

@@ -546,11 +546,11 @@ export default function AccountPage() {
       </div>
 
       {/* Export */}
-      <div className="rounded-2xl border border-border bg-card p-4 flex flex-col gap-3">
+      <div className="rounded-2xl border border-border bg-card p-4 flex flex-col gap-3 overflow-hidden">
         <p className="text-xs text-muted-foreground">{t('export.title')}</p>
 
         {/* Month picker */}
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 min-w-0">
           <label className="text-xs text-muted-foreground">{t('export.month')}</label>
           <input
             type="month"
@@ -558,7 +558,7 @@ export default function AccountPage() {
             onChange={(e) => setExportMonth(e.target.value)}
             max={format(new Date(), 'yyyy-MM')}
             min={format(subMonths(new Date(), 24), 'yyyy-MM')}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+            className="w-full max-w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
           />
         </div>
 

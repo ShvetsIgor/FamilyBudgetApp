@@ -86,7 +86,7 @@ export function IncomeForm({ initialIncome, onSave, onCancel }: Props) {
       {/* Category */}
       <div className="rounded-2xl border border-border bg-card p-4">
         <label className="text-xs text-muted-foreground mb-2 block">{t('income.category')}</label>
-        <CategoryPicker type="income" value={categoryId} onChange={setCategoryId} />
+        <CategoryPicker type="income" childrenOnly value={categoryId} onChange={setCategoryId} />
       </div>
 
       {/* Date */}

@@ -32,7 +32,6 @@ const CURRENCIES: { value: Currency; label: string }[] = [
 const LANGUAGES: { value: Language; label: string }[] = [
   { value: 'en', label: '🇺🇸 English' },
   { value: 'ru', label: '🇷🇺 Русский' },
-  { value: 'he', label: '🇮🇱 עברית' },
 ];
 
 export default function AccountPage() {

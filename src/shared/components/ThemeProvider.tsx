@@ -11,7 +11,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const root = document.documentElement;
     root.classList.toggle('dark', theme === 'dark');
     root.setAttribute('lang', language);
-    root.setAttribute('dir', language === 'he' ? 'rtl' : 'ltr');
+    root.setAttribute('dir', 'ltr');
   }, [theme, language]);
 
   return <>{children}</>;

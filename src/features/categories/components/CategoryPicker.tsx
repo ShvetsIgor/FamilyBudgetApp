@@ -14,9 +14,10 @@ interface Props {
   onChange: (categoryId: string) => void;
   placeholder?: string;
   parentsOnly?: boolean;
+  childrenOnly?: boolean;
 }
 
-export function CategoryPicker({ type, value, onChange, placeholder = 'Select category', parentsOnly = false }: Props) {
+export function CategoryPicker({ type, value, onChange, placeholder = 'Select category', parentsOnly = false, childrenOnly = false }: Props) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const allCategories = useAppSelector((s) => s.categories[type]);
@@ -24,10 +25,14 @@ export function CategoryPicker({ type, value, onChange, placeholder = 'Select ca
 
   const categories = parentsOnly
     ? allCategories.filter((c) => !c.parentId)
-    : allCategories;
+    : childrenOnly
+      ? allCategories.filter((c) => !!c.parentId)
+      : allCategories;
 
   const selected = allCategories.find((c) => c.id === value);
-  const parents = categories.filter((c) => !c.parentId);
+  const defaultList = childrenOnly
+    ? categories
+    : categories.filter((c) => !c.parentId);
 
   const filtered = search
     ? categories.filter((c) =>
@@ -75,7 +80,7 @@ export function CategoryPicker({ type, value, onChange, placeholder = 'Select ca
             />
           </div>
           <div className="max-h-64 overflow-y-auto p-2 flex flex-col gap-1">
-            {(filtered ?? parents).map((cat) => (
+            {(filtered ?? defaultList).map((cat) => (
               <CategoryRow key={cat.id} cat={cat} displayName={t.cat(cat.name)} selected={value} onSelect={select} />
             ))}
           </div>

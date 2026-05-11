@@ -65,9 +65,17 @@ async function seedDefaultCategoriesForce(userId: string): Promise<void> {
     await addDoc(colRef(userId, 'expense'), { ...catData, parentId: realParentId, userId });
   }
 
-  for (const cat of DEFAULT_INCOME_CATEGORIES) {
+  const incomeParentIdMap: Record<string, string> = {};
+  for (const cat of DEFAULT_INCOME_CATEGORIES.filter((c) => !c.parentId)) {
     const { parentId: _omit, ...catData } = cat;
-    await addDoc(colRef(userId, 'income'), { ...catData, userId });
+    const ref = await addDoc(colRef(userId, 'income'), { ...catData, userId });
+    const key = `__${cat.name.toLowerCase().replace(/[\s/]+/g, '_')}__`;
+    incomeParentIdMap[key] = ref.id;
+  }
+  for (const cat of DEFAULT_INCOME_CATEGORIES.filter((c) => c.parentId)) {
+    const realParentId = incomeParentIdMap[cat.parentId!] ?? null;
+    const { parentId: _omit, ...catData } = cat;
+    await addDoc(colRef(userId, 'income'), { ...catData, parentId: realParentId, userId });
   }
 }
 
@@ -77,7 +85,6 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
 
   const parentIdMap: Record<string, string> = {};
 
-  // Parents first — strip parentId entirely (Firestore rejects undefined)
   for (const cat of DEFAULT_EXPENSE_CATEGORIES.filter((c) => !c.parentId)) {
     const { parentId: _omit, ...catData } = cat;
     const ref = await addDoc(colRef(userId, 'expense'), { ...catData, userId });
@@ -85,17 +92,23 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
     parentIdMap[key] = ref.id;
   }
 
-  // Children — resolve temp key to real Firestore ID
   for (const cat of DEFAULT_EXPENSE_CATEGORIES.filter((c) => c.parentId)) {
     const realParentId = parentIdMap[cat.parentId!] ?? null;
     const { parentId: _omit, ...catData } = cat;
     await addDoc(colRef(userId, 'expense'), { ...catData, parentId: realParentId, userId });
   }
 
-  // Income (flat)
-  for (const cat of DEFAULT_INCOME_CATEGORIES) {
+  const incomeParentIdMap: Record<string, string> = {};
+  for (const cat of DEFAULT_INCOME_CATEGORIES.filter((c) => !c.parentId)) {
     const { parentId: _omit, ...catData } = cat;
-    await addDoc(colRef(userId, 'income'), { ...catData, userId });
+    const ref = await addDoc(colRef(userId, 'income'), { ...catData, userId });
+    const key = `__${cat.name.toLowerCase().replace(/[\s/]+/g, '_')}__`;
+    incomeParentIdMap[key] = ref.id;
+  }
+  for (const cat of DEFAULT_INCOME_CATEGORIES.filter((c) => c.parentId)) {
+    const realParentId = incomeParentIdMap[cat.parentId!] ?? null;
+    const { parentId: _omit, ...catData } = cat;
+    await addDoc(colRef(userId, 'income'), { ...catData, parentId: realParentId, userId });
   }
 }
 

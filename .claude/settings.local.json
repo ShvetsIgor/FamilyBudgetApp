@@ -21,7 +21,26 @@
       "Bash(git remote *)",
       "Bash(git push *)",
       "Bash(vercel --version)",
-      "Bash(firebase --version)"
+      "Bash(firebase --version)",
+      "Bash(npx vercel *)",
+      "Read(//c/Users/Shvets/**)",
+      "Read(//c/Users/Shvets/Desktop/**)",
+      "Skill(update-config)",
+      "Bash(git *)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"Git commit complete. Update the Change Log section in CLAUDE.md now: add today date and a one-line summary of what was just committed.\"}}'",
+            "if": "Bash(git commit *)"
+          }
+        ]
+      }
     ]
   }
 }

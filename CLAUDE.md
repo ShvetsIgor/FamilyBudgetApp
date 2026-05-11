@@ -3,12 +3,13 @@
 ## Stack
 - **Framework:** Next.js 15 + App Router
 - **Language:** TypeScript (strict)
-- **Styling:** Tailwind CSS + shadcn/ui (Radix primitives)
+- **Styling:** Tailwind CSS + shadcn/ui (Radix primitives) + custom design tokens (Nunito font, warm palette)
 - **State:** Redux Toolkit (`src/store/store.ts`)
 - **Backend:** Firebase (Auth + Firestore + Storage) — Spark free tier
 - **i18n:** next-intl, locales: `en` (default), `ru`, `he` (RTL)
-- **PWA:** next-pwa (disabled in dev)
+- **PWA:** next-pwa (disabled in dev), update banner when new version available
 - **Date utils:** date-fns
+- **Charts:** Statistics page uses pie + bar charts
 
 ## Dev Workflow
 ```
@@ -21,45 +22,108 @@ npm run lint
 ```
 src/
   app/
-    layout.tsx              — root layout, Providers
-    providers.tsx           — Redux + ThemeProvider + AuthProvider
-    page.tsx                — redirect → /home
-    (app)/                  — authenticated route group
-      layout.tsx            — Header + BottomNav wrapper
-      home/page.tsx         — Quick Add screen
-      expenses/page.tsx
-      statistics/page.tsx
-      analytics/page.tsx
-      account/page.tsx
+    layout.tsx                    — root layout, Providers
+    providers.tsx                 — Redux + ThemeProvider + AuthProvider
+    page.tsx                      — redirect → /home
+    auth/
+      layout.tsx
+      login/page.tsx              — email/password + Google sign-in
+      register/page.tsx           — email/password + Google sign-up
+    (app)/                        — authenticated route group
+      layout.tsx                  — Header + BottomNav wrapper
+      home/page.tsx               — Quick Add, upcoming bills, recent expenses
+      expenses/
+        page.tsx                  — grouped by date, search/filter
+        new/page.tsx              — new expense form
+        [id]/page.tsx             — expense detail
+        [id]/edit/page.tsx        — edit expense
+      categories/page.tsx         — tree view, CRUD, reset to defaults
+      statistics/page.tsx         — pie + bar charts, monthly breakdown
+      analytics/page.tsx          — trends, insights
+      recurring/page.tsx          — recurring payments CRUD
+      savings/page.tsx            — savings goals CRUD + contribute
+      account/page.tsx            — profile, theme, language, currency, family, export CSV
   features/
     auth/
-      components/AuthProvider.tsx   — Firebase onAuthStateChanged
+      components/
+        AuthProvider.tsx          — Firebase onAuthStateChanged
+        LoginForm.tsx
+        RegisterForm.tsx
+        GoogleButton.tsx
+      services/authService.ts
       store/authSlice.ts
+    categories/
+      components/
+        CategoryForm.tsx
+        CategoryIcon.tsx
+        CategoryPicker.tsx
+        CategoryTree.tsx
+      services/
+        categoriesService.ts
+        defaultCategories.ts      — seed data for default categories
+      store/categoriesSlice.ts
+    expenses/
+      components/
+        ExpenseCard.tsx
+        ExpenseForm.tsx           — with split support
+        SplitEditor.tsx           — inline split editor
+      services/expensesService.ts
+      store/expensesSlice.ts
+      utils/splitAlgorithm.ts
+    income/
+      components/
+        IncomeCard.tsx
+        IncomeForm.tsx
+      services/incomeService.ts
+      store/incomeSlice.ts
+    recurring/
+      components/UpcomingBills.tsx
+      hooks/useRecurringNotifications.ts
+      services/recurringService.ts
+      store/recurringSlice.ts
+    savings/
+      services/savingsService.ts
+      store/savingsSlice.ts
+    stats/
+      services/statsService.ts
+    budget/
+      services/budgetService.ts
+      store/budgetSlice.ts
+    family/
+      services/familyService.ts
+      store/familySlice.ts
+    onboarding/
+      components/OnboardingFlow.tsx
     ui/
-      store/uiSlice.ts              — theme, language, currency, offline
-    expenses/   (skeleton)
-    categories/ (skeleton)
-    income/     (skeleton)
-    recurring/  (skeleton)
-    savings/    (skeleton)
-    stats/      (skeleton)
-    family/     (skeleton)
-    analytics/  (skeleton)
+      store/uiSlice.ts            — theme, language, currency, offline
   shared/
     components/
-      Header.tsx            — sticky, offline indicator, nav icons
-      BottomNav.tsx         — 4 tabs: Add / Expenses / Stats / Analytics
-      ThemeProvider.tsx     — applies dark class + RTL dir to <html>
+      Header.tsx                  — sticky, offline indicator, wordmark logo, recurring icon
+      BottomNav.tsx               — 4 tabs: Add / Expenses / Stats / Analytics
+      ThemeProvider.tsx           — applies dark class + RTL dir to <html>
+      LoadingScreen.tsx
+      UpdateBanner.tsx            — PWA update prompt
+    hooks/
+      useNotifications.ts
+      useT.ts
     lib/
-      firebase.ts           — lazy getFirebaseApp() factory
+      firebase.ts                 — lazy getFirebaseApp() factory
       i18n.ts
-    types/index.ts          — all TypeScript interfaces
+    types/index.ts                — all TypeScript interfaces
     utils/
-      cn.ts                 — tailwind-merge helper
-      currency.ts           — formatAmount, getCurrencySymbol
-  store/store.ts            — Redux store + typed hooks
+      cn.ts                       — tailwind-merge helper
+      colors.ts
+      currency.ts                 — formatAmount, getCurrencySymbol
+      exportCsv.ts                — CSV export for account page
+  store/store.ts                  — Redux store + typed hooks
   messages/
-    en.json / ru.json / he.json
+    en.json / ru.json / he.json   — full i18n coverage
+public/
+  logo-mark.svg                   — pig logo mark
+  wordmark.svg                    — text wordmark
+  favicon.ico / favicon.svg
+  icon-192.png / icon-512.png     — PWA icons
+  manifest.json
 ```
 
 ## Firebase Setup
@@ -74,7 +138,9 @@ src/
 - **monthlyStats docs** — pre-aggregated per user per month to minimize Firestore reads
 - **Optimistic UI** — Redux updated immediately, Firestore write async
 - **Privacy tiers** — personal / family / secret (secret = owner-only read in Firestore rules)
-- **Split expense** — optional inline editor, doesn't block fast path
+- **Split expense** — optional inline SplitEditor, doesn't block fast path
+- **Savings as expenses** — savings contributions create an expense record in the Savings category
+- **Auto-seed categories** — Savings category auto-created if missing on first contribution
 
 ## Firestore Collections
 ```
@@ -90,27 +156,39 @@ savingsGoals/{userId}/{goalId}
 monthlyStats/{userId}/{YYYY-MM}
 ```
 
-## Phase 1 Status (2026-05-10)
+## Feature Status (2026-05-12)
 - [x] Next.js + TypeScript + Tailwind setup
 - [x] Redux Toolkit store
 - [x] Firebase lazy initialization
-- [x] Auth slice + AuthProvider
-- [x] ThemeProvider (dark/light + RTL)
+- [x] Auth — email/password + Google sign-in/sign-up
+- [x] ThemeProvider (dark/light + RTL for Hebrew)
 - [x] Header + BottomNav
-- [x] All page stubs
-- [x] TypeScript types (all interfaces)
-- [x] i18n messages (en/ru/he)
-- [x] PWA manifest
+- [x] i18n — full coverage en/ru/he, all strings via t() hook
+- [x] PWA manifest + icons + update banner
+- [x] Design system — Nunito font, warm palette, design tokens, category colors
+- [x] Logo — pig logo-mark SVG, wordmark SVG, favicon, PWA icons
+- [x] Categories — tree view, CRUD, color/icon, default seed, reset to defaults
+- [x] Add Expense form + split logic (SplitEditor)
+- [x] Expenses list — grouped by date, search/filter
+- [x] Expense detail + edit
+- [x] Income — add/list, category picker
+- [x] Statistics — pie chart + bar chart, monthly breakdown by category
+- [x] Analytics — trends and insights page
+- [x] Recurring payments — CRUD, upcoming bills on Home + Expenses
+- [x] Savings goals — CRUD, contribute (creates expense), sync on delete
+- [x] Account page — profile, theme, language, currency, family, CSV export
+- [x] Home — quick-add buttons, upcoming bills, recent expenses, real data
+- [x] Onboarding flow
+- [x] Budget feature (service + slice)
+- [x] Family feature (service + slice)
 - [ ] Firebase config (.env.local) — waiting for user
-- [ ] Auth screens (login/register)
-- [ ] Categories
-- [ ] Add Expense form + split logic
-- [ ] Expenses list
-- [ ] Income
-- [ ] Statistics
-- [ ] Family flow
-- [ ] Recurring payments
-- [ ] Savings goals
+- [ ] Firestore security rules
+- [ ] Family invite flow (UI)
+- [ ] Push notifications (backend)
+- [ ] Deploy (Vercel)
 
 ## Change Log
-- **2026-05-10** — Phase 1 bootstrap complete. Next.js project initialized, all base files created, dev server running at :3000.
+- **2026-05-10** — Phase 1 bootstrap: Next.js, Firebase auth, layout system.
+- **2026-05-10** — Steps 3–11: Categories, Expense form+split, Expenses list, Income, Statistics, Analytics, Recurring payments, Savings goals, Account page, Home with real data.
+- **2026-05-11** — Steps 12–20: PWA update banner, full i18n, design system tokens, logo integration (SVG logo-mark + wordmark, favicon, PWA icons), category color fixes, auth screens polished.
+- **2026-05-12** — Logo SVG fixes: pig scaled 1.14×, shekel/pig removed from coin/wordmark, wordmark text centered in viewBox.

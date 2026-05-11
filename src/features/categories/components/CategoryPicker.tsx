@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
 import { CategoryIcon } from './CategoryIcon';
+import { useT } from '@/shared/hooks/useT';
 import { cn } from '@/shared/utils/cn';
 import type { Category, CategoryType } from '@/shared/types';
 
@@ -19,6 +20,7 @@ export function CategoryPicker({ type, value, onChange, placeholder = 'Select ca
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const allCategories = useAppSelector((s) => s.categories[type]);
+  const t = useT();
 
   const categories = parentsOnly
     ? allCategories.filter((c) => !c.parentId)
@@ -28,7 +30,10 @@ export function CategoryPicker({ type, value, onChange, placeholder = 'Select ca
   const parents = categories.filter((c) => !c.parentId);
 
   const filtered = search
-    ? categories.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()))
+    ? categories.filter((c) =>
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        t.cat(c.name).toLowerCase().includes(search.toLowerCase())
+      )
     : null;
 
   function select(cat: Category) {
@@ -50,7 +55,7 @@ export function CategoryPicker({ type, value, onChange, placeholder = 'Select ca
         {selected ? (
           <>
             <CategoryIcon icon={selected.icon} color={selected.color} size="sm" />
-            <span className="flex-1 font-medium">{selected.name}</span>
+            <span className="flex-1 font-medium">{t.cat(selected.name)}</span>
           </>
         ) : (
           <span className="flex-1 text-muted-foreground">{placeholder}</span>
@@ -71,7 +76,7 @@ export function CategoryPicker({ type, value, onChange, placeholder = 'Select ca
           </div>
           <div className="max-h-64 overflow-y-auto p-2 flex flex-col gap-1">
             {(filtered ?? parents).map((cat) => (
-              <CategoryRow key={cat.id} cat={cat} selected={value} onSelect={select} />
+              <CategoryRow key={cat.id} cat={cat} displayName={t.cat(cat.name)} selected={value} onSelect={select} />
             ))}
           </div>
         </div>
@@ -84,7 +89,7 @@ export function CategoryPicker({ type, value, onChange, placeholder = 'Select ca
   );
 }
 
-function CategoryRow({ cat, selected, onSelect }: { cat: Category; selected?: string; onSelect: (c: Category) => void }) {
+function CategoryRow({ cat, displayName, selected, onSelect }: { cat: Category; displayName: string; selected?: string; onSelect: (c: Category) => void }) {
   return (
     <button
       type="button"
@@ -95,7 +100,7 @@ function CategoryRow({ cat, selected, onSelect }: { cat: Category; selected?: st
       )}
     >
       <CategoryIcon icon={cat.icon} color={cat.color} size="sm" />
-      <span className="flex-1 text-left">{cat.name}</span>
+      <span className="flex-1 text-left">{displayName}</span>
       {selected === cat.id && <Check className="h-4 w-4 text-primary" />}
     </button>
   );

@@ -82,7 +82,7 @@ export default function StatisticsPage() {
     ? Object.entries(stats.byCategory)
         .map(([catId, amount]) => {
           const cat = categories.find((c) => c.id === catId);
-          return { catId, name: cat?.name ?? 'Other', amount, color: cat?.color ?? '#6b7280', icon: cat?.icon ?? '📦' };
+          return { catId, name: t.cat(cat?.name ?? 'Other'), amount, color: cat?.color ?? '#6b7280', icon: cat?.icon ?? '📦' };
         })
         .filter((d) => d.amount > 0)
         .sort((a, b) => b.amount - a.amount)

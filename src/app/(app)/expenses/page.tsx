@@ -218,7 +218,7 @@ export default function ExpensesPage() {
                     }`}
                   >
                     <span>{c.icon}</span>
-                    <span>{c.name}</span>
+                    <span>{t.cat(c.name)}</span>
                   </button>
                 ))}
             </div>

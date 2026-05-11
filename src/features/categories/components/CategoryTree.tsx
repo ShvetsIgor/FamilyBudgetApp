@@ -52,7 +52,7 @@ export function CategoryTree({ categories, onAdd, onEdit, onDelete }: Props) {
                   ) : null}
                 </span>
                 <CategoryIcon icon={parent.icon} color={parent.color} size="sm" />
-                <span className="text-sm font-medium truncate">{parent.name}</span>
+                <span className="text-sm font-medium truncate">{t.cat(parent.name)}</span>
                 {parent.isPrivate && (
                   <span className="text-xs text-muted-foreground ml-1">🔒</span>
                 )}
@@ -91,7 +91,7 @@ export function CategoryTree({ categories, onAdd, onEdit, onDelete }: Props) {
                     className="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-muted transition-colors group"
                   >
                     <CategoryIcon icon={child.icon} color={child.color} size="sm" />
-                    <span className="text-sm flex-1 truncate">{child.name}</span>
+                    <span className="text-sm flex-1 truncate">{t.cat(child.name)}</span>
                     {child.isPrivate && (
                       <span className="text-xs text-muted-foreground">🔒</span>
                     )}

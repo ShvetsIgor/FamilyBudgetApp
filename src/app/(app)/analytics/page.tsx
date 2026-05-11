@@ -150,7 +150,7 @@ export default function AnalyticsPage() {
                 <div key={id}>
                   <div className="flex items-center gap-2 mb-1">
                     <CategoryIcon icon={cat!.icon} color={cat!.color} size="sm" />
-                    <span className="flex-1 text-sm">{cat!.name}</span>
+                    <span className="flex-1 text-sm">{t.cat(cat!.name)}</span>
                     <span className="text-sm font-semibold tabular-nums">{formatAmount(total, currency)}</span>
                     <span className="text-xs text-muted-foreground w-9 text-right">{pct.toFixed(0)}%</span>
                   </div>

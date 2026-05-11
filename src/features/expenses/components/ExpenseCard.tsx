@@ -3,6 +3,7 @@
 import { useAppSelector } from '@/store/store';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { formatAmount } from '@/shared/utils/currency';
+import { useT } from '@/shared/hooks/useT';
 import { format } from 'date-fns';
 import { cn } from '@/shared/utils/cn';
 import type { SerializableExpense } from '@/shared/types';
@@ -21,6 +22,7 @@ const PAYMENT_ICONS: Record<string, string> = {
 export function ExpenseCard({ expense, onClick }: Props) {
   const categories = useAppSelector((s) => s.categories.expense);
   const category = categories.find((c) => c.id === expense.categoryId);
+  const t = useT();
 
   return (
     <button
@@ -35,10 +37,10 @@ export function ExpenseCard({ expense, onClick }: Props) {
 
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">
-          {expense.store || category?.name || 'Expense'}
+          {expense.store || (category ? t.cat(category.name) : 'Expense')}
         </p>
         <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-          <span>{category?.name}</span>
+          <span>{category && t.cat(category.name)}</span>
           {expense.splits.length > 0 && (
             <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px]">
               split {expense.splits.length + 1}

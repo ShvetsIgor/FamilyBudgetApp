@@ -196,4 +196,5 @@ monthlyStats/{userId}/{YYYY-MM}
 - **2026-05-12** — Desktop Home dashboard: 3 stat cards (balance/income/expenses), 2-col layout (transaction table + sidebar with upcoming bills and savings goals).
 - **2026-05-12** — Desktop layouts for Expenses (2-col list+form panel), Statistics (pie+budgets left, bar chart right), Analytics (4 stat cards + 2-col charts), Account (2-col profile+family vs prefs+export).
 - **2026-05-12** — Desktop layouts for Auth (split branded panel), Categories (2-col tree+form), Savings (2-col goals grid+detail panel), Recurring (2-col list+form panel).
+- **2026-05-12** — Desktop redesign per HANDOFF.md: Sidebar (family.budget logo, new nav structure), TopBar (greeting + search bar), Home dashboard (hero balance card, avg-day sparkline, 6-month trend chart, upcoming bills, budget categories, transactions table).
 - **2026-05-12** — Fix: Sidebar logout button showed raw key "account.logout" → corrected to account.signOut.

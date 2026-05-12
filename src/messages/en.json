@@ -1,13 +1,18 @@
 {
   "nav": {
     "add": "Add",
+    "overview": "Overview",
+    "transactions": "Transactions",
     "expenses": "Expenses",
     "statistics": "Statistics",
     "analytics": "Analytics",
     "account": "Account",
     "categories": "Categories",
     "savings": "Savings",
-    "recurring": "Recurring"
+    "recurring": "Recurring",
+    "goals": "Goals",
+    "members": "Members",
+    "settings": "Settings"
   },
   "sidebar": {
     "budget": "Budget",

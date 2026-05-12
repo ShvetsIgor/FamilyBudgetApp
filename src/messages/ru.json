@@ -20,7 +20,9 @@
     "family": "Семья"
   },
   "topbar": {
-    "addTransaction": "Добавить"
+    "addTransaction": "Новая трата",
+    "greeting": "Привет, {name}",
+    "search": "Найти транзакцию, категорию…"
   },
   "home": {
     "addExpense": "Добавить расход",

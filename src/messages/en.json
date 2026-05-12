@@ -20,7 +20,9 @@
     "family": "Family"
   },
   "topbar": {
-    "addTransaction": "Add Transaction"
+    "addTransaction": "New Expense",
+    "greeting": "Hi, {name}",
+    "search": "Search transactions, categories…"
   },
   "home": {
     "addExpense": "Add Expense",

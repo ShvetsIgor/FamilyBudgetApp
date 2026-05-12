@@ -323,7 +323,7 @@ export default function HomePage() {
                       ))}
                     </Bar>
                     <Tooltip
-                      formatter={(v: number) => [formatAmount(v, currency), '']}
+                      formatter={(v) => [formatAmount(Number(v ?? 0), currency), '']}
                       contentStyle={{
                         borderRadius: '12px',
                         border: '1px solid hsl(var(--border))',

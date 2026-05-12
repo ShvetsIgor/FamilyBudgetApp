@@ -1,13 +1,18 @@
 {
   "nav": {
     "add": "Добавить",
+    "overview": "Обзор",
+    "transactions": "Транзакции",
     "expenses": "Расходы",
     "statistics": "Статистика",
     "analytics": "Аналитика",
     "account": "Аккаунт",
     "categories": "Категории",
-    "savings": "Накопления",
-    "recurring": "Регулярные"
+    "savings": "Копилки",
+    "recurring": "Регулярные",
+    "goals": "Цели",
+    "members": "Участники",
+    "settings": "Настройки"
   },
   "sidebar": {
     "budget": "Бюджет",

@@ -36,7 +36,22 @@
     "noExpenses": "No expenses yet",
     "addFirst": "Add your first expense →",
     "savingsGoals": "Savings",
-    "transactions": "Transactions"
+    "transactions": "Transactions",
+    "remainingIn": "Remaining in",
+    "saved": "Saved",
+    "details": "Details",
+    "avgDay": "Avg per day",
+    "trend6m": "6-Month Trend",
+    "tabMonth": "Month",
+    "tabQuarter": "Quarter",
+    "tabYear": "Year",
+    "upcoming": "Upcoming bills",
+    "budgetCategories": "Budget Categories",
+    "manage": "Manage →",
+    "colWhere": "Where",
+    "colCategory": "Category",
+    "colAmount": "Amount",
+    "colDate": "Date"
   },
   "expense": {
     "title": "Add Expense",

@@ -4,8 +4,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Home, List, BarChart2, Lightbulb, Tag,
-  PiggyBank, Repeat2, Users, LogOut, UserCircle,
+  LayoutDashboard, List, BarChart2, Tag,
+  PiggyBank, Repeat2, Users, Settings,
+  LogOut, UserCircle,
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { useAppSelector } from '@/store/store';
@@ -17,10 +18,9 @@ const NAV_SECTIONS = [
   {
     labelKey: 'sidebar.budget',
     items: [
-      { href: '/home', icon: Home, labelKey: 'nav.add' },
-      { href: '/expenses', icon: List, labelKey: 'nav.expenses' },
-      { href: '/statistics', icon: BarChart2, labelKey: 'nav.statistics' },
-      { href: '/analytics', icon: Lightbulb, labelKey: 'nav.analytics' },
+      { href: '/home', icon: LayoutDashboard, labelKey: 'nav.overview' },
+      { href: '/expenses', icon: List, labelKey: 'nav.transactions' },
+      { href: '/analytics', icon: BarChart2, labelKey: 'nav.analytics' },
       { href: '/categories', icon: Tag, labelKey: 'nav.categories' },
     ],
   },
@@ -34,7 +34,8 @@ const NAV_SECTIONS = [
   {
     labelKey: 'sidebar.family',
     items: [
-      { href: '/account', icon: Users, labelKey: 'nav.account' },
+      { href: '/account', icon: Users, labelKey: 'nav.members' },
+      { href: '/account', icon: Settings, labelKey: 'nav.settings' },
     ],
   },
 ] as const;
@@ -51,33 +52,42 @@ export function Sidebar() {
     router.replace('/auth/login');
   }
 
+  // Track which href was activated first to avoid double-highlight
+  const activatedHrefs = new Set<string>();
+
   return (
     <aside className="hidden lg:flex w-[260px] flex-shrink-0 flex-col h-screen border-r border-border bg-background overflow-y-auto">
       {/* Logo */}
       <div className="flex items-center h-16 px-5 border-b border-border flex-shrink-0">
-        <Link href="/home" className="flex items-center">
-          <Image src="/logo-wordmark.svg" alt="Family Budget" width={140} height={36} priority className="h-9 w-auto" />
+        <Link href="/home" className="flex items-center gap-2.5">
+          <Image src="/logo-mark.svg" alt="" width={32} height={32} priority className="h-8 w-8" />
+          <span className="text-[15px] font-bold tracking-tight leading-none">
+            <span className="text-primary">family</span>
+            <span className="text-foreground/40">.</span>
+            <span className="text-foreground">budget</span>
+          </span>
         </Link>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 py-4 px-3 flex flex-col gap-6">
+      <nav className="flex-1 py-4 px-3 flex flex-col gap-5">
         {NAV_SECTIONS.map((section) => (
           <div key={section.labelKey}>
-            <p className="px-3 mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+            <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
               {t(section.labelKey)}
             </p>
             <div className="flex flex-col gap-0.5">
               {section.items.map(({ href, icon: Icon, labelKey }) => {
-                const isActive = pathname === href || pathname.startsWith(href + '/');
+                const isActive = (pathname === href || pathname.startsWith(href + '/')) && !activatedHrefs.has(href);
+                if (isActive) activatedHrefs.add(href);
                 return (
                   <Link
-                    key={href}
+                    key={labelKey}
                     href={href}
                     className={cn(
                       'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
                       isActive
-                        ? 'bg-primary text-primary-foreground'
+                        ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30'
                         : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                     )}
                   >
@@ -99,13 +109,13 @@ export function Sidebar() {
         >
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary flex-shrink-0">
             {user?.name ? (
-              <span className="text-sm font-semibold">{user.name[0].toUpperCase()}</span>
+              <span className="text-sm font-bold">{user.name[0].toUpperCase()}</span>
             ) : (
               <UserCircle className="h-5 w-5" />
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{user?.name || user?.email}</p>
+            <p className="text-sm font-semibold truncate">{user?.name || user?.email}</p>
             {user?.accountType === 'family' && (
               <p className="text-xs text-muted-foreground truncate">{t('common.family')}</p>
             )}

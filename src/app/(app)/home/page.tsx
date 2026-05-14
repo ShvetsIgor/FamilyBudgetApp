@@ -417,7 +417,7 @@ export default function HomePage() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-[1fr_auto_auto_auto] gap-0 px-5 py-2 border-b border-border">
+                <div className="grid grid-cols-[1fr_auto_auto_auto] gap-4 px-5 py-2 border-b border-border">
                   {['home.colWhere', 'home.colCategory', 'home.colAmount', 'home.colDate'].map((k) => (
                     <p key={k} className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
                       {t(k)}

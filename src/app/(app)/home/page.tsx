@@ -469,9 +469,25 @@ export default function HomePage() {
                         </p>
                         {/* Date */}
                         <div className="flex items-center gap-2">
-                          <p className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
-                            {format(parseISO(e.date), 'dd MMM')}
-                          </p>
+                          <div className="text-right">
+                            {(() => {
+                              const d = parseISO(e.date);
+                              const timeStr = format(d, 'HH:mm');
+                              if (isToday(d)) return (
+                                <>
+                                  <p className="text-xs text-muted-foreground whitespace-nowrap">{t('common.today')}</p>
+                                  <p className="text-[10px] text-muted-foreground/60 tabular-nums">{timeStr}</p>
+                                </>
+                              );
+                              if (isYesterday(d)) return (
+                                <>
+                                  <p className="text-xs text-muted-foreground whitespace-nowrap">{t('common.yesterday')}</p>
+                                  <p className="text-[10px] text-muted-foreground/60 tabular-nums">{timeStr}</p>
+                                </>
+                              );
+                              return <p className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">{format(d, 'd MMM', { locale: ru })}</p>;
+                            })()}
+                          </div>
                           <MoreHorizontal className="h-4 w-4 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                       </button>

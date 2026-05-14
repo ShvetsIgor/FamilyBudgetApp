@@ -351,7 +351,7 @@ export default function HomePage() {
                 {t('home.seeAll')} <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
-            <UpcomingBills withinDays={30} maxItems={4} compact />
+            <UpcomingBills withinDays={30} maxItems={4} embedded />
           </div>
         </div>
 

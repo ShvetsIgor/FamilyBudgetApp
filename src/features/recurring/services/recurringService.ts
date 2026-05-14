@@ -3,7 +3,7 @@ import {
   getDocs, query, orderBy, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
-import { addMonths, addWeeks, addDays, addYears } from 'date-fns';
+import { addMonths, addWeeks, addDays, addYears, parseISO } from 'date-fns';
 import type { SerializableRecurringPayment, Currency, RecurringFrequency, RecurringType } from '@/shared/types';
 
 function col(userId: string) {

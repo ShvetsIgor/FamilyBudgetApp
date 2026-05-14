@@ -95,6 +95,47 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false, embe
     }
   }
 
+  const itemRows = upcoming.map((item) => {
+    const cat = categories.find((c) => c.id === item.categoryId);
+    const days = differenceInDays(parseISO(item.nextDueDate), new Date());
+    const isDue = days <= 0;
+    return (
+      <div key={item.id} className="flex items-center gap-3 px-4 py-3">
+        {cat ? (
+          <CategoryIcon icon={cat.icon} color={cat.color} size="sm" />
+        ) : (
+          <span className="text-xl shrink-0">{TYPE_ICONS[item.type] ?? '🔄'}</span>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold truncate">{item.name}</p>
+          <p className="text-xs text-muted-foreground">
+            {format(parseISO(item.nextDueDate), 'd MMMM', { locale: ru })}
+          </p>
+        </div>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <span className="text-sm font-bold tabular-nums">
+            {item.amount > 0 ? '-' : ''}{formatAmount(item.amount, item.currency)}
+          </span>
+          {isDue ? (
+            <button
+              onClick={(e) => handlePay(item, e)}
+              disabled={payingId === item.id}
+              className="rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 text-[10px] font-bold hover:bg-emerald-500/25 transition-colors disabled:opacity-50"
+            >
+              {payingId === item.id ? '…' : t('recurring.markPaid')}
+            </button>
+          ) : (
+            <DayPill days={days} />
+          )}
+        </div>
+      </div>
+    );
+  });
+
+  if (embedded) {
+    return <div className="divide-y divide-border">{itemRows}</div>;
+  }
+
   if (compact) {
     return (
       <div className="w-full">

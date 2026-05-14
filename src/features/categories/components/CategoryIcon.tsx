@@ -1,5 +1,22 @@
 import { I } from '../icons/icons';
 
+interface StickerProps {
+  icon: string;
+  color: string;
+  className?: string;
+}
+
+export function StickerIcon({ icon, color, className = 'h-4 w-4' }: StickerProps) {
+  const IconComp = I[icon];
+  const gradId = `si-${icon}-${color.replace('#', '')}`;
+  if (!IconComp) return <span style={{ color }}>{icon}</span>;
+  return (
+    <span className={`inline-block shrink-0 ${className}`}>
+      <IconComp c={color} id={gradId} />
+    </span>
+  );
+}
+
 interface Props {
   icon: string;
   color: string;

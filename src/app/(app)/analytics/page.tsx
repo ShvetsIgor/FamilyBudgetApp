@@ -12,7 +12,9 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 
-const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+// Mon-first order: indices into JS getDay() (0=Sun,1=Mon,...,6=Sat)
+const DOW_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const DOW_NAMES = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
 export default function AnalyticsPage() {
   const user = useAppSelector((s) => s.auth.user);

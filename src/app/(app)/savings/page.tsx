@@ -417,6 +417,11 @@ function GoalForm({ currency, onSave, onCancel, t }: {
           onKeyDown={blockInvalidAmountKeys} className="w-full bg-transparent text-2xl font-bold outline-none tabular-nums text-emerald-500" />
       </div>
       <div className="rounded-2xl border border-border bg-card p-4">
+        <label className="text-xs text-muted-foreground mb-1 block">{t('savings.initialBalance')} ({currency}) <span className="opacity-50">({t('common.optional')})</span></label>
+        <input type="number" min="0" step="0.01" placeholder="0.00" value={initialAmt} onChange={(e) => setInitialAmt(e.target.value)}
+          onKeyDown={blockInvalidAmountKeys} className="w-full bg-transparent text-sm font-medium outline-none tabular-nums" />
+      </div>
+      <div className="rounded-2xl border border-border bg-card p-4">
         <label className="text-xs text-muted-foreground mb-1 block">{t('savings.monthlyPlan')} ({currency})</label>
         <input type="number" min="0" step="0.01" placeholder="0.00" value={monthly} onChange={(e) => setMonthly(e.target.value)}
           onKeyDown={blockInvalidAmountKeys} className="w-full bg-transparent text-sm font-medium outline-none tabular-nums" />

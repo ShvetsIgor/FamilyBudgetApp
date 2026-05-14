@@ -166,6 +166,7 @@
     "addMore": "Add expenses to see analytics",
     "totalSpend6m": "Total spend (6m)",
     "bestMonth": "Best month",
+    "avgDay": "Avg daily spend",
     "dow": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
   },
   "account": {

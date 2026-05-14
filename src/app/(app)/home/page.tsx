@@ -3,7 +3,7 @@
 import { useEffect, useCallback, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { format, parseISO, subMonths } from 'date-fns';
+import { format, parseISO, subMonths, isToday, isYesterday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Plus, TrendingUp, PiggyBank, ArrowRight, MoreHorizontal } from 'lucide-react';
 import {

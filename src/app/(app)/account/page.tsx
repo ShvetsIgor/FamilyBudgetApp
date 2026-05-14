@@ -18,6 +18,7 @@ import type { Currency, Language, Theme } from '@/shared/types';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
 import { fetchMonthExpenses } from '@/features/expenses/services/expensesService';
+import { getCurrencySymbol } from '@/shared/utils/currency';
 import { getNotificationPermission, requestNotificationPermission } from '@/shared/hooks/useNotifications';
 import { fetchMonthIncome } from '@/features/income/services/incomeService';
 import { expensesToCsv, incomeTocsv, downloadCsv } from '@/shared/utils/exportCsv';

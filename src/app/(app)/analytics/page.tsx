@@ -203,9 +203,78 @@ export default function AnalyticsPage() {
 
       {/* ── MOBILE layout ── */}
       <div className="lg:hidden flex flex-col gap-4">
-        {trendChart}
-        {topCatsCard}
-        {dowChart}
+        {mobileHeroCard}
+        {/* Trend: custom bars to match reference */}
+        {hasTrendData && (() => {
+          const maxV = Math.max(...trendData.map((d) => d.expenses), 1);
+          return (
+            <div>
+              <p className="text-[17px] font-extrabold text-foreground mb-2.5">{t('analytics.trend')}</p>
+              <div className="rounded-[22px] bg-card px-4 py-5" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
+                <div className="flex items-flex-end gap-2.5" style={{ height: 130, alignItems: 'flex-end' }}>
+                  {trendData.map((d, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                      <div
+                        className="w-full rounded-[10px_10px_6px_6px]"
+                        style={{ height: Math.max(6, (d.expenses / maxV) * 110), background: i === trendData.length - 1 ? 'hsl(var(--primary))' : 'hsl(var(--primary) / .3)' }}
+                      />
+                      <span className="text-[10px] font-bold text-muted-foreground">{d.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+        {/* DOW: custom bars */}
+        {hasDowData && (() => {
+          const maxV = Math.max(...dowData.map((d) => d.amount), 1);
+          const peakDay = dowData.reduce((best, d) => d.amount > best.amount ? d : best, dowData[0]);
+          return (
+            <div>
+              <p className="text-[17px] font-extrabold text-foreground mb-2.5">{t('analytics.byDow')}</p>
+              <div className="rounded-[22px] bg-card px-4 py-5" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
+                <div className="flex items-flex-end gap-2" style={{ height: 100, alignItems: 'flex-end' }}>
+                  {dowData.map((d, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                      <div
+                        className="w-full rounded-[8px_8px_4px_4px]"
+                        style={{ height: Math.max(4, (d.amount / maxV) * 80), background: '#81B29A' }}
+                      />
+                      <span className="text-[10px] font-extrabold text-muted-foreground">{d.name[0]}</span>
+                    </div>
+                  ))}
+                </div>
+                {peakDay && (
+                  <p className="text-[12px] font-semibold text-muted-foreground text-center mt-3">
+                    Пик трат — {peakDay.name}
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+        {/* Top category */}
+        {topCats[0] && (() => {
+          const top = topCats[0];
+          const pct = totalSpend > 0 ? (top.total / totalSpend) * 100 : 0;
+          return (
+            <div>
+              <p className="text-[17px] font-extrabold text-foreground mb-2.5">{t('analytics.topCategories')}</p>
+              <div className="rounded-[22px] bg-card px-4 py-4 flex items-center gap-3.5" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
+                <div className="h-[52px] w-[52px] rounded-[18px] flex items-center justify-center text-[26px] shrink-0" style={{ background: (top.cat?.color ?? '#E07A5F') + '22' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <span style={{ fontSize: 28 }}>{top.cat?.icon ?? '📦'}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-extrabold text-foreground">{t.cat(top.cat?.name ?? '')}</p>
+                  <p className="text-xs font-semibold text-muted-foreground mt-0.5">{pct.toFixed(0)}% {t('analytics.topCategories').toLowerCase()}</p>
+                </div>
+                <p className="text-[18px] font-black tabular-nums text-foreground">{formatAmount(top.total, currency)}</p>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* ── DESKTOP layout ── */}

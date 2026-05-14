@@ -182,7 +182,7 @@ export default function ExpensesPage() {
                       onClick={() => setFilterCatId(filterCatId === c.id ? '' : c.id)}
                       className={`shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${filterCatId === c.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
                     >
-                      <span>{c.icon}</span><span>{t.cat(c.name)}</span>
+                      <StickerIcon icon={c.icon} color={c.color} className="h-3.5 w-3.5" /><span>{t.cat(c.name)}</span>
                     </button>
                   ))}
               </div>

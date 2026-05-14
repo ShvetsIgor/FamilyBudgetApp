@@ -110,80 +110,81 @@ export default function HomePage() {
   return (
     <>
       {/* ─── MOBILE ─── */}
-      <div className="lg:hidden flex flex-col items-center px-4 pt-8 gap-6 pb-8">
-        {/* Month summary card */}
-        <div className="w-full rounded-[22px] bg-primary p-6 text-primary-foreground shadow-lg shadow-primary/20 relative overflow-hidden">
-          <div className="absolute -top-6 -right-6 h-28 w-28 rounded-full bg-white/10 pointer-events-none" />
-          <div className="absolute -bottom-10 -right-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
-          <p className="text-sm font-medium opacity-80 relative">{monthLabel}</p>
-          <div className="mt-1 flex items-baseline gap-2 relative">
-            <span className="text-3xl font-black tabular-nums">
-              {balance > 0 ? '+' : balance < 0 ? '-' : ''}{formatAmount(Math.abs(balance), currency)}
-            </span>
-          </div>
-          <div className="mt-4 grid grid-cols-2 gap-4 text-sm relative">
+      <div className="lg:hidden flex flex-col px-[22px] pt-4 gap-5 pb-28">
+
+        {/* Header: logo + greeting + avatar */}
+        <div className="flex items-center justify-between pt-2">
+          <div className="flex items-center gap-2.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-mark.svg" alt="" className="h-10 w-10 rounded-xl" />
             <div>
-              <p className="opacity-70">{t('home.income')}</p>
-              <p className="font-semibold tabular-nums">+{formatAmount(monthIncome, currency)}</p>
+              <p className="text-xs text-muted-foreground font-bold">{t('home.greeting')} {user?.name?.split(' ')[0] ?? ''} ✨</p>
+              <p className="text-lg font-extrabold text-foreground tracking-tight leading-none mt-0.5 capitalize">{monthLabel}</p>
             </div>
-            <div className="text-right">
-              <p className="opacity-70">{t('home.expenses')}</p>
-              <p className="font-semibold tabular-nums">-{formatAmount(monthExpenses, currency)}</p>
+          </div>
+          <Link href="/account">
+            <div className="h-11 w-11 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-black text-lg">
+              {user?.name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? 'A'}
             </div>
+          </Link>
+        </div>
+
+        {/* Hero balance card */}
+        <div className="rounded-[32px] bg-primary text-primary-foreground p-6 relative overflow-hidden" style={{ boxShadow: '0 16px 30px rgba(224,122,95,.30)' }}>
+          <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-white/10 pointer-events-none" />
+          <div className="absolute bottom-[-30px] right-7 h-[70px] w-[70px] rounded-full bg-white/08 pointer-events-none" />
+          <p className="text-[13px] font-bold opacity-85 relative">{t('home.remainingIn')} {monthLabel}</p>
+          <p className="text-[44px] font-black tabular-nums leading-none tracking-[-0.025em] mt-1 relative">
+            {formatAmount(Math.max(0, balance), currency)}
+          </p>
+          <div className="flex gap-5 mt-3.5 text-[13px] font-bold relative opacity-90">
+            <span>↑ {formatAmount(monthIncome, currency)} {t('home.income').toLowerCase()}</span>
+            <span>↓ {formatAmount(monthExpenses, currency)} {t('home.expenses').toLowerCase()}</span>
           </div>
         </div>
 
-        {/* Quick add */}
-        <div className="flex items-end gap-10">
-          <div className="flex flex-col items-center gap-2">
-            <Link href="/expenses?tab=income">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md active:scale-95 transition-transform">
-                <TrendingUp className="h-6 w-6" />
-              </div>
-            </Link>
-            <p className="text-xs text-muted-foreground">{t('home.income')}</p>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <Link href="/expenses/new">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 active:scale-95 transition-transform">
-                <Plus className="h-9 w-9" />
-              </div>
-            </Link>
-            <p className="text-sm text-muted-foreground">{t('home.expenses')}</p>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <Link href="/savings">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-500 text-white shadow-md active:scale-95 transition-transform">
-                <PiggyBank className="h-6 w-6" />
-              </div>
-            </Link>
-            <p className="text-xs text-muted-foreground">{t('home.savingsGoals')}</p>
-          </div>
+        {/* Quick actions */}
+        <div className="grid grid-cols-3 gap-2.5">
+          <Link href="/expenses/new" className="flex flex-col items-center gap-1 rounded-[22px] py-3.5 font-bold text-[13px] active:opacity-80 transition-opacity" style={{ background: '#81B29A', color: '#fff' }}>
+            <span className="text-[22px] leading-none">＋</span>
+            <span>{t('home.expense')}</span>
+          </Link>
+          <Link href="/expenses?tab=income" className="flex flex-col items-center gap-1 rounded-[22px] py-3.5 font-bold text-[13px] active:opacity-80 transition-opacity" style={{ background: '#F2CC8F', color: '#3D2C1F' }}>
+            <span className="text-[22px] leading-none">↑</span>
+            <span>{t('home.income')}</span>
+          </Link>
+          <Link href="/savings" className="flex flex-col items-center gap-1 rounded-[22px] py-3.5 font-bold text-[13px] border-2 border-dashed border-muted/50 active:opacity-80 transition-opacity text-foreground">
+            <span className="text-[22px] leading-none">🐷</span>
+            <span>{t('home.savingsGoals')}</span>
+          </Link>
         </div>
 
-        <UpcomingBills withinDays={7} maxItems={3} compact />
-
-        {activeGoals.length > 0 && (
-          <div className="w-full">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-muted-foreground">{t('home.savingsGoals')}</h2>
-              <Link href="/savings" className="text-xs text-primary hover:underline">{t('home.seeAll')}</Link>
+        {/* Budget categories */}
+        {topCategories.length > 0 && (
+          <div>
+            <div className="flex items-baseline justify-between mb-3">
+              <h2 className="text-[17px] font-extrabold text-foreground">{t('home.budgets')}</h2>
+              <Link href="/expenses" className="text-[13px] font-bold text-primary">{t('home.seeAll')} →</Link>
             </div>
-            <div className="rounded-[22px] border border-border bg-card divide-y divide-border overflow-hidden">
-              {activeGoals.map((g) => {
-                const pct = Math.min(100, (g.currentAmount / g.targetAmount) * 100);
+            <div className="flex flex-col gap-2.5">
+              {topCategories.slice(0, 3).map(({ cat, spent }) => {
+                const limit = 1000; // placeholder — budget feature coming
+                const over = spent > limit;
+                const pct = Math.min(100, (spent / Math.max(spent, limit)) * 100);
                 return (
-                  <div key={g.id} className="px-4 py-3">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm font-medium flex items-center gap-1.5">
-                        <span>{g.icon}</span><span>{g.name}</span>
-                      </span>
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        {formatAmount(g.currentAmount, currency)} / {formatAmount(g.targetAmount, currency)}
-                      </span>
+                  <div key={cat.id} className="bg-card rounded-[22px] px-4 py-3.5" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
+                    <div className="flex items-center gap-3">
+                      <CategoryIcon icon={cat.icon} color={cat.color} size="sm" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-foreground">{t.cat(cat.name)}</p>
+                        <p className="text-[11px] font-bold text-muted-foreground tabular-nums mt-0.5">{formatAmount(spent, currency)}</p>
+                      </div>
+                      {over && (
+                        <span className="text-[10px] font-extrabold text-primary bg-primary/15 px-2.5 py-1 rounded-full">{t('home.over')}</span>
+                      )}
                     </div>
-                    <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                      <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${pct}%` }} />
+                    <div className="h-2 bg-muted rounded-full mt-2.5 overflow-hidden">
+                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: over ? 'hsl(var(--primary))' : cat.color }} />
                     </div>
                   </div>
                 );
@@ -192,22 +193,29 @@ export default function HomePage() {
           </div>
         )}
 
-        <div className="w-full">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-muted-foreground">{t('home.recent')}</h2>
+        {/* Upcoming bills */}
+        <div>
+          <h2 className="text-[17px] font-extrabold text-foreground mb-3">{t('home.upcoming')}</h2>
+          <UpcomingBills withinDays={14} maxItems={3} embedded />
+        </div>
+
+        {/* Recent expenses */}
+        <div>
+          <div className="flex items-baseline justify-between mb-3">
+            <h2 className="text-[17px] font-extrabold text-foreground">{t('home.recent')}</h2>
             {expenses.length > 5 && (
-              <Link href="/expenses" className="text-xs text-primary hover:underline">{t('home.seeAll')}</Link>
+              <Link href="/expenses" className="text-[13px] font-bold text-primary">{t('home.seeAll')} →</Link>
             )}
           </div>
           {recent5.length === 0 ? (
-            <div className="rounded-[22px] border border-border bg-card p-8 text-center">
+            <div className="rounded-[22px] bg-card p-8 text-center" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
               <p className="text-sm text-muted-foreground">{t('home.noExpenses')}</p>
-              <Link href="/expenses/new" className="mt-3 inline-block text-sm font-medium text-primary hover:underline">
+              <Link href="/expenses/new" className="mt-3 inline-block text-sm font-bold text-primary">
                 {t('home.addFirst')}
               </Link>
             </div>
           ) : (
-            <div className="rounded-[22px] border border-border bg-card overflow-hidden divide-y divide-border">
+            <div className="rounded-[22px] bg-card overflow-hidden divide-y divide-border" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
               {recent5.map((e) => (
                 <ExpenseCard key={e.id} expense={e} onClick={() => router.push(`/expenses/${e.id}`)} />
               ))}

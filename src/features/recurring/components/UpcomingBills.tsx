@@ -58,7 +58,7 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false }: Pr
     .filter((r) => {
       if (!r.isActive) return false;
       const days = differenceInDays(parseISO(r.nextDueDate), new Date());
-      return days >= 0 && days <= withinDays;
+      return days >= -7 && days <= withinDays;
     })
     .sort((a, b) => parseISO(a.nextDueDate).getTime() - parseISO(b.nextDueDate).getTime())
     .slice(0, maxItems);

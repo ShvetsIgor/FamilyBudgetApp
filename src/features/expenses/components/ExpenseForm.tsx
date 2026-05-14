@@ -184,7 +184,7 @@ export function ExpenseForm({ initialExpense }: Props) {
                     : 'border-border bg-card text-muted-foreground hover:bg-muted'
                 )}
               >
-                <span>{sub.icon}</span>
+                <StickerIcon icon={sub.icon} color={sub.color} className="h-3.5 w-3.5" />
                 <span>{t.cat(sub.name)}</span>
               </button>
             ))}

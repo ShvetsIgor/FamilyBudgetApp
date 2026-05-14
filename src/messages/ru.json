@@ -51,7 +51,11 @@
     "colWhere": "Где",
     "colCategory": "Категория",
     "colAmount": "Сумма",
-    "colDate": "Дата"
+    "colDate": "Дата",
+    "greeting": "Привет,",
+    "expense": "Расход",
+    "budgets": "Топ категории",
+    "over": "Превышен"
   },
   "expense": {
     "title": "Новый расход",

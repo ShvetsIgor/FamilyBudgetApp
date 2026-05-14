@@ -370,6 +370,7 @@ function GoalForm({ currency, onSave, onCancel, t }: {
   const [icon, setIcon] = useState('🎯');
   const [color, setColor] = useState(GOAL_COLORS[0]);
   const [target, setTarget] = useState('');
+  const [initialAmt, setInitialAmt] = useState('');
   const [monthly, setMonthly] = useState('');
   const [deadline, setDeadline] = useState('');
   const [saving, setSaving] = useState(false);
@@ -385,6 +386,7 @@ function GoalForm({ currency, onSave, onCancel, t }: {
     try {
       await onSave({
         name: name.trim(), icon, color, targetAmount: num, currency: currency as Currency,
+        initialAmount: initialAmt ? parseFloat(initialAmt) : undefined,
         monthlyContribution: monthly ? parseFloat(monthly) : undefined,
         deadline: deadline ? parseLocalDate(deadline) : undefined,
       });

@@ -257,6 +257,7 @@
     "namePlaceholder": "New car, Vacation…",
     "icon": "Icon",
     "target": "Target amount",
+    "initialBalance": "Already saved",
     "monthlyPlan": "Monthly contribution (optional)",
     "saved": "saved",
     "toGo": "to go",

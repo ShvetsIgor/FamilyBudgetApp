@@ -71,9 +71,38 @@ export default function RecurringPage() {
         currency: data.currency,
       }));
     } else {
-      dispatch(addRecurringItem(await addRecurring({ ...data, userId: user.id })));
+      const added = await addRecurring({ ...data, userId: user.id });
+      const isPast = data.startDate < new Date();
+      if (isPast) {
+        if (data.categoryId) {
+          const exp = await addExpense({
+            userId: user.id, amount: data.amount, currency: data.currency,
+            categoryId: data.categoryId, date: data.startDate,
+            paymentMethod: 'card', splits: [], tags: ['recurring'], privacy: 'regular',
+            comment: data.name + (data.comment ? ' · ' + data.comment : '') || undefined,
+          });
+          dispatch(prependExpense(exp));
+        }
+        dispatch(addRecurringItem(await advanceToNextFutureDue(user.id, added)));
+      } else {
+        dispatch(addRecurringItem(added));
+      }
     }
     setFormMode(null);
+  }
+
+  async function handleMarkPaid(item: SerializableRecurringPayment) {
+    if (!user) return;
+    if (item.categoryId) {
+      const exp = await addExpense({
+        userId: user.id, amount: item.amount, currency: item.currency,
+        categoryId: item.categoryId, date: parseISO(item.nextDueDate),
+        paymentMethod: 'card', splits: [], tags: ['recurring'], privacy: 'regular',
+        comment: item.name + (item.comment ? ' · ' + item.comment : '') || undefined,
+      });
+      dispatch(prependExpense(exp));
+    }
+    dispatch(updateRecurringItem(await markAsPaid(user.id, item)));
   }
 
   async function handleDelete(item: SerializableRecurringPayment) {

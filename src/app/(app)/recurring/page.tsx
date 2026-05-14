@@ -158,6 +158,14 @@ export default function RecurringPage() {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-sm font-semibold tabular-nums">{item.amount > 0 ? '-' : ''}{formatAmount(item.amount, item.currency)}</span>
+          {item.isActive && days <= 0 && (
+            <button
+              onClick={() => handleMarkPaid(item)}
+              className="rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-1 text-xs font-semibold hover:bg-emerald-500/20 transition-colors"
+            >
+              {t('recurring.markPaid')}
+            </button>
+          )}
           <button
             onClick={() => handleToggle(item)}
             className={`relative h-5 w-9 rounded-full transition-colors flex-shrink-0 ${item.isActive ? 'bg-primary' : 'bg-muted'}`}

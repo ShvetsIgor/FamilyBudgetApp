@@ -9,6 +9,7 @@ import { addExpense, updateExpense } from '@/features/expenses/services/expenses
 import { addContribution } from '@/features/savings/services/savingsService';
 import { updateGoalItem } from '@/features/savings/store/savingsSlice';
 import { CategoryPicker } from '@/features/categories/components/CategoryPicker';
+import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { SplitEditor } from './SplitEditor';
 import { calculateSplit } from '@/features/expenses/utils/splitAlgorithm';
 import { getCurrencySymbol, blockInvalidAmountKeys, parseLocalDate } from '@/shared/utils/currency';

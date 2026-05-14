@@ -105,3 +105,27 @@ export async function deleteRecurring(userId: string, id: string): Promise<void>
 export async function toggleRecurring(userId: string, id: string, isActive: boolean): Promise<void> {
   await updateDoc(doc(getDb(), 'recurringPayments', userId, 'items', id), { isActive });
 }
+
+export async function markAsPaid(
+  userId: string,
+  item: SerializableRecurringPayment,
+): Promise<SerializableRecurringPayment> {
+  const next = nextDue(parseISO(item.nextDueDate), item.frequency);
+  await updateDoc(doc(getDb(), 'recurringPayments', userId, 'items', item.id), {
+    nextDueDate: Timestamp.fromDate(next),
+  });
+  return { ...item, nextDueDate: next.toISOString() };
+}
+
+export async function advanceToNextFutureDue(
+  userId: string,
+  item: SerializableRecurringPayment,
+): Promise<SerializableRecurringPayment> {
+  const now = new Date();
+  let next = parseISO(item.nextDueDate);
+  while (next <= now) next = nextDue(next, item.frequency);
+  await updateDoc(doc(getDb(), 'recurringPayments', userId, 'items', item.id), {
+    nextDueDate: Timestamp.fromDate(next),
+  });
+  return { ...item, nextDueDate: next.toISOString() };
+}

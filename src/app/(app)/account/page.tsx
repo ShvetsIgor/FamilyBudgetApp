@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAppSelector, useAppDispatch } from '@/store/store';
-import { setTheme, setCurrency, setLanguage } from '@/features/ui/store/uiSlice';
+import { setTheme, setCurrency, setLanguage, setWeekStart, type WeekStart } from '@/features/ui/store/uiSlice';
 import { signOut } from '@/features/auth/services/authService';
 import { doc, updateDoc } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';

@@ -44,7 +44,13 @@ export default function AnalyticsPage() {
   const trendData = months.map((m) => ({ name: m.month.slice(5), expenses: m.totalExpenses, income: m.totalIncome }));
 
   const catTotals: Record<string, number> = {};
-  for (const m of months) for (const [id, amt] of Object.entries(m.byCategory)) catTotals[id] = (catTotals[id] ?? 0) + amt;
+  for (const m of months) {
+    for (const [id, amt] of Object.entries(m.byCategory)) {
+      const cat = categories.find((c) => c.id === id);
+      const resolvedId = cat?.parentId ?? id;
+      catTotals[resolvedId] = (catTotals[resolvedId] ?? 0) + amt;
+    }
+  }
   const topCats = Object.entries(catTotals)
     .map(([id, total]) => ({ id, total, cat: categories.find((c) => c.id === id) }))
     .filter((d) => d.total > 0 && d.cat)

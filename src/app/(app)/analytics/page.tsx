@@ -37,7 +37,7 @@ export default function AnalyticsPage() {
       ]);
       const byDow = Array(7).fill(0);
       for (const e of [...m0, ...m1]) byDow[getDay(parseISO(e.date))] += e.amount;
-      setDowData(DOW.map((name, i) => ({ name, amount: Math.round(byDow[i]) })));
+      setDowData(DOW_ORDER.map((dayIdx, i) => ({ name: DOW_NAMES[i], amount: Math.round(byDow[dayIdx]) })));
     } finally { setLoading(false); }
   }, [user]);
 

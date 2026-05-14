@@ -40,6 +40,10 @@
         "hooks": [
           {
             "type": "command",
+            "command": "jq -r '.tool_input.command' | grep -q 'vercel.*--prod' && cd /c/Users/Shvets/Desktop/FamilyBudgetApp && git push origin master 2>/dev/null || true"
+          },
+          {
+            "type": "command",
             "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"Git commit complete. Update the Change Log section in CLAUDE.md now: add today date and a one-line summary of what was just committed.\"}}'",
             "if": "Bash(git commit *)"
           }

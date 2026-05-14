@@ -17,6 +17,7 @@ import { cn } from '@/shared/utils/cn';
 import type { SerializableExpense, SerializableIncome } from '@/shared/types';
 import type { AddIncomeInput } from '@/features/income/services/incomeService';
 import { useT } from '@/shared/hooks/useT';
+import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 
 type Tab = 'expenses' | 'income';
 

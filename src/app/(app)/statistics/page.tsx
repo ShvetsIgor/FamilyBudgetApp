@@ -70,14 +70,22 @@ export default function StatisticsPage() {
   useEffect(() => { load(); }, [load]);
 
   const pieData = stats
-    ? Object.entries(stats.byCategory)
-        .map(([catId, amount]) => {
+    ? (() => {
+        const agg = new Map<string, number>();
+        for (const [catId, amount] of Object.entries(stats.byCategory)) {
           const cat = categories.find((c) => c.id === catId);
-          return { catId, name: t.cat(cat?.name ?? 'Other'), amount, color: cat?.color ?? '#6b7280', icon: cat?.icon ?? '📦' };
-        })
-        .filter((d) => d.amount > 0)
-        .sort((a, b) => b.amount - a.amount)
-        .slice(0, 8)
+          const resolvedId = cat?.parentId ?? catId;
+          agg.set(resolvedId, (agg.get(resolvedId) ?? 0) + amount);
+        }
+        return Array.from(agg.entries())
+          .map(([catId, amount]) => {
+            const cat = categories.find((c) => c.id === catId);
+            return { catId, name: t.cat(cat?.name ?? 'Other'), amount, color: cat?.color ?? '#6b7280', icon: cat?.icon ?? '📦' };
+          })
+          .filter((d) => d.amount > 0)
+          .sort((a, b) => b.amount - a.amount)
+          .slice(0, 8);
+      })()
     : [];
 
   const barData = history.map((m) => ({

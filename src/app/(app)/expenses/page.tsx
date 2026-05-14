@@ -23,7 +23,7 @@ type Tab = 'expenses' | 'income';
 function groupByDate<T extends { date: string }>(items: T[]): [string, T[]][] {
   const map = new Map<string, T[]>();
   for (const item of items) {
-    const day = item.date.slice(0, 10);
+    const day = format(parseISO(item.date), 'yyyy-MM-dd');
     if (!map.has(day)) map.set(day, []);
     map.get(day)!.push(item);
   }

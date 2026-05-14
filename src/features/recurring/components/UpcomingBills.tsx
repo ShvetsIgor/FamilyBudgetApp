@@ -54,7 +54,7 @@ interface Props {
   embedded?: boolean; // renders bare items inside an existing card (no wrapper, no header)
 }
 
-export function UpcomingBills({ withinDays = 30, maxItems, compact = false }: Props) {
+export function UpcomingBills({ withinDays = 30, maxItems, compact = false, embedded = false }: Props) {
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);

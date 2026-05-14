@@ -4,7 +4,7 @@ import { TAXONOMY, INCOME_TAXONOMY } from '../icons/icons';
 type DefaultCategory = Omit<Category, 'id' | 'userId'>;
 
 function makeKey(name: string) {
-  return `__${name.toLowerCase().replace(/[\s/&]+/g, '_')}__`;
+  return `__${name.toLowerCase().replace(/[\s/]+/g, '_')}__`;
 }
 
 export const DEFAULT_EXPENSE_CATEGORIES: DefaultCategory[] = TAXONOMY.flatMap((parent, order) => [

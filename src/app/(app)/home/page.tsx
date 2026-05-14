@@ -444,7 +444,12 @@ export default function HomePage() {
                             <p className="text-sm font-semibold truncate">
                               {e.store || (cat ? t.cat(cat.name) : '—')}
                             </p>
-                            <p className="text-[11px] text-muted-foreground">{PAYMENT_ICONS[e.paymentMethod]}</p>
+                            <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                              <span>{PAYMENT_ICONS[e.paymentMethod]}</span>
+                              {e.splits.length > 0 && (
+                                <span className="text-primary/70">split · {e.splits.length + 1}</span>
+                              )}
+                            </p>
                           </div>
                         </div>
                         {/* Category pill */}

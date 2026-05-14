@@ -33,6 +33,8 @@ export function ExpenseForm({ initialExpense }: Props) {
   const isEdit = !!initialExpense;
 
   const [amount, setAmount] = useState(initialExpense?.amount.toString() ?? '');
+  const initialCat = initialExpense ? expenseCategories.find((c) => c.id === initialExpense.categoryId) : undefined;
+  const [parentCategoryId, setParentCategoryId] = useState(initialCat?.parentId ?? initialExpense?.categoryId ?? '');
   const [categoryId, setCategoryId] = useState(initialExpense?.categoryId ?? '');
   const [goalId, setGoalId] = useState(initialExpense?.goalId ?? '');
   const [splits, setSplits] = useState<SplitItem[]>(initialExpense?.splits ?? []);

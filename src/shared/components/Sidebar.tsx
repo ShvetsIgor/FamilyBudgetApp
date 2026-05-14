@@ -28,14 +28,12 @@ const NAV_SECTIONS = [
     labelKey: 'sidebar.planning',
     items: [
       { href: '/savings', icon: PiggyBank, labelKey: 'nav.savings' },
-      { href: '/savings', icon: Target, labelKey: 'nav.goals' },
       { href: '/recurring', icon: Repeat2, labelKey: 'nav.recurring' },
     ],
   },
   {
     labelKey: 'sidebar.family',
     items: [
-      { href: '/account', icon: Users, labelKey: 'nav.members' },
       { href: '/account', icon: Settings, labelKey: 'nav.settings' },
     ],
   },

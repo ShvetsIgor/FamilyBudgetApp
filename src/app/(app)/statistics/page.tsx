@@ -210,8 +210,24 @@ export default function StatisticsPage() {
     <div className="flex flex-col gap-4 px-4 pt-5 pb-8 lg:px-0 lg:pt-0">
       <h1 className="text-xl font-bold lg:hidden">{t('stats.title')}</h1>
 
-      {/* Range selector */}
-      <div className="flex rounded-xl bg-muted p-1 gap-1">
+      {/* Range selector — pills (mobile) / tabs (desktop) */}
+      <div className="lg:hidden flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none]">
+        {RANGES.map((r) => (
+          <button
+            key={r.value}
+            onClick={() => setRange(r.value)}
+            className="shrink-0 rounded-full px-4 py-2 text-[13px] font-extrabold transition-all border-0"
+            style={{
+              background: range === r.value ? 'hsl(var(--primary))' : 'hsl(var(--card))',
+              color: range === r.value ? 'hsl(var(--primary-foreground))' : 'hsl(var(--foreground))',
+              boxShadow: range === r.value ? '0 6px 14px hsl(var(--primary) / .3)' : '0 2px 4px rgba(61,44,31,.06)',
+            }}
+          >
+            {r.label}
+          </button>
+        ))}
+      </div>
+      <div className="hidden lg:flex rounded-xl bg-muted p-1 gap-1">
         {RANGES.map((r) => (
           <button
             key={r.value}

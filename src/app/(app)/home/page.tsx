@@ -453,9 +453,12 @@ export default function HomePage() {
                             </p>
                             <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                               <span>{PAYMENT_ICONS[e.paymentMethod]}</span>
-                              {e.splits.length > 0 && (
-                                <span className="text-primary/70">split · {e.splits.length + 1}</span>
-                              )}
+                              {(() => {
+                                const splitSum = e.splits.reduce((s, x) => s + x.amount, 0);
+                                const parentPct = e.amount - splitSum;
+                                const parts = e.splits.filter((s) => s.amount > 0).length + (parentPct > 0.01 ? 1 : 0);
+                                return parts > 1 ? <span className="text-primary/70">split · {parts}</span> : null;
+                              })()}
                             </p>
                           </div>
                         </div>

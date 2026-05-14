@@ -14,6 +14,13 @@ const TYPE_ICONS: Record<string, string> = {
 };
 
 function DayPill({ days }: { days: number }) {
+  if (days < 0) {
+    return (
+      <span className="rounded-full bg-destructive/15 text-destructive px-2 py-0.5 text-[10px] font-bold whitespace-nowrap">
+        Просрочено
+      </span>
+    );
+  }
   if (days === 0) {
     return (
       <span className="rounded-full bg-destructive/15 text-destructive px-2 py-0.5 text-[10px] font-bold whitespace-nowrap">

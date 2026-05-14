@@ -198,3 +198,6 @@ monthlyStats/{userId}/{YYYY-MM}
 - **2026-05-12** — Desktop layouts for Auth (split branded panel), Categories (2-col tree+form), Savings (2-col goals grid+detail panel), Recurring (2-col list+form panel).
 - **2026-05-12** — Desktop redesign per HANDOFF.md: Sidebar (family.budget logo, new nav structure), TopBar (greeting + search bar), Home dashboard (hero balance card, avg-day sparkline, 6-month trend chart, upcoming bills, budget categories, transactions table).
 - **2026-05-12** — Fix: Sidebar logout button showed raw key "account.logout" → corrected to account.signOut.
+- **2026-05-15** — Шаг 3: SVG sticker icons from design system (55 icons, icons.tsx), TAXONOMY-based defaultCategories, CategoryIcon + StickerIcon SVG rendering with emoji fallback.
+- **2026-05-15** — Шаг 4: FastExpenseEntry full-screen numpad component (/expenses/new), split rows, parentLeftover logic.
+- **2026-05-15** — Шаг 8 (home): Mobile home redesign — hero balance card, quick-action grid, budget bars, upcoming bills, recent expenses; added missing i18n keys (home.greeting/expense/budgets/over).

@@ -410,17 +410,131 @@ export default function AccountPage() {
     </button>
   );
 
+  const mobileRow = (icon: string, bg: string, title: string, sub?: string, right?: React.ReactNode, onClick?: () => void) => (
+    <div onClick={onClick} className={cn('flex items-center gap-3 px-4 py-3.5', onClick && 'cursor-pointer active:bg-muted/50 transition-colors')}>
+      <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: bg }}>{icon}</div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-foreground">{title}</p>
+        {sub && <p className="text-xs font-semibold text-muted-foreground mt-0.5">{sub}</p>}
+      </div>
+      {right ?? <span className="text-muted-foreground text-lg leading-none">›</span>}
+    </div>
+  );
+
+  const mobileLabel = (label: string) => (
+    <p className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em] px-1">{label}</p>
+  );
+
+  const mobileCard = (children: React.ReactNode) => (
+    <div className="rounded-[22px] bg-card overflow-hidden divide-y divide-border" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
+      {children}
+    </div>
+  );
+
   return (
     <>
       {/* ── MOBILE layout ── */}
-      <div className="lg:hidden flex flex-col gap-4 px-4 pt-6 pb-8">
-        <h1 className="text-xl font-bold">{t('account.title')}</h1>
+      <div className="lg:hidden flex flex-col gap-4 px-[22px] pt-4 pb-28">
+        {/* Profile card */}
         {profileCard}
+
+        {/* Family */}
+        {mobileLabel(t('account.family'))}
         {familyBlock}
-        {preferencesBlock}
-        {quickLinks}
-        {notificationsBlock}
+
+        {/* Budget section */}
+        {mobileLabel('Бюджет')}
+        {mobileCard(<>
+          <Link href="/categories">{mobileRow('🗂', '#F2CC8F22', t('account.categories').replace('🏷️ ', ''))}</Link>
+          <Link href="/recurring">{mobileRow('🔁', '#8AA9D622', t('account.recurringPayments').replace('🔄 ', ''))}</Link>
+          <Link href="/savings">{mobileRow('🐷', '#81B29A22', t('account.savingsGoals').replace('🎯 ', ''))}</Link>
+        </>)}
+
+        {/* App section */}
+        {mobileLabel('Приложение')}
+        {mobileCard(<>
+          {/* Dark mode toggle */}
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#8AA9D622' }}>🌙</div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground">{t('account.dark')}</p>
+              <p className="text-xs font-semibold text-muted-foreground mt-0.5">{theme === 'dark' ? 'Включена' : 'Выключена'}</p>
+            </div>
+            <button
+              onClick={() => handleTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="relative h-[26px] w-[46px] rounded-full transition-all duration-200 shrink-0 border-0"
+              style={{ background: theme === 'dark' ? '#81B29A' : 'hsl(var(--muted))' }}
+            >
+              <span
+                className="absolute top-[3px] h-5 w-5 rounded-full bg-white transition-all duration-200"
+                style={{ left: theme === 'dark' ? '23px' : '3px', boxShadow: '0 1px 3px rgba(0,0,0,.2)' }}
+              />
+            </button>
+          </div>
+          {/* Language */}
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#F2CC8F22' }}>🌐</div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground">{t('account.language')}</p>
+              <p className="text-xs font-semibold text-muted-foreground mt-0.5">{LANGUAGES.find((l) => l.value === language)?.label}</p>
+            </div>
+            <select
+              value={language}
+              onChange={(e) => handleLanguage(e.target.value as Language)}
+              className="text-sm font-bold text-primary bg-transparent border-0 outline-none cursor-pointer pr-1"
+            >
+              {LANGUAGES.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
+            </select>
+          </div>
+          {/* Currency */}
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] font-black shrink-0" style={{ background: '#E07A5F22', color: '#E07A5F' }}>
+              {getCurrencySymbol(currency)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground">{t('account.currency')}</p>
+              <p className="text-xs font-semibold text-muted-foreground mt-0.5">{CURRENCIES.find((c) => c.value === currency)?.label}</p>
+            </div>
+            <select
+              value={currency}
+              onChange={(e) => handleCurrency(e.target.value as Currency)}
+              className="text-sm font-bold text-primary bg-transparent border-0 outline-none cursor-pointer pr-1"
+            >
+              {CURRENCIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+            </select>
+          </div>
+          {/* Notifications */}
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#C97B8422' }}>🔔</div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground">{t('notifications.title')}</p>
+              <p className="text-xs font-semibold text-muted-foreground mt-0.5">
+                {notifPermission === 'granted' ? t('notifications.enabled') : notifPermission === 'denied' ? t('notifications.denied') : t('notifications.enable')}
+              </p>
+            </div>
+            {notifPermission === 'default' && (
+              <button
+                onClick={async () => { const g = await requestNotificationPermission(); setNotifPermission(g ? 'granted' : 'denied'); }}
+                className="text-xs font-extrabold text-primary border-0 bg-transparent cursor-pointer"
+              >
+                {t('notifications.enable')}
+              </button>
+            )}
+          </div>
+          {/* Export */}
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#A8B89C22' }}>📤</div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground">{t('export.title')}</p>
+              <p className="text-xs font-semibold text-muted-foreground mt-0.5">{exportMonth}</p>
+            </div>
+          </div>
+        </>)}
+
+        {/* Export controls */}
         {exportBlock}
+
+        {/* Sign out */}
         {signOutBtn}
       </div>
 

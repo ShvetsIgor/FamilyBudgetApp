@@ -164,11 +164,31 @@ export function ExpenseForm({ initialExpense }: Props) {
         <label className="text-sm font-medium">{t('expense.category')}</label>
         <CategoryPicker
           type="expense"
-          value={categoryId || undefined}
+          value={parentCategoryId || undefined}
           onChange={handleCategoryChange}
           placeholder={t('categories.selectCategory')}
           parentsOnly
         />
+        {subcategories.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-1">
+            {subcategories.map((sub) => (
+              <button
+                key={sub.id}
+                type="button"
+                onClick={() => setCategoryId(categoryId === sub.id ? parentCategoryId : sub.id)}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors',
+                  categoryId === sub.id
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border bg-card text-muted-foreground hover:bg-muted'
+                )}
+              >
+                <span>{sub.icon}</span>
+                <span>{t.cat(sub.name)}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── Savings goal picker ── */}

@@ -1,12 +1,17 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { useAppSelector } from '@/store/store';
+import { useAppSelector, useAppDispatch } from '@/store/store';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { formatAmount } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
+import { markAsPaid } from '@/features/recurring/services/recurringService';
+import { updateRecurringItem } from '@/features/recurring/store/recurringSlice';
+import { addExpense } from '@/features/expenses/services/expensesService';
+import { prependExpense } from '@/features/expenses/store/expensesSlice';
 
 const TYPE_ICONS: Record<string, string> = {
   subscription: '📺', rent: '🏠', utility: '💡',
@@ -49,10 +54,13 @@ interface Props {
 }
 
 export function UpcomingBills({ withinDays = 30, maxItems, compact = false }: Props) {
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const categories = useAppSelector((s) => s.categories.expense);
   const { list } = useAppSelector((s) => s.recurring);
   const t = useT();
+  const [payingId, setPayingId] = useState<string | null>(null);
 
   const upcoming = list
     .filter((r) => {
@@ -65,6 +73,27 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false }: Pr
 
   if (upcoming.length === 0) return null;
 
+  async function handlePay(item: typeof upcoming[0], e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user || payingId) return;
+    setPayingId(item.id);
+    try {
+      if (item.categoryId) {
+        const exp = await addExpense({
+          userId: user.id, amount: item.amount, currency: item.currency,
+          categoryId: item.categoryId, date: parseISO(item.nextDueDate),
+          paymentMethod: 'card', splits: [], tags: ['recurring'], privacy: 'regular',
+          comment: item.name + (item.comment ? ' · ' + item.comment : '') || undefined,
+        });
+        dispatch(prependExpense(exp));
+      }
+      dispatch(updateRecurringItem(await markAsPaid(user.id, item)));
+    } finally {
+      setPayingId(null);
+    }
+  }
+
   if (compact) {
     return (
       <div className="w-full">
@@ -76,6 +105,7 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false }: Pr
           {upcoming.map((item) => {
             const cat = categories.find((c) => c.id === item.categoryId);
             const days = differenceInDays(parseISO(item.nextDueDate), new Date());
+            const isDue = days <= 0;
             return (
               <div key={item.id} className="flex items-center gap-3 px-4 py-3">
                 {cat ? (
@@ -93,7 +123,17 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false }: Pr
                   <span className="text-sm font-bold tabular-nums">
                     {item.amount > 0 ? '-' : ''}{formatAmount(item.amount, item.currency)}
                   </span>
-                  <DayPill days={days} />
+                  {isDue ? (
+                    <button
+                      onClick={(e) => handlePay(item, e)}
+                      disabled={payingId === item.id}
+                      className="rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 text-[10px] font-bold hover:bg-emerald-500/25 transition-colors disabled:opacity-50"
+                    >
+                      {payingId === item.id ? '…' : t('recurring.markPaid')}
+                    </button>
+                  ) : (
+                    <DayPill days={days} />
+                  )}
                 </div>
               </div>
             );
@@ -112,26 +152,37 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false }: Pr
         {upcoming.map((item) => {
           const cat = categories.find((c) => c.id === item.categoryId);
           const days = differenceInDays(parseISO(item.nextDueDate), new Date());
+          const isDue = days <= 0;
           return (
-            <Link key={item.id} href="/recurring" className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
+            <div key={item.id} className="flex items-center gap-3 px-4 py-3">
               {cat ? (
                 <CategoryIcon icon={cat.icon} color={cat.color} size="md" />
               ) : (
                 <span className="text-2xl shrink-0">{TYPE_ICONS[item.type] ?? '🔄'}</span>
               )}
-              <div className="flex-1 min-w-0">
+              <Link href="/recurring" className="flex-1 min-w-0 hover:opacity-80 transition-opacity">
                 <p className="text-sm font-medium truncate">{item.name}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {format(parseISO(item.nextDueDate), 'd MMMM', { locale: ru })}
                 </p>
-              </div>
+              </Link>
               <div className="flex flex-col items-end gap-1 shrink-0">
                 <span className="text-sm font-semibold tabular-nums">
                   -{formatAmount(item.amount, item.currency)}
                 </span>
-                <DayPill days={days} />
+                {isDue ? (
+                  <button
+                    onClick={(e) => handlePay(item, e)}
+                    disabled={payingId === item.id}
+                    className="rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 text-[10px] font-bold hover:bg-emerald-500/25 transition-colors disabled:opacity-50"
+                  >
+                    {payingId === item.id ? '…' : t('recurring.markPaid')}
+                  </button>
+                ) : (
+                  <DayPill days={days} />
+                )}
               </div>
-            </Link>
+            </div>
           );
         })}
       </div>

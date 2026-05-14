@@ -64,7 +64,7 @@ export function Header() {
             className="rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground"
             aria-label="Categories"
           >
-            <Settings className="h-5 w-5" />
+            <LayoutGrid className="h-5 w-5" />
           </Link>
         </div>
       </div>

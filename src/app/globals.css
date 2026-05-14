@@ -39,10 +39,16 @@
     --radius-xl: 2rem;                 /* 32 px — hero */
     --radius-pill: 9999px;
 
+    /* ── Semantic status ── */
+    --success: 150 21% 50%;             /* deeper sage */
+    --warn: 38 78% 60%;                 /* deeper warm yellow */
+
     /* ── Shadows — brown-tinted ── */
     --shadow-sm: 0 1px 2px rgba(61, 44, 31, .04);
     --shadow-md: 0 6px 16px rgba(61, 44, 31, .06);
     --shadow-lg: 0 16px 30px rgba(61, 44, 31, .12);
+    --shadow-primary: 0 16px 30px hsl(var(--primary) / 0.30);
+    --shadow-primary-sm: 0 6px 14px hsl(var(--primary) / 0.20);
 
     /* ── Category accent palette ── */
     --cat-food:          #E07A5F;

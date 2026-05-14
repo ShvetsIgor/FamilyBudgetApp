@@ -28,6 +28,7 @@ const NAV_SECTIONS = [
     labelKey: 'sidebar.planning',
     items: [
       { href: '/savings', icon: PiggyBank, labelKey: 'nav.savings' },
+      { href: '/savings', icon: Target, labelKey: 'nav.goals' },
       { href: '/recurring', icon: Repeat2, labelKey: 'nav.recurring' },
     ],
   },

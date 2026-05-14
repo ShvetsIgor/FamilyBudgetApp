@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Settings, UserCircle, WifiOff, RefreshCw, Repeat2 } from 'lucide-react';
+import { LayoutGrid, UserCircle, WifiOff, RefreshCw, Repeat2 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
 import { useT } from '@/shared/hooks/useT';
 

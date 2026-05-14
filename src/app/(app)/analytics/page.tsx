@@ -82,6 +82,23 @@ export default function AnalyticsPage() {
     );
   }
 
+  const daysInMonth = new Date().getDate();
+  const avgDaily = daysInMonth > 0 ? (thisMonth?.totalExpenses ?? 0) / daysInMonth : 0;
+
+  const mobileHeroCard = (
+    <div className="rounded-[22px] bg-card p-5" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
+      <p className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">{t('analytics.avgDay')}</p>
+      <p className="text-[36px] font-black tabular-nums text-foreground mt-1 leading-none tracking-[-0.025em]">
+        {formatAmount(avgDaily, currency)}
+      </p>
+      {momChange !== null && (
+        <p className={`text-[13px] font-bold mt-2 ${momChange > 0 ? 'text-destructive' : 'text-emerald-500'}`}>
+          {momChange > 0 ? '↑' : '↓'} {Math.abs(momChange).toFixed(0)}% {t('analytics.vsLastMonth')}
+        </p>
+      )}
+    </div>
+  );
+
   const statCards = (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       <div className="rounded-2xl border border-border bg-card p-4">

@@ -51,7 +51,11 @@
     "colWhere": "Where",
     "colCategory": "Category",
     "colAmount": "Amount",
-    "colDate": "Date"
+    "colDate": "Date",
+    "greeting": "Hey,",
+    "expense": "Expense",
+    "budgets": "Top Categories",
+    "over": "Over"
   },
   "expense": {
     "title": "Add Expense",

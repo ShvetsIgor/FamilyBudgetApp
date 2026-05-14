@@ -8,8 +8,11 @@ import {
 } from '@/features/recurring/store/recurringSlice';
 import {
   fetchRecurring, addRecurring, updateRecurring, deleteRecurring, toggleRecurring,
+  markAsPaid, advanceToNextFutureDue,
   type AddRecurringInput,
 } from '@/features/recurring/services/recurringService';
+import { addExpense } from '@/features/expenses/services/expensesService';
+import { prependExpense } from '@/features/expenses/store/expensesSlice';
 import { CategoryPicker } from '@/features/categories/components/CategoryPicker';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { formatAmount, blockInvalidAmountKeys, parseLocalDate } from '@/shared/utils/currency';

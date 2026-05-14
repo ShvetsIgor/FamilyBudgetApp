@@ -47,18 +47,19 @@ export interface AddGoalInput {
   icon: string;
   color: string;
   targetAmount: number;
+  initialAmount?: number;
   currency: Currency;
   monthlyContribution?: number;
   deadline?: Date;
 }
 
 export async function addGoal(input: AddGoalInput): Promise<SavingsGoal> {
-  const { userId, deadline, monthlyContribution, ...rest } = input;
+  const { userId, deadline, monthlyContribution, initialAmount, ...rest } = input;
   const data = Object.fromEntries(
     Object.entries({
       ...rest,
       userId,
-      currentAmount: 0,
+      currentAmount: initialAmount ?? 0,
       contributions: [],
       monthlyContribution,
       deadline: deadline ? Timestamp.fromDate(deadline) : undefined,

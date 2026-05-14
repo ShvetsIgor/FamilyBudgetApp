@@ -51,6 +51,7 @@ interface Props {
   withinDays?: number;
   maxItems?: number;
   compact?: boolean;
+  embedded?: boolean; // renders bare items inside an existing card (no wrapper, no header)
 }
 
 export function UpcomingBills({ withinDays = 30, maxItems, compact = false }: Props) {

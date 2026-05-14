@@ -86,7 +86,8 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false, embe
           userId: user.id, amount: item.amount, currency: item.currency,
           categoryId: item.categoryId, date: parseISO(item.nextDueDate),
           paymentMethod: 'card', splits: [], tags: ['recurring'], privacy: 'regular',
-          comment: item.name + (item.comment ? ' · ' + item.comment : '') || undefined,
+          store: item.name,
+          comment: item.comment || undefined,
         });
         dispatch(prependExpense(exp));
       }

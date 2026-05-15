@@ -336,11 +336,11 @@ export function FastExpenseEntry() {
       </div>
 
       {/* ── Save bar ── */}
-      <div className="px-4 pt-2.5 pb-safe flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 18px)' }}>
+      <div className="px-4 pt-1.5 pb-safe flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
         <button
           onClick={handleSave}
           disabled={saving || totalNum <= 0}
-          className="w-full py-[15px] rounded-[18px] flex items-center justify-center gap-2 text-[15px] font-black text-primary-foreground transition-opacity disabled:opacity-50 border-0"
+          className="w-full py-[12px] rounded-[16px] flex items-center justify-center gap-2 text-[14px] font-black text-primary-foreground transition-opacity disabled:opacity-50 border-0"
           style={{
             background: catColor,
             boxShadow: `0 12px 24px ${catColor}60`,

@@ -13,6 +13,7 @@ export type RecurringType =
   | 'credit'
   | 'mortgage'
   | 'utility'
+  | 'installment'
   | 'custom';
 export type CategoryType = 'expense' | 'income';
 export type InviteStatus = 'pending' | 'accepted' | 'rejected';

@@ -36,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dispatch(setCurrency(profile.currency));
         dispatch(setLanguage(profile.language));
         dispatch(setTheme(profile.theme));
+        if (profile.weekStart) dispatch(setWeekStart(profile.weekStart));
 
         // Seed categories if first login, then load
         await seedDefaultCategories(firebaseUser.uid);

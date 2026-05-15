@@ -70,7 +70,7 @@ export default function AccountPage() {
   const initials = user.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2);
   const isOwner = family?.ownerId === user.id;
 
-  async function savePrefs(patch: Partial<{ theme: Theme; currency: Currency; language: Language }>) {
+  async function savePrefs(patch: Partial<{ theme: Theme; currency: Currency; language: Language; weekStart: WeekStart }>) {
     setSaving(true);
     try { await updateDoc(doc(getDb(), 'users', user!.id), patch); } finally { setSaving(false); }
   }

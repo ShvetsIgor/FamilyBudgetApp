@@ -19,6 +19,8 @@ export type InviteStatus = 'pending' | 'accepted' | 'rejected';
 
 // ─── User ───────────────────────────────────────────────────────────────────
 
+export type WeekStart = 'monday' | 'sunday';
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -26,6 +28,7 @@ export interface UserProfile {
   currency: Currency;
   language: Language;
   theme: Theme;
+  weekStart?: WeekStart;
   accountType: AccountType;
   familyId?: string;
   onboarded?: boolean;

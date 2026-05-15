@@ -169,24 +169,29 @@ export default function HomePage() {
             </div>
             <div className="flex flex-col gap-2.5">
               {topCategories.slice(0, 3).map(({ cat, spent }) => {
-                const limit = 1000; // placeholder — budget feature coming
-                const over = spent > limit;
-                const pct = Math.min(100, (spent / Math.max(spent, limit)) * 100);
+                const limit = budgetLimits[cat.id];
+                const hasLimit = limit != null && limit > 0;
+                const over = hasLimit && spent > limit;
+                const pct = hasLimit ? Math.min(100, (spent / limit) * 100) : 0;
                 return (
                   <div key={cat.id} className="bg-card rounded-[22px] px-4 py-3.5" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
                     <div className="flex items-center gap-3">
                       <CategoryIcon icon={cat.icon} color={cat.color} size="sm" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-foreground">{t.cat(cat.name)}</p>
-                        <p className="text-[11px] font-bold text-muted-foreground tabular-nums mt-0.5">{formatAmount(spent, currency)}</p>
+                        <p className="text-[11px] font-bold text-muted-foreground tabular-nums mt-0.5">
+                          {formatAmount(spent, currency)}{hasLimit ? ` / ${formatAmount(limit, currency)}` : ''}
+                        </p>
                       </div>
                       {over && (
                         <span className="text-[10px] font-extrabold text-primary bg-primary/15 px-2.5 py-1 rounded-full">{t('home.over')}</span>
                       )}
                     </div>
-                    <div className="h-2 bg-muted rounded-full mt-2.5 overflow-hidden">
-                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: over ? 'hsl(var(--primary))' : cat.color }} />
-                    </div>
+                    {hasLimit && (
+                      <div className="h-2 bg-muted rounded-full mt-2.5 overflow-hidden">
+                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: over ? 'hsl(var(--primary))' : cat.color }} />
+                      </div>
+                    )}
                   </div>
                 );
               })}

@@ -293,8 +293,32 @@ export function FastExpenseEntry() {
         )}
       </div>
 
+      {/* ── Payment method ── */}
+      <div className="px-3 pb-1 flex gap-2 flex-shrink-0">
+        {(['card', 'cash', 'other'] as const).map((m) => {
+          const icons = { card: '💳', cash: '💵', other: '🔄' };
+          const labels = { card: t('expense.card'), cash: t('expense.cash'), other: t('expense.other') };
+          const sel = paymentMethod === m;
+          return (
+            <button
+              key={m}
+              onClick={() => setPaymentMethod(m)}
+              className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-xl text-[11px] font-bold transition-all border"
+              style={{
+                background: sel ? catColor + '18' : 'hsl(var(--card))',
+                borderColor: sel ? catColor : 'transparent',
+                color: sel ? catColor : 'hsl(var(--muted-foreground))',
+              }}
+            >
+              <span>{icons[m]}</span>
+              <span>{labels[m]}</span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* ── Numpad ── */}
-      <div className="px-3 pt-1 grid grid-cols-3 flex-shrink-0" style={{ gridAutoRows: '44px', gap: '5px' }}>
+      <div className="px-3 pt-0.5 grid grid-cols-3 flex-shrink-0" style={{ gridAutoRows: '40px', gap: '4px' }}>
         {NUMPAD_KEYS.map((k) => (
           <button
             key={String(k)}

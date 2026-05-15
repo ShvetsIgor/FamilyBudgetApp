@@ -3,6 +3,7 @@
 import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { format, parseISO } from 'date-fns';
+import { ru } from 'date-fns/locale';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { removeExpense } from '@/features/expenses/store/expensesSlice';
 import { deleteExpense } from '@/features/expenses/services/expensesService';

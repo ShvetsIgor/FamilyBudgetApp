@@ -20,6 +20,7 @@ const initialState: UIState = {
   weekStart: 'monday',
   isOffline: false,
   isSyncing: false,
+  expensesSearch: '',
 };
 
 const uiSlice = createSlice({

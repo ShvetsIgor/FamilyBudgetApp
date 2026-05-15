@@ -42,12 +42,55 @@ export async function deleteCategory(userId: string, categoryId: string, type: C
 }
 
 export async function resetCategoriesToDefaults(userId: string): Promise<void> {
-  // Delete all existing categories
+  const db = getDb();
+
+  // 1. Snapshot old categories: name → id (for both expense types)
+  const oldNameToId: Record<string, string> = {};
+  for (const type of ['expense', 'income'] as CategoryType[]) {
+    const snap = await getDocs(colRef(userId, type));
+    snap.docs.forEach((d) => {
+      const name = (d.data().name as string | undefined) ?? '';
+      if (name) oldNameToId[name] = d.id;
+    });
+  }
+
+  // 2. Delete all existing categories
   for (const type of ['expense', 'income'] as CategoryType[]) {
     const snap = await getDocs(colRef(userId, type));
     await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
   }
-  await seedDefaultCategoriesForce(userId);
+
+  // 3. Seed new categories and build new name → id map
+  const newNameToId = await seedDefaultCategoriesForce(userId);
+
+  // 4. Migrate expenses: remap categoryId and subcategoryId
+  const expSnap = await getDocs(collection(db, 'expenses', userId, 'items'));
+  const batch = writeBatch(db);
+  let batchCount = 0;
+
+  for (const expDoc of expSnap.docs) {
+    const data = expDoc.data() as { categoryId?: string; subcategoryId?: string };
+    const updates: Record<string, string> = {};
+
+    if (data.categoryId) {
+      // find old name for this id, then map to new id
+      const oldName = Object.entries(oldNameToId).find(([, id]) => id === data.categoryId)?.[0];
+      if (oldName && newNameToId[oldName]) updates.categoryId = newNameToId[oldName];
+    }
+    if (data.subcategoryId) {
+      const oldName = Object.entries(oldNameToId).find(([, id]) => id === data.subcategoryId)?.[0];
+      if (oldName && newNameToId[oldName]) updates.subcategoryId = newNameToId[oldName];
+    }
+
+    if (Object.keys(updates).length > 0) {
+      batch.update(expDoc.ref, updates);
+      batchCount++;
+      // Firestore batch limit is 500 ops
+      if (batchCount === 499) break;
+    }
+  }
+
+  if (batchCount > 0) await batch.commit();
 }
 
 async function seedDefaultCategoriesForce(userId: string): Promise<void> {

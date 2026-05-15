@@ -8,6 +8,7 @@ import {
   query,
   orderBy,
   writeBatch,
+  WriteBatch,
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import type { Category, CategoryType } from '@/shared/types';

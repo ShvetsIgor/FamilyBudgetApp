@@ -201,7 +201,10 @@
     "save": "Save",
     "cancel": "✕",
     "personal": "personal",
-    "family2": "family"
+    "family2": "family",
+    "weekStart": "Week starts on",
+    "weekMonday": "Monday",
+    "weekSunday": "Sunday"
   },
   "recurring": {
     "title": "Recurring Payments",

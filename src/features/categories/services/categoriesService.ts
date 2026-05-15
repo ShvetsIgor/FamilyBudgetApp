@@ -42,19 +42,19 @@ export async function deleteCategory(userId: string, categoryId: string, type: C
   await deleteDoc(doc(getDb(), 'categories', userId, type, categoryId));
 }
 
-// Returns { oldIdToNewId } for Redux expense remap
+// Returns oldId→newId map for Redux expense remap
 export async function resetCategoriesToDefaults(
   userId: string
 ): Promise<Record<string, string>> {
   const db = getDb();
 
-  // 1. Snapshot old categories: id → name
-  const oldIdToName: Record<string, string> = {};
+  // 1. Snapshot old categories: id → { name, parentId }
+  const oldCats: Record<string, { name: string; parentId?: string }> = {};
   for (const type of ['expense', 'income'] as CategoryType[]) {
     const snap = await getDocs(colRef(userId, type));
     snap.docs.forEach((d) => {
-      const name = (d.data().name as string | undefined) ?? '';
-      if (name) oldIdToName[d.id] = name;
+      const data = d.data() as { name?: string; parentId?: string };
+      if (data.name) oldCats[d.id] = { name: data.name, parentId: data.parentId };
     });
   }
 
@@ -64,13 +64,23 @@ export async function resetCategoriesToDefaults(
     await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
   }
 
-  // 3. Seed new categories via batch (atomic, consistent)
-  const nameToNewId = await seedDefaultCategoriesForce(userId);
+  // 3. Seed new categories via atomic batch
+  const { nameToId, parentKeyToId } = await seedDefaultCategoriesForce(userId);
 
-  // 4. Build oldId → newId map
+  // 4. Build oldId → newId:
+  //    - parents matched by name (unique across taxonomy)
+  //    - subs matched by parentName::subName to avoid "Other" collisions
   const oldIdToNewId: Record<string, string> = {};
-  for (const [oldId, name] of Object.entries(oldIdToName)) {
-    if (nameToNewId[name]) oldIdToNewId[oldId] = nameToNewId[name];
+  for (const [oldId, { name, parentId }] of Object.entries(oldCats)) {
+    if (!parentId) {
+      // parent category — match by name
+      if (nameToId[name]) oldIdToNewId[oldId] = nameToId[name];
+    } else {
+      // sub — match by parentName::subName
+      const parentName = oldCats[parentId]?.name;
+      const key = parentName ? `${parentName}::${name}` : name;
+      if (parentKeyToId[key]) oldIdToNewId[oldId] = parentKeyToId[key];
+    }
   }
 
   // 5. Migrate Firestore expenses

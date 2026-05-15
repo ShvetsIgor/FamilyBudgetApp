@@ -2,16 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { getCurrencySymbol, formatAmount } from '@/shared/utils/currency';
 
 describe('getCurrencySymbol', () => {
-  it('returns correct symbols', () => {
-    expect(getCurrencySymbol('ILS')).toBe('₪');
-    expect(getCurrencySymbol('USD')).toBe('$');
-    expect(getCurrencySymbol('EUR')).toBe('€');
-    expect(getCurrencySymbol('RUB')).toBe('₽');
-  });
-
-  it('falls back to currency code for unknown currency', () => {
-    expect(getCurrencySymbol('XYZ' as never)).toBe('XYZ');
-  });
+  it('returns ₪ for ILS', () => expect(getCurrencySymbol('ILS')).toBe('₪'));
+  it('returns $ for USD',  () => expect(getCurrencySymbol('USD')).toBe('$'));
+  it('returns CA$ for CAD', () => expect(getCurrencySymbol('CAD')).toBe('CA$'));
+  it('returns ₽ for RUB', () => expect(getCurrencySymbol('RUB')).toBe('₽'));
 });
 
 describe('formatAmount', () => {

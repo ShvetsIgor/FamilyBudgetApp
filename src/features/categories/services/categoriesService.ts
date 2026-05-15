@@ -104,13 +104,8 @@ export async function resetCategoriesToDefaults(
         updates.categoryId = fallbackId;
       }
     }
-    if (data.subcategoryId) {
-      if (oldIdToNewId[data.subcategoryId]) {
-        updates.subcategoryId = oldIdToNewId[data.subcategoryId];
-      } else if (!newIds.has(data.subcategoryId)) {
-        // Stale subcategoryId — just clear it
-        updates.subcategoryId = '';
-      }
+    if (data.subcategoryId && oldIdToNewId[data.subcategoryId]) {
+      updates.subcategoryId = oldIdToNewId[data.subcategoryId];
     }
 
     if (Object.keys(updates).length > 0) {

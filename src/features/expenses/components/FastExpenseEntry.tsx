@@ -52,6 +52,7 @@ export function FastExpenseEntry() {
   const [splits, setSplits] = useState<SplitRow[]>([]);
   const [editing, setEditing] = useState<'total' | number>('total');
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash' | 'other'>('card');
   const [saving, setSaving] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);

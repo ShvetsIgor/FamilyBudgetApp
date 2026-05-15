@@ -68,6 +68,7 @@
     "store": "Store / Place",
     "storePlaceholder": "Shufersal, Amazon…",
     "tags": "Tags",
+    "tagRecurring": "recurring",
     "comment": "Comment",
     "commentPlaceholder": "Note…",
     "optional": "optional",

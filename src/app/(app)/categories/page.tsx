@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { addCategory, updateCategory, removeCategory, setCategories } from '@/features/categories/store/categoriesSlice';
+import { remapExpenseCategories } from '@/features/expenses/store/expensesSlice';
 import {
   addCategory as addCategoryToDb,
   updateCategory as updateCategoryInDb,

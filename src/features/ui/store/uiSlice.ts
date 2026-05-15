@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { Theme, Language, Currency } from '@/shared/types';
+import type { Theme, Language, Currency, WeekStart } from '@/shared/types';
 
-export type WeekStart = 'monday' | 'sunday';
+export type { WeekStart };
 
 interface UIState {
   theme: Theme;

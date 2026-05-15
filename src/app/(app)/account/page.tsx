@@ -381,12 +381,20 @@ export default function AccountPage() {
   const exportBlock = (
     <div className="rounded-2xl border border-border bg-card p-4 flex flex-col gap-3 overflow-hidden w-full min-w-0">
       <p className="text-xs text-muted-foreground">{t('export.title')}</p>
-      <div className="flex flex-col gap-1 min-w-0">
+      <div className="flex flex-col gap-1">
         <label className="text-xs text-muted-foreground">{t('export.month')}</label>
-        <input type="month" value={exportMonth} onChange={(e) => setExportMonth(e.target.value)}
-          max={format(new Date(), 'yyyy-MM')} min={format(subMonths(new Date(), 24), 'yyyy-MM')}
-          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-          style={{ boxSizing: 'border-box', minWidth: 0 }} />
+        <select
+          value={exportMonth}
+          onChange={(e) => setExportMonth(e.target.value)}
+          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary appearance-none cursor-pointer"
+        >
+          {Array.from({ length: 24 }, (_, i) => {
+            const d = subMonths(new Date(), i);
+            const val = format(d, 'yyyy-MM');
+            const label = format(d, 'LLLL yyyy', { locale: ru });
+            return <option key={val} value={val}>{label}</option>;
+          })}
+        </select>
       </div>
       <div className="flex flex-col gap-1">
         <label className="text-xs text-muted-foreground">{t('export.type')}</label>

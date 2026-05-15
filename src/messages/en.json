@@ -167,8 +167,10 @@
     "noData": "Not enough data yet",
     "addMore": "Add expenses to see analytics",
     "totalSpend6m": "Total spend (6m)",
+    "totalSpendPeriod": "Total spend ({n}m)",
     "bestMonth": "Best month",
     "avgDay": "Avg daily spend",
+    "avgDayByMonth": "Avg daily by month",
     "months": "mo",
     "dow": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
   },

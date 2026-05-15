@@ -8,7 +8,7 @@ import { fetchLastNMonths, type MonthStats } from '@/features/stats/services/sta
 import { fetchMonthExpenses } from '@/features/expenses/services/expensesService';
 import { formatAmount } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
-import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
+import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';

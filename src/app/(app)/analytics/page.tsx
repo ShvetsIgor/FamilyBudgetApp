@@ -165,7 +165,7 @@ export default function AnalyticsPage() {
         )}
       </div>
       <div className="rounded-2xl border border-border bg-card p-4">
-        <p className="text-xs text-muted-foreground">{t('analytics.totalSpend6m')}</p>
+        <p className="text-xs text-muted-foreground">{t('analytics.totalSpendPeriod').replace('{n}', String(period))}</p>
         <p className="text-lg font-bold tabular-nums mt-1">{formatAmount(totalSpend, currency)}</p>
       </div>
       <div className="rounded-2xl border border-border bg-card p-4">

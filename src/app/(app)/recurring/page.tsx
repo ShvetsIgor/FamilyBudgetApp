@@ -57,7 +57,19 @@ export default function RecurringPage() {
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    try { dispatch(setRecurring(await fetchRecurring(user.id))); } finally { setLoading(false); }
+    try {
+      const items = await fetchRecurring(user.id);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const advanced = await Promise.all(
+        items.map((item) =>
+          item.isActive && parseISO(item.nextDueDate) < today
+            ? advanceToNextFutureDue(user.id, item)
+            : item
+        )
+      );
+      dispatch(setRecurring(advanced));
+    } finally { setLoading(false); }
   }, [user, dispatch]);
 
   useEffect(() => { if (status === 'idle') load(); }, [status, load]);

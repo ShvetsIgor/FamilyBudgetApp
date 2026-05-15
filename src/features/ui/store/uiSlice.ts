@@ -45,6 +45,9 @@ const uiSlice = createSlice({
     setSyncing(state, action: PayloadAction<boolean>) {
       state.isSyncing = action.payload;
     },
+    setExpensesSearch(state, action: PayloadAction<string>) {
+      state.expensesSearch = action.payload;
+    },
   },
 });
 

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Sun, Moon, WifiOff, RefreshCw, Plus, Search, Bell } from 'lucide-react';
+import { Sun, Moon, WifiOff, RefreshCw, Plus, Bell } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setTheme } from '@/features/ui/store/uiSlice';
 import { useT } from '@/shared/hooks/useT';

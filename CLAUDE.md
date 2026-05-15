@@ -201,3 +201,4 @@ monthlyStats/{userId}/{YYYY-MM}
 - **2026-05-15** — Шаг 3: SVG sticker icons from design system (55 icons, icons.tsx), TAXONOMY-based defaultCategories, CategoryIcon + StickerIcon SVG rendering with emoji fallback.
 - **2026-05-15** — Шаг 4: FastExpenseEntry full-screen numpad component (/expenses/new), split rows, parentLeftover logic.
 - **2026-05-15** — Шаг 8 (home): Mobile home redesign — hero balance card, quick-action grid, budget bars, upcoming bills, recent expenses; added missing i18n keys (home.greeting/expense/budgets/over).
+- **2026-05-16** — FastIncomeEntry + FastSavingsEntry numpad overlays (/income/new, /savings/contribute); home simplified to greeting+balance+3 buttons; floating BottomNav (raised, rounded, oversized plus); month picker on expenses page; analytics icon fix (StickerIcon); export month input → select; Vitest suite added (50 tests: slices, utils, CSV, icon registry).

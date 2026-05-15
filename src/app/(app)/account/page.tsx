@@ -38,7 +38,7 @@ const LANGUAGES: { value: Language; label: string }[] = [
 export default function AccountPage() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
-  const { theme, currency, language } = useAppSelector((s) => s.ui);
+  const { theme, currency, language, weekStart } = useAppSelector((s) => s.ui);
   const expenseCategories = useAppSelector((s) => s.categories.expense);
   const incomeCategories = useAppSelector((s) => s.categories.income);
   const family = useAppSelector((s) => s.family.family);

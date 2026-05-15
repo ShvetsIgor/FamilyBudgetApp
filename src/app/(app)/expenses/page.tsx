@@ -180,7 +180,7 @@ export default function ExpensesPage() {
           <button
             key={m}
             data-month={m}
-            onClick={() => { setSelectedMonth(m); setSearch(''); setFilterCatId(''); }}
+            onClick={() => { setSelectedMonth(m); dispatch(setExpensesSearch('')); setFilterCatId(''); }}
             className={cn(
               'shrink-0 rounded-full px-3.5 py-1 text-xs font-bold capitalize transition-colors',
               sel

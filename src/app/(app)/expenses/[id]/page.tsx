@@ -96,7 +96,7 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
         <Row label={t('expense.payment')} value={PAYMENT_LABELS[expense.paymentMethod] ?? expense.paymentMethod} />
         <Row label={t('expense.privacy2')} value={expense.privacy === 'secret' ? `🔒 ${t('expense.secret')}` : t('expense.regular')} />
         {expense.comment && <Row label={t('expense.comment')} value={expense.comment} />}
-        {expense.tags.length > 0 && <Row label={t('expense.tags')} value={expense.tags.join(', ')} />}
+        {expense.tags.length > 0 && <Row label={t('expense.tags')} value={expense.tags.map((tag) => tag === 'recurring' ? t('expense.tagRecurring') : tag).join(', ')} />}
       </div>
 
       {/* Splits */}

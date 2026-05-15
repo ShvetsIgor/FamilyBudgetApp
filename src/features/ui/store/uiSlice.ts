@@ -10,6 +10,7 @@ interface UIState {
   weekStart: WeekStart;
   isOffline: boolean;
   isSyncing: boolean;
+  expensesSearch: string;
 }
 
 const initialState: UIState = {

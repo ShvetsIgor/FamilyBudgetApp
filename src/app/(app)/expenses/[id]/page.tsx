@@ -84,7 +84,7 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
           {expense.amount > 0 ? '-' : ''}{formatAmount(expense.amount, expense.currency)}
         </p>
         <p className="text-sm text-muted-foreground">
-          {format(parseISO(expense.date), 'EEEE, MMMM d, yyyy')}
+          {format(parseISO(expense.date), 'EEEE, d MMMM yyyy', { locale: ru })}
         </p>
       </div>
 

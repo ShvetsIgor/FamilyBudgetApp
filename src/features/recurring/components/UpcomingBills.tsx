@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { format, parseISO, differenceInDays } from 'date-fns';
+import { format, parseISO, differenceInDays, endOfMonth } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';

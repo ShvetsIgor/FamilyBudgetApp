@@ -77,11 +77,11 @@ export default function RecurringPage() {
   async function handleSave(data: Omit<AddRecurringInput, 'userId'>) {
     if (!user) return;
     if (formMode?.mode === 'edit') {
-      await updateRecurring(user.id, formMode.item.id, data);
+      const { nextDueDate } = await updateRecurring(user.id, formMode.item.id, data);
       dispatch(updateRecurringItem({
         ...formMode.item, ...data,
         startDate: data.startDate.toISOString(),
-        nextDueDate: new Date(data.startDate).toISOString(),
+        nextDueDate,
         currency: data.currency,
       }));
     } else {

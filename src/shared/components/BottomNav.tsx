@@ -18,23 +18,23 @@ export function BottomNav() {
   ] as const;
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background pb-safe">
+    <nav className="lg:hidden fixed bottom-4 left-4 right-4 z-40 rounded-[26px] border border-border bg-background/90 backdrop-blur-md shadow-lg shadow-black/10">
       <div className="flex h-16 items-center justify-around">
         {NAV_ITEMS.map(({ href, icon: Icon, label, activeOn }) => {
           const isActive = activeOn.some((path) => pathname.startsWith(path));
 
           if (href === '/home') {
             return (
-              <Link key={href} href={href} aria-label={label}>
+              <Link key={href} href={href} aria-label={label} className="-mt-7">
                 <div
                   className={cn(
-                    'flex h-12 w-12 items-center justify-center rounded-full transition-all',
+                    'flex h-16 w-16 items-center justify-center rounded-full transition-all border-4 border-background',
                     isActive
-                      ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
-                      : 'bg-primary text-primary-foreground shadow-md'
+                      ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/40'
+                      : 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
                   )}
                 >
-                  <Icon className="h-6 w-6" />
+                  <Icon className="h-7 w-7" />
                 </div>
               </Link>
             );

@@ -41,14 +41,17 @@ export async function deleteCategory(userId: string, categoryId: string, type: C
   await deleteDoc(doc(getDb(), 'categories', userId, type, categoryId));
 }
 
-// Returns oldId→newId map for Redux expense remap
+// Resets categories to TAXONOMY defaults while REUSING the same Firestore IDs
+// for matched categories — so expense categoryIds stay valid without any migration.
+// Returns oldId→newId only for categories that got NEW ids (truly new entries).
 export async function resetCategoriesToDefaults(
   userId: string
 ): Promise<Record<string, string>> {
   const db = getDb();
 
-  // 1. Snapshot old categories: id → { name, parentId }
-  const oldCats: Record<string, { name: string; parentId?: string }> = {};
+  // 1. Read current categories (id → { name, parentId, parentName })
+  type OldCat = { name: string; parentId?: string };
+  const oldCats: Record<string, OldCat> = {};
   for (const type of ['expense', 'income'] as CategoryType[]) {
     const snap = await getDocs(colRef(userId, type));
     snap.docs.forEach((d) => {
@@ -57,63 +60,64 @@ export async function resetCategoriesToDefaults(
     });
   }
 
-  // 2. Delete old categories
+  // Build lookup: name → existing id (parents); "parentName::subName" → existing id (subs)
+  const existingParentId: Record<string, string> = {};   // parentName → existingId
+  const existingSubId: Record<string, string> = {};      // "parentName::subName" → existingId
+  for (const [id, { name, parentId }] of Object.entries(oldCats)) {
+    if (!parentId) {
+      existingParentId[name] = id;
+    } else {
+      const parentName = oldCats[parentId]?.name;
+      if (parentName) existingSubId[`${parentName}::${name}`] = id;
+    }
+  }
+
+  // 2. Delete all existing categories
   for (const type of ['expense', 'income'] as CategoryType[]) {
     const snap = await getDocs(colRef(userId, type));
     await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
   }
 
-  // 3. Seed new categories via atomic batch
-  const { nameToId, parentKeyToId } = await seedDefaultCategoriesForce(userId);
+  // 3. Recreate via batch — reusing the SAME id where name matches, new id otherwise
+  const batch = writeBatch(db);
+  const oldIdToNewId: Record<string, string> = {};  // only populated when id changes
+  const keyToNewId: Record<string, string> = {};    // makeKey → new parent id (for child parentId resolution)
+  const nameToNewId: Record<string, string> = {};   // parent name → new id
 
-  // 4. Build oldId → newId:
-  //    - parents matched by name (unique across taxonomy)
-  //    - subs matched by parentName::subName to avoid "Other" collisions
-  const oldIdToNewId: Record<string, string> = {};
-  for (const [oldId, { name, parentId }] of Object.entries(oldCats)) {
-    if (!parentId) {
-      // parent category — match by name
-      if (nameToId[name]) oldIdToNewId[oldId] = nameToId[name];
-    } else {
-      // sub — match by parentName::subName
-      const parentName = oldCats[parentId]?.name;
-      const key = parentName ? `${parentName}::${name}` : name;
-      if (parentKeyToId[key]) oldIdToNewId[oldId] = parentKeyToId[key];
+  const seedCats = (
+    cats: typeof DEFAULT_EXPENSE_CATEGORIES,
+    type: CategoryType
+  ) => {
+    // Parents first
+    for (const cat of cats.filter((c) => !c.parentId)) {
+      const { parentId: _omit, ...catData } = cat;
+      const reuseId = existingParentId[cat.name];
+      const ref = reuseId
+        ? doc(colRef(userId, type), reuseId)
+        : doc(colRef(userId, type));
+      batch.set(ref, { ...catData, userId });
+      const key = `__${cat.name.toLowerCase().replace(/[\s/]+/g, '_')}__`;
+      keyToNewId[key] = ref.id;
+      nameToNewId[cat.name] = ref.id;
+      if (reuseId && reuseId !== ref.id) oldIdToNewId[reuseId] = ref.id;
     }
-  }
-
-  // All valid new category IDs (to detect stale IDs from older resets)
-  const newIds = new Set([...Object.values(nameToId), ...Object.values(parentKeyToId)]);
-  // Fallback: first parent category (not Savings) for completely unknown IDs
-  const fallbackId = Object.entries(nameToId).find(([name]) => name !== 'Savings')?.[1] ?? '';
-
-  // 5. Migrate Firestore expenses
-  const expSnap = await getDocs(collection(db, 'expenses', userId, 'items'));
-  const expBatch = writeBatch(db);
-  let count = 0;
-  for (const expDoc of expSnap.docs) {
-    const data = expDoc.data() as { categoryId?: string; subcategoryId?: string };
-    const updates: Record<string, string> = {};
-
-    if (data.categoryId) {
-      if (oldIdToNewId[data.categoryId]) {
-        updates.categoryId = oldIdToNewId[data.categoryId];
-      } else if (!newIds.has(data.categoryId) && fallbackId) {
-        // Stale ID from a previous failed reset — map to fallback
-        oldIdToNewId[data.categoryId] = fallbackId;
-        updates.categoryId = fallbackId;
-      }
+    // Children
+    for (const cat of cats.filter((c) => c.parentId)) {
+      const realParentId = keyToNewId[cat.parentId!] ?? null;
+      const { parentId: _omit, ...catData } = cat;
+      const parentName = Object.entries(nameToNewId).find(([, id]) => id === realParentId)?.[0];
+      const reuseId = parentName ? existingSubId[`${parentName}::${cat.name}`] : undefined;
+      const ref = reuseId
+        ? doc(colRef(userId, type), reuseId)
+        : doc(colRef(userId, type));
+      batch.set(ref, { ...catData, parentId: realParentId, userId });
+      if (reuseId && reuseId !== ref.id) oldIdToNewId[reuseId] = ref.id;
     }
-    if (data.subcategoryId && oldIdToNewId[data.subcategoryId]) {
-      updates.subcategoryId = oldIdToNewId[data.subcategoryId];
-    }
+  };
 
-    if (Object.keys(updates).length > 0) {
-      expBatch.update(expDoc.ref, updates);
-      if (++count === 499) break;
-    }
-  }
-  if (count > 0) await expBatch.commit();
+  seedCats(DEFAULT_EXPENSE_CATEGORIES, 'expense');
+  seedCats(DEFAULT_INCOME_CATEGORIES, 'income');
+  await batch.commit();
 
   return oldIdToNewId;
 }

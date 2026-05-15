@@ -175,6 +175,21 @@ export default function AnalyticsPage() {
     </div>
   );
 
+  const avgDailyChart = avgDailyByMonth.some((d) => d.avgDay > 0) && (
+    <div className="rounded-2xl border border-border bg-card p-4">
+      <h2 className="text-sm font-semibold mb-3">{t('analytics.avgDayByMonth')}</h2>
+      <ResponsiveContainer width="100%" height={160}>
+        <BarChart data={avgDailyByMonth}>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+          <YAxis tick={{ fontSize: 11 }} width={45} />
+          <Tooltip formatter={(value) => formatAmount(value as number, currency)} contentStyle={tooltipStyle} />
+          <Bar dataKey="avgDay" name={t('analytics.avgDay')} fill="#81B29A" radius={[3, 3, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+
   const trendChart = hasTrendData && (
     <div className="rounded-2xl border border-border bg-card p-4">
       <h2 className="text-sm font-semibold mb-3">{t('analytics.trend')}</h2>

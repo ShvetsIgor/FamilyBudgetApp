@@ -185,7 +185,7 @@ export default function StatisticsPage() {
         );
       })}
       {showBudget && pieData.length > 0 && (
-        <p className="text-xs text-muted-foreground mt-1">Tap a category limit to edit</p>
+        <p className="text-xs text-muted-foreground mt-1">{t('stats.editHint')}</p>
       )}
     </div>
   );

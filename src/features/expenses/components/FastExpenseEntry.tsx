@@ -138,55 +138,55 @@ export function FastExpenseEntry() {
   return (
     <div className="flex flex-col bg-background" style={{ height: '100dvh' }}>
       {/* ── Top bar ── */}
-      <div className="flex items-center gap-2 px-4 py-2 flex-shrink-0">
-        <button onClick={() => router.back()} className="p-2 rounded-full hover:bg-muted transition-colors">
-          <X className="h-5 w-5" />
+      <div className="flex items-center gap-2 px-4 pt-1 pb-0.5 flex-shrink-0">
+        <button onClick={() => router.back()} className="p-1.5 rounded-full hover:bg-muted transition-colors">
+          <X className="h-4 w-4" />
         </button>
         <div className="flex-1 text-center text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">
           Чек · {splits.length + 1} {pluralRu(splits.length + 1)}
         </div>
-        <div className="w-9" />
+        <div className="w-8" />
       </div>
 
       {/* ── Total ── */}
       <div
         onClick={() => setEditing('total')}
         className={cn(
-          'mx-4 px-4 py-3 rounded-[18px] cursor-pointer flex items-baseline justify-between flex-shrink-0 transition-all border-[1.5px]',
+          'mx-4 px-4 py-1.5 rounded-[18px] cursor-pointer flex items-baseline justify-between flex-shrink-0 transition-all border-[1.5px]',
           editing === 'total' ? 'bg-primary/10 border-primary' : 'bg-transparent border-transparent'
         )}
       >
-        <span className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">Итого по чеку</span>
+        <span className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">Итого</span>
         <div className="flex items-baseline gap-1">
-          <span className="text-lg font-bold text-muted-foreground">{symbol}</span>
-          <span className="text-[38px] font-black text-foreground tracking-[-0.03em] leading-none tabular-nums">
+          <span className="text-base font-bold text-muted-foreground">{symbol}</span>
+          <span className="text-[32px] font-black text-foreground tracking-[-0.03em] leading-none tabular-nums">
             {total}
           </span>
         </div>
       </div>
 
       {/* ── Parent category grid — 2 rows × horizontal scroll ── */}
-      <div className="overflow-x-auto px-3.5 py-2.5 flex-shrink-0 [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
-        <div className="grid grid-rows-2 grid-flow-col gap-1.5" style={{ gridAutoColumns: '72px' }}>
+      <div className="overflow-x-auto px-3.5 py-1.5 flex-shrink-0 [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
+        <div className="grid grid-rows-2 grid-flow-col gap-1.5" style={{ gridAutoColumns: '64px' }}>
           {parentCats.map((cat) => {
             const sel = cat.id === parentId;
             return (
               <button
                 key={cat.id}
                 onClick={() => changeParent(cat.id)}
-                className="w-[72px] h-[54px] rounded-[14px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
+                className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
                 style={{
                   background: sel ? cat.color : 'hsl(var(--card))',
-                  boxShadow: sel ? `0 4px 10px ${cat.color}55` : '0 1px 3px rgba(61,44,31,.06)',
+                  boxShadow: sel ? `0 3px 8px ${cat.color}55` : '0 1px 3px rgba(61,44,31,.06)',
                 }}
               >
                 <StickerIcon
                   icon={cat.icon}
                   color={sel ? '#fff' : cat.color}
-                  className="h-5 w-5"
+                  className="h-4 w-4"
                 />
                 <span
-                  className="text-[9px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
+                  className="text-[8px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
                   style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}
                 >
                   {t.cat(cat.name)}

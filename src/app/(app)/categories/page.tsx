@@ -45,13 +45,16 @@ export default function CategoriesPage() {
     if (!user || !confirm(t('categories.confirmDelete'))) return;
     setResetting(true);
     try {
-      await resetCategoriesToDefaults(user.id);
+      const oldIdToNewId = await resetCategoriesToDefaults(user.id);
       const [expenseCats, incomeCats] = await Promise.all([
         fetchCategories(user.id, 'expense'),
         fetchCategories(user.id, 'income'),
       ]);
       dispatch(setCategories({ type: 'expense', categories: expenseCats }));
       dispatch(setCategories({ type: 'income', categories: incomeCats }));
+      if (Object.keys(oldIdToNewId).length > 0) {
+        dispatch(remapExpenseCategories(oldIdToNewId));
+      }
     } finally { setResetting(false); }
   }
 

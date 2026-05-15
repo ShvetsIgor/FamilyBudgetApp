@@ -370,6 +370,7 @@ export default function AnalyticsPage() {
           <div className="grid grid-cols-3 gap-4 items-start">
             <div className="col-span-2 flex flex-col gap-4">
               {trendChart}
+              {avgDailyChart}
               {dowChart}
             </div>
             <div>{topCatsCard}</div>

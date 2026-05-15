@@ -72,13 +72,14 @@ export interface AddRecurringInput {
 
 export async function addRecurring(input: AddRecurringInput): Promise<SerializableRecurringPayment> {
   const { userId, startDate, comment, ...rest } = input;
+  const nextDueDate = firstFutureOrToday(startDate, input.frequency);
   const data = Object.fromEntries(
     Object.entries({
       ...rest,
       userId,
       comment,
       startDate: Timestamp.fromDate(startDate),
-      nextDueDate: Timestamp.fromDate(startDate),
+      nextDueDate: Timestamp.fromDate(nextDueDate),
       isActive: true,
       createdAt: serverTimestamp(),
     }).filter(([, v]) => v !== undefined)
@@ -87,7 +88,7 @@ export async function addRecurring(input: AddRecurringInput): Promise<Serializab
   return toSerializable(ref.id, {
     ...data,
     startDate: Timestamp.fromDate(startDate),
-    nextDueDate: Timestamp.fromDate(startDate),
+    nextDueDate: Timestamp.fromDate(nextDueDate),
   });
 }
 

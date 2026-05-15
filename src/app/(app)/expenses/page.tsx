@@ -236,7 +236,7 @@ export default function ExpensesPage() {
 
         {/* Search + filter (expenses tab only) */}
         {tab === 'expenses' && (
-          <div className="px-4 mb-2 flex flex-col gap-2 lg:px-0">
+          <div className="px-4 mb-2 flex flex-col gap-2 lg:px-0 lg:hidden">
             <input
               type="search"
               value={search}

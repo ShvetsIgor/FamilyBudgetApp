@@ -215,7 +215,9 @@ export default function AnalyticsPage() {
           return (
             <div key={id}>
               <div className="flex items-center gap-2 mb-1">
-                <CategoryIcon icon={cat!.icon} color={cat!.color} size="sm" />
+                <div className="h-8 w-8 flex shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: `${cat!.color}20` }}>
+                  <StickerIcon icon={cat!.icon} color={cat!.color} className="h-5 w-5" />
+                </div>
                 <span className="flex-1 text-sm">{t.cat(cat!.name)}</span>
                 <span className="text-sm font-semibold tabular-nums">{formatAmount(total, currency)}</span>
                 <span className="text-xs text-muted-foreground w-9 text-right">{pct.toFixed(0)}%</span>

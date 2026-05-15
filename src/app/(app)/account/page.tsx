@@ -78,6 +78,7 @@ export default function AccountPage() {
   async function handleTheme(th: Theme) { dispatch(setTheme(th)); await savePrefs({ theme: th }); }
   async function handleCurrency(c: Currency) { dispatch(setCurrency(c)); await savePrefs({ currency: c }); }
   async function handleLanguage(l: Language) { dispatch(setLanguage(l)); await savePrefs({ language: l }); }
+  function handleWeekStart(ws: WeekStart) { dispatch(setWeekStart(ws)); }
 
   async function handleSaveName() {
     const name = nameInput.trim();

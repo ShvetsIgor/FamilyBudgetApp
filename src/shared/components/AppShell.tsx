@@ -13,7 +13,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-screen flex-col lg:hidden">
         <UpdateBanner />
         <Header />
-        <main className="flex-1 pb-20">{children}</main>
+        <main className="flex-1 pb-28">{children}</main>
         <BottomNav />
       </div>
 

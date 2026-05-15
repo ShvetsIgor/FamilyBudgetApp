@@ -342,6 +342,28 @@ export default function AnalyticsPage() {
             </div>
           );
         })()}
+        {/* Avg daily by month */}
+        {avgDailyByMonth.some((d) => d.avgDay > 0) && (() => {
+          const maxV = Math.max(...avgDailyByMonth.map((d) => d.avgDay), 1);
+          return (
+            <div>
+              <p className="text-[17px] font-extrabold text-foreground mb-2.5">{t('analytics.avgDayByMonth')}</p>
+              <div className="rounded-[22px] bg-card px-4 py-5" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
+                <div className="flex items-flex-end gap-2.5" style={{ height: 100, alignItems: 'flex-end' }}>
+                  {avgDailyByMonth.map((d, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                      <div
+                        className="w-full rounded-[10px_10px_6px_6px]"
+                        style={{ height: Math.max(4, (d.avgDay / maxV) * 80), background: i === avgDailyByMonth.length - 1 ? '#81B29A' : '#81B29A55' }}
+                      />
+                      <span className="text-[9px] font-bold text-muted-foreground leading-none">{d.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
         {/* Top category */}
         {topCats[0] && (() => {
           const top = topCats[0];

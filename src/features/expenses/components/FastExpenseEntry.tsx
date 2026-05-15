@@ -109,7 +109,7 @@ export function FastExpenseEntry() {
       userId: user.id,
       currency,
       date: new Date(),
-      paymentMethod: 'card' as const,
+      paymentMethod,
       tags: [],
       privacy: 'regular' as const,
       splits: [],

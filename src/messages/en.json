@@ -125,7 +125,8 @@
     "noIncome": "No income this month",
     "addIncome": "Add income →",
     "addMore": "+ Add income",
-    "confirmDelete": "Delete this income entry?"
+    "confirmDelete": "Delete this income entry?",
+    "record": "Record"
   },
   "expenses": {
     "title": "Expenses",

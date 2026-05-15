@@ -378,7 +378,7 @@ export default function AccountPage() {
   );
 
   const exportBlock = (
-    <div className="rounded-2xl border border-border bg-card p-4 flex flex-col gap-3 overflow-hidden">
+    <div className="rounded-2xl border border-border bg-card p-4 flex flex-col gap-3 overflow-hidden w-full min-w-0">
       <p className="text-xs text-muted-foreground">{t('export.title')}</p>
       <div className="flex flex-col gap-1 min-w-0">
         <label className="text-xs text-muted-foreground">{t('export.month')}</label>

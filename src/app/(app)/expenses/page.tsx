@@ -236,13 +236,13 @@ export default function ExpensesPage() {
 
         {/* Search + filter (expenses tab only) */}
         {tab === 'expenses' && (
-          <div className="px-4 mb-2 flex flex-col gap-2 lg:px-0 lg:hidden">
+          <div className="px-4 mb-2 flex flex-col gap-2 lg:px-0">
             <input
               type="search"
               value={search}
               onChange={(e) => dispatch(setExpensesSearch(e.target.value))}
               placeholder={t('expenses.search')}
-              className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
+              className="lg:hidden w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
             />
             {expenses.length > 0 && (
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">

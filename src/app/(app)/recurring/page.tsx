@@ -152,7 +152,7 @@ export default function RecurringPage() {
               ) : days <= 3 ? (
                 <span className="text-amber-500 font-medium">{t('recurring.inDays').replace('{n}', String(days))}</span>
               ) : (
-                <span>{t('recurring.due')}: {format(parseISO(item.nextDueDate), 'MMM d')}</span>
+                <span>{t('recurring.due')}: {format(parseISO(item.nextDueDate), 'd MMM', { locale: ru })}</span>
               )}
             </p>
           </div>

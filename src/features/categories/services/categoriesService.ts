@@ -122,47 +122,6 @@ export async function resetCategoriesToDefaults(
   return oldIdToNewId;
 }
 
-async function seedDefaultCategoriesForce(
-  userId: string
-): Promise<{ nameToId: Record<string, string>; parentKeyToId: Record<string, string> }> {
-  const db = getDb();
-  const nameToId: Record<string, string> = {};       // parentName → newId
-  const parentKeyToId: Record<string, string> = {};  // "ParentName::SubName" → newId
-  const keyToRef: Record<string, string> = {};       // makeKey → newId (for parentId resolution)
-
-  const batch = writeBatch(db);
-
-  const seedCats = (
-    cats: typeof DEFAULT_EXPENSE_CATEGORIES,
-    type: CategoryType
-  ) => {
-    // First pass: parents
-    for (const cat of cats.filter((c) => !c.parentId)) {
-      const { parentId: _omit, ...catData } = cat;
-      const ref = doc(colRef(userId, type));
-      batch.set(ref, { ...catData, userId });
-      const key = `__${cat.name.toLowerCase().replace(/[\s/]+/g, '_')}__`;
-      keyToRef[key] = ref.id;
-      nameToId[cat.name] = ref.id;
-    }
-    // Second pass: children
-    for (const cat of cats.filter((c) => c.parentId)) {
-      const realParentId = keyToRef[cat.parentId!] ?? null;
-      const { parentId: _omit, ...catData } = cat;
-      const ref = doc(colRef(userId, type));
-      batch.set(ref, { ...catData, parentId: realParentId, userId });
-      // Find parent name to build "ParentName::SubName" key
-      const parentName = Object.entries(nameToId).find(([, id]) => id === realParentId)?.[0];
-      if (parentName) parentKeyToId[`${parentName}::${cat.name}`] = ref.id;
-    }
-  };
-
-  seedCats(DEFAULT_EXPENSE_CATEGORIES, 'expense');
-  seedCats(DEFAULT_INCOME_CATEGORIES, 'income');
-
-  await batch.commit();
-  return { nameToId, parentKeyToId };
-}
 
 export async function seedDefaultCategories(userId: string): Promise<void> {
   const existing = await fetchCategories(userId, 'expense');

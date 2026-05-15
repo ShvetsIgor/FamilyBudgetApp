@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Sun, Moon, WifiOff, RefreshCw, Plus, Bell } from 'lucide-react';
+import { Sun, Moon, WifiOff, RefreshCw, Plus, Bell, Search } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
-import { setTheme } from '@/features/ui/store/uiSlice';
+import { setTheme, setExpensesSearch } from '@/features/ui/store/uiSlice';
 import { useT } from '@/shared/hooks/useT';
 
 const PAGE_TITLE_KEYS: Record<string, string> = {
@@ -28,11 +28,12 @@ function getPageTitleKey(pathname: string): string {
 export function TopBar() {
   const dispatch = useAppDispatch();
   const pathname = usePathname();
-  const { theme, isOffline, isSyncing } = useAppSelector((s) => s.ui);
+  const { theme, isOffline, isSyncing, expensesSearch } = useAppSelector((s) => s.ui);
   const user = useAppSelector((s) => s.auth.user);
   const t = useT();
 
   const isHome = pathname === '/home';
+  const isExpenses = pathname.startsWith('/expenses');
   const firstName = user?.name?.split(' ')[0] || '';
 
   const title = isHome && firstName
@@ -43,6 +44,22 @@ export function TopBar() {
     <header className="hidden lg:flex h-16 flex-shrink-0 items-center gap-4 border-b border-border bg-background/95 backdrop-blur px-6">
       {/* Title */}
       <h1 className="text-lg font-bold text-foreground shrink-0 min-w-[160px]">{title}</h1>
+
+      {/* Search — only on expenses page */}
+      {isExpenses && (
+        <div className="flex-1 max-w-[360px]">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <input
+              type="search"
+              value={expensesSearch}
+              onChange={(e) => dispatch(setExpensesSearch(e.target.value))}
+              placeholder={t('expenses.search')}
+              className="w-full rounded-xl border border-border bg-muted/50 py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+            />
+          </div>
+        </div>
+      )}
 
       <div className="ml-auto flex items-center gap-2">
         {isOffline && (

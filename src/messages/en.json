@@ -153,7 +153,8 @@
     "over": "⚠ Over",
     "addLimit": "+ limit",
     "save": "Save",
-    "noData": "No data for this period"
+    "noData": "No data for this period",
+    "editHint": "Tap a category limit to edit"
   },
   "analytics": {
     "title": "Analytics",

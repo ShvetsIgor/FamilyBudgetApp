@@ -99,12 +99,18 @@ export async function resetCategoriesToDefaults(
       if (oldIdToNewId[data.categoryId]) {
         updates.categoryId = oldIdToNewId[data.categoryId];
       } else if (!newIds.has(data.categoryId) && fallbackId) {
-        // Stale ID from a previous failed reset — assign fallback
+        // Stale ID from a previous failed reset — map to fallback
+        oldIdToNewId[data.categoryId] = fallbackId;
         updates.categoryId = fallbackId;
       }
     }
-    if (data.subcategoryId && oldIdToNewId[data.subcategoryId]) {
-      updates.subcategoryId = oldIdToNewId[data.subcategoryId];
+    if (data.subcategoryId) {
+      if (oldIdToNewId[data.subcategoryId]) {
+        updates.subcategoryId = oldIdToNewId[data.subcategoryId];
+      } else if (!newIds.has(data.subcategoryId)) {
+        // Stale subcategoryId — just clear it
+        updates.subcategoryId = '';
+      }
     }
 
     if (Object.keys(updates).length > 0) {
@@ -113,15 +119,6 @@ export async function resetCategoriesToDefaults(
     }
   }
   if (count > 0) await expBatch.commit();
-
-  // Also extend oldIdToNewId with stale→fallback entries for Redux update
-  const expSnap2 = await getDocs(collection(db, 'expenses', userId, 'items'));
-  expSnap2.docs.forEach((d) => {
-    const data = d.data() as { categoryId?: string };
-    if (data.categoryId && !newIds.has(data.categoryId) && !oldIdToNewId[data.categoryId] && fallbackId) {
-      oldIdToNewId[data.categoryId] = fallbackId;
-    }
-  });
 
   return oldIdToNewId;
 }

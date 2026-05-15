@@ -80,7 +80,8 @@ export default function RecurringPage() {
             userId: user.id, amount: data.amount, currency: data.currency,
             categoryId: data.categoryId, date: data.startDate,
             paymentMethod: 'card', splits: [], tags: ['recurring'], privacy: 'regular',
-            comment: data.name + (data.comment ? ' · ' + data.comment : '') || undefined,
+            store: data.name,
+            comment: data.comment || undefined,
           });
           dispatch(prependExpense(exp));
         }

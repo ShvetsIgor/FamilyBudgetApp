@@ -36,6 +36,7 @@ export default function HomePage() {
   const { list: incomes, status: incStatus } = useAppSelector((s) => s.income);
   const { list: goals, status: goalsStatus } = useAppSelector((s) => s.savings);
   const expenseCategories = useAppSelector((s) => s.categories.expense);
+  const budgetLimits = useAppSelector((s) => s.budget.limits);
   const t = useT();
 
   const [trendData, setTrendData] = useState<MonthStats[]>([]);

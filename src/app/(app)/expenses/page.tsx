@@ -71,7 +71,7 @@ export default function ExpensesPage() {
   const [showIncomeForm, setShowIncomeForm] = useState(searchParams.get('tab') === 'income');
   const [editingIncome, setEditingIncome] = useState<SerializableIncome | null>(null);
   const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState('');
+  const search = useAppSelector((s) => s.ui.expensesSearch);
   const [filterCatId, setFilterCatId] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   // Local data for non-current months; current month synced with Redux

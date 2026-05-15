@@ -504,6 +504,24 @@ export default function AccountPage() {
               {CURRENCIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
           </div>
+          {/* Week start */}
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#8AA9D622' }}>📅</div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground">{t('account.weekStart')}</p>
+              <p className="text-xs font-semibold text-muted-foreground mt-0.5">
+                {weekStart === 'monday' ? t('account.weekMonday') : t('account.weekSunday')}
+              </p>
+            </div>
+            <select
+              value={weekStart}
+              onChange={(e) => handleWeekStart(e.target.value as WeekStart)}
+              className="text-sm font-bold text-primary bg-transparent border-0 outline-none cursor-pointer pr-1"
+            >
+              <option value="monday">{t('account.weekMonday')}</option>
+              <option value="sunday">{t('account.weekSunday')}</option>
+            </select>
+          </div>
           {/* Notifications */}
           <div className="flex items-center gap-3 px-4 py-3.5">
             <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#C97B8422' }}>🔔</div>

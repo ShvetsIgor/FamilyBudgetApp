@@ -39,6 +39,14 @@ const expensesSlice = createSlice({
     setHasMore(state, action: PayloadAction<boolean>) {
       state.hasMore = action.payload;
     },
+    remapExpenseCategories(state, action: PayloadAction<Record<string, string>>) {
+      const map = action.payload;
+      state.list = state.list.map((e) => ({
+        ...e,
+        categoryId: map[e.categoryId] ?? e.categoryId,
+        subcategoryId: e.subcategoryId ? (map[e.subcategoryId] ?? e.subcategoryId) : e.subcategoryId,
+      }));
+    },
   },
 });
 

@@ -136,7 +136,7 @@ export function FastExpenseEntry() {
   const catColor = parent?.color ?? '#E07A5F';
 
   return (
-    <div className="flex flex-col bg-background" style={{ height: '100dvh' }}>
+    <div className="flex flex-col bg-background fixed inset-0 z-50" style={{ height: '100dvh' }}>
       {/* ── Top bar ── */}
       <div className="flex items-center gap-2 px-4 pt-1 pb-0.5 flex-shrink-0">
         <button onClick={() => router.back()} className="p-1.5 rounded-full hover:bg-muted transition-colors">

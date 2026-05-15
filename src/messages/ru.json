@@ -201,7 +201,10 @@
     "save": "Сохранить",
     "cancel": "✕",
     "personal": "личный",
-    "family2": "семейный"
+    "family2": "семейный",
+    "weekStart": "Начало недели",
+    "weekMonday": "Понедельник",
+    "weekSunday": "Воскресенье"
   },
   "recurring": {
     "title": "Регулярные платежи",

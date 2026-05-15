@@ -384,7 +384,8 @@ export default function AccountPage() {
         <label className="text-xs text-muted-foreground">{t('export.month')}</label>
         <input type="month" value={exportMonth} onChange={(e) => setExportMonth(e.target.value)}
           max={format(new Date(), 'yyyy-MM')} min={format(subMonths(new Date(), 24), 'yyyy-MM')}
-          className="w-full max-w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+          style={{ boxSizing: 'border-box', minWidth: 0 }} />
       </div>
       <div className="flex flex-col gap-1">
         <label className="text-xs text-muted-foreground">{t('export.type')}</label>

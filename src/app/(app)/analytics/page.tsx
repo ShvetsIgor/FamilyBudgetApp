@@ -13,7 +13,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 
-type Period = 3 | 6 | 9 | 12;
+type Period = 1 | 3 | 6 | 9 | 12;
 
 interface DowPoint {
   name: string;

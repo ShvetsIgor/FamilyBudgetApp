@@ -42,6 +42,16 @@ function nextDue(from: Date, frequency: RecurringFrequency): Date {
   }
 }
 
+// Advance date to the first occurrence >= today
+function firstFutureOrToday(start: Date, frequency: RecurringFrequency): Date {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  let d = new Date(start);
+  d.setHours(0, 0, 0, 0);
+  while (d < today) d = nextDue(d, frequency);
+  return d;
+}
+
 export async function fetchRecurring(userId: string): Promise<SerializableRecurringPayment[]> {
   const snap = await getDocs(query(col(userId), orderBy('nextDueDate')));
   return snap.docs.map((d) => toSerializable(d.id, d.data()));

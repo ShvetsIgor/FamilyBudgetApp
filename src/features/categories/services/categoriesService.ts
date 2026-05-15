@@ -93,7 +93,8 @@ export async function resetCategoriesToDefaults(userId: string): Promise<void> {
   if (batchCount > 0) await batch.commit();
 }
 
-async function seedDefaultCategoriesForce(userId: string): Promise<void> {
+async function seedDefaultCategoriesForce(userId: string): Promise<Record<string, string>> {
+  const nameToId: Record<string, string> = {};
   const parentIdMap: Record<string, string> = {};
 
   for (const cat of DEFAULT_EXPENSE_CATEGORIES.filter((c) => !c.parentId)) {
@@ -101,12 +102,14 @@ async function seedDefaultCategoriesForce(userId: string): Promise<void> {
     const ref = await addDoc(colRef(userId, 'expense'), { ...catData, userId });
     const key = `__${cat.name.toLowerCase().replace(/[\s/]+/g, '_')}__`;
     parentIdMap[key] = ref.id;
+    nameToId[cat.name] = ref.id;
   }
 
   for (const cat of DEFAULT_EXPENSE_CATEGORIES.filter((c) => c.parentId)) {
     const realParentId = parentIdMap[cat.parentId!] ?? null;
     const { parentId: _omit, ...catData } = cat;
-    await addDoc(colRef(userId, 'expense'), { ...catData, parentId: realParentId, userId });
+    const ref = await addDoc(colRef(userId, 'expense'), { ...catData, parentId: realParentId, userId });
+    nameToId[cat.name] = ref.id;
   }
 
   const incomeParentIdMap: Record<string, string> = {};
@@ -115,12 +118,16 @@ async function seedDefaultCategoriesForce(userId: string): Promise<void> {
     const ref = await addDoc(colRef(userId, 'income'), { ...catData, userId });
     const key = `__${cat.name.toLowerCase().replace(/[\s/]+/g, '_')}__`;
     incomeParentIdMap[key] = ref.id;
+    nameToId[cat.name] = ref.id;
   }
   for (const cat of DEFAULT_INCOME_CATEGORIES.filter((c) => c.parentId)) {
     const realParentId = incomeParentIdMap[cat.parentId!] ?? null;
     const { parentId: _omit, ...catData } = cat;
-    await addDoc(colRef(userId, 'income'), { ...catData, parentId: realParentId, userId });
+    const ref = await addDoc(colRef(userId, 'income'), { ...catData, parentId: realParentId, userId });
+    nameToId[cat.name] = ref.id;
   }
+
+  return nameToId;
 }
 
 export async function seedDefaultCategories(userId: string): Promise<void> {

@@ -105,10 +105,19 @@ export default function AnalyticsPage() {
   const daysInMonth = new Date().getDate();
   const avgDaily = daysInMonth > 0 ? (thisMonth?.totalExpenses ?? 0) / daysInMonth : 0;
 
+  // Avg daily per month for comparison chart
+  const avgDailyByMonth = months.map((m) => {
+    const daysInM = new Date(m.month + '-01').getMonth() === new Date().getMonth() &&
+      new Date(m.month + '-01').getFullYear() === new Date().getFullYear()
+      ? new Date().getDate()
+      : new Date(parseInt(m.month.slice(0, 4)), parseInt(m.month.slice(5)), 0).getDate();
+    return { name: m.month.slice(5), avgDay: daysInM > 0 ? Math.round(m.totalExpenses / daysInM) : 0 };
+  });
+
   // Period selector (shared)
   const periodSelector = (
     <div className="flex gap-2 flex-wrap">
-      {([3, 6, 9, 12] as Period[]).map((p) => (
+      {([1, 3, 6, 9, 12] as Period[]).map((p) => (
         <button
           key={p}
           onClick={() => setPeriod(p)}

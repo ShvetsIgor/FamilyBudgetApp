@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { format, parseISO, isToday, isYesterday } from 'date-fns';
+import { format, parseISO, isToday, isYesterday, subMonths, startOfMonth } from 'date-fns';
+import { ru } from 'date-fns/locale';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setExpenses } from '@/features/expenses/store/expensesSlice';
 import { setIncome, prependIncome, removeIncome, updateIncome as updateIncomeAction } from '@/features/income/store/incomeSlice';
@@ -33,9 +34,23 @@ function groupByDate<T extends { date: string }>(items: T[]): [string, T[]][] {
 
 function dateLabel(dateStr: string): string {
   const d = parseISO(dateStr);
-  if (isToday(d)) return 'Today';
-  if (isYesterday(d)) return 'Yesterday';
-  return format(d, 'EEEE, MMM d');
+  if (isToday(d)) return 'Сегодня';
+  if (isYesterday(d)) return 'Вчера';
+  return format(d, 'EEEE, d MMMM', { locale: ru });
+}
+
+// Generate months from Jan of current year up to (and including) current month
+function getYearMonths(): string[] {
+  const now = new Date();
+  const currentMonth = format(now, 'yyyy-MM');
+  const months: string[] = [];
+  for (let m = 0; m <= 11; m++) {
+    const d = new Date(now.getFullYear(), m, 1);
+    const key = format(d, 'yyyy-MM');
+    months.push(key);
+    if (key === currentMonth) break;
+  }
+  return months;
 }
 
 export default function ExpensesPage() {
@@ -43,38 +58,68 @@ export default function ExpensesPage() {
   const router = useRouter();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
-  const { list: expenses, status: expStatus } = useAppSelector((s) => s.expenses);
-  const { list: incomes, status: incStatus } = useAppSelector((s) => s.income);
+  const { list: reduxExpenses, status: expStatus } = useAppSelector((s) => s.expenses);
+  const { list: reduxIncomes, status: incStatus } = useAppSelector((s) => s.income);
   const categories = useAppSelector((s) => s.categories.expense);
   const searchParams = useSearchParams();
+
+  const currentMonth = format(new Date(), 'yyyy-MM');
+  const yearMonths = getYearMonths();
+
   const [tab, setTab] = useState<Tab>(searchParams.get('tab') === 'income' ? 'income' : 'expenses');
   const [showIncomeForm, setShowIncomeForm] = useState(searchParams.get('tab') === 'income');
   const [editingIncome, setEditingIncome] = useState<SerializableIncome | null>(null);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [filterCatId, setFilterCatId] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  // Local data for non-current months; current month synced with Redux
+  const [localExpenses, setLocalExpenses] = useState<SerializableExpense[] | null>(null);
+  const [localIncomes, setLocalIncomes] = useState<SerializableIncome[] | null>(null);
+  const monthBarRef = useRef<HTMLDivElement>(null);
   const t = useT();
 
-  const currentMonth = format(new Date(), 'yyyy-MM');
+  const isCurrentMonth = selectedMonth === currentMonth;
+  const expenses = isCurrentMonth ? reduxExpenses : (localExpenses ?? []);
+  const incomes = isCurrentMonth ? reduxIncomes : (localIncomes ?? []);
 
-  const loadExpenses = useCallback(async () => {
+  // Load current month into Redux (once)
+  const loadCurrentExpenses = useCallback(async () => {
+    if (!user || expStatus !== 'idle') return;
+    dispatch(setExpenses(await fetchMonthExpenses(user.id, currentMonth)));
+  }, [user, currentMonth, expStatus, dispatch]);
+
+  const loadCurrentIncomes = useCallback(async () => {
+    if (!user || incStatus !== 'idle') return;
+    dispatch(setIncome(await fetchMonthIncome(user.id, currentMonth)));
+  }, [user, currentMonth, incStatus, dispatch]);
+
+  useEffect(() => { loadCurrentExpenses(); }, [loadCurrentExpenses]);
+  useEffect(() => { if (tab === 'income') loadCurrentIncomes(); }, [tab, loadCurrentIncomes]);
+
+  // Load historical month into local state
+  useEffect(() => {
+    if (isCurrentMonth) { setLocalExpenses(null); setLocalIncomes(null); return; }
+    setLocalExpenses(null);
+    setLocalIncomes(null);
     if (!user) return;
     setLoading(true);
-    try {
-      dispatch(setExpenses(await fetchMonthExpenses(user.id, currentMonth)));
-    } finally { setLoading(false); }
-  }, [user, currentMonth, dispatch]);
+    Promise.all([
+      fetchMonthExpenses(user.id, selectedMonth),
+      fetchMonthIncome(user.id, selectedMonth),
+    ]).then(([exp, inc]) => {
+      setLocalExpenses(exp);
+      setLocalIncomes(inc);
+    }).finally(() => setLoading(false));
+  }, [selectedMonth, isCurrentMonth, user]);
 
-  const loadIncome = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      dispatch(setIncome(await fetchMonthIncome(user.id, currentMonth)));
-    } finally { setLoading(false); }
-  }, [user, currentMonth, dispatch]);
-
-  useEffect(() => { if (expStatus === 'idle') loadExpenses(); }, [expStatus, loadExpenses]);
-  useEffect(() => { if (tab === 'income' && incStatus === 'idle') loadIncome(); }, [tab, incStatus, loadIncome]);
+  // Scroll month bar to selected chip
+  useEffect(() => {
+    const bar = monthBarRef.current;
+    if (!bar) return;
+    const chip = bar.querySelector(`[data-month="${selectedMonth}"]`) as HTMLElement | null;
+    if (chip) chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, [selectedMonth]);
 
   async function handleAddIncome(data: Omit<AddIncomeInput, 'userId'>) {
     if (!user) return;
@@ -90,7 +135,7 @@ export default function ExpensesPage() {
 
   async function handleDeleteIncome(income: SerializableIncome) {
     if (!user) return;
-    if (!confirm('Delete this income entry?')) return;
+    if (!confirm('Удалить эту запись?')) return;
     await deleteIncome(user.id, income);
     dispatch(removeIncome(income.id));
   }
@@ -122,15 +167,44 @@ export default function ExpensesPage() {
     />
   );
 
+  const monthBar = (
+    <div
+      ref={monthBarRef}
+      className="flex gap-1.5 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [-webkit-overflow-scrolling:touch] lg:px-0"
+    >
+      {yearMonths.map((m) => {
+        const sel = m === selectedMonth;
+        const label = format(parseISO(m + '-01'), 'LLL', { locale: ru });
+        return (
+          <button
+            key={m}
+            data-month={m}
+            onClick={() => { setSelectedMonth(m); setSearch(''); setFilterCatId(''); }}
+            className={cn(
+              'shrink-0 rounded-full px-3.5 py-1 text-xs font-bold capitalize transition-colors',
+              sel
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'bg-muted text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {label}
+          </button>
+        );
+      })}
+    </div>
+  );
+
   return (
     <div className="lg:grid lg:grid-cols-3 lg:gap-6 lg:items-start">
-      {/* ── List column (left on desktop, full on mobile when form not open) ── */}
+      {/* ── List column ── */}
       <div className={cn('lg:col-span-2 flex flex-col', formOpen && 'hidden lg:flex')}>
         {/* Header */}
-        <div className="px-4 pt-5 pb-3 flex items-center justify-between lg:px-0 lg:pt-0">
+        <div className="px-4 pt-5 pb-2 flex items-center justify-between lg:px-0 lg:pt-0">
           <div>
             <h1 className="text-xl font-bold">{tab === 'expenses' ? t('expenses.title') : t('expenses.income')}</h1>
-            <p className="text-sm text-muted-foreground">{format(new Date(), 'MMMM yyyy')}</p>
+            <p className="text-sm text-muted-foreground capitalize">
+              {format(parseISO(selectedMonth + '-01'), 'LLLL yyyy', { locale: ru })}
+            </p>
           </div>
           <div className="text-right">
             <p className="text-xs text-muted-foreground">{t('expenses.total')}</p>
@@ -139,6 +213,9 @@ export default function ExpensesPage() {
             </p>
           </div>
         </div>
+
+        {/* Month bar */}
+        {monthBar}
 
         {/* Tab switcher */}
         <div className="flex rounded-xl bg-muted p-1 mx-4 mb-3 gap-1 lg:mx-0">
@@ -149,7 +226,7 @@ export default function ExpensesPage() {
             {t('expenses.title')}
           </button>
           <button
-            onClick={() => { setTab('income'); if (incStatus === 'idle') loadIncome(); }}
+            onClick={() => { setTab('income'); if (incStatus === 'idle') loadCurrentIncomes(); }}
             className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${tab === 'income' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'}`}
           >
             {t('expenses.income')}
@@ -191,13 +268,13 @@ export default function ExpensesPage() {
         )}
 
         {/* Loading */}
-        {loading && (tab === 'expenses' ? expenses : incomes).length === 0 && (
+        {loading && (
           <div className="flex justify-center py-16">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-primary" />
           </div>
         )}
 
-        {/* Expenses empty states */}
+        {/* Expenses empty state */}
         {tab === 'expenses' && !loading && expenses.length === 0 && (
           <div className="flex flex-col items-center py-16 px-8 text-center">
             <p className="text-4xl mb-3">📭</p>
@@ -213,11 +290,11 @@ export default function ExpensesPage() {
           </div>
         )}
 
-        {/* Upcoming recurring (expenses tab, mobile only — desktop shows in right col) */}
-        {tab === 'expenses' && <div className="lg:hidden"><UpcomingBills withinDays={30} /></div>}
+        {/* Upcoming recurring (expenses tab, current month, mobile only) */}
+        {tab === 'expenses' && isCurrentMonth && <div className="lg:hidden"><UpcomingBills withinDays={30} /></div>}
 
         {/* Expense groups */}
-        {tab === 'expenses' && (
+        {tab === 'expenses' && !loading && (
           <div className="flex flex-col gap-2 pb-4">
             {expenseGroups.map(([day, items]) => {
               const dayTotal = (items as SerializableExpense[]).reduce((s, e) => s + e.amount, 0);
@@ -245,14 +322,16 @@ export default function ExpensesPage() {
           <div className="flex flex-col items-center py-12 px-8 text-center">
             <p className="text-4xl mb-3">💰</p>
             <p className="font-medium">{t('income.noIncome')}</p>
-            <button onClick={() => setShowIncomeForm(true)} className="mt-3 text-sm font-medium text-primary hover:underline">
-              {t('income.addIncome')}
-            </button>
+            {isCurrentMonth && (
+              <button onClick={() => setShowIncomeForm(true)} className="mt-3 text-sm font-medium text-primary hover:underline">
+                {t('income.addIncome')}
+              </button>
+            )}
           </div>
         )}
 
         {/* Income groups */}
-        {tab === 'income' && (
+        {tab === 'income' && !loading && (
           <>
             <div className="flex flex-col gap-2 pb-4">
               {incomeGroups.map(([day, items]) => {
@@ -274,7 +353,7 @@ export default function ExpensesPage() {
                 );
               })}
             </div>
-            {incomes.length > 0 && (
+            {isCurrentMonth && incomes.length > 0 && (
               <div className="px-4 pb-4 lg:px-0">
                 <button
                   onClick={() => setShowIncomeForm(true)}
@@ -290,7 +369,6 @@ export default function ExpensesPage() {
 
       {/* ── Right column ── */}
       <div>
-        {/* Mobile: form replaces page */}
         {formOpen && (
           <div className="lg:hidden flex flex-col">
             <div className="px-4 pt-5 pb-3 flex items-center gap-3">
@@ -300,8 +378,6 @@ export default function ExpensesPage() {
             {formPanel}
           </div>
         )}
-
-        {/* Desktop: form panel or upcoming bills */}
         <div className="hidden lg:block sticky top-6">
           {formOpen ? (
             <div className="rounded-2xl border border-border bg-card overflow-hidden">
@@ -313,8 +389,8 @@ export default function ExpensesPage() {
             </div>
           ) : (
             <div className="flex flex-col gap-4">
-              <UpcomingBills withinDays={30} maxItems={5} />
-              {tab === 'income' && (
+              {isCurrentMonth && <UpcomingBills withinDays={30} maxItems={5} />}
+              {tab === 'income' && isCurrentMonth && (
                 <button
                   onClick={() => setShowIncomeForm(true)}
                   className="w-full rounded-2xl bg-primary py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"

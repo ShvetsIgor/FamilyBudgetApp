@@ -6,7 +6,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { getFirebaseAuth, getDb } from '@/shared/lib/firebase';
 import { useAppDispatch } from '@/store/store';
 import { setUser, setLoading } from '@/features/auth/store/authSlice';
-import { setCurrency, setLanguage, setTheme } from '@/features/ui/store/uiSlice';
+import { setCurrency, setLanguage, setTheme, setWeekStart } from '@/features/ui/store/uiSlice';
 import { setCategories } from '@/features/categories/store/categoriesSlice';
 import { fetchCategories, seedDefaultCategories } from '@/features/categories/services/categoriesService';
 import type { UserProfile } from '@/shared/types';

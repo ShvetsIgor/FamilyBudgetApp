@@ -96,17 +96,19 @@ export async function updateRecurring(
   userId: string,
   id: string,
   input: Omit<AddRecurringInput, 'userId'>
-): Promise<void> {
+): Promise<{ nextDueDate: string }> {
   const { startDate, comment, ...rest } = input;
+  const nextDueDate = firstFutureOrToday(startDate, input.frequency);
   const patch = Object.fromEntries(
     Object.entries({
       ...rest,
       comment,
       startDate: Timestamp.fromDate(startDate),
-      nextDueDate: Timestamp.fromDate(startDate),
+      nextDueDate: Timestamp.fromDate(nextDueDate),
     }).filter(([, v]) => v !== undefined)
   );
   await updateDoc(doc(getDb(), 'recurringPayments', userId, 'items', id), patch);
+  return { nextDueDate: nextDueDate.toISOString() };
 }
 
 export async function deleteRecurring(userId: string, id: string): Promise<void> {

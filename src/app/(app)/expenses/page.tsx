@@ -240,7 +240,7 @@ export default function ExpensesPage() {
             <input
               type="search"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => dispatch(setExpensesSearch(e.target.value))}
               placeholder={t('expenses.search')}
               className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
             />

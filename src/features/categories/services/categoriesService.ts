@@ -82,6 +82,11 @@ export async function resetCategoriesToDefaults(
     }
   }
 
+  // All valid new category IDs (to detect stale IDs from older resets)
+  const newIds = new Set([...Object.values(nameToId), ...Object.values(parentKeyToId)]);
+  // Fallback: first parent category (not Savings) for completely unknown IDs
+  const fallbackId = Object.entries(nameToId).find(([name]) => name !== 'Savings')?.[1] ?? '';
+
   // 5. Migrate Firestore expenses
   const expSnap = await getDocs(collection(db, 'expenses', userId, 'items'));
   const expBatch = writeBatch(db);
@@ -89,14 +94,34 @@ export async function resetCategoriesToDefaults(
   for (const expDoc of expSnap.docs) {
     const data = expDoc.data() as { categoryId?: string; subcategoryId?: string };
     const updates: Record<string, string> = {};
-    if (data.categoryId && oldIdToNewId[data.categoryId]) updates.categoryId = oldIdToNewId[data.categoryId];
-    if (data.subcategoryId && oldIdToNewId[data.subcategoryId]) updates.subcategoryId = oldIdToNewId[data.subcategoryId];
+
+    if (data.categoryId) {
+      if (oldIdToNewId[data.categoryId]) {
+        updates.categoryId = oldIdToNewId[data.categoryId];
+      } else if (!newIds.has(data.categoryId) && fallbackId) {
+        // Stale ID from a previous failed reset — assign fallback
+        updates.categoryId = fallbackId;
+      }
+    }
+    if (data.subcategoryId && oldIdToNewId[data.subcategoryId]) {
+      updates.subcategoryId = oldIdToNewId[data.subcategoryId];
+    }
+
     if (Object.keys(updates).length > 0) {
       expBatch.update(expDoc.ref, updates);
       if (++count === 499) break;
     }
   }
   if (count > 0) await expBatch.commit();
+
+  // Also extend oldIdToNewId with stale→fallback entries for Redux update
+  const expSnap2 = await getDocs(collection(db, 'expenses', userId, 'items'));
+  expSnap2.docs.forEach((d) => {
+    const data = d.data() as { categoryId?: string };
+    if (data.categoryId && !newIds.has(data.categoryId) && !oldIdToNewId[data.categoryId] && fallbackId) {
+      oldIdToNewId[data.categoryId] = fallbackId;
+    }
+  });
 
   return oldIdToNewId;
 }

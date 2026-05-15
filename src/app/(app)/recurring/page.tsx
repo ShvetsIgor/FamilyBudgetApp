@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { format, parseISO, differenceInDays } from 'date-fns';
+import { ru } from 'date-fns/locale';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import {
   setRecurring, addRecurringItem, removeRecurringItem, updateRecurringItem, toggleRecurringItem,

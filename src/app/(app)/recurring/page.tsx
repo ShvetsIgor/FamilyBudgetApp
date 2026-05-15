@@ -50,6 +50,7 @@ export default function RecurringPage() {
     { value: 'utility', label: t('recurring.utility'), icon: '💡' },
     { value: 'credit', label: t('recurring.credit'), icon: '💳' },
     { value: 'mortgage', label: t('recurring.mortgage'), icon: '🏦' },
+    { value: 'installment', label: t('recurring.installment'), icon: '📦' },
     { value: 'custom', label: t('recurring.custom'), icon: '🔄' },
   ];
 

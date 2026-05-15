@@ -6,7 +6,7 @@ import { X } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setGoals, updateGoalItem } from '@/features/savings/store/savingsSlice';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
-import { addCategoryRedux } from '@/features/categories/store/categoriesSlice';
+import { addCategory as addCategoryRedux } from '@/features/categories/store/categoriesSlice';
 import { addContribution, fetchGoals } from '@/features/savings/services/savingsService';
 import { addExpense } from '@/features/expenses/services/expensesService';
 import { addCategory } from '@/features/categories/services/categoriesService';

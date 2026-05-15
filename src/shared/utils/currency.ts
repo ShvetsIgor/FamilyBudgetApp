@@ -23,5 +23,5 @@ export function blockInvalidAmountKeys(e: React.KeyboardEvent) {
 
 export function formatAmount(amount: number, currency: Currency): string {
   const symbol = getCurrencySymbol(currency);
-  return `${symbol}${amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  return `${symbol}\u202F${amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }

@@ -13,7 +13,8 @@ import {
   createFamily, sendInvite, acceptInvite, rejectInvite,
   leaveFamily, fetchFamilyMembers,
 } from '@/features/family/services/familyService';
-import { format, subMonths } from 'date-fns';
+import { format, subMonths, parseISO } from 'date-fns';
+import { ru } from 'date-fns/locale';
 import type { Currency, Language, Theme } from '@/shared/types';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';

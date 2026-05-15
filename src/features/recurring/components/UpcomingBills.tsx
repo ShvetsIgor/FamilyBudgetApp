@@ -64,11 +64,13 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false, embe
   const t = useT();
   const [payingId, setPayingId] = useState<string | null>(null);
 
+  const monthEnd = endOfMonth(new Date());
   const upcoming = list
     .filter((r) => {
       if (!r.isActive) return false;
-      const days = differenceInDays(parseISO(r.nextDueDate), new Date());
-      return days >= -7 && days <= withinDays;
+      const due = parseISO(r.nextDueDate);
+      const days = differenceInDays(due, new Date());
+      return days >= -7 && due <= monthEnd;
     })
     .sort((a, b) => parseISO(a.nextDueDate).getTime() - parseISO(b.nextDueDate).getTime())
     .slice(0, maxItems);

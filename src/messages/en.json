@@ -222,6 +222,7 @@
     "utility": "Utility",
     "credit": "Credit",
     "mortgage": "Mortgage",
+    "installment": "Installment",
     "custom": "Custom",
     "due": "Due",
     "dueToday": "Due today!",

@@ -382,7 +382,12 @@ export default function HomePage() {
                       d.parsedDateLabel as string | undefined,
                       d.parsedNote as string | undefined,
                     )}
-                    onAllCategories={() => {}}
+                    onAllCategories={() => setCategorySheet({
+                      amount: d.amount as number,
+                      parsedDate: d.parsedDate as string | undefined,
+                      parsedDateLabel: d.parsedDateLabel as string | undefined,
+                      parsedNote: d.parsedNote as string | undefined,
+                    })}
                   />
                 </BotCardBubble>
               );

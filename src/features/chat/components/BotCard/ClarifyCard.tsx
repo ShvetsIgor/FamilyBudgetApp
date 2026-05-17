@@ -3,6 +3,7 @@
 import { Search } from 'lucide-react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { C, SHADOW } from '@/features/chat/styles/tokens';
+import { useT } from '@/shared/hooks/useT';
 
 interface ClarifyChip {
   id: string;
@@ -20,10 +21,12 @@ interface ClarifyCardProps {
 }
 
 export function ClarifyCard({ amount, currency, chips, onSelectChip, onAllCategories }: ClarifyCardProps) {
+  const t = useT();
+
   return (
     <div className="p-3.5">
       <p className="m-0 mb-2 text-[10px] font-[800] uppercase tracking-[.08em]" style={{ color: C.sub }}>
-        Часто выбираешь
+        {t('chat.clarify.common')}
       </p>
       <div className="flex flex-wrap gap-1.5">
         {chips.map((chip) => (
@@ -58,11 +61,11 @@ export function ClarifyCard({ amount, currency, chips, onSelectChip, onAllCatego
         }}
       >
         <Search size={14} />
-        Все категории
+        {t('chat.clarify.all')}
       </button>
 
       <p className="m-0 mt-2.5 text-[11px] font-[700]" style={{ color: C.sub }}>
-        подскажешь — запомню это слово навсегда
+        {t('chat.clarify.promise')}
       </p>
     </div>
   );

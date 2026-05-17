@@ -30,7 +30,7 @@ export async function sendMorningGreeting(ctx: BotContext): Promise<void> {
   const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
   const sym = symMap[currency] ?? currency;
 
-  const yesterdayExpenses = (ctx as Record<string, unknown>).yesterdayExpenses as Array<{ amount: number; categoryId: string }> ?? [];
+  const yesterdayExpenses = (ctx as unknown as Record<string, unknown>).yesterdayExpenses as Array<{ amount: number; categoryId: string }> ?? [];
   const yesterdayAmount = yesterdayExpenses.reduce((s, e) => s + e.amount, 0);
 
   const catFreq: Record<string, number> = {};
@@ -47,7 +47,7 @@ export async function sendMorningGreeting(ctx: BotContext): Promise<void> {
     .map(([n]) => n)
     .join(' и ');
 
-  const dailyBudget = (ctx as Record<string, unknown>).dailyBudget as number ?? 0;
+  const dailyBudget = (ctx as unknown as Record<string, unknown>).dailyBudget as number ?? 0;
   const todayFree = Math.max(0, dailyBudget - todaySpent);
 
   const cardData: MorningCardData = {

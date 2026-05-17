@@ -9,7 +9,8 @@ export interface ParserContext {
 
 export function parseMessage(text: string, ctx: ParserContext): ParseResult {
   // 1. Normalize
-  let t = text.trim().toLowerCase().replace(/\s+/g, ' ');
+  const origInput = text.trim().replace(/\s+/g, ' ');
+  let t = origInput.toLowerCase();
 
   // 2. Slash-command → not an expense
   if (t.startsWith('/')) {

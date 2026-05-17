@@ -4,41 +4,24 @@ import { useState, useRef } from 'react';
 import { Plus, Mic, Send } from 'lucide-react';
 import { C } from '@/features/chat/styles/tokens';
 import { useT } from '@/shared/hooks/useT';
+import { HelpSheet } from './HelpSheet';
 
 interface ComposerProps {
   onSend: (text: string) => void;
   disabled?: boolean;
 }
 
-const COMMANDS = [
-  { cmd: '/баланс', tKey: 'chat.envelopes.title' },
-  { cmd: '/неделя', tKey: 'chat.weekly.envelopes' },
-  { cmd: '/помощь', tKey: 'nav.settings' },
-] as const;
-
-const COMMAND_HINTS: Record<string, string> = {
-  '/баланс': 'chat.envelopes.title',
-  '/неделя': 'chat.weekly.envelopes',
-};
-
 export function Composer({ onSend, disabled }: ComposerProps) {
   const t = useT();
   const [value, setValue] = useState('');
-  const [showHints, setShowHints] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const COMMAND_LIST = [
-    { cmd: '/баланс', hint: t('chat.envelopes.title') },
-    { cmd: '/неделя', hint: t('chat.weekly.envelopes') },
-    { cmd: '/помощь', hint: '?' },
-  ];
 
   function handleSend() {
     const trimmed = value.trim();
     if (!trimmed || disabled) return;
     onSend(trimmed);
     setValue('');
-    setShowHints(false);
   }
 
   function handleKey(e: React.KeyboardEvent) {
@@ -46,41 +29,12 @@ export function Composer({ onSend, disabled }: ComposerProps) {
       e.preventDefault();
       handleSend();
     }
-    if (e.key === 'Escape') setShowHints(false);
-  }
-
-  function selectCommand(cmd: string) {
-    setValue(cmd);
-    setShowHints(false);
-    inputRef.current?.focus();
   }
 
   const focused = value.length > 0;
 
   return (
     <div className="flex-shrink-0" style={{ background: C.bg }}>
-      {showHints && (
-        <div
-          className="mx-3 mb-2 overflow-hidden rounded-[18px]"
-          style={{
-            background: C.card,
-            border: `1.5px solid ${C.hairline}`,
-            boxShadow: '0 8px 24px rgba(61,44,31,.10)',
-          }}
-        >
-          {COMMAND_LIST.map(({ cmd, hint }) => (
-            <button
-              key={cmd}
-              onClick={() => selectCommand(cmd)}
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors active:bg-black/5"
-            >
-              <span className="text-[13.5px] font-[900]" style={{ color: C.primary }}>{cmd}</span>
-              <span className="text-[12px] font-[700]" style={{ color: C.sub }}>{hint}</span>
-            </button>
-          ))}
-        </div>
-      )}
-
       <div
         className="flex items-center gap-2 px-3 pb-3 pt-2.5"
         style={{ borderTop: `1px solid ${C.hairline}` }}
@@ -116,12 +70,9 @@ export function Composer({ onSend, disabled }: ComposerProps) {
             style={{ color: C.fg }}
           />
           <button
-            onClick={() => setShowHints((v) => !v)}
-            className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-[900] transition-all"
-            style={{
-              background: showHints ? C.primary : C.hairline,
-              color: showHints ? 'white' : C.sub,
-            }}
+            onClick={() => setHelpOpen(true)}
+            className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-[900] transition-all active:scale-90"
+            style={{ background: C.hairline, color: C.sub }}
           >
             ?
           </button>
@@ -149,6 +100,8 @@ export function Composer({ onSend, disabled }: ComposerProps) {
           </button>
         )}
       </div>
+
+      {helpOpen && <HelpSheet onClose={() => setHelpOpen(false)} />}
     </div>
   );
 }

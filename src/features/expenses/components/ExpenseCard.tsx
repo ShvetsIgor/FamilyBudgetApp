@@ -5,6 +5,7 @@ import { useAppSelector } from '@/store/store';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { formatAmount } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
+import { cn } from '@/shared/utils/cn';
 import type { SerializableExpense } from '@/shared/types';
 
 interface Props {

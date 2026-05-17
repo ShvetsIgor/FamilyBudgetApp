@@ -1,27 +1,33 @@
 'use client';
 
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { Header } from './Header';
-import { BottomNav } from './BottomNav';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { UpdateBanner } from './UpdateBanner';
 import { AddDrawer } from '@/features/quickadd/components/AddDrawer';
+import { ChatHeader } from '@/features/chat/components/ChatHeader';
+import { MenuOverlay } from '@/features/chat/components/MenuOverlay';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isChat = pathname === '/home';
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <>
-      {/* Mobile */}
-      <div className="flex min-h-screen flex-col lg:hidden">
+      {/* Mobile — unified chrome: ChatHeader + no BottomNav */}
+      <div className="flex h-screen flex-col overflow-hidden lg:hidden">
         <UpdateBanner />
-        {!isChat && <Header />}
-        <main className={isChat ? 'flex-1 flex flex-col overflow-hidden h-screen' : 'flex-1 pb-28'}>
+        <ChatHeader onMenu={() => setMenuOpen(true)} />
+        <main className={isChat ? 'flex-1 flex flex-col overflow-hidden' : 'flex-1 overflow-y-auto'}>
           {children}
         </main>
-        {!isChat && <BottomNav />}
+        {menuOpen && (
+          <div className="fixed inset-0 z-50">
+            <MenuOverlay onClose={() => setMenuOpen(false)} />
+          </div>
+        )}
       </div>
 
       {/* Desktop */}

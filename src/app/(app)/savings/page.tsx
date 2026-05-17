@@ -208,7 +208,13 @@ export default function SavingsPage() {
         <div className="flex flex-col items-center py-16 text-center">
           <p className="text-5xl mb-3">🎯</p>
           <p className="font-medium">{t('savings.noGoals')}</p>
-          <p className="text-sm text-muted-foreground mt-1">{t('savings.noGoalsHint')}</p>
+          <p className="text-sm text-muted-foreground mt-1 mb-6">{t('savings.noGoalsHint')}</p>
+          <button
+            onClick={() => setMode('add')}
+            className="rounded-2xl bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold"
+          >
+            + {t('savings.add')}
+          </button>
         </div>
       )}
 

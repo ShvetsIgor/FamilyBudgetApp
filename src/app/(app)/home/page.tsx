@@ -318,6 +318,8 @@ export default function HomePage() {
               const translatedTitle = parentName && catName && catName !== parentName
                 ? `${t.cat(parentName)} · ${t.cat(catName)}`
                 : parentName ? t.cat(parentName) : catName ? t.cat(catName) : (d.title as string);
+              const savedExpenseId = d.expenseId as string | undefined;
+              const savedUserMsgId = d.userMsgId as string | undefined;
               return (
                 <BotCardBubble key={msg.id} tail={tail}>
                   <SavedCard
@@ -327,6 +329,9 @@ export default function HomePage() {
                     hint={d.hint as string | undefined}
                     amount={d.amount as number}
                     currency={d.currency as string}
+                    onUndo={savedExpenseId && savedUserMsgId
+                      ? () => handleUndo(msg.id, savedUserMsgId, savedExpenseId)
+                      : undefined}
                   />
                 </BotCardBubble>
               );

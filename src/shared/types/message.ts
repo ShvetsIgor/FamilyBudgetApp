@@ -2,7 +2,7 @@ import type { Timestamp } from 'firebase/firestore';
 
 export type MessageStatus = 'pending' | 'saved' | 'clarifying' | 'undone' | 'failed';
 
-export type BotCardKind = 'morning' | 'saved' | 'clarify' | 'weekly' | 'envelopes' | 'goal' | 'undone' | 'alert';
+export type BotCardKind = 'morning' | 'saved' | 'clarify' | 'weekly' | 'envelopes' | 'goal' | 'undone' | 'alert' | 'future';
 
 export interface BotCard {
   kind: BotCardKind;

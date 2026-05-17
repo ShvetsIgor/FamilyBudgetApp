@@ -191,12 +191,54 @@ export default function HomePage() {
 
   const handleClarifyChip = useCallback(async (
     amount: number,
-    chip: { id: string; name: string; icon: string; color: string }
+    chip: { id: string; name: string; icon: string; color: string },
+    parsedDate?: string,
+    parsedDateLabel?: string,
   ) => {
-    if (!userId) return;
+    if (!userId || sendingRef.current) return;
+    sendingRef.current = true;
+
+    // Teach bot this word → category mapping
     await saveLearnedKeyword(userId, chip.name.toLowerCase(), { parentId: chip.id });
-    await handleSend(`${amount} ${chip.name.toLowerCase()}`);
-  }, [userId, handleSend]);
+
+    dispatch(setTyping(true));
+    try {
+      const enrichedCtx = buildEnrichedCtx();
+      if (!enrichedCtx) return;
+
+      // Add visible user message
+      const userMsg = await addMessage({
+        userId,
+        senderId: userId,
+        kind: 'user',
+        text: `${amount} ${chip.name.toLowerCase()}${parsedDateLabel ? ` · ${parsedDateLabel}` : ''}`,
+        status: 'saved',
+      });
+
+      await new Promise((r) => setTimeout(r, 400));
+
+      // Bypass re-parse — we already know the category and date
+      const parsed: import('@/shared/types/message').ParseResult = {
+        amount,
+        categoryId: chip.id,
+        parentId: chip.id,
+        confidence: 'high',
+        date: parsedDate,
+        dateLabel: parsedDateLabel,
+      };
+
+      const reply = await respondToUserMessage(userMsg, parsed, enrichedCtx);
+      for (const botMsg of reply.messages) {
+        await addMessage(botMsg);
+      }
+      if (reply.expense) {
+        dispatch(prependExpense(reply.expense));
+      }
+    } finally {
+      dispatch(setTyping(false));
+      sendingRef.current = false;
+    }
+  }, [userId, buildEnrichedCtx, dispatch]);
 
   const groups = groupByDay(messages);
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { X } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setGoals, updateGoalItem } from '@/features/savings/store/savingsSlice';

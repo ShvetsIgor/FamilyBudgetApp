@@ -3,8 +3,8 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, MessageSquare, Calendar } from 'lucide-react';
-import { format } from 'date-fns';
 import { useAppSelector, useAppDispatch } from '@/store/store';
+import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import { prependExpense, updateExpense as updateExpenseAction } from '@/features/expenses/store/expensesSlice';
 import { addExpense, updateExpense } from '@/features/expenses/services/expensesService';
 import { CategoryIcon, StickerIcon } from '@/features/categories/components/CategoryIcon';

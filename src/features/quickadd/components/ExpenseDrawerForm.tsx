@@ -244,17 +244,17 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
           {/* Subcategory picker */}
           {pickerOpen && subCats.length > 0 && (
             <div className="border-t border-border px-3 py-2.5">
-              <div className="grid grid-cols-6 gap-1.5">
+              <div className="grid grid-cols-4 gap-1.5">
                 {subCats.map((s) => {
                   const sel = !!splits.find((x) => x.categoryId === s.id);
                   return (
                     <button
                       key={s.id}
                       onClick={() => sel ? removeSplit(splits.findIndex((x) => x.categoryId === s.id)) : addSplit(s)}
-                      className="flex flex-col items-center gap-0.5 py-1.5 rounded-[9px] text-[9px] font-extrabold transition-all border"
+                      className="flex flex-col items-center gap-1 py-2 rounded-[9px] text-[11px] font-extrabold transition-all border"
                       style={{ background: sel ? catColor + '28' : catColor + '10', borderColor: sel ? catColor : 'transparent' }}
                     >
-                      <StickerIcon icon={s.icon} color={catColor} className="h-3.5 w-3.5" />
+                      <StickerIcon icon={s.icon} color={catColor} className="h-4 w-4" />
                       <span className="leading-tight text-center line-clamp-1 px-0.5">{t.cat(s.name)}</span>
                     </button>
                   );

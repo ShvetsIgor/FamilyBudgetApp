@@ -2,6 +2,7 @@
 
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { C } from '@/features/chat/styles/tokens';
+import { useT } from '@/shared/hooks/useT';
 
 export interface EnvelopeItem {
   name: string;
@@ -61,6 +62,7 @@ function EnvelopeRow({ env }: { env: EnvelopeItem }) {
 }
 
 export function EnvelopesCard({ data }: { data: EnvelopesCardData }) {
+  const t = useT();
   const { envelopes, monthLabel } = data;
 
   const totalSpent = envelopes.reduce((s, e) => s + e.spent, 0);
@@ -69,27 +71,25 @@ export function EnvelopesCard({ data }: { data: EnvelopesCardData }) {
 
   return (
     <div className="overflow-hidden">
-      {/* Header */}
       <div
         className="flex items-center justify-between"
         style={{ padding: '12px 14px 8px', borderBottom: `1px solid ${C.hairline}` }}
       >
         <div>
           <p className="m-0 text-[10px] font-[800] uppercase tracking-[.08em]" style={{ color: C.sub }}>
-            Конверты · {monthLabel}
+            {t('chat.envelopes.title')} · {monthLabel}
           </p>
           <p className="m-0 mt-0.5 text-[18px] font-[900] tabular-nums" style={{ color: C.fg, letterSpacing: -0.4 }}>
             {currency}{totalSpent.toLocaleString()}
             {totalLimit > 0 && (
               <span className="text-[13px] font-[700]" style={{ color: C.sub }}>
-                {' '}/ {currency}{totalLimit.toLocaleString()}
+                {' '}{t('chat.today.of')} {currency}{totalLimit.toLocaleString()}
               </span>
             )}
           </p>
         </div>
       </div>
 
-      {/* Rows */}
       {envelopes.length > 0 ? (
         <div style={{ paddingTop: 4, paddingBottom: 8 }}>
           {envelopes.map((env) => (
@@ -98,7 +98,7 @@ export function EnvelopesCard({ data }: { data: EnvelopesCardData }) {
         </div>
       ) : (
         <div className="py-4 text-center text-[13px] font-[700]" style={{ color: C.sub }}>
-          Нет настроенных бюджетов
+          {t('chat.envelopes.empty')}
         </div>
       )}
     </div>

@@ -1,98 +1,211 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
-import Link from 'next/link';
-import { format } from 'date-fns';
+import { useCallback, useRef } from 'react';
+import { format, isToday, isYesterday, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
+
 import { useAppSelector, useAppDispatch } from '@/store/store';
-import { setExpenses } from '@/features/expenses/store/expensesSlice';
-import { setIncome } from '@/features/income/store/incomeSlice';
-import { fetchMonthExpenses } from '@/features/expenses/services/expensesService';
-import { fetchMonthIncome } from '@/features/income/services/incomeService';
-import { formatAmount } from '@/shared/utils/currency';
-import { useT } from '@/shared/hooks/useT';
+import { setTyping } from '@/features/chat/store/chatSlice';
+import { prependExpense } from '@/features/expenses/store/expensesSlice';
+
+import { useChatMessages } from '@/features/chat/hooks/useChatMessages';
+import { useLearnedKeywords } from '@/features/chat/hooks/useLearnedKeywords';
+
+import { parseMessage } from '@/features/chat/parser/parse';
+import { saveLearnedKeyword } from '@/features/chat/parser/learning';
+import { collectBotContext } from '@/features/chat/bot/context';
+import { respondToUserMessage } from '@/features/chat/bot/respond';
+import { addMessage } from '@/features/chat/services/messagesService';
+
+import { ChatScreen } from '@/features/chat/components/ChatScreen';
+import { PinnedToday } from '@/features/chat/components/PinnedToday';
+import { DateChip } from '@/features/chat/components/DateChip';
+import { BotBubble, BotCardBubble } from '@/features/chat/components/BotBubble';
+import { UserBubble } from '@/features/chat/components/UserBubble';
+import { SavedCard } from '@/features/chat/components/BotCard/SavedCard';
+import { ClarifyCard } from '@/features/chat/components/BotCard/ClarifyCard';
+import { Typing } from '@/features/chat/components/Typing';
 import type { Currency } from '@/shared/types';
+import type { SerializableChatMessage } from '@/shared/types/message';
+
+function dayLabel(iso: string): string {
+  const d = parseISO(iso);
+  if (isToday(d)) return 'Сегодня';
+  if (isYesterday(d)) return 'Вчера';
+  return format(d, 'd MMMM', { locale: ru });
+}
+
+function msgTime(iso: string): string {
+  return format(parseISO(iso), 'HH:mm');
+}
+
+function groupByDay(messages: SerializableChatMessage[]): { day: string; items: SerializableChatMessage[] }[] {
+  const map = new Map<string, SerializableChatMessage[]>();
+  for (const m of messages) {
+    const key = m.createdAt.slice(0, 10);
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(m);
+  }
+  return Array.from(map.entries()).map(([day, items]) => ({ day, items }));
+}
 
 export default function HomePage() {
   const dispatch = useAppDispatch();
-  const user = useAppSelector((s) => s.auth.user);
+  const userId = useAppSelector((s) => s.auth.user?.id);
   const currency = useAppSelector((s) => s.ui.currency) as Currency;
-  const { list: expenses, status: expStatus } = useAppSelector((s) => s.expenses);
-  const { list: incomes, status: incStatus } = useAppSelector((s) => s.income);
-  const t = useT();
+  const messages = useAppSelector((s) => s.chat.messages);
+  const typing = useAppSelector((s) => s.chat.typing);
+  const state = useAppSelector((s) => s);
 
-  const currentMonth = format(new Date(), 'yyyy-MM');
+  useChatMessages();
+  const learned = useLearnedKeywords();
 
-  const loadExpenses = useCallback(async () => {
-    if (!user || expStatus !== 'idle') return;
-    dispatch(setExpenses(await fetchMonthExpenses(user.id, currentMonth)));
-  }, [user, currentMonth, expStatus, dispatch]);
+  // Daily budget from budget slice (avg per day); fallback to zero
+  const monthBudget = useAppSelector((s) => (s.budget as any)?.monthlyLimit ?? 0);
+  const dailyBudget = monthBudget > 0 ? Math.round(monthBudget / 30) : 0;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const todaySpent = useAppSelector((s) =>
+    s.expenses.list.filter((e) => e.date.startsWith(todayStr)).reduce((acc, e) => acc + e.amount, 0)
+  );
 
-  const loadIncome = useCallback(async () => {
-    if (!user || incStatus !== 'idle') return;
-    dispatch(setIncome(await fetchMonthIncome(user.id, currentMonth)));
-  }, [user, currentMonth, incStatus, dispatch]);
+  const sendingRef = useRef(false);
 
-  useEffect(() => { loadExpenses(); }, [loadExpenses]);
-  useEffect(() => { loadIncome(); }, [loadIncome]);
+  const handleSend = useCallback(async (text: string) => {
+    if (!userId || sendingRef.current) return;
+    sendingRef.current = true;
 
-  const monthExpenses = expenses.reduce((s, e) => s + e.amount, 0);
-  const monthIncome = incomes.reduce((s, i) => s + i.amount, 0);
-  const balance = monthIncome - monthExpenses;
+    const ctx = collectBotContext(state);
+    if (!ctx) { sendingRef.current = false; return; }
 
-  const monthLabel = format(new Date(), 'LLLL yyyy', { locale: ru });
+    const parsed = parseMessage(text, { learned });
 
-  if (!user) return null;
+    // 1. Optimistically add user message
+    const userMsgInput = {
+      userId,
+      senderId: userId,
+      kind: 'user' as const,
+      text,
+      parsed,
+      status: 'pending' as const,
+      createdAt: new Date().toISOString(),
+    };
+    const userMsg = await addMessage(userMsgInput);
+
+    // 2. Show typing indicator
+    dispatch(setTyping(true));
+    await new Promise((r) => setTimeout(r, 600));
+
+    // 3. Bot response
+    try {
+      const reply = await respondToUserMessage(userMsg, parsed, ctx);
+
+      // 4. Save bot messages to Firestore
+      for (const botMsg of reply.messages) {
+        await addMessage(botMsg);
+      }
+
+      // 5. Patch expense into Redux if created
+      if (reply.expense) {
+        dispatch(prependExpense(reply.expense));
+      }
+    } finally {
+      dispatch(setTyping(false));
+      sendingRef.current = false;
+    }
+  }, [userId, state, learned, dispatch]);
+
+  const handleClarifyChip = useCallback(async (
+    amount: number,
+    chip: { id: string; name: string; icon: string; color: string }
+  ) => {
+    if (!userId) return;
+    // Teach bot this association for future
+    await saveLearnedKeyword(userId, chip.name.toLowerCase(), { parentId: chip.id });
+    // Re-send with category name
+    await handleSend(`${amount} ${chip.name.toLowerCase()}`);
+  }, [userId, handleSend]);
+
+  const groups = groupByDay(messages);
+
+  if (!userId) return null;
 
   return (
-    <div className="px-[22px] pt-4 pb-28 flex flex-col gap-5">
+    <ChatScreen onSend={handleSend} disabled={typing}>
+      {/* Pinned today hero */}
+      <PinnedToday
+        spent={todaySpent}
+        total={dailyBudget}
+        currency={currency}
+        dayLabel="Бюджет на сегодня"
+      />
 
-      {/* Header: logo + greeting + avatar */}
-      <div className="flex items-center justify-between pt-2">
-        <div className="flex items-center gap-2.5">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-mark.svg" alt="" className="h-10 w-10 rounded-xl" />
-          <div>
-            <p className="text-xs text-muted-foreground font-bold">{t('home.greeting')} {user?.name?.split(' ')[0] ?? ''} ✨</p>
-            <p className="text-lg font-extrabold text-foreground tracking-tight leading-none mt-0.5 capitalize">{monthLabel}</p>
-          </div>
+      {/* Message groups */}
+      {groups.map(({ day, items }, gi) => (
+        <div key={day}>
+          <DateChip label={dayLabel(day + 'T00:00:00')} />
+          {items.map((msg, idx) => {
+            const isLast = idx === items.length - 1;
+            const nextSameSender = !isLast && items[idx + 1]?.kind === msg.kind;
+            const tail = !nextSameSender;
+            const time = msgTime(msg.createdAt);
+
+            if (msg.kind === 'user') {
+              return (
+                <UserBubble
+                  key={msg.id}
+                  text={msg.text}
+                  time={time}
+                  status={msg.status as 'pending' | 'saved' | 'sent'}
+                  tail={tail}
+                />
+              );
+            }
+
+            // Bot message
+            if (msg.card?.kind === 'saved') {
+              const d = msg.card.data;
+              return (
+                <BotCardBubble key={msg.id} tail={tail}>
+                  <SavedCard
+                    icon={d.icon}
+                    color={d.color}
+                    title={d.title}
+                    amount={d.amount}
+                    currency={d.currency}
+                  />
+                </BotCardBubble>
+              );
+            }
+
+            if (msg.card?.kind === 'clarify') {
+              const d = msg.card.data;
+              return (
+                <BotCardBubble key={msg.id} tail={tail}>
+                  <ClarifyCard
+                    amount={d.amount}
+                    currency={d.currency ?? '₪'}
+                    chips={d.chips}
+                    onSelectChip={(chip) => handleClarifyChip(d.amount, chip)}
+                    onAllCategories={() => {}}
+                  />
+                </BotCardBubble>
+              );
+            }
+
+            return (
+              <BotBubble
+                key={msg.id}
+                text={msg.text}
+                time={time}
+                tail={tail}
+              />
+            );
+          })}
         </div>
-        <Link href="/account">
-          <div className="h-11 w-11 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-black text-lg">
-            {user?.name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? 'A'}
-          </div>
-        </Link>
-      </div>
+      ))}
 
-      {/* Hero balance card */}
-      <div className="rounded-[32px] bg-primary text-primary-foreground p-6 relative overflow-hidden" style={{ boxShadow: '0 16px 30px rgba(224,122,95,.30)' }}>
-        <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-white/10 pointer-events-none" />
-        <div className="absolute bottom-[-30px] right-7 h-[70px] w-[70px] rounded-full bg-white/08 pointer-events-none" />
-        <p className="text-[13px] font-bold opacity-85 relative">{t('home.remainingIn')} {monthLabel}</p>
-        <p className="text-[44px] font-black tabular-nums leading-none tracking-[-0.025em] mt-1 relative">
-          {formatAmount(Math.max(0, balance), currency)}
-        </p>
-        <div className="flex gap-5 mt-3.5 text-[13px] font-bold relative opacity-90">
-          <span>↑ {formatAmount(monthIncome, currency)} {t('home.income').toLowerCase()}</span>
-          <span>↓ {formatAmount(monthExpenses, currency)} {t('home.expenses').toLowerCase()}</span>
-        </div>
-      </div>
-
-      {/* Quick actions */}
-      <div className="grid grid-cols-3 gap-2.5">
-        <Link href="/expenses/new" className="flex flex-col items-center gap-1 rounded-[22px] py-3.5 font-bold text-[13px] active:opacity-80 transition-opacity" style={{ background: '#81B29A', color: '#fff' }}>
-          <span className="text-[22px] leading-none">＋</span>
-          <span>{t('home.expense')}</span>
-        </Link>
-        <Link href="/income/new" className="flex flex-col items-center gap-1 rounded-[22px] py-3.5 font-bold text-[13px] active:opacity-80 transition-opacity" style={{ background: '#F2CC8F', color: '#3D2C1F' }}>
-          <span className="text-[22px] leading-none">↑</span>
-          <span>{t('home.income')}</span>
-        </Link>
-        <Link href="/savings" className="flex flex-col items-center gap-1 rounded-[22px] py-3.5 font-bold text-[13px] border-2 border-dashed border-muted/50 active:opacity-80 transition-opacity text-foreground">
-          <span className="text-[22px] leading-none">🐷</span>
-          <span>{t('home.savingsGoals')}</span>
-        </Link>
-      </div>
-    </div>
+      {/* Typing indicator */}
+      {typing && <Typing />}
+    </ChatScreen>
   );
 }

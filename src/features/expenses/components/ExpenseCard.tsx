@@ -90,29 +90,13 @@ export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
               ✎
             </button>
           )}
-          {onDelete && !confirmDelete && (
+          {onDelete && (
             <button
-              onClick={() => setConfirmDelete(true)}
+              onClick={() => setShowDeleteModal(true)}
               className="text-muted-foreground hover:text-destructive transition-colors text-xs"
             >
               ✕
             </button>
-          )}
-          {confirmDelete && (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => { onDelete?.(); setConfirmDelete(false); }}
-                className="text-[11px] font-semibold text-destructive hover:opacity-80 transition-opacity"
-              >
-                ✓
-              </button>
-              <button
-                onClick={() => setConfirmDelete(false)}
-                className="text-[11px] font-semibold text-muted-foreground hover:opacity-80 transition-opacity"
-              >
-                ✕
-              </button>
-            </div>
           )}
         </div>
       </div>

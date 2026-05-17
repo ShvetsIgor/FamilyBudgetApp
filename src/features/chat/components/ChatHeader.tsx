@@ -3,12 +3,15 @@
 import { Bell, Menu } from 'lucide-react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { C } from '@/features/chat/styles/tokens';
+import { useT } from '@/shared/hooks/useT';
 
 interface ChatHeaderProps {
   onMenu: () => void;
 }
 
 export function ChatHeader({ onMenu }: ChatHeaderProps) {
+  const t = useT();
+
   return (
     <div
       className="sticky top-0 z-10 flex items-center gap-3 border-b px-3.5 pb-3 pt-3"
@@ -22,7 +25,6 @@ export function ChatHeader({ onMenu }: ChatHeaderProps) {
         <Menu size={20} strokeWidth={2.4} />
       </button>
 
-      {/* Bot avatar */}
       <div className="relative flex-shrink-0">
         <div
           className="flex h-10 w-10 items-center justify-center rounded-full"
@@ -39,7 +41,6 @@ export function ChatHeader({ onMenu }: ChatHeaderProps) {
         />
       </div>
 
-      {/* Title */}
       <div className="flex-1 min-w-0">
         <p className="m-0 text-[17px] font-[800] leading-tight" style={{ letterSpacing: -0.3, color: C.fg }}>
           <span style={{ color: C.primary }}>family</span>
@@ -47,11 +48,10 @@ export function ChatHeader({ onMenu }: ChatHeaderProps) {
           budget
         </p>
         <p className="m-0 mt-px text-[11px] font-[700]" style={{ color: C.sage }}>
-          онлайн · считает локально
+          {t('chat.header.online')}
         </p>
       </div>
 
-      {/* Bell */}
       <button
         className="relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors"
         style={{ color: C.fg }}

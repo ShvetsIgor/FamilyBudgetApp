@@ -31,6 +31,7 @@ import {
 import { isSlashCommand, handleSlashCommand } from '@/features/chat/bot/slash';
 
 import { ChatScreen } from '@/features/chat/components/ChatScreen';
+import { CategorySheet } from '@/features/chat/components/CategorySheet';
 import { PinnedToday } from '@/features/chat/components/PinnedToday';
 import { DateChip } from '@/features/chat/components/DateChip';
 import { BotBubble, BotCardBubble } from '@/features/chat/components/BotBubble';

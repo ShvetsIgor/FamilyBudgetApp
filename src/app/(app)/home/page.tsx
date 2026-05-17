@@ -247,6 +247,14 @@ export default function HomePage() {
               );
             }
 
+            if (msg.card?.kind === 'envelopes') {
+              return (
+                <BotCardBubble key={msg.id} tail={tail}>
+                  <EnvelopesCard data={msg.card.data} />
+                </BotCardBubble>
+              );
+            }
+
             if (msg.card?.kind === 'saved') {
               const d = msg.card.data;
               return (

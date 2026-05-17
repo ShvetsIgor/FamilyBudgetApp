@@ -39,6 +39,9 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
     return { amount, categoryId: null, parentId: null, confidence: 'failed', date, dateLabel };
   }
 
+  // Note with original casing: remove number from original input
+  const origNote = origInput.replace(/\b\d+([.,]\d+)?\b/, '').replace(/\s+/g, ' ').trim();
+
   // 6. Emoji (highest priority)
   for (const [emo, hit] of Object.entries(EMOJI)) {
     if (rest.includes(emo)) {

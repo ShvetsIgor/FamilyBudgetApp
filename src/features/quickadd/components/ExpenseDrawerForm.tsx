@@ -29,6 +29,7 @@ const PAYMENT_METHODS = [
 
 export function ExpenseDrawerForm({ accent }: { accent: string }) {
   const dispatch = useAppDispatch();
+  const t = useT();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const allCats = useAppSelector((s) => s.categories.expense);

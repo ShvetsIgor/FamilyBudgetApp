@@ -38,9 +38,6 @@ function pluralRu(n: number) {
   return 'позиций';
 }
 
-function toDateInput(d: Date): string {
-  return format(d, 'yyyy-MM-dd');
-}
 
 interface Props {
   initialExpense?: SerializableExpense;

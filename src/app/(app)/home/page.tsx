@@ -88,7 +88,7 @@ export default function HomePage() {
           <span className="text-[22px] leading-none">↑</span>
           <span>{t('home.income')}</span>
         </Link>
-        <Link href="/savings/contribute" className="flex flex-col items-center gap-1 rounded-[22px] py-3.5 font-bold text-[13px] border-2 border-dashed border-muted/50 active:opacity-80 transition-opacity text-foreground">
+        <Link href="/savings" className="flex flex-col items-center gap-1 rounded-[22px] py-3.5 font-bold text-[13px] border-2 border-dashed border-muted/50 active:opacity-80 transition-opacity text-foreground">
           <span className="text-[22px] leading-none">🐷</span>
           <span>{t('home.savingsGoals')}</span>
         </Link>

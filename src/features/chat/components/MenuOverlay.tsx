@@ -7,17 +7,25 @@ import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { C, SHADOW, RAD } from '@/features/chat/styles/tokens';
 import { useAppSelector } from '@/store/store';
 import { getCurrencySymbol } from '@/shared/utils/currency';
+import { useT } from '@/shared/hooks/useT';
 import { signOut } from '@/features/auth/services/authService';
 
-const NAV_ITEMS = [
-  { icon: 'receipt',  color: '#8AA9D6', label: 'Транзакции',  href: '/expenses'   },
-  { icon: 'chart_up', color: '#E07A5F', label: 'Статистика',  href: '/statistics' },
-  { icon: 'chart_up', color: '#81B29A', label: 'Аналитика',   href: '/analytics'  },
-  { icon: 'piggy',    color: '#A48BC9', label: 'Копилки',      href: '/savings'    },
-  { icon: 'refund',   color: '#F2CC8F', label: 'Регулярные',  href: '/recurring'  },
-  { icon: 'tag',      color: '#D4A574', label: 'Категории',    href: '/categories' },
-  { icon: 'cog',      color: '#8E7A66', label: 'Настройки',   href: '/account'    },
-] as const;
+interface NavItem {
+  icon: string;
+  color: string;
+  labelKey: string;
+  href: string;
+}
+
+const NAV_ITEMS: NavItem[] = [
+  { icon: 'receipt',  color: '#8AA9D6', labelKey: 'nav.expenses',    href: '/expenses'   },
+  { icon: 'chart_up', color: '#E07A5F', labelKey: 'nav.statistics',  href: '/statistics' },
+  { icon: 'chart_up', color: '#81B29A', labelKey: 'nav.analytics',   href: '/analytics'  },
+  { icon: 'piggy',    color: '#A48BC9', labelKey: 'nav.savings',     href: '/savings'    },
+  { icon: 'refund',   color: '#F2CC8F', labelKey: 'nav.recurring',   href: '/recurring'  },
+  { icon: 'tag',      color: '#D4A574', labelKey: 'nav.categories',  href: '/categories' },
+  { icon: 'cog',      color: '#8E7A66', labelKey: 'nav.settings',    href: '/account'    },
+];
 
 interface MenuOverlayProps {
   onClose: () => void;
@@ -30,6 +38,7 @@ function memberInitial(name?: string | null, email?: string | null): string {
 const MEMBER_COLORS = [C.primary, C.sage, C.lavender, C.caramel, C.blueSoft];
 
 export function MenuOverlay({ onClose }: MenuOverlayProps) {
+  const t = useT();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const expenses = useAppSelector((s) => s.expenses.list);
@@ -42,13 +51,9 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
     .reduce((s, e) => s + e.amount, 0);
 
   const initial = memberInitial(user?.name, user?.email);
-
-  // Show current user + family members (deduplicated)
-  const allMembers = familyMembers.length > 0 ? familyMembers : [];
-  const displayMembers = allMembers.slice(0, 4);
+  const displayMembers = familyMembers.slice(0, 4);
   const onlineCount = displayMembers.length || 1;
 
-  // Close on Escape
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose();
@@ -59,14 +64,12 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
 
   return (
     <>
-      {/* Backdrop */}
       <div
         onClick={onClose}
         className="absolute inset-0 z-10"
         style={{ background: 'rgba(61,44,31,.42)', backdropFilter: 'blur(2px)' }}
       />
 
-      {/* Slide-in Panel */}
       <div
         className="absolute bottom-0 left-0 top-0 z-20 flex flex-col overflow-hidden"
         style={{
@@ -108,7 +111,7 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
               <span className="text-[26px] font-[900] tabular-nums" style={{ letterSpacing: -0.8 }}>
                 {sym}{todaySpent.toLocaleString()}
               </span>
-              <span className="text-[12px] font-[800] opacity-80">сегодня потрачено</span>
+              <span className="text-[12px] font-[800] opacity-80">{t('chat.menu.todaySpent')}</span>
             </div>
           </div>
         </div>
@@ -129,7 +132,7 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
               >
                 <StickerIcon icon={item.icon} color={item.color} className="h-6 w-6" />
               </div>
-              <span className="flex-1 text-[14.5px] font-[800]">{item.label}</span>
+              <span className="flex-1 text-[14.5px] font-[800]">{t(item.labelKey)}</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2.4" strokeLinecap="round">
                 <path d="M9 6l6 6-6 6" />
               </svg>
@@ -137,12 +140,11 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
           ))}
         </nav>
 
-        {/* Footer: family + sign-out */}
+        {/* Footer */}
         <div
           className="flex-shrink-0 flex items-center gap-3 px-4 py-3.5"
           style={{ borderTop: `1px solid ${C.hairline}` }}
         >
-          {/* Member avatars */}
           <div className="flex">
             {displayMembers.length > 0 ? (
               displayMembers.map((m, i) => (
@@ -170,8 +172,8 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
           </div>
           <p className="m-0 flex-1 text-[12px] font-[700]" style={{ color: C.sub }}>
             {familyMembers.length > 0
-              ? `Семья онлайн · ${onlineCount}`
-              : 'Только вы'}
+              ? t('chat.menu.online').replace('{n}', String(onlineCount))
+              : t('chat.menu.onlyYou')}
           </p>
           <button
             onClick={() => signOut().catch(() => {})}

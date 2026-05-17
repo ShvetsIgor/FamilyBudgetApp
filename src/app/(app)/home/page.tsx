@@ -26,6 +26,7 @@ import {
   markWeeklySummarySent,
   sendWeeklySummary,
 } from '@/features/chat/bot/weekly';
+import { isSlashCommand, handleSlashCommand } from '@/features/chat/bot/slash';
 
 import { ChatScreen } from '@/features/chat/components/ChatScreen';
 import { PinnedToday } from '@/features/chat/components/PinnedToday';

@@ -218,6 +218,15 @@ export default function SavingsPage() {
         </div>
       )}
 
+      {list.length > 0 && (
+        <button
+          onClick={() => setMode('add')}
+          className="w-full rounded-2xl border-2 border-dashed border-primary/40 py-3 text-sm font-semibold text-primary/70 hover:border-primary hover:text-primary transition-colors"
+        >
+          + {t('savings.add')}
+        </button>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {list.map((goal) => {
           const pct = Math.min(100, goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0);

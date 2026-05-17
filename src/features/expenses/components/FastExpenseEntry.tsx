@@ -364,7 +364,7 @@ export function FastExpenseEntry({ initialExpense }: Props) {
                   <button
                     key={s.id}
                     onClick={() => selected ? removeSplit(splits.findIndex((x) => x.categoryId === s.id)) : addSplit(s)}
-                    className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[11px] font-extrabold text-foreground border transition-all"
+                    className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[13px] font-extrabold text-foreground border transition-all"
                     style={{
                       background: selected ? catColor + '30' : catColor + '14',
                       borderColor: selected ? catColor : 'transparent',

@@ -25,7 +25,8 @@ describe('extractDate', () => {
   });
 
   it('«вчера» → yesterday ISO', () => {
-    const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+    const yest = new Date(Date.now() - 86_400_000);
+    const yesterday = localISO(yest);
     const r = extractDate('кофе 65 вчера');
     expect(r!.date).toBe(yesterday);
     expect(r!.label).toBe('вчера');

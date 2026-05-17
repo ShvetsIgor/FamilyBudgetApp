@@ -258,13 +258,6 @@ export default function SavingsPage() {
 
         {mode === 'list' && listContent}
 
-        {typeof mode === 'object' && mode.action === 'contribute' && (
-          <ContributeForm
-            goal={mode.goal} currency={currency}
-            onSave={(amount, note, rec, catId) => handleContribute(mode.goal, amount, note, rec, catId)}
-            onCancel={() => setMode('list')} t={t}
-          />
-        )}
         {typeof mode === 'object' && mode.action === 'detail' && (() => {
           const goal = list.find((g) => g.id === (mode as { goal: SavingsGoal }).goal.id) ?? (mode as { goal: SavingsGoal }).goal;
           const pct = Math.min(100, goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0);
@@ -274,7 +267,6 @@ export default function SavingsPage() {
           const done = pct >= 100;
           return (
             <div className="flex flex-col gap-4">
-              {/* Goal detail card */}
               <div className="rounded-[20px] bg-card shadow p-6 flex flex-col items-center gap-3">
                 <div className="text-5xl">{goal.icon}</div>
                 <h2 className="text-xl font-bold">{goal.name}</h2>
@@ -297,7 +289,10 @@ export default function SavingsPage() {
                   <p className="text-xs text-muted-foreground">~{formatAmount(remaining / monthsLeft, goal.currency)}/{t('recurring.monthly').toLowerCase()}</p>
                 )}
               </div>
-              <button onClick={() => setMode({ goal, action: 'contribute' })} className="rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground">
+              <button
+                onClick={() => router.push(`/savings/contribute?goalId=${goal.id}`)}
+                className="rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground"
+              >
                 {t('savings.addContribution')}
               </button>
               {goal.contributions.length > 0 && (

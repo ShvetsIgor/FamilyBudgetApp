@@ -135,6 +135,8 @@ export async function respondToUserMessage(
             icon: cat?.icon ?? parentCat?.icon ?? 'box',
             color: parentCat?.color ?? '#E07A5F',
             title: catPath,
+            catName: cat?.name ?? null,
+            parentName: parentCat?.name ?? null,
             hint: dateHint,
             amount: parsed.amount,
             currency: sym,

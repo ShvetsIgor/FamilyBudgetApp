@@ -2,6 +2,7 @@
 
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { C } from '@/features/chat/styles/tokens';
+import { useT } from '@/shared/hooks/useT';
 
 export interface WeeklyEnvelope {
   name: string;
@@ -13,15 +14,15 @@ export interface WeeklyEnvelope {
 
 export interface WeeklyCardData {
   weekNum: number;
-  weekRange: string;     // "13–19 мая"
+  weekRange: string;
   totalSpent: number;
   totalBudget: number;
   saved: number;
   savingsGoalName?: string;
   envelopes: WeeklyEnvelope[];
-  bestDay: string;       // "Вс · ₪80"
-  worstDay: string;      // "Ср · ₪420"
-  mostFrequent: string;  // "☕ Кофе ×6"
+  bestDay: string;
+  worstDay: string;
+  mostFrequent: string;
   currency: string;
 }
 
@@ -59,11 +60,11 @@ function EnvelopeRow({ env }: { env: WeeklyEnvelope }) {
 }
 
 export function WeeklyCard({ data }: { data: WeeklyCardData }) {
+  const t = useT();
   const { weekNum, weekRange, totalSpent, totalBudget, saved, savingsGoalName, envelopes, bestDay, worstDay, mostFrequent, currency } = data;
 
   return (
     <div className="overflow-hidden">
-      {/* Hero gradient header */}
       <div
         className="relative overflow-hidden"
         style={{
@@ -72,7 +73,6 @@ export function WeeklyCard({ data }: { data: WeeklyCardData }) {
           color: 'white',
         }}
       >
-        {/* Decorative rings */}
         <svg
           style={{ position: 'absolute', top: -40, right: -40, opacity: 0.25, pointerEvents: 'none' }}
           width="160" height="160" viewBox="0 0 120 120"
@@ -82,7 +82,8 @@ export function WeeklyCard({ data }: { data: WeeklyCardData }) {
         </svg>
 
         <p className="m-0 text-[10px] font-[800] uppercase tracking-[.09em] opacity-85">
-          Неделя {weekNum} · {weekRange}
+          {/* weekNum/weekRange come from stored data — keep as-is */}
+          {weekNum ? `Неделя ${weekNum} · ${weekRange}` : weekRange}
         </p>
 
         <div className="mt-1 flex items-baseline justify-between">
@@ -90,7 +91,7 @@ export function WeeklyCard({ data }: { data: WeeklyCardData }) {
             {currency}{totalSpent.toLocaleString()}
           </span>
           <span className="text-[12px] font-[800] opacity-85">
-            из {currency}{totalBudget.toLocaleString()}
+            {t('chat.today.of')} {currency}{totalBudget.toLocaleString()}
           </span>
         </div>
 
@@ -100,20 +101,19 @@ export function WeeklyCard({ data }: { data: WeeklyCardData }) {
             style={{ padding: '4px 10px', borderRadius: 999, background: 'rgba(255,255,255,.18)' }}
           >
             <StickerIcon icon="piggy" color={C.yellow} className="h-4 w-4" />
-            Сэкономил {currency}{saved.toLocaleString()}
-            {savingsGoalName ? ` — переведём в ${savingsGoalName}?` : ''}
+            {currency}{saved.toLocaleString()}
+            {savingsGoalName ? ` → ${savingsGoalName}?` : ''}
           </div>
         )}
       </div>
 
-      {/* Envelopes */}
       {envelopes.length > 0 && (
         <div style={{ paddingTop: 10, paddingBottom: 6 }}>
           <p
             className="m-0 text-[10px] font-[800] uppercase tracking-[.08em]"
             style={{ color: C.sub, margin: '4px 14px 4px' }}
           >
-            Конверты
+            {t('chat.weekly.envelopes')}
           </p>
           {envelopes.map((env) => (
             <EnvelopeRow key={env.name} env={env} />
@@ -121,15 +121,14 @@ export function WeeklyCard({ data }: { data: WeeklyCardData }) {
         </div>
       )}
 
-      {/* Stat strip */}
       <div
         className="flex"
         style={{ borderTop: `1px solid ${C.hairline}`, padding: '10px 4px' }}
       >
         {[
-          { lab: 'Лучший день', val: bestDay, color: C.sage },
-          { lab: 'Тяжёлый день', val: worstDay, color: C.primary },
-          { lab: 'Часто', val: mostFrequent, color: C.fg },
+          { lab: t('chat.weekly.best'),  val: bestDay,      color: C.sage    },
+          { lab: t('chat.weekly.worst'), val: worstDay,     color: C.primary },
+          { lab: t('chat.weekly.often'), val: mostFrequent, color: C.fg      },
         ].map((s, i, arr) => (
           <div key={s.lab} className="flex" style={{ flex: 1 }}>
             <div className="flex-1 px-2">

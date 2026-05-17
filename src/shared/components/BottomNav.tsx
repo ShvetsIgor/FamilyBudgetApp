@@ -27,18 +27,16 @@ export function BottomNav() {
 
           if (href === '/home') {
             return (
-              <Link key={href} href={href} aria-label={label} className="-mt-7">
-                <div
-                  className={cn(
-                    'flex h-16 w-16 items-center justify-center rounded-full transition-all border-4 border-background',
-                    isActive
-                      ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/40'
-                      : 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
-                  )}
-                >
+              <button
+                key={href}
+                aria-label={label}
+                className="-mt-7"
+                onClick={() => isHome ? router.push('/expenses/new') : router.push('/home')}
+              >
+                <div className="flex h-16 w-16 items-center justify-center rounded-full transition-all border-4 border-background bg-primary text-primary-foreground shadow-lg shadow-primary/30">
                   <Icon className="h-7 w-7" />
                 </div>
-              </Link>
+              </button>
             );
           }
 

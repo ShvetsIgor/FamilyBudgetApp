@@ -21,7 +21,7 @@ export function MorningCard({ data }: { data: MorningCardData }) {
           className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[12px]"
           style={{ background: C.primaryTint }}
         >
-          <StickerIcon icon="sun" color={C.primary} className="h-6 w-6" />
+          <StickerIcon icon="coin" color={C.yellow} className="h-6 w-6" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="m-0 text-[14.5px] font-[800] leading-snug" style={{ color: C.fg }}>

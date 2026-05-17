@@ -1,9 +1,7 @@
 'use client';
 
-import { Undo2 } from 'lucide-react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { C } from '@/features/chat/styles/tokens';
-import { useT } from '@/shared/hooks/useT';
 
 interface SavedCardProps {
   icon: string;

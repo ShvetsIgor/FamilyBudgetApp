@@ -105,8 +105,8 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
                   }}
                 >
                   <kbd className="absolute top-1 left-1.5 text-[8px] font-mono opacity-40">{i + 1}</kbd>
-                  <StickerIcon icon={cat.icon} color={sel ? '#fff' : cat.color} className="h-4 w-4" />
-                  <span className="text-[10px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
+                  <StickerIcon icon={cat.icon} color={sel ? '#fff' : cat.color} className="h-5 w-5" />
+                  <span className="text-[11px] font-extrabold leading-tight text-center px-1 line-clamp-1"
                     style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}>
                     {t.cat(cat.name)}
                   </span>

@@ -34,7 +34,7 @@ describe('extractDate', () => {
   });
 
   it('«сегодня» → today ISO', () => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = localISO(new Date());
     const r = extractDate('сегодня хлеб 30');
     expect(r!.date).toBe(today);
   });

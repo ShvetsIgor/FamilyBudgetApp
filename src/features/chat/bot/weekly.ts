@@ -41,16 +41,16 @@ export async function sendWeeklySummary(ctx: BotContext): Promise<void> {
   const weekNum = getISOWeek(now);
   const weekRange = `${format(weekStart, 'd', { locale: ru })}–${format(weekEnd, 'd MMMM', { locale: ru })}`;
 
-  const allExpenses = (ctx as Record<string, unknown>).allExpenses as Array<{ amount: number; categoryId: string; date: string }> ?? [];
+  const allExpenses = (ctx as unknown as Record<string, unknown>).allExpenses as Array<{ amount: number; categoryId: string; date: string }> ?? [];
   const weekStartStr = weekStart.toISOString().slice(0, 10);
   const weekEndStr = weekEnd.toISOString().slice(0, 10);
   const weekExpenses = allExpenses.filter((e) => e.date >= weekStartStr && e.date <= weekEndStr);
   const totalSpent = weekExpenses.reduce((s, e) => s + e.amount, 0);
 
-  const monthBudget = (ctx as Record<string, unknown>).monthBudget as number ?? 0;
+  const monthBudget = (ctx as unknown as Record<string, unknown>).monthBudget as number ?? 0;
   const totalBudget = Math.round(monthBudget / 4);
   const saved = Math.max(0, totalBudget - totalSpent);
-  const savingsGoalName = (ctx as Record<string, unknown>).firstGoalName as string | undefined;
+  const savingsGoalName = (ctx as unknown as Record<string, unknown>).firstGoalName as string | undefined;
 
   const catSpent: Record<string, number> = {};
   weekExpenses.forEach((e) => {
@@ -59,7 +59,7 @@ export async function sendWeeklySummary(ctx: BotContext): Promise<void> {
     catSpent[parentId] = (catSpent[parentId] ?? 0) + e.amount;
   });
 
-  const limits = (ctx as Record<string, unknown>).budgetLimits as Record<string, number> ?? {};
+  const limits = (ctx as unknown as Record<string, unknown>).budgetLimits as Record<string, number> ?? {};
   const envelopes: WeeklyEnvelope[] = Object.entries(limits)
     .filter(([, lim]) => lim > 0)
     .map(([catId, monthLimit]) => {

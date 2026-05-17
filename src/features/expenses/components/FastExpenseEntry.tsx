@@ -231,13 +231,14 @@ export function FastExpenseEntry({ initialExpense }: Props) {
 
       {/* ── Expandable: date / comment ── */}
       {(showDate || showComment) && (
-        <div className="mx-4 flex-shrink-0">
+        <div className="mx-4 mt-2 flex-shrink-0">
           {showDate && (
             <input
               type="date"
               value={dateStr}
               onChange={(e) => setDateStr(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl text-sm bg-card border border-border outline-none focus:border-primary transition-colors"
+              className="block w-full px-3 py-2 rounded-xl text-sm text-center bg-card border border-border outline-none focus:border-primary transition-colors box-border"
+              style={{ maxWidth: '100%' }}
             />
           )}
           {showComment && (
@@ -247,7 +248,8 @@ export function FastExpenseEntry({ initialExpense }: Props) {
               onChange={(e) => setComment(e.target.value)}
               placeholder="Заметка к расходу…"
               autoFocus
-              className="w-full px-3 py-2 rounded-xl text-sm bg-card border border-border outline-none focus:border-primary transition-colors"
+              className="block w-full px-3 py-2 rounded-xl text-sm bg-card border border-border outline-none focus:border-primary transition-colors box-border"
+              style={{ maxWidth: '100%' }}
             />
           )}
         </div>

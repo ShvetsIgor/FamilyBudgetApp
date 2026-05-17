@@ -64,6 +64,20 @@ export function SavedCard({ icon, color, title, hint, amount, currency, alert, o
           ⚠️ {alert}
         </div>
       )}
+
+      {/* Undo row */}
+      {onUndo && (
+        <div style={{ borderTop: `1px solid ${C.hairline}` }}>
+          <button
+            onClick={onUndo}
+            className="flex w-full items-center justify-center gap-1.5 py-2 text-[12px] font-[700] transition-colors active:opacity-60"
+            style={{ color: C.sub }}
+          >
+            <Undo2 size={13} strokeWidth={2.5} />
+            {t('chat.clarify.undo')}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

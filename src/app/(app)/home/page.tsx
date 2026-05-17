@@ -320,20 +320,42 @@ export default function HomePage() {
                 : parentName ? t.cat(parentName) : catName ? t.cat(catName) : (d.title as string);
               const savedExpenseId = d.expenseId as string | undefined;
               const savedUserMsgId = d.userMsgId as string | undefined;
+              const undoHandler = savedExpenseId && savedUserMsgId
+                ? () => handleUndo(msg.id, savedUserMsgId, savedExpenseId)
+                : undefined;
               return (
-                <BotCardBubble key={msg.id} tail={tail}>
-                  <SavedCard
-                    icon={d.icon as string}
-                    color={d.color as string}
-                    title={translatedTitle}
-                    hint={d.hint as string | undefined}
-                    amount={d.amount as number}
-                    currency={d.currency as string}
-                    onUndo={savedExpenseId && savedUserMsgId
-                      ? () => handleUndo(msg.id, savedUserMsgId, savedExpenseId)
-                      : undefined}
-                  />
-                </BotCardBubble>
+                <div key={msg.id}>
+                  <BotCardBubble tail={tail}>
+                    <SavedCard
+                      icon={d.icon as string}
+                      color={d.color as string}
+                      title={translatedTitle}
+                      hint={d.hint as string | undefined}
+                      amount={d.amount as number}
+                      currency={d.currency as string}
+                    />
+                  </BotCardBubble>
+                  {undoHandler && (
+                    <div className="flex" style={{ paddingLeft: 42, marginTop: 4, marginBottom: 2 }}>
+                      <button
+                        onClick={undoHandler}
+                        className="text-[11.5px] font-[700] active:opacity-50 transition-opacity"
+                        style={{
+                          color: '#9CA3AF',
+                          borderBottom: '1.5px dashed #9CA3AF66',
+                          paddingBottom: 1,
+                          background: 'none',
+                          border: 'none',
+                          borderBottom: '1.5px dashed #9CA3AF77',
+                          cursor: 'pointer',
+                          paddingBottom: 1,
+                        }}
+                      >
+                        {t('chat.clarify.undo')}
+                      </button>
+                    </div>
+                  )}
+                </div>
               );
             }
 

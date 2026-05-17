@@ -356,6 +356,8 @@ export default function HomePage() {
         total={dailyBudget}
         currency={currency}
         dayLabel={t('chat.today.budgetLabel')}
+        budgetMode={budgetMode}
+        onSettings={() => setBudgetSettingsOpen(true)}
       />
 
       {/* Message groups */}

@@ -90,7 +90,7 @@ export function Sidebar() {
                         : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                     )}
                   >
-                    <Icon className="h-4 w-4 flex-shrink-0" />
+                    {Icon ? <Icon className="h-4 w-4 flex-shrink-0" /> : <span className="h-4 w-4 flex-shrink-0" />}
                     {t(labelKey)}
                   </Link>
                 );

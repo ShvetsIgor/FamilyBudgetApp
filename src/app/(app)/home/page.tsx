@@ -13,6 +13,8 @@ import { useLearnedKeywords } from '@/features/chat/hooks/useLearnedKeywords';
 
 import { parseMessage } from '@/features/chat/parser/parse';
 import { saveLearnedKeyword } from '@/features/chat/parser/learning';
+import { deleteExpense } from '@/features/expenses/services/expensesService';
+import { deleteMessageAndExpense } from '@/features/chat/services/messagesService';
 import { collectBotContext } from '@/features/chat/bot/context';
 import { respondToUserMessage } from '@/features/chat/bot/respond';
 import { addMessage } from '@/features/chat/services/messagesService';

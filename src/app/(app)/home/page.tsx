@@ -336,6 +336,7 @@ export default function HomePage() {
                       chip,
                       d.parsedDate as string | undefined,
                       d.parsedDateLabel as string | undefined,
+                      d.parsedNote as string | undefined,
                     )}
                     onAllCategories={() => {}}
                   />

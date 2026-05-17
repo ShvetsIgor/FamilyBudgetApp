@@ -5,6 +5,7 @@ import { BottomNav } from './BottomNav';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { UpdateBanner } from './UpdateBanner';
+import { AddDrawer } from '@/features/quickadd/components/AddDrawer';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (

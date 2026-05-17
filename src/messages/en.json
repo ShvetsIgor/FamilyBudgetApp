@@ -385,5 +385,44 @@
     "family": "Family",
     "regular": "Regular",
     "saving": "Saving…"
+  },
+  "chat": {
+    "header": {
+      "online": "online · computes locally"
+    },
+    "today": {
+      "budgetLabel": "Today's budget",
+      "of": "of",
+      "spent": "spent",
+      "spentPct": "already {pct}%"
+    },
+    "morning": {
+      "greeting": "Good morning ✨",
+      "yesterdaySpent": "Yesterday spent",
+      "freeToday": "Free today"
+    },
+    "clarify": {
+      "common": "Often chosen",
+      "all": "All categories",
+      "promise": "tell me — I'll remember this word forever"
+    },
+    "weekly": {
+      "envelopes": "Envelopes",
+      "best": "Best day",
+      "worst": "Tough day",
+      "often": "Often"
+    },
+    "envelopes": {
+      "title": "Envelopes",
+      "empty": "No budgets set"
+    },
+    "composer": {
+      "placeholder": "Quick note…"
+    },
+    "menu": {
+      "todaySpent": "spent today",
+      "online": "Family online · {n}",
+      "onlyYou": "Just you"
+    }
   }
 }

@@ -509,6 +509,14 @@ export default function HomePage() {
         onClose={() => setCategorySheet(null)}
       />
     )}
+
+    {/* Budget settings sheet */}
+    {budgetSettingsOpen && (
+      <BudgetSettingsSheet
+        autoDaily={autoDaily}
+        onClose={() => setBudgetSettingsOpen(false)}
+      />
+    )}
     </>
   );
 }

@@ -1,7 +1,9 @@
 'use client';
 
+import { Undo2 } from 'lucide-react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { C } from '@/features/chat/styles/tokens';
+import { useT } from '@/shared/hooks/useT';
 
 interface SavedCardProps {
   icon: string;
@@ -11,9 +13,11 @@ interface SavedCardProps {
   amount: number;
   currency: string;
   alert?: string;
+  onUndo?: () => void;
 }
 
-export function SavedCard({ icon, color, title, hint, amount, currency, alert }: SavedCardProps) {
+export function SavedCard({ icon, color, title, hint, amount, currency, alert, onUndo }: SavedCardProps) {
+  const t = useT();
   return (
     <div>
       {/* Main row */}

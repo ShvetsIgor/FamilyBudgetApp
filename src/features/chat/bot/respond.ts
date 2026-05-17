@@ -109,9 +109,9 @@ export async function respondToUserMessage(
   }
 
   // ── Case 3: happy path — save expense
-  const catId = parsed.categoryId!;
-  const cat = categoriesById.get(catId);
-  const parentCat = parsed.parentId ? categoriesById.get(parsed.parentId) : cat;
+  const cat = resolveCategory(parsed.categoryId, categoriesById);
+  const catId = cat?.id ?? parsed.categoryId!;
+  const parentCat = resolveCategory(parsed.parentId, categoriesById) ?? cat;
   const date = expenseDate(parsed);
 
   let expense: Awaited<ReturnType<typeof addExpense>> | undefined;

@@ -227,5 +227,6 @@ export function FastIncomeEntry() {
         </button>
       </div>
     </div>
+    </div>
   );
 }

@@ -103,20 +103,8 @@ export default function ExpensesPage() {
     return matchesSearch && matchesCat;
   });
 
-  const monthTotal = tab === 'expenses'
-    ? expenses.reduce((s, e) => s + e.amount, 0)
-    : incomes.reduce((s, i) => s + i.amount, 0);
-
+  const monthTotal = expenses.reduce((s, e) => s + e.amount, 0);
   const expenseGroups = groupByDate(filteredExpenses);
-  const incomeGroups = groupByDate(incomes);
-
-  const formPanel = (
-    <IncomeForm
-      initialIncome={editingIncome ?? undefined}
-      onSave={editingIncome ? handleEditIncome : handleAddIncome}
-      onCancel={closeForm}
-    />
-  );
 
   const monthBar = (
     <div

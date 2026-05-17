@@ -1,0 +1,51 @@
+import type { Timestamp } from 'firebase/firestore';
+
+export type MessageStatus = 'pending' | 'saved' | 'clarifying' | 'undone' | 'failed';
+
+export type BotCardKind = 'morning' | 'saved' | 'clarify' | 'weekly' | 'envelopes' | 'goal' | 'undone' | 'alert';
+
+export interface BotCard {
+  kind: BotCardKind;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: any;
+}
+
+export interface ParseResult {
+  amount: number;
+  categoryId: string | null;
+  parentId: string | null;
+  matchedKeyword?: string;
+  confidence: 'high' | 'medium' | 'low' | 'failed';
+}
+
+export interface ChatMessage {
+  id: string;
+  userId: string;
+  senderId: string;
+  kind: 'user' | 'bot';
+
+  text: string;
+  parsed?: ParseResult;
+  expenseId?: string;
+  card?: BotCard;
+
+  status: MessageStatus;
+  createdAt: Timestamp;
+  updatedAt?: Timestamp;
+}
+
+export interface SerializableChatMessage {
+  id: string;
+  userId: string;
+  senderId: string;
+  kind: 'user' | 'bot';
+
+  text: string;
+  parsed?: ParseResult;
+  expenseId?: string;
+  card?: BotCard;
+
+  status: MessageStatus;
+  createdAt: string;
+  updatedAt?: string;
+}

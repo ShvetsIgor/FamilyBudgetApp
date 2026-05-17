@@ -96,7 +96,7 @@ export default function HomePage() {
 
     const yesterdayStr = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
     const yesterdayExpenses = allExpenses.filter((e) => e.date.startsWith(yesterdayStr));
-    const firstGoalName = savingsGoals.find((g: any) => !g.name?.toLowerCase().includes('savings'))?.name;
+    const firstGoalName = savingsGoals.find((g) => !g.name?.toLowerCase().includes('savings'))?.name;
 
     const enrichedCtx = {
       ...ctx,

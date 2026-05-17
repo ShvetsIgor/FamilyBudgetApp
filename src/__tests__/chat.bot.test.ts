@@ -106,7 +106,17 @@ describe('parseMessage — bot flow inputs', () => {
 // ── respondToUserMessage ──────────────────────────────────────────────────────
 
 describe('respondToUserMessage', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const { addExpense } = await import('@/features/expenses/services/expensesService');
+    (addExpense as ReturnType<typeof vi.fn>).mockResolvedValue(mockExpense);
+    const { addMessage, updateMessage } = await import('@/features/chat/services/messagesService');
+    (addMessage as ReturnType<typeof vi.fn>).mockImplementation(async (input: unknown) => ({
+      id: 'msg-bot-001',
+      ...(input as object),
+    }));
+    (updateMessage as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+  });
 
   it('«65 кофе» → saved-card с правильными данными', async () => {
     const parsed = parseMessage('65 кофе', { learned: {} });

@@ -165,8 +165,6 @@ export const KEYWORDS: Record<string, KeywordHit> = {
   'латте':           { parentId: 'dining', subId: 'coffee' },
   'эспрессо':        { parentId: 'dining', subId: 'coffee' },
   'americano':       { parentId: 'dining', subId: 'coffee' },
-  'americano':       { parentId: 'dining', subId: 'coffee' },
-  'americano':       { parentId: 'dining', subId: 'coffee' },
   'cappuccino':      { parentId: 'dining', subId: 'coffee' },
   'latte':           { parentId: 'dining', subId: 'coffee' },
   'espresso':        { parentId: 'dining', subId: 'coffee' },

@@ -58,13 +58,16 @@ export function extractDate(text: string): ExtractedDate | null {
 
   if (!month || day < 1 || day > 31) return null;
 
-  const d = new Date(year, month - 1, day);
-  if (isNaN(d.getTime())) return null;
+  // Validate day/month combination
+  const testDate = new Date(year, month - 1, day);
+  if (isNaN(testDate.getTime()) || testDate.getMonth() !== month - 1) return null;
 
+  // Format directly to avoid UTC offset shifting the date
+  const isoDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   const label = m[3] ? `${day} ${m[2]} ${year}` : `${day} ${m[2]}`;
 
   // Remove the matched date from the original text (case-insensitive)
   const rest = text.replace(new RegExp(m[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'), '').trim();
 
-  return { date: d.toISOString().slice(0, 10), label, rest };
+  return { date: isoDate, label, rest };
 }

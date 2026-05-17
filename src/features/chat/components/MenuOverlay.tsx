@@ -1,19 +1,21 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { LogOut } from 'lucide-react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { C, SHADOW, RAD } from '@/features/chat/styles/tokens';
 import { useAppSelector } from '@/store/store';
 import { getCurrencySymbol } from '@/shared/utils/currency';
+import { signOut } from '@/features/auth/services/authService';
 
 const NAV_ITEMS = [
+  { icon: 'receipt',  color: '#8AA9D6', label: 'Транзакции',  href: '/expenses'   },
   { icon: 'chart_up', color: '#E07A5F', label: 'Статистика',  href: '/statistics' },
   { icon: 'chart_up', color: '#81B29A', label: 'Аналитика',   href: '/analytics'  },
   { icon: 'piggy',    color: '#A48BC9', label: 'Копилки',      href: '/savings'    },
   { icon: 'refund',   color: '#F2CC8F', label: 'Регулярные',  href: '/recurring'  },
   { icon: 'tag',      color: '#D4A574', label: 'Категории',    href: '/categories' },
-  { icon: 'receipt',  color: '#8AA9D6', label: 'Транзакции',  href: '/expenses'   },
   { icon: 'cog',      color: '#8E7A66', label: 'Настройки',   href: '/account'    },
 ] as const;
 
@@ -21,10 +23,17 @@ interface MenuOverlayProps {
   onClose: () => void;
 }
 
+function memberInitial(name?: string | null, email?: string | null): string {
+  return name?.[0]?.toUpperCase() ?? email?.[0]?.toUpperCase() ?? '?';
+}
+
+const MEMBER_COLORS = [C.primary, C.sage, C.lavender, C.caramel, C.blueSoft];
+
 export function MenuOverlay({ onClose }: MenuOverlayProps) {
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const expenses = useAppSelector((s) => s.expenses.list);
+  const familyMembers = useAppSelector((s) => s.family.members);
   const sym = getCurrencySymbol(currency);
 
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -32,7 +41,21 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
     .filter((e) => e.date.startsWith(todayStr))
     .reduce((s, e) => s + e.amount, 0);
 
-  const initial = user?.name?.[0]?.toUpperCase() ?? '?';
+  const initial = memberInitial(user?.name, user?.email);
+
+  // Show current user + family members (deduplicated)
+  const allMembers = familyMembers.length > 0 ? familyMembers : [];
+  const displayMembers = allMembers.slice(0, 4);
+  const onlineCount = displayMembers.length || 1;
+
+  // Close on Escape
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   return (
     <>
@@ -43,14 +66,16 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
         style={{ background: 'rgba(61,44,31,.42)', backdropFilter: 'blur(2px)' }}
       />
 
-      {/* Panel */}
+      {/* Slide-in Panel */}
       <div
         className="absolute bottom-0 left-0 top-0 z-20 flex flex-col overflow-hidden"
         style={{
           width: '83%',
+          maxWidth: 320,
           background: C.bg,
           boxShadow: SHADOW.card,
           paddingTop: 54,
+          animation: 'slideInLeft 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         }}
       >
         {/* Profile hero */}
@@ -59,7 +84,10 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
             className="relative p-4"
             style={{ background: `linear-gradient(135deg, ${C.primary} 0%, ${C.primaryDeep} 100%)`, color: 'white' }}
           >
-            <svg style={{ position: 'absolute', top: -30, right: -30, opacity: 0.25, pointerEvents: 'none' }} width="140" height="140" viewBox="0 0 120 120">
+            <svg
+              style={{ position: 'absolute', top: -30, right: -30, opacity: 0.25, pointerEvents: 'none' }}
+              width="140" height="140" viewBox="0 0 120 120"
+            >
               <circle cx="60" cy="60" r="58" stroke="white" strokeWidth="1.5" fill="none" />
             </svg>
             <div className="relative flex items-center gap-3">
@@ -69,15 +97,15 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
               >
                 {initial}
               </div>
-              <div className="flex-1">
-                <p className="m-0 text-[17px] font-[800]" style={{ letterSpacing: -0.2 }}>
+              <div className="flex-1 min-w-0">
+                <p className="m-0 truncate text-[16px] font-[800]" style={{ letterSpacing: -0.2 }}>
                   {user?.name || user?.email}
                 </p>
-                <p className="m-0 mt-0.5 text-[12px] font-[700] opacity-85">family.budget</p>
+                <p className="m-0 mt-0.5 text-[11.5px] font-[700] opacity-85">family.budget</p>
               </div>
             </div>
             <div className="relative mt-3 flex items-baseline gap-2">
-              <span className="text-[28px] font-[900] tabular-nums" style={{ letterSpacing: -0.8 }}>
+              <span className="text-[26px] font-[900] tabular-nums" style={{ letterSpacing: -0.8 }}>
                 {sym}{todaySpent.toLocaleString()}
               </span>
               <span className="text-[12px] font-[800] opacity-80">сегодня потрачено</span>
@@ -92,7 +120,7 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
               key={item.href}
               href={item.href}
               onClick={onClose}
-              className="flex items-center gap-3 rounded-[14px] px-3 py-3 transition-colors hover:bg-black/5"
+              className="flex items-center gap-3 rounded-[14px] px-3 py-2.5 transition-colors hover:bg-black/5 active:bg-black/8"
               style={{ color: C.fg, textDecoration: 'none' }}
             >
               <div
@@ -109,30 +137,59 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
           ))}
         </nav>
 
-        {/* Footer */}
+        {/* Footer: family + sign-out */}
         <div
           className="flex-shrink-0 flex items-center gap-3 px-4 py-3.5"
           style={{ borderTop: `1px solid ${C.hairline}` }}
         >
+          {/* Member avatars */}
           <div className="flex">
-            {[C.primary, C.sage, C.lavender].map((bg, i) => (
+            {displayMembers.length > 0 ? (
+              displayMembers.map((m, i) => (
+                <div
+                  key={m.id}
+                  className="flex h-7 w-7 items-center justify-center rounded-full border-[2.5px] text-[11px] font-[900] text-white"
+                  style={{
+                    background: MEMBER_COLORS[i % MEMBER_COLORS.length],
+                    borderColor: C.bg,
+                    marginLeft: i ? -8 : 0,
+                    zIndex: displayMembers.length - i,
+                  }}
+                >
+                  {memberInitial(m.name, m.email)}
+                </div>
+              ))
+            ) : (
               <div
-                key={i}
                 className="flex h-7 w-7 items-center justify-center rounded-full border-[2.5px] text-[11px] font-[900] text-white"
-                style={{ background: bg, borderColor: C.bg, marginLeft: i ? -8 : 0 }}
+                style={{ background: C.primary, borderColor: C.bg }}
               >
-                {['И','А','М'][i]}
+                {initial}
               </div>
-            ))}
+            )}
           </div>
           <p className="m-0 flex-1 text-[12px] font-[700]" style={{ color: C.sub }}>
-            Семья онлайн · 3
+            {familyMembers.length > 0
+              ? `Семья онлайн · ${onlineCount}`
+              : 'Только вы'}
           </p>
-          <button className="flex items-center gap-1 text-[12px] font-[700]" style={{ color: C.sub }}>
-            <LogOut size={14} />
+          <button
+            onClick={() => signOut().catch(() => {})}
+            className="flex items-center gap-1 rounded-lg p-1.5 transition-colors hover:bg-black/5"
+            style={{ color: C.sub }}
+            title="Выйти"
+          >
+            <LogOut size={16} />
           </button>
         </div>
       </div>
+
+      <style>{`
+        @keyframes slideInLeft {
+          from { transform: translateX(-100%); opacity: 0.6; }
+          to   { transform: translateX(0);    opacity: 1;   }
+        }
+      `}</style>
     </>
   );
 }

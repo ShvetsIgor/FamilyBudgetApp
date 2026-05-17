@@ -103,6 +103,15 @@ export default function HomePage() {
   const allExpenses = useAppSelector((s) => s.expenses.list);
   const savingsGoals = useAppSelector((s) => s.savings.list);
 
+  // Load current month expenses on home mount so todaySpent is accurate
+  useEffect(() => {
+    if (!userId) return;
+    const now = new Date();
+    fetchMonthExpenses(userId, now.getFullYear(), now.getMonth() + 1)
+      .then((list) => dispatch(setExpenses(list)))
+      .catch(() => {});
+  }, [userId, dispatch]);
+
   // Auto-send morning greeting / weekly summary on first daily mount
   const autoSentRef = useRef(false);
   useEffect(() => {

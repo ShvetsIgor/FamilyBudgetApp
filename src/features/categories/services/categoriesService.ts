@@ -42,15 +42,14 @@ export async function deleteCategory(userId: string, categoryId: string, type: C
   await deleteDoc(doc(getDb(), 'categories', userId, type, categoryId));
 }
 
-// Resets categories to TAXONOMY defaults while REUSING the same Firestore IDs
-// for matched categories — so expense categoryIds stay valid without any migration.
-// Returns oldId→newId only for categories that got NEW ids (truly new entries).
+// Resets categories to TAXONOMY defaults using stable taxonomy IDs.
+// Returns oldId→newId map for expenses that need re-linking.
 export async function resetCategoriesToDefaults(
   userId: string
 ): Promise<Record<string, string>> {
   const db = getDb();
 
-  // 1. Read current categories (id → { name, parentId, parentName })
+  // Build old name→id maps so we can return a migration map for expenses
   type OldCat = { name: string; parentId?: string };
   const oldCats: Record<string, OldCat> = {};
   for (const type of ['expense', 'income'] as CategoryType[]) {
@@ -61,65 +60,35 @@ export async function resetCategoriesToDefaults(
     });
   }
 
-  // Build lookup: name → existing id (parents); "parentName::subName" → existing id (subs)
-  const existingParentId: Record<string, string> = {};   // parentName → existingId
-  const existingSubId: Record<string, string> = {};      // "parentName::subName" → existingId
-  for (const [id, { name, parentId }] of Object.entries(oldCats)) {
-    if (!parentId) {
-      existingParentId[name] = id;
-    } else {
-      const parentName = oldCats[parentId]?.name;
-      if (parentName) existingSubId[`${parentName}::${name}`] = id;
-    }
-  }
-
-  // 2. Delete all existing categories
+  // Delete all existing categories
   for (const type of ['expense', 'income'] as CategoryType[]) {
     const snap = await getDocs(colRef(userId, type));
     await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
   }
 
-  // 3. Recreate via batch — reusing the SAME id where name matches, new id otherwise
+  // Recreate with stable taxonomy IDs
   const batch = writeBatch(db);
-  const oldIdToNewId: Record<string, string> = {};  // only populated when id changes
-  const keyToNewId: Record<string, string> = {};    // makeKey → new parent id (for child parentId resolution)
-  const nameToNewId: Record<string, string> = {};   // parent name → new id
-
-  const seedCats = (
-    cats: typeof DEFAULT_EXPENSE_CATEGORIES,
-    type: CategoryType
-  ) => {
-    // Parents first
-    for (const cat of cats.filter((c) => !c.parentId)) {
-      const { parentId: _omit, ...catData } = cat;
-      const reuseId = existingParentId[cat.name];
-      const ref = reuseId
-        ? doc(colRef(userId, type), reuseId)
-        : doc(colRef(userId, type));
-      batch.set(ref, { ...catData, userId });
-      const key = `__${cat.name.toLowerCase().replace(/[\s/]+/g, '_')}__`;
-      keyToNewId[key] = ref.id;
-      nameToNewId[cat.name] = ref.id;
-      if (reuseId && reuseId !== ref.id) oldIdToNewId[reuseId] = ref.id;
-    }
-    // Children
-    for (const cat of cats.filter((c) => c.parentId)) {
-      const realParentId = keyToNewId[cat.parentId!] ?? null;
-      const { parentId: _omit, ...catData } = cat;
-      const parentName = Object.entries(nameToNewId).find(([, id]) => id === realParentId)?.[0];
-      const reuseId = parentName ? existingSubId[`${parentName}::${cat.name}`] : undefined;
-      const ref = reuseId
-        ? doc(colRef(userId, type), reuseId)
-        : doc(colRef(userId, type));
-      batch.set(ref, { ...catData, parentId: realParentId, userId });
-      if (reuseId && reuseId !== ref.id) oldIdToNewId[reuseId] = ref.id;
-    }
-  };
-
-  seedCats(DEFAULT_EXPENSE_CATEGORIES, 'expense');
-  seedCats(DEFAULT_INCOME_CATEGORIES, 'income');
+  for (const cat of DEFAULT_EXPENSE_CATEGORIES) {
+    const { id, parentId: _omit, ...catData } = cat;
+    batch.set(doc(colRef(userId, 'expense'), id), { ...catData, userId });
+  }
+  for (const cat of DEFAULT_INCOME_CATEGORIES) {
+    const { id, parentId: _omit, ...catData } = cat;
+    batch.set(doc(colRef(userId, 'income'), id), { ...catData, userId });
+  }
   await batch.commit();
 
+  // Build oldId→newTaxonomyId map for expenses migration
+  const oldIdToNewId: Record<string, string> = {};
+  for (const [oldId, { name, parentId }] of Object.entries(oldCats)) {
+    // Find matching taxonomy entry by name
+    for (const cat of [...DEFAULT_EXPENSE_CATEGORIES, ...DEFAULT_INCOME_CATEGORIES]) {
+      if (cat.name === name && String(cat.parentId ?? '') === String(parentId ?? '')) {
+        if (oldId !== cat.id) oldIdToNewId[oldId] = cat.id;
+        break;
+      }
+    }
+  }
   return oldIdToNewId;
 }
 

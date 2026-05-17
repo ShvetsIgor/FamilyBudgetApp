@@ -28,6 +28,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="mx-auto max-w-[1280px] p-6">{children}</div>
           </main>
         </div>
+        <AddDrawer />
       </div>
     </>
   );

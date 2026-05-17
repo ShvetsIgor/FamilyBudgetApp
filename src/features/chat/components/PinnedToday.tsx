@@ -20,7 +20,7 @@ export function PinnedToday({ spent, total, currency, dayLabel, budgetMode, onSe
   const t = useT();
   const sym = getCurrencySymbol(currency);
   const left = Math.max(0, total - spent);
-  const pct = total > 0 ? Math.min(100, (left / total) * 100) : 0;
+  const spentPct = total > 0 ? Math.min(100, Math.round((spent / total) * 100)) : 0;
   const isOver = total > 0 && spent > total;
 
   const modeBadge: Record<BudgetMode, string> = {
@@ -38,6 +38,7 @@ export function PinnedToday({ spent, total, currency, dayLabel, budgetMode, onSe
           boxShadow: SHADOW.pinned,
           overflow: 'hidden',
           position: 'relative',
+          padding: '12px 14px 14px',
         }}
       >
         {/* decorative circle */}
@@ -49,7 +50,7 @@ export function PinnedToday({ spent, total, currency, dayLabel, budgetMode, onSe
         </svg>
 
         {/* main row */}
-        <div className="flex items-center gap-2.5 px-3.5 pt-2.5 pb-2.5">
+        <div className="relative flex items-center gap-2.5 mb-3">
           {/* left: label + amount */}
           <div className="flex-1">
             <div className="flex items-center gap-1.5 mb-0.5">
@@ -93,12 +94,18 @@ export function PinnedToday({ spent, total, currency, dayLabel, budgetMode, onSe
           </div>
         </div>
 
-        {/* progress bar in normal flow — no absolute, clips cleanly with overflow:hidden */}
+        {/* progress bar with inner padding */}
         {total > 0 && (
-          <div className="h-[4px]" style={{ background: 'rgba(255,255,255,.18)' }}>
+          <div
+            className="relative h-[6px] rounded-full overflow-hidden"
+            style={{ background: 'rgba(255,255,255,.2)' }}
+          >
             <div
-              className="h-full transition-all duration-500"
-              style={{ width: `${pct}%`, background: isOver ? '#FFD166' : 'rgba(255,255,255,.88)' }}
+              className="h-full rounded-full transition-all duration-700"
+              style={{
+                width: `${spentPct}%`,
+                background: isOver ? '#FFD166' : 'rgba(255,255,255,.9)',
+              }}
             />
           </div>
         )}

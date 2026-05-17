@@ -9,6 +9,7 @@ import recurringReducer from '@/features/recurring/store/recurringSlice';
 import savingsReducer from '@/features/savings/store/savingsSlice';
 import familyReducer from '@/features/family/store/familySlice';
 import budgetReducer from '@/features/budget/store/budgetSlice';
+import quickAddReducer from '@/features/quickadd/store/quickAddSlice';
 
 export const store = configureStore({
   reducer: {
@@ -21,6 +22,7 @@ export const store = configureStore({
     savings: savingsReducer,
     family: familyReducer,
     budget: budgetReducer,
+    quickAdd: quickAddReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

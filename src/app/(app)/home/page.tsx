@@ -409,6 +409,22 @@ export default function HomePage() {
               );
             }
 
+            if (msg.card?.kind === 'future') {
+              const d = msg.card.data as FutureCardData;
+              return (
+                <BotCardBubble key={msg.id} tail={tail}>
+                  <FutureCard
+                    amount={d.amount}
+                    currency={d.currency}
+                    note={d.note}
+                    dateLabel={d.dateLabel}
+                    onConfirm={() => handleFutureConfirm(msg.id, d)}
+                    onCancel={() => handleFutureCancel(msg.id, d.userMsgId)}
+                  />
+                </BotCardBubble>
+              );
+            }
+
             if (msg.card?.kind === 'clarify') {
               const d = msg.card.data as Record<string, unknown>;
               return (

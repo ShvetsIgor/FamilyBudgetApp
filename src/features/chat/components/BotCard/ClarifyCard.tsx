@@ -1,0 +1,69 @@
+'use client';
+
+import { Search } from 'lucide-react';
+import { StickerIcon } from '@/features/categories/components/CategoryIcon';
+import { C, SHADOW } from '@/features/chat/styles/tokens';
+
+interface ClarifyChip {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+}
+
+interface ClarifyCardProps {
+  amount: number;
+  currency: string;
+  chips: ClarifyChip[];
+  onSelectChip: (chip: ClarifyChip) => void;
+  onAllCategories: () => void;
+}
+
+export function ClarifyCard({ amount, currency, chips, onSelectChip, onAllCategories }: ClarifyCardProps) {
+  return (
+    <div className="p-3.5">
+      <p className="m-0 mb-2 text-[10px] font-[800] uppercase tracking-[.08em]" style={{ color: C.sub }}>
+        Часто выбираешь
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {chips.map((chip) => (
+          <button
+            key={chip.id}
+            onClick={() => onSelectChip(chip)}
+            className="inline-flex items-center gap-1.5 text-[12.5px] font-[800] transition-all active:scale-95"
+            style={{
+              padding: '7px 12px 7px 7px',
+              borderRadius: 999,
+              background: C.card,
+              border: `1.5px solid ${C.hairline}`,
+              color: C.fg,
+              boxShadow: SHADOW.bubble,
+            }}
+          >
+            <StickerIcon icon={chip.icon} color={chip.color} className="h-5 w-5" />
+            {chip.name}
+          </button>
+        ))}
+      </div>
+
+      <button
+        onClick={onAllCategories}
+        className="mt-2 inline-flex items-center gap-1.5 text-[12px] font-[800]"
+        style={{
+          padding: '8px 14px',
+          borderRadius: 999,
+          background: 'transparent',
+          border: `1.5px dashed ${C.sub}77`,
+          color: C.sub,
+        }}
+      >
+        <Search size={14} />
+        Все категории
+      </button>
+
+      <p className="m-0 mt-2.5 text-[11px] font-[700]" style={{ color: C.sub }}>
+        подскажешь — запомню это слово навсегда
+      </p>
+    </div>
+  );
+}

@@ -1,4 +1,3 @@
-import { Timestamp } from 'firebase/firestore';
 import { addExpense } from '@/features/expenses/services/expensesService';
 import { addMessage, updateMessage } from '@/features/chat/services/messagesService';
 import type { SerializableChatMessage, ParseResult } from '@/shared/types/message';

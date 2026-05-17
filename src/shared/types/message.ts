@@ -15,6 +15,10 @@ export interface ParseResult {
   parentId: string | null;
   matchedKeyword?: string;
   confidence: 'high' | 'medium' | 'low' | 'failed';
+  /** ISO date string YYYY-MM-DD if the user specified a date in the message */
+  date?: string;
+  /** Human-readable date label, e.g. "9 мая" */
+  dateLabel?: string;
 }
 
 export interface ChatMessage {

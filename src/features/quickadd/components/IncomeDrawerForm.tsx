@@ -169,7 +169,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
               </div>
             </div>
             <span className="text-sm font-black" style={{ color: catColor }}>
-              {selectedCat?.name}
+              {selectedCat ? t.cat(selectedCat.name) : ''}
             </span>
           </div>
         )}

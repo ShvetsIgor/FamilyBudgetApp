@@ -90,9 +90,14 @@ export default function HomePage() {
   );
   const budgetLimits = useAppSelector((s) => s.budget.limits);
   const dailyBudget = monthBudget > 0 ? Math.round(monthBudget / 30) : 0;
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const todaySpent = useAppSelector((s) =>
-    s.expenses.list.filter((e) => e.date.startsWith(todayStr)).reduce((acc, e) => acc + e.amount, 0)
+    s.expenses.list.filter((e) => {
+      const d = new Date(e.date);
+      const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      return ds === todayStr;
+    }).reduce((acc, e) => acc + e.amount, 0)
   );
   const allExpenses = useAppSelector((s) => s.expenses.list);
   const savingsGoals = useAppSelector((s) => s.savings.list);

@@ -88,14 +88,20 @@ export default function HomePage() {
   useChatMessages();
   const learned = useLearnedKeywords();
 
-  // Daily budget = sum of all category limits / 30
+  const budgetMode = useAppSelector((s) => s.ui.budgetMode);
+  const budgetDailyLimit = useAppSelector((s) => s.ui.budgetDailyLimit);
+  const budgetMonthlyLimit = useAppSelector((s) => s.ui.budgetMonthlyLimit);
+  const budgetLimits = useAppSelector((s) => s.budget.limits);
   const monthBudget = useAppSelector((s) =>
     Object.values(s.budget.limits).reduce((acc, v) => acc + v, 0)
   );
-  const budgetLimits = useAppSelector((s) => s.budget.limits);
-  const dailyBudget = monthBudget > 0 ? Math.round(monthBudget / 30) : 0;
+
   const now = new Date();
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const monthStr = todayStr.slice(0, 7);
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const remainingDays = daysInMonth - now.getDate() + 1;
+
   const todaySpent = useAppSelector((s) =>
     s.expenses.list.filter((e) => {
       const d = new Date(e.date);
@@ -103,8 +109,29 @@ export default function HomePage() {
       return ds === todayStr;
     }).reduce((acc, e) => acc + e.amount, 0)
   );
+  const monthSpent = useAppSelector((s) =>
+    s.expenses.list.filter((e) => e.date.startsWith(monthStr)).reduce((acc, e) => acc + e.amount, 0)
+  );
+  const monthIncome = useAppSelector((s) =>
+    s.income.list.filter((i) => i.date.startsWith(monthStr)).reduce((acc, i) => acc + i.amount, 0)
+  );
+
+  // Compute daily budget based on selected mode
+  const autoDaily = monthIncome > 0
+    ? Math.max(0, Math.round((monthIncome - monthSpent) / remainingDays))
+    : 0;
+
+  const dailyBudget = (() => {
+    if (budgetMode === 'daily') return budgetDailyLimit;
+    if (budgetMode === 'monthly') return budgetMonthlyLimit > 0
+      ? Math.max(0, Math.round((budgetMonthlyLimit - monthSpent) / remainingDays))
+      : 0;
+    return autoDaily; // 'auto'
+  })();
+
   const allExpenses = useAppSelector((s) => s.expenses.list);
   const savingsGoals = useAppSelector((s) => s.savings.list);
+  const [budgetSettingsOpen, setBudgetSettingsOpen] = useState(false);
 
   // Load current month expenses on home mount so todaySpent is accurate
   useEffect(() => {

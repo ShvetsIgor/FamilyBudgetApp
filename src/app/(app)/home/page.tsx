@@ -83,7 +83,7 @@ export default function HomePage() {
     s.expenses.list.filter((e) => e.date.startsWith(todayStr)).reduce((acc, e) => acc + e.amount, 0)
   );
   const allExpenses = useAppSelector((s) => s.expenses.list);
-  const savingsGoals = useAppSelector((s) => (s as any).savings?.goals ?? []);
+  const savingsGoals = useAppSelector((s) => s.savings.list);
 
   // Auto-send morning greeting / weekly summary on first daily mount
   const autoSentRef = useRef(false);

@@ -28,6 +28,7 @@ function getPageTitleKey(pathname: string): string {
 export function TopBar() {
   const dispatch = useAppDispatch();
   const pathname = usePathname();
+  const router = useRouter();
   const { theme, isOffline, isSyncing, expensesSearch } = useAppSelector((s) => s.ui);
   const user = useAppSelector((s) => s.auth.user);
   const t = useT();

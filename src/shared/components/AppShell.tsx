@@ -8,11 +8,13 @@ import { UpdateBanner } from './UpdateBanner';
 import { AddDrawer } from '@/features/quickadd/components/AddDrawer';
 import { ChatHeader } from '@/features/chat/components/ChatHeader';
 import { MenuOverlay } from '@/features/chat/components/MenuOverlay';
+import { NotificationsPanel } from '@/features/notifications/components/NotificationsPanel';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isChat = pathname === '/home';
   const [menuOpen, setMenuOpen] = useState(false);
+  const [bellOpen, setBellOpen] = useState(false);
 
   return (
     <>

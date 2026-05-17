@@ -124,31 +124,57 @@ export default function HomePage() {
 
   const sendingRef = useRef(false);
 
+  const buildEnrichedCtx = useCallback(() => {
+    const ctx = collectBotContext(state);
+    if (!ctx) return null;
+    return {
+      ...ctx,
+      allExpenses,
+      monthBudget,
+      budgetLimits,
+      dailyBudget,
+      firstGoalName: savingsGoals.find((g) => !g.name?.toLowerCase().includes('savings'))?.name,
+    };
+  }, [state, allExpenses, monthBudget, budgetLimits, dailyBudget, savingsGoals]);
+
   const handleSend = useCallback(async (text: string) => {
     if (!userId || sendingRef.current) return;
     sendingRef.current = true;
 
-    const ctx = collectBotContext(state);
-    if (!ctx) { sendingRef.current = false; return; }
-
-    const parsed = parseMessage(text, { learned });
-
-    const userMsgInput = {
+    // Save user message
+    await addMessage({
       userId,
       senderId: userId,
       kind: 'user' as const,
       text,
-      parsed,
       status: 'pending' as const,
-      createdAt: new Date().toISOString(),
-    };
-    const userMsg = await addMessage(userMsgInput);
+    });
 
     dispatch(setTyping(true));
     await new Promise((r) => setTimeout(r, 600));
 
     try {
-      const reply = await respondToUserMessage(userMsg, parsed, ctx);
+      const enrichedCtx = buildEnrichedCtx();
+      if (!enrichedCtx) return;
+
+      // Slash command routing
+      if (isSlashCommand(text)) {
+        await handleSlashCommand(text, enrichedCtx);
+        return;
+      }
+
+      // Normal expense parsing
+      const parsed = parseMessage(text, { learned });
+      const userMsg = await addMessage({
+        userId,
+        senderId: userId,
+        kind: 'user' as const,
+        text,
+        parsed,
+        status: 'pending' as const,
+      });
+
+      const reply = await respondToUserMessage(userMsg, parsed, enrichedCtx);
       for (const botMsg of reply.messages) {
         await addMessage(botMsg);
       }
@@ -159,7 +185,7 @@ export default function HomePage() {
       dispatch(setTyping(false));
       sendingRef.current = false;
     }
-  }, [userId, state, learned, dispatch]);
+  }, [userId, buildEnrichedCtx, learned, dispatch]);
 
   const handleClarifyChip = useCallback(async (
     amount: number,

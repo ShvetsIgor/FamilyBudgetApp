@@ -10,6 +10,7 @@ import savingsReducer from '@/features/savings/store/savingsSlice';
 import familyReducer from '@/features/family/store/familySlice';
 import budgetReducer from '@/features/budget/store/budgetSlice';
 import quickAddReducer from '@/features/quickadd/store/quickAddSlice';
+import chatReducer from '@/features/chat/store/chatSlice';
 
 export const store = configureStore({
   reducer: {
@@ -23,6 +24,7 @@ export const store = configureStore({
     family: familyReducer,
     budget: budgetReducer,
     quickAdd: quickAddReducer,
+    chat: chatReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

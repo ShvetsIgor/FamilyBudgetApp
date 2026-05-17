@@ -4,6 +4,7 @@ import { ChevronDown } from 'lucide-react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { C, SHADOW, RAD } from '@/features/chat/styles/tokens';
 import { getCurrencySymbol } from '@/shared/utils/currency';
+import { useT } from '@/shared/hooks/useT';
 import type { Currency } from '@/shared/types';
 
 interface PinnedTodayProps {
@@ -14,6 +15,7 @@ interface PinnedTodayProps {
 }
 
 export function PinnedToday({ spent, total, currency, dayLabel }: PinnedTodayProps) {
+  const t = useT();
   const sym = getCurrencySymbol(currency);
   const left = Math.max(0, total - spent);
   const pct = total > 0 ? Math.min(100, (left / total) * 100) : 0;
@@ -31,7 +33,6 @@ export function PinnedToday({ spent, total, currency, dayLabel }: PinnedTodayPro
         boxShadow: SHADOW.pinned,
       }}
     >
-      {/* Decorative ring */}
       <svg
         style={{ position: 'absolute', top: -20, right: -28, opacity: 0.25, pointerEvents: 'none' }}
         width="120" height="120" viewBox="0 0 120 120"
@@ -53,10 +54,15 @@ export function PinnedToday({ spent, total, currency, dayLabel }: PinnedTodayPro
             <span className="text-[30px] font-[900] tabular-nums" style={{ letterSpacing: -0.8 }}>
               {sym}{left.toLocaleString()}
             </span>
-            <span className="text-[13px] font-[800] opacity-80">из {sym}{total.toLocaleString()}</span>
+            {total > 0 && (
+              <span className="text-[13px] font-[800] opacity-80">
+                {t('chat.today.of')} {sym}{total.toLocaleString()}
+              </span>
+            )}
           </div>
           <p className="m-0 mt-0.5 text-[12px] font-[700] opacity-85">
-            потрачено {sym}{spent.toLocaleString()} · уже {spentPct}%
+            {t('chat.today.spent')} {sym}{spent.toLocaleString()}
+            {total > 0 && ` · ${t('chat.today.spentPct').replace('{pct}', String(spentPct))}`}
           </p>
         </div>
         <button
@@ -67,7 +73,6 @@ export function PinnedToday({ spent, total, currency, dayLabel }: PinnedTodayPro
         </button>
       </div>
 
-      {/* Progress bar */}
       <div
         className="relative mt-3 h-[5px] overflow-hidden rounded-full"
         style={{ background: 'rgba(255,255,255,.22)' }}

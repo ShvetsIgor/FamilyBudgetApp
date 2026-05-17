@@ -3,7 +3,7 @@
 import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/store/store';
-import { ExpenseForm } from '@/features/expenses/components/ExpenseForm';
+import { FastExpenseEntry } from '@/features/expenses/components/FastExpenseEntry';
 import { useT } from '@/shared/hooks/useT';
 
 export default function EditExpensePage({ params }: { params: Promise<{ id: string }> }) {
@@ -24,15 +24,5 @@ export default function EditExpensePage({ params }: { params: Promise<{ id: stri
     );
   }
 
-  return (
-    <div className="flex flex-col gap-0 pb-8">
-      <div className="flex items-center gap-3 px-4 pt-5 pb-2">
-        <button onClick={() => router.back()} className="text-sm text-muted-foreground hover:text-foreground">
-          {t('expense.back')}
-        </button>
-        <h1 className="text-lg font-bold">{t('expense.editTitle')}</h1>
-      </div>
-      <ExpenseForm initialExpense={expense} />
-    </div>
-  );
+  return <FastExpenseEntry initialExpense={expense} />;
 }

@@ -4,13 +4,16 @@ import { Bell, Menu } from 'lucide-react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { C } from '@/features/chat/styles/tokens';
 import { useT } from '@/shared/hooks/useT';
+import { useAppSelector } from '@/store/store';
 
 interface ChatHeaderProps {
   onMenu: () => void;
+  onBell?: () => void;
 }
 
-export function ChatHeader({ onMenu }: ChatHeaderProps) {
+export function ChatHeader({ onMenu, onBell }: ChatHeaderProps) {
   const t = useT();
+  const unread = useAppSelector((s) => s.notifications.items.filter((n) => !n.read).length);
 
   return (
     <div

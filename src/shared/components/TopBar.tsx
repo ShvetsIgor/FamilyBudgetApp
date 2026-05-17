@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Sun, Moon, WifiOff, RefreshCw, Plus, Bell, Search } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setTheme, setExpensesSearch } from '@/features/ui/store/uiSlice';

@@ -141,24 +141,16 @@ export default function HomePage() {
     if (!userId || sendingRef.current) return;
     sendingRef.current = true;
 
-    // Save user message
-    await addMessage({
-      userId,
-      senderId: userId,
-      kind: 'user' as const,
-      text,
-      status: 'pending' as const,
-    });
-
     dispatch(setTyping(true));
-    await new Promise((r) => setTimeout(r, 600));
 
     try {
       const enrichedCtx = buildEnrichedCtx();
       if (!enrichedCtx) return;
 
-      // Slash command routing
+      // Slash command — save user message, skip expense parsing
       if (isSlashCommand(text)) {
+        await addMessage({ userId, senderId: userId, kind: 'user', text, status: 'saved' });
+        await new Promise((r) => setTimeout(r, 400));
         await handleSlashCommand(text, enrichedCtx);
         return;
       }
@@ -168,11 +160,13 @@ export default function HomePage() {
       const userMsg = await addMessage({
         userId,
         senderId: userId,
-        kind: 'user' as const,
+        kind: 'user',
         text,
         parsed,
-        status: 'pending' as const,
+        status: 'pending',
       });
+
+      await new Promise((r) => setTimeout(r, 600));
 
       const reply = await respondToUserMessage(userMsg, parsed, enrichedCtx);
       for (const botMsg of reply.messages) {

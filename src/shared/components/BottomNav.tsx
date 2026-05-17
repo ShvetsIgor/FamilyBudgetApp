@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Plus, List, BarChart2, Lightbulb } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';

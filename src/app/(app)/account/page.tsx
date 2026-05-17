@@ -468,7 +468,7 @@ export default function AccountPage() {
           <div className="flex items-center gap-3 px-4 py-3.5">
             <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#8AA9D622' }}>🌙</div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-foreground">{t('account.dark')}</p>
+              <p className="text-sm font-bold text-foreground">Тёмная тема</p>
               <p className="text-xs font-semibold text-muted-foreground mt-0.5">{theme === 'dark' ? 'Включена' : 'Выключена'}</p>
             </div>
             <button

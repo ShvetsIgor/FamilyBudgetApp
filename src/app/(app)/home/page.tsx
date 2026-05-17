@@ -5,8 +5,8 @@ import { format, isToday, isYesterday, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
 import { useAppSelector, useAppDispatch } from '@/store/store';
-import { setTyping } from '@/features/chat/store/chatSlice';
-import { prependExpense } from '@/features/expenses/store/expensesSlice';
+import { setTyping, removeMessage } from '@/features/chat/store/chatSlice';
+import { prependExpense, removeExpense } from '@/features/expenses/store/expensesSlice';
 
 import { useChatMessages } from '@/features/chat/hooks/useChatMessages';
 import { useLearnedKeywords } from '@/features/chat/hooks/useLearnedKeywords';

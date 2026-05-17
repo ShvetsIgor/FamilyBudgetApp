@@ -285,6 +285,36 @@ export default function HomePage() {
     } catch { /* ignore */ }
   }, [userId, allExpenses, dispatch]);
 
+  const handleFutureConfirm = useCallback(async (botMsgId: string, data: FutureCardData) => {
+    if (!userId || sendingRef.current) return;
+    sendingRef.current = true;
+    dispatch(setTyping(true));
+    try {
+      const enrichedCtx = buildEnrichedCtx();
+      if (!enrichedCtx) return;
+      const reply = await confirmFutureExpense(data, botMsgId, enrichedCtx);
+      for (const botMsg of reply.messages) {
+        await addMessage(botMsg);
+      }
+      if (reply.expense) {
+        dispatch(prependExpense(reply.expense));
+      }
+    } finally {
+      dispatch(setTyping(false));
+      sendingRef.current = false;
+    }
+  }, [userId, buildEnrichedCtx, dispatch]);
+
+  const handleFutureCancel = useCallback(async (botMsgId: string, userMsgId: string) => {
+    if (!userId) return;
+    dispatch(removeMessage(botMsgId));
+    dispatch(removeMessage(userMsgId));
+    try {
+      await deleteMessageAndExpense(userId, botMsgId);
+      await deleteMessageAndExpense(userId, userMsgId);
+    } catch { /* ignore */ }
+  }, [userId, dispatch]);
+
   const groups = groupByDay(messages);
 
   if (!userId) return null;

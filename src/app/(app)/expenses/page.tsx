@@ -70,34 +70,21 @@ export default function ExpensesPage() {
   const isCurrentMonth = selectedMonth === currentMonth;
   const expenses = isCurrentMonth ? reduxExpenses : (localExpenses ?? []);
 
-  // Load current month into Redux (once)
   const loadCurrentExpenses = useCallback(async () => {
     if (!user || expStatus !== 'idle') return;
     dispatch(setExpenses(await fetchMonthExpenses(user.id, currentMonth)));
   }, [user, currentMonth, expStatus, dispatch]);
 
-  const loadCurrentIncomes = useCallback(async () => {
-    if (!user || incStatus !== 'idle') return;
-    dispatch(setIncome(await fetchMonthIncome(user.id, currentMonth)));
-  }, [user, currentMonth, incStatus, dispatch]);
-
   useEffect(() => { loadCurrentExpenses(); }, [loadCurrentExpenses]);
-  useEffect(() => { if (tab === 'income') loadCurrentIncomes(); }, [tab, loadCurrentIncomes]);
 
-  // Load historical month into local state
   useEffect(() => {
-    if (isCurrentMonth) { setLocalExpenses(null); setLocalIncomes(null); return; }
+    if (isCurrentMonth) { setLocalExpenses(null); return; }
     setLocalExpenses(null);
-    setLocalIncomes(null);
     if (!user) return;
     setLoading(true);
-    Promise.all([
-      fetchMonthExpenses(user.id, selectedMonth),
-      fetchMonthIncome(user.id, selectedMonth),
-    ]).then(([exp, inc]) => {
-      setLocalExpenses(exp);
-      setLocalIncomes(inc);
-    }).finally(() => setLoading(false));
+    fetchMonthExpenses(user.id, selectedMonth)
+      .then(setLocalExpenses)
+      .finally(() => setLoading(false));
   }, [selectedMonth, isCurrentMonth, user]);
 
   // Scroll month bar to selected chip

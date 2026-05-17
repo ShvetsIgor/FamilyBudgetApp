@@ -2,15 +2,16 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { X } from 'lucide-react';
+import { X, MessageSquare, Calendar } from 'lucide-react';
+import { format } from 'date-fns';
 import { useAppSelector, useAppDispatch } from '@/store/store';
-import { prependExpense } from '@/features/expenses/store/expensesSlice';
-import { addExpense } from '@/features/expenses/services/expensesService';
+import { prependExpense, updateExpense as updateExpenseAction } from '@/features/expenses/store/expensesSlice';
+import { addExpense, updateExpense } from '@/features/expenses/services/expensesService';
 import { CategoryIcon, StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
-import type { Category } from '@/shared/types';
+import type { Category, SerializableExpense, SplitItem } from '@/shared/types';
 
 interface SplitRow {
   categoryId: string;
@@ -36,7 +37,15 @@ function pluralRu(n: number) {
   return 'позиций';
 }
 
-export function FastExpenseEntry() {
+function toDateInput(d: Date): string {
+  return format(d, 'yyyy-MM-dd');
+}
+
+interface Props {
+  initialExpense?: SerializableExpense;
+}
+
+export function FastExpenseEntry({ initialExpense }: Props) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
@@ -44,15 +53,48 @@ export function FastExpenseEntry() {
   const allCats = useAppSelector((s) => s.categories.expense);
   const t = useT();
   const symbol = getCurrencySymbol(currency);
+  const isEdit = !!initialExpense;
 
   const parentCats = allCats.filter((c) => !c.parentId && c.name !== 'Savings');
 
-  const [total, setTotal] = useState('0');
-  const [parentId, setParentId] = useState(parentCats[0]?.id ?? '');
-  const [splits, setSplits] = useState<SplitRow[]>([]);
+  function initParentId() {
+    if (!initialExpense) return parentCats[0]?.id ?? '';
+    const cat = allCats.find((c) => c.id === initialExpense.categoryId);
+    return cat?.parentId ?? cat?.id ?? parentCats[0]?.id ?? '';
+  }
+
+  function initSplits(): SplitRow[] {
+    if (!initialExpense?.splits?.length) return [];
+    return initialExpense.splits
+      .map((sp: SplitItem) => {
+        const cat = allCats.find((c) => c.id === sp.categoryId);
+        const parent = allCats.find((c) => c.id === cat?.parentId);
+        if (!cat) return null;
+        return {
+          categoryId: sp.categoryId,
+          name: cat.name,
+          icon: cat.icon,
+          color: parent?.color ?? cat.color,
+          amount: String(sp.amount),
+        };
+      })
+      .filter(Boolean) as SplitRow[];
+  }
+
+  const [total, setTotal] = useState(initialExpense ? String(initialExpense.amount) : '0');
+  const [parentId, setParentId] = useState(initParentId);
+  const [splits, setSplits] = useState<SplitRow[]>(initSplits);
   const [editing, setEditing] = useState<'total' | number>('total');
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash' | 'other'>('card');
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash' | 'other'>(
+    initialExpense?.paymentMethod ?? 'card'
+  );
+  const [comment, setComment] = useState(initialExpense?.comment ?? '');
+  const [showComment, setShowComment] = useState(!!initialExpense?.comment);
+  const [dateStr, setDateStr] = useState(
+    toDateInput(initialExpense ? new Date(initialExpense.date) : new Date())
+  );
+  const [showDate, setShowDate] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -77,6 +119,7 @@ export function FastExpenseEntry() {
   }
 
   function addSplit(sub: Category) {
+    if (splits.find((s) => s.categoryId === sub.id)) return;
     setSplits((prev) => {
       const next = [
         ...prev,
@@ -88,6 +131,7 @@ export function FastExpenseEntry() {
       );
       return next;
     });
+    setPickerOpen(false);
   }
 
   function removeSplit(i: number) {
@@ -105,27 +149,34 @@ export function FastExpenseEntry() {
   async function handleSave() {
     if (!user || totalNum <= 0 || saving) return;
     setSaving(true);
+
+    const splitItems: SplitItem[] = splits
+      .filter((sp) => parseFloat(sp.amount) > 0)
+      .map((sp) => ({ categoryId: sp.categoryId, amount: parseFloat(sp.amount) }));
+
     const base = {
       userId: user.id,
       currency,
-      date: new Date(),
+      date: new Date(dateStr),
       paymentMethod,
-      tags: [],
+      tags: [] as string[],
       privacy: 'regular' as const,
-      splits: [],
+      comment: comment.trim() || undefined,
+      amount: totalNum,
+      categoryId: parentId,
+      splits: splitItems,
     };
+
     try {
-      if (parentLeftover > 0 && parent) {
-        const exp = await addExpense({ ...base, amount: parentLeftover, categoryId: parent.id });
+      if (isEdit && initialExpense) {
+        const updated = await updateExpense({ ...base, id: initialExpense.id });
+        dispatch(updateExpenseAction(updated));
+        router.push(`/expenses/${initialExpense.id}`);
+      } else {
+        const exp = await addExpense(base);
         dispatch(prependExpense(exp));
+        router.push('/expenses');
       }
-      for (const sp of splits) {
-        const amt = parseFloat(sp.amount) || 0;
-        if (amt <= 0) continue;
-        const exp = await addExpense({ ...base, amount: amt, categoryId: sp.categoryId });
-        dispatch(prependExpense(exp));
-      }
-      router.push('/expenses');
     } catch {
       setSaving(false);
     }
@@ -143,7 +194,7 @@ export function FastExpenseEntry() {
           <X className="h-4 w-4" />
         </button>
         <div className="flex-1 text-center text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">
-          Чек · {splits.length + 1} {pluralRu(splits.length + 1)}
+          {isEdit ? 'Редактировать' : `Чек · ${splits.length + 1} ${pluralRu(splits.length + 1)}`}
         </div>
         <div className="w-8" />
       </div>
@@ -165,7 +216,7 @@ export function FastExpenseEntry() {
         </div>
       </div>
 
-      {/* ── Parent category grid — 2 rows × horizontal scroll ── */}
+      {/* ── Parent category grid ── */}
       <div className="overflow-x-auto px-3.5 py-1.5 flex-shrink-0 [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
         <div className="grid grid-rows-2 grid-flow-col gap-1.5" style={{ gridAutoColumns: '64px' }}>
           {parentCats.map((cat) => {
@@ -180,11 +231,7 @@ export function FastExpenseEntry() {
                   boxShadow: sel ? `0 3px 8px ${cat.color}55` : '0 1px 3px rgba(61,44,31,.06)',
                 }}
               >
-                <StickerIcon
-                  icon={cat.icon}
-                  color={sel ? '#fff' : cat.color}
-                  className="h-4 w-4"
-                />
+                <StickerIcon icon={cat.icon} color={sel ? '#fff' : cat.color} className="h-4 w-4" />
                 <span
                   className="text-[8px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
                   style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}
@@ -211,12 +258,16 @@ export function FastExpenseEntry() {
           <div className="flex-1 min-w-0">
             <div className="text-sm font-extrabold text-foreground">
               {t.cat(parent?.name ?? '')}
-              <span className="text-xs font-semibold text-muted-foreground ml-1">· общее</span>
+              {splits.length > 0 && (
+                <span className="text-xs font-semibold text-muted-foreground ml-1">· общее</span>
+              )}
             </div>
-            <div className="text-[11px] text-muted-foreground font-semibold mt-0.5">остаток после уточнений</div>
+            {splits.length > 0 && (
+              <div className="text-[11px] text-muted-foreground font-semibold mt-0.5">остаток после уточнений</div>
+            )}
           </div>
           <span className="text-lg font-black text-foreground tabular-nums">
-            {symbol}{parentLeftover}
+            {symbol}{splits.length > 0 ? parentLeftover : total}
           </span>
         </div>
 
@@ -265,7 +316,7 @@ export function FastExpenseEntry() {
           </button>
         )}
 
-        {/* Subcategory picker grid */}
+        {/* Subcategory picker */}
         {pickerOpen && subCats.length > 0 && (
           <div
             className="bg-card rounded-[14px] p-2.5 flex-shrink-0"
@@ -275,46 +326,103 @@ export function FastExpenseEntry() {
               Подкатегория {t.cat(parent?.name ?? '')}
             </div>
             <div className="grid grid-cols-4 gap-1.5">
-              {subCats
-                .filter((s) => !splits.find((x) => x.categoryId === s.id))
-                .map((s) => (
+              {subCats.map((s) => {
+                const selected = !!splits.find((x) => x.categoryId === s.id);
+                return (
                   <button
                     key={s.id}
-                    onClick={() => addSplit(s)}
-                    className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[9px] font-extrabold text-foreground border-0 transition-colors"
-                    style={{ background: catColor + '14' }}
+                    onClick={() => selected ? removeSplit(splits.findIndex((x) => x.categoryId === s.id)) : addSplit(s)}
+                    className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
+                    style={{
+                      background: selected ? catColor + '30' : catColor + '14',
+                      borderColor: selected ? catColor : 'transparent',
+                    }}
                   >
                     <StickerIcon icon={s.icon} color={catColor} className="h-3.5 w-3.5" />
                     <span className="leading-tight text-center line-clamp-1">{t.cat(s.name)}</span>
+                    {selected && <span className="text-[8px]" style={{ color: catColor }}>✓</span>}
                   </button>
-                ))}
+                );
+              })}
             </div>
           </div>
         )}
       </div>
 
-      {/* ── Payment method ── */}
-      <div className="px-3 pb-1 flex gap-2 flex-shrink-0">
-        {(['card', 'cash', 'other'] as const).map((m) => {
-          const icons = { card: '💳', cash: '💵', other: '🔄' };
-          const labels = { card: t('expense.card'), cash: t('expense.cash'), other: t('expense.other') };
-          const sel = paymentMethod === m;
-          return (
-            <button
-              key={m}
-              onClick={() => setPaymentMethod(m)}
-              className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-xl text-[11px] font-bold transition-all border"
-              style={{
-                background: sel ? catColor + '18' : 'hsl(var(--card))',
-                borderColor: sel ? catColor : 'transparent',
-                color: sel ? catColor : 'hsl(var(--muted-foreground))',
-              }}
-            >
-              <span>{icons[m]}</span>
-              <span>{labels[m]}</span>
-            </button>
-          );
-        })}
+      {/* ── Payment method + extras ── */}
+      <div className="px-3 pb-1 flex flex-col gap-1.5 flex-shrink-0">
+        {/* Payment method */}
+        <div className="flex gap-2">
+          {(['card', 'cash', 'other'] as const).map((m) => {
+            const icons = { card: '💳', cash: '💵', other: '🔄' };
+            const labels = { card: t('expense.card'), cash: t('expense.cash'), other: t('expense.other') };
+            const sel = paymentMethod === m;
+            return (
+              <button
+                key={m}
+                onClick={() => setPaymentMethod(m)}
+                className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-xl text-[11px] font-bold transition-all border"
+                style={{
+                  background: sel ? catColor + '18' : 'hsl(var(--card))',
+                  borderColor: sel ? catColor : 'transparent',
+                  color: sel ? catColor : 'hsl(var(--muted-foreground))',
+                }}
+              >
+                <span>{icons[m]}</span>
+                <span>{labels[m]}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Extra toggles row */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowComment(!showComment)}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border flex-1"
+            style={{
+              background: showComment ? catColor + '18' : 'hsl(var(--card))',
+              borderColor: showComment ? catColor : 'transparent',
+              color: showComment ? catColor : 'hsl(var(--muted-foreground))',
+            }}
+          >
+            <MessageSquare className="h-3 w-3" />
+            <span>{comment.trim() ? comment.trim().slice(0, 14) + (comment.length > 14 ? '…' : '') : 'Комментарий'}</span>
+          </button>
+          <button
+            onClick={() => setShowDate(!showDate)}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border flex-1"
+            style={{
+              background: showDate ? catColor + '18' : 'hsl(var(--card))',
+              borderColor: showDate ? catColor : 'transparent',
+              color: showDate ? catColor : 'hsl(var(--muted-foreground))',
+            }}
+          >
+            <Calendar className="h-3 w-3" />
+            <span>{dateStr === toDateInput(new Date()) ? 'Сегодня' : dateStr}</span>
+          </button>
+        </div>
+
+        {/* Comment input */}
+        {showComment && (
+          <input
+            type="text"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Заметка к расходу…"
+            className="w-full px-3 py-2 rounded-xl text-sm bg-card border border-border outline-none focus:border-primary transition-colors"
+          />
+        )}
+
+        {/* Date input */}
+        {showDate && (
+          <input
+            type="date"
+            value={dateStr}
+            onChange={(e) => setDateStr(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl text-sm bg-card border border-border outline-none focus:border-primary transition-colors"
+          />
+        )}
       </div>
 
       {/* ── Numpad ── */}
@@ -347,8 +455,8 @@ export function FastExpenseEntry() {
           }}
         >
           <StickerIcon icon={parent?.icon ?? 'box'} color="#fff" className="h-5 w-5" />
-          <span>{saving ? 'Сохранение…' : `Записать чек ${symbol}${total}`}</span>
-          <span className="opacity-75 font-bold text-[13px]">· {posCount} {pluralRu(posCount)}</span>
+          <span>{saving ? 'Сохранение…' : isEdit ? `Сохранить ${symbol}${total}` : `Записать чек ${symbol}${total}`}</span>
+          {!isEdit && <span className="opacity-75 font-bold text-[13px]">· {posCount} {pluralRu(posCount)}</span>}
         </button>
       </div>
     </div>

@@ -205,7 +205,7 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
                   <div className="h-[22px] w-[22px] rounded-[6px] flex items-center justify-center flex-shrink-0" style={{ background: catColor + '28' }}>
                     <StickerIcon icon={sp.icon} color={catColor} className="h-3 w-3" />
                   </div>
-                  <div className="flex-1 min-w-0 text-xs font-bold text-foreground">{sp.name}</div>
+                  <div className="flex-1 min-w-0 text-xs font-bold text-foreground">{t.cat(sp.name)}</div>
                   {isActive ? (
                     <input
                       autoFocus

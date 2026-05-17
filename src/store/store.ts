@@ -11,6 +11,7 @@ import familyReducer from '@/features/family/store/familySlice';
 import budgetReducer from '@/features/budget/store/budgetSlice';
 import quickAddReducer from '@/features/quickadd/store/quickAddSlice';
 import chatReducer from '@/features/chat/store/chatSlice';
+import notificationsReducer from '@/features/notifications/store/notificationsSlice';
 
 export const store = configureStore({
   reducer: {

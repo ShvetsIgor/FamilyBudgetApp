@@ -440,5 +440,6 @@ export function FastExpenseEntry({ initialExpense }: Props) {
         </button>
       </div>
     </div>
+    </div>
   );
 }

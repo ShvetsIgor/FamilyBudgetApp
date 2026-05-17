@@ -56,10 +56,19 @@ export function ChatHeader({ onMenu, onBell }: ChatHeaderProps) {
       </div>
 
       <button
+        onClick={onBell}
         className="relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors"
         style={{ color: C.fg }}
       >
         <Bell size={20} strokeWidth={2} />
+        {unread > 0 && (
+          <span
+            className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-[900] text-white"
+            style={{ background: C.rose, lineHeight: 1 }}
+          >
+            {unread > 9 ? '9+' : unread}
+          </span>
+        )}
       </button>
     </div>
   );

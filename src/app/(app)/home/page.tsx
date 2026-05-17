@@ -322,7 +322,12 @@ export default function HomePage() {
                     amount={d.amount as number}
                     currency={(d.currency as string | undefined) ?? '₪'}
                     chips={d.chips as { id: string; name: string; icon: string; color: string }[]}
-                    onSelectChip={(chip) => handleClarifyChip(d.amount as number, chip)}
+                    onSelectChip={(chip) => handleClarifyChip(
+                      d.amount as number,
+                      chip,
+                      d.parsedDate as string | undefined,
+                      d.parsedDateLabel as string | undefined,
+                    )}
                     onAllCategories={() => {}}
                   />
                 </BotCardBubble>

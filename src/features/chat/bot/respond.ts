@@ -97,9 +97,9 @@ export async function respondToUserMessage(
             data: {
               amount: parsed.amount,
               chips,
-              // Carry date forward so clarify chip can use it
               parsedDate: parsed.date,
               parsedDateLabel: parsed.dateLabel,
+              parsedNote: parsed.note,
             },
           },
           status: 'saved',

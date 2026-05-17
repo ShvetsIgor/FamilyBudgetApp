@@ -47,6 +47,7 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
         categoryId: hit.subId ?? hit.parentId,
         matchedKeyword: emo,
         confidence: 'high',
+        note: rest,
         date,
         dateLabel,
       };
@@ -62,6 +63,7 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
         categoryId: hit.subId ?? hit.parentId,
         matchedKeyword: kw,
         confidence: 'high',
+        note: rest,
         date,
         dateLabel,
       };
@@ -78,6 +80,7 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
         categoryId: hit.subId ?? hit.parentId,
         matchedKeyword: kw,
         confidence: 'medium',
+        note: rest,
         date,
         dateLabel,
       };

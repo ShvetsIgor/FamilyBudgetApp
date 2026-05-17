@@ -102,7 +102,7 @@ export function NotificationsPanel({ onClose }: Props) {
                     className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[11px] text-lg"
                     style={{ background: C.primaryTint + '44' }}
                   >
-                    {n.kind === 'morning' ? '🌅' : n.kind === 'weekly' ? '📊' : '🔔'}
+                    {n.kind === 'morning' ? '🌅' : n.kind === 'weekly' ? '📊' : n.kind === 'family_invite' ? '👨‍👩‍👧' : '🔔'}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="m-0 text-[13.5px] font-[800] leading-tight" style={{ color: C.fg }}>

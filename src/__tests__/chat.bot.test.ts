@@ -7,6 +7,15 @@ import type { Category } from '@/shared/types';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
+vi.mock('@/features/expenses/services/expensesService', () => ({
+  addExpense: vi.fn(),
+}));
+
+vi.mock('@/features/chat/services/messagesService', () => ({
+  addMessage: vi.fn(),
+  updateMessage: vi.fn(),
+}));
+
 const mockExpense = {
   id: 'exp-001',
   userId: 'u1',
@@ -20,15 +29,6 @@ const mockExpense = {
   splits: [],
   createdAt: '2026-05-17T09:14:00.000Z',
 };
-
-vi.mock('@/features/expenses/services/expensesService', () => ({
-  addExpense: vi.fn().mockResolvedValue(mockExpense),
-}));
-
-vi.mock('@/features/chat/services/messagesService', () => ({
-  addMessage: vi.fn().mockImplementation(async (input) => ({ id: 'msg-bot-001', ...input })),
-  updateMessage: vi.fn().mockResolvedValue(undefined),
-}));
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

@@ -27,6 +27,8 @@ function applyKey(cur: string, key: NumKey): string {
 
 export function FastSavingsEntry() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const preselectedGoalId = searchParams.get('goalId');
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
@@ -36,7 +38,7 @@ export function FastSavingsEntry() {
   const symbol = getCurrencySymbol(currency);
 
   const [amount, setAmount] = useState('0');
-  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
+  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(preselectedGoalId);
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {

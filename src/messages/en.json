@@ -443,6 +443,34 @@
     "composer": {
       "placeholder": "Quick note…"
     },
+    "help": {
+      "title": "How to use",
+      "subtitle": "It's simple — just type",
+      "tip1": {
+        "title": "Type amount and what you bought",
+        "desc": "Just write amount and name — the bot figures out the category",
+        "example": "bread 150 · coffee 80 · taxi 350"
+      },
+      "tip2": {
+        "title": "Unknown word? Pick a category",
+        "desc": "If the bot doesn't know the word, it'll ask — pick from the list and it'll remember next time",
+        "example": "rami levy 500 → Supermarket"
+      },
+      "tip3": {
+        "title": "Comment is saved automatically",
+        "desc": "Any word in your message becomes a note on the expense — handy to find it later",
+        "example": "nike sneakers 2000"
+      },
+      "tip4": {
+        "title": "Undo right away",
+        "desc": "Under each saved expense there's an Undo link — tap it and the expense disappears"
+      },
+      "tip5": {
+        "title": "Future expenses",
+        "desc": "Type a future date and the bot will ask if you want to schedule it",
+        "example": "TV 15000 June 20"
+      }
+    },
     "menu": {
       "todaySpent": "spent today",
       "online": "Family online · {n}",

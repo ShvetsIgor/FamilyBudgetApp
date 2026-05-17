@@ -68,7 +68,7 @@ describe('parseMessage с датой', () => {
   });
 
   it('«65 кофе вчера» → dining + yesterday date', () => {
-    const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+    const yesterday = localISO(new Date(Date.now() - 86_400_000));
     const r = parseMessage('65 кофе вчера', noLearned);
     expect(r.amount).toBe(65);
     expect(r.parentId).toBe('dining');

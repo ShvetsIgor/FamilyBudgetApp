@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { X } from 'lucide-react';
+import { X, MessageSquare, Calendar } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { prependIncome } from '@/features/income/store/incomeSlice';
 import { addIncome } from '@/features/income/services/incomeService';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { getCurrencySymbol } from '@/shared/utils/currency';
-import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
+import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 
 const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 'C', 0, '⌫'] as const;
 type NumKey = (typeof NUMPAD_KEYS)[number];
@@ -37,6 +37,10 @@ export function FastIncomeEntry() {
   const [amount, setAmount] = useState('0');
   const [categoryId, setCategoryId] = useState(parentCats[0]?.id ?? '');
   const [method, setMethod] = useState<Method>('card');
+  const [comment, setComment] = useState('');
+  const [showComment, setShowComment] = useState(false);
+  const [dateStr, setDateStr] = useState(toDateInput(new Date()));
+  const [showDate, setShowDate] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const category = allCats.find((c) => c.id === categoryId);
@@ -56,9 +60,10 @@ export function FastIncomeEntry() {
         amount: amountNum,
         currency,
         categoryId,
-        date: new Date(),
+        date: new Date(dateStr),
         method,
         privacy: 'regular',
+        comment: comment.trim() || undefined,
       });
       dispatch(prependIncome(income));
       router.back();
@@ -86,7 +91,20 @@ export function FastIncomeEntry() {
         <div className="flex-1 text-center text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">
           {t('income.addIncome')}
         </div>
-        <div className="w-8" />
+        <button
+          onClick={() => { setShowDate(!showDate); setShowComment(false); }}
+          className="p-1.5 rounded-full transition-colors"
+          style={{ color: showDate ? catColor : 'hsl(var(--muted-foreground))' }}
+        >
+          <Calendar className="h-4 w-4" />
+        </button>
+        <button
+          onClick={() => { setShowComment(!showComment); setShowDate(false); }}
+          className="p-1.5 rounded-full transition-colors"
+          style={{ color: showComment ? catColor : 'hsl(var(--muted-foreground))' }}
+        >
+          <MessageSquare className="h-4 w-4" />
+        </button>
       </div>
 
       {/* ── Amount display ── */}
@@ -105,6 +123,25 @@ export function FastIncomeEntry() {
         </div>
       </div>
 
+      {/* ── Expandable: date / comment ── */}
+      {(showDate || showComment) && (
+        <div className="mx-4 mt-2 flex-shrink-0">
+          {showDate && (
+            <MiniCalendar value={dateStr} onChange={(d) => { setDateStr(d); setShowDate(false); }} color={catColor} />
+          )}
+          {showComment && (
+            <input
+              type="text"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Заметка к доходу…"
+              autoFocus
+              className="block w-full px-3 py-2 rounded-xl text-sm bg-card border border-border outline-none focus:border-primary transition-colors"
+            />
+          )}
+        </div>
+      )}
+
       {/* ── Category grid ── */}
       <div className="overflow-x-auto px-3.5 py-1.5 flex-shrink-0 [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
         <div className="grid grid-rows-2 grid-flow-col gap-1.5" style={{ gridAutoColumns: '64px' }}>
@@ -120,11 +157,7 @@ export function FastIncomeEntry() {
                   boxShadow: sel ? `0 3px 8px ${cat.color}55` : '0 1px 3px rgba(61,44,31,.06)',
                 }}
               >
-                <StickerIcon
-                  icon={cat.icon}
-                  color={sel ? '#fff' : cat.color}
-                  className="h-4 w-4"
-                />
+                <StickerIcon icon={cat.icon} color={sel ? '#fff' : cat.color} className="h-4 w-4" />
                 <span
                   className="text-[8px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
                   style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}
@@ -186,10 +219,7 @@ export function FastIncomeEntry() {
           onClick={handleSave}
           disabled={saving || amountNum <= 0}
           className="w-full py-[12px] rounded-[16px] flex items-center justify-center gap-2 text-[14px] font-black text-white transition-opacity disabled:opacity-50 border-0"
-          style={{
-            background: catColor,
-            boxShadow: `0 12px 24px ${catColor}60`,
-          }}
+          style={{ background: catColor, boxShadow: `0 12px 24px ${catColor}60` }}
         >
           <StickerIcon icon={category?.icon ?? 'trending-up'} color="#fff" className="h-5 w-5" />
           <span>{saving ? t('common.saving') : `${t('income.record')} ${symbol}${amount}`}</span>

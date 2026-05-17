@@ -66,5 +66,44 @@
     "back": "חזור",
     "offline": "לא מחובר",
     "syncing": "מסנכרן..."
+  },
+  "chat": {
+    "header": {
+      "online": "מחובר · מחשב מקומית"
+    },
+    "today": {
+      "budgetLabel": "תקציב להיום",
+      "of": "מתוך",
+      "spent": "הוצא",
+      "spentPct": "כבר {pct}%"
+    },
+    "morning": {
+      "greeting": "בוקר טוב ✨",
+      "yesterdaySpent": "אתמול הוצאת",
+      "freeToday": "חופשי להיום"
+    },
+    "clarify": {
+      "common": "בחירות נפוצות",
+      "all": "כל הקטגוריות",
+      "promise": "תגיד לי — אזכור את המילה הזו לנצח"
+    },
+    "weekly": {
+      "envelopes": "מעטפות",
+      "best": "היום הטוב",
+      "worst": "יום קשה",
+      "often": "לעיתים קרובות"
+    },
+    "envelopes": {
+      "title": "מעטפות",
+      "empty": "אין תקציבים מוגדרים"
+    },
+    "composer": {
+      "placeholder": "רשום מהר…"
+    },
+    "menu": {
+      "todaySpent": "הוצא היום",
+      "online": "משפחה מחוברת · {n}",
+      "onlyYou": "רק אתה"
+    }
   }
 }

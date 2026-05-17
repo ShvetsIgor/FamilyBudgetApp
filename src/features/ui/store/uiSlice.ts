@@ -2,6 +2,11 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { Theme, Language, Currency, WeekStart } from '@/shared/types';
 
 export type { WeekStart };
+export type BudgetMode = 'daily' | 'monthly' | 'auto';
+
+function ls(key: string): string | null {
+  return typeof window !== 'undefined' ? localStorage.getItem(key) : null;
+}
 
 interface UIState {
   theme: Theme;
@@ -11,6 +16,9 @@ interface UIState {
   isOffline: boolean;
   isSyncing: boolean;
   expensesSearch: string;
+  budgetMode: BudgetMode;
+  budgetDailyLimit: number;
+  budgetMonthlyLimit: number;
 }
 
 const initialState: UIState = {
@@ -21,6 +29,9 @@ const initialState: UIState = {
   isOffline: false,
   isSyncing: false,
   expensesSearch: '',
+  budgetMode: (ls('budgetMode') as BudgetMode) ?? 'auto',
+  budgetDailyLimit: Number(ls('budgetDailyLimit')) || 0,
+  budgetMonthlyLimit: Number(ls('budgetMonthlyLimit')) || 0,
 };
 
 const uiSlice = createSlice({

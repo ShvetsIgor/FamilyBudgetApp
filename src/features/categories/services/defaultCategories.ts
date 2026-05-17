@@ -1,14 +1,11 @@
 import type { Category } from '@/shared/types';
 import { TAXONOMY, INCOME_TAXONOMY } from '../icons/icons';
 
-type DefaultCategory = Omit<Category, 'id' | 'userId'>;
-
-function makeKey(name: string) {
-  return `__${name.toLowerCase().replace(/[\s/]+/g, '_')}__`;
-}
+export type DefaultCategory = Omit<Category, 'userId'>;
 
 export const DEFAULT_EXPENSE_CATEGORIES: DefaultCategory[] = TAXONOMY.flatMap((parent, order) => [
   {
+    id:        parent.id,
     name:      parent.name,
     icon:      parent.icon,
     color:     parent.color,
@@ -18,10 +15,11 @@ export const DEFAULT_EXPENSE_CATEGORIES: DefaultCategory[] = TAXONOMY.flatMap((p
     type:      'expense' as const,
   },
   ...parent.subs.map((sub, subOrder) => ({
+    id:        sub.id,
     name:      sub.name,
     icon:      sub.icon,
     color:     parent.color,
-    parentId:  makeKey(parent.name),
+    parentId:  parent.id,
     isPrivate: false,
     order:     subOrder,
     type:      'expense' as const,

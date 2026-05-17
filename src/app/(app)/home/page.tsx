@@ -278,6 +278,7 @@ export default function HomePage() {
   if (!userId) return null;
 
   return (
+    <>
     <ChatScreen onSend={handleSend} disabled={typing}>
       {/* Pinned today hero */}
       <PinnedToday

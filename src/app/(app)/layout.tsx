@@ -22,6 +22,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const recurringStatus = useAppSelector((s) => s.recurring.status);
   const family = useAppSelector((s) => s.family.family);
   const budgetStatus = useAppSelector((s) => s.budget.status);
+  const existingNotifications = useAppSelector((s) => s.notifications.items);
   const router = useRouter();
   const [showOnboarding, setShowOnboarding] = useState(false);
 

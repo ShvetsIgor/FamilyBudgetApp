@@ -319,6 +319,7 @@ export default function HomePage() {
                     amount={d.amount as number}
                     currency={(d.currency as string | undefined) ?? '₪'}
                     chips={d.chips as { id: string; name: string; icon: string; color: string }[]}
+                    unknownNote={d.parsedNote as string | undefined}
                     onSelectChip={(chip) => handleClarifyChip(
                       d.amount as number,
                       chip,

@@ -42,35 +42,20 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
   // Note: use `rest` (already stripped of number + date tokens), capitalize each word
   const origNote = rest.replace(/\b\p{L}/gu, (c) => c.toUpperCase());
 
+  // Shared date fields — only include if defined (Firestore rejects undefined values)
+  const dateFields = date != null ? { date, ...(dateLabel != null ? { dateLabel } : {}) } : {};
+
   // 6. Emoji (highest priority)
   for (const [emo, hit] of Object.entries(EMOJI)) {
     if (rest.includes(emo)) {
-      return {
-        amount,
-        parentId: hit.parentId,
-        categoryId: hit.subId ?? hit.parentId,
-        matchedKeyword: emo,
-        confidence: 'high',
-        note: origNote,
-        date,
-        dateLabel,
-      };
+      return { amount, parentId: hit.parentId, categoryId: hit.subId ?? hit.parentId, matchedKeyword: emo, confidence: 'high', note: origNote, ...dateFields };
     }
   }
 
   // 7. Learned keywords (priority over built-in)
   for (const [kw, hit] of Object.entries(ctx.learned)) {
     if (rest.includes(kw.toLowerCase())) {
-      return {
-        amount,
-        parentId: hit.parentId,
-        categoryId: hit.subId ?? hit.parentId,
-        matchedKeyword: kw,
-        confidence: 'high',
-        note: origNote,
-        date,
-        dateLabel,
-      };
+      return { amount, parentId: hit.parentId, categoryId: hit.subId ?? hit.parentId, matchedKeyword: kw, confidence: 'high', note: origNote, ...dateFields };
     }
   }
 
@@ -78,19 +63,10 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
   const sortedKeywords = Object.entries(KEYWORDS).sort((a, b) => b[0].length - a[0].length);
   for (const [kw, hit] of sortedKeywords) {
     if (rest.includes(kw)) {
-      return {
-        amount,
-        parentId: hit.parentId,
-        categoryId: hit.subId ?? hit.parentId,
-        matchedKeyword: kw,
-        confidence: 'medium',
-        note: origNote,
-        date,
-        dateLabel,
-      };
+      return { amount, parentId: hit.parentId, categoryId: hit.subId ?? hit.parentId, matchedKeyword: kw, confidence: 'medium', note: origNote, ...dateFields };
     }
   }
 
   // 9. Nothing matched → clarify (preserve date + unknown word as note)
-  return { amount, categoryId: null, parentId: null, confidence: 'failed', date, dateLabel, note: origNote };
+  return { amount, categoryId: null, parentId: null, confidence: 'failed', note: origNote, ...dateFields };
 }

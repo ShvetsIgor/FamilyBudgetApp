@@ -51,7 +51,7 @@ export function AddDrawer() {
               return (
                 <button
                   key={t.key}
-                  onClick={() => dispatch(setQuickAddTab(t.key))}
+                  onClick={() => switchTab(t.key)}
                   className="relative px-4 py-2.5 text-sm font-bold transition-colors rounded-t-xl"
                   style={{ color: active ? t.accent : 'hsl(var(--muted-foreground))' }}
                 >

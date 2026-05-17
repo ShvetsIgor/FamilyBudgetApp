@@ -2,6 +2,7 @@
 
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { closeQuickAdd, setQuickAddTab } from '@/features/quickadd/store/quickAddSlice';
 import { cn } from '@/shared/utils/cn';

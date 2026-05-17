@@ -181,7 +181,7 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-extrabold text-foreground">
-                {parent?.name ?? ''}
+                {parent ? t.cat(parent.name) : ''}
                 {splits.length > 0 && <span className="text-xs font-semibold text-muted-foreground ml-1">· общее</span>}
               </div>
               {splits.length > 0 && <div className="text-[10px] text-muted-foreground">остаток после уточнений</div>}

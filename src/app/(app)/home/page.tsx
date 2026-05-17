@@ -206,7 +206,7 @@ export default function HomePage() {
         spent={todaySpent}
         total={dailyBudget}
         currency={currency}
-        dayLabel="Бюджет на сегодня"
+        dayLabel={t('chat.today.budgetLabel')}
       />
 
       {/* Message groups */}

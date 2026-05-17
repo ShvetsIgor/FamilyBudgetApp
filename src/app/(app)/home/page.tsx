@@ -403,5 +403,22 @@ export default function HomePage() {
       {/* Typing indicator */}
       {typing && <Typing />}
     </ChatScreen>
+
+    {/* All categories sheet */}
+    {categorySheet && (
+      <CategorySheet
+        onSelect={(chip) => {
+          handleClarifyChip(
+            categorySheet.amount,
+            chip,
+            categorySheet.parsedDate,
+            categorySheet.parsedDateLabel,
+            categorySheet.parsedNote,
+          );
+          setCategorySheet(null);
+        }}
+        onClose={() => setCategorySheet(null)}
+      />
+    )}
   );
 }

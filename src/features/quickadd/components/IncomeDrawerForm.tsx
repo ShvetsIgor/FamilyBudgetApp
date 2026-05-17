@@ -24,6 +24,7 @@ const AMOUNT_PRESETS = [10000, 25000, 50000, 100000];
 
 export function IncomeDrawerForm({ accent }: { accent: string }) {
   const dispatch = useAppDispatch();
+  const t = useT();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const allCats = useAppSelector((s) => s.categories.income);

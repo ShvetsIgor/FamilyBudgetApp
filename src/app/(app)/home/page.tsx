@@ -60,8 +60,10 @@ export default function HomePage() {
   useChatMessages();
   const learned = useLearnedKeywords();
 
-  // Daily budget from budget slice (avg per day); fallback to zero
-  const monthBudget = useAppSelector((s) => (s.budget as any)?.monthlyLimit ?? 0);
+  // Daily budget = sum of all category limits / 30
+  const monthBudget = useAppSelector((s) =>
+    Object.values(s.budget.limits).reduce((acc, v) => acc + v, 0)
+  );
   const dailyBudget = monthBudget > 0 ? Math.round(monthBudget / 30) : 0;
   const todayStr = new Date().toISOString().slice(0, 10);
   const todaySpent = useAppSelector((s) =>

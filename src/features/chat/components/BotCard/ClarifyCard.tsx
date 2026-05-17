@@ -44,7 +44,7 @@ export function ClarifyCard({ amount, currency, chips, onSelectChip, onAllCatego
             }}
           >
             <StickerIcon icon={chip.icon} color={chip.color} className="h-5 w-5" />
-            {chip.name}
+            {t.cat(chip.name)}
           </button>
         ))}
       </div>

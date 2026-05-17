@@ -1,10 +1,10 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Sun, Moon, WifiOff, RefreshCw, Plus, Bell, Search } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setTheme, setExpensesSearch } from '@/features/ui/store/uiSlice';
+import { openQuickAdd } from '@/features/quickadd/store/quickAddSlice';
 import { useT } from '@/shared/hooks/useT';
 
 const PAGE_TITLE_KEYS: Record<string, string> = {

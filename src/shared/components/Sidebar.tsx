@@ -4,8 +4,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  LayoutDashboard, List, BarChart2, Tag,
-  PiggyBank, Repeat2, Settings,
+  LayoutDashboard, List, BarChart2,
+  PiggyBank, Repeat2,
   LogOut, UserCircle,
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';

@@ -1,0 +1,95 @@
+'use client';
+
+import { useState, useRef, useEffect } from 'react';
+import { Plus, Mic, Send } from 'lucide-react';
+import { C } from '@/features/chat/styles/tokens';
+
+interface ComposerProps {
+  onSend: (text: string) => void;
+  disabled?: boolean;
+}
+
+export function Composer({ onSend, disabled }: ComposerProps) {
+  const [value, setValue] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function handleSend() {
+    const trimmed = value.trim();
+    if (!trimmed || disabled) return;
+    onSend(trimmed);
+    setValue('');
+  }
+
+  function handleKey(e: React.KeyboardEvent) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  }
+
+  const focused = value.length > 0;
+
+  return (
+    <div
+      className="flex-shrink-0 flex items-center gap-2 px-3 pb-3 pt-2.5"
+      style={{ borderTop: `1px solid ${C.hairline}`, background: C.bg }}
+    >
+      {/* + button (placeholder) */}
+      <button
+        className="flex h-[38px] w-[38px] items-center justify-center rounded-xl transition-colors"
+        style={{ color: C.sub }}
+        onClick={() => alert('Скоро: фото чека и голосовой ввод')}
+      >
+        <Plus size={22} strokeWidth={2.2} />
+      </button>
+
+      {/* Input field */}
+      <div
+        className="flex flex-1 items-center gap-2 transition-all"
+        style={{
+          background: C.card,
+          borderRadius: 22,
+          padding: '9px 14px',
+          border: `1.5px solid ${focused ? C.primary : C.hairline}`,
+          minHeight: 40,
+          boxShadow: focused ? `0 0 0 4px ${C.primary}18` : 'none',
+        }}
+      >
+        <input
+          ref={inputRef}
+          type="text"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={handleKey}
+          placeholder="Запиши быстро…"
+          disabled={disabled}
+          className="flex-1 bg-transparent text-[14.5px] font-[700] outline-none"
+          style={{ color: C.fg }}
+        />
+      </div>
+
+      {/* Send / Mic */}
+      {focused ? (
+        <button
+          onClick={handleSend}
+          disabled={disabled}
+          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-0 transition-all active:scale-95 disabled:opacity-50"
+          style={{
+            background: `linear-gradient(135deg, ${C.primary}, ${C.primaryDeep})`,
+            boxShadow: `0 6px 14px ${C.primaryDeep}55`,
+          }}
+        >
+          <Send size={18} color="white" strokeWidth={2.6} />
+        </button>
+      ) : (
+        <button
+          className="flex h-[38px] w-[38px] items-center justify-center rounded-xl transition-colors"
+          style={{ color: C.sub }}
+          onClick={() => alert('Голосовой ввод — скоро')}
+        >
+          <Mic size={22} strokeWidth={2} />
+        </button>
+      )}
+    </div>
+  );
+}

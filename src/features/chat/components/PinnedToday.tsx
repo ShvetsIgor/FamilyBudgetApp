@@ -30,17 +30,16 @@ export function PinnedToday({ spent, total, currency, dayLabel, budgetMode, onSe
   };
 
   return (
-    <div className="sticky top-0 z-10 px-3 pt-2 pb-1" style={{ background: C.bg }}>
+    <div className="sticky top-0 z-10 px-3 pt-2 pb-2" style={{ background: C.bg }}>
       <div
-        className="flex items-center gap-2.5 px-3.5 py-2.5"
         style={{
           borderRadius: RAD.card,
           background: `linear-gradient(135deg, ${C.primary} 0%, ${C.primaryDeep} 110%)`,
           boxShadow: SHADOW.pinned,
-          position: 'relative',
           overflow: 'hidden',
         }}
       >
+      <div className="flex items-center gap-2.5 px-3.5 pt-2.5 pb-2.5">
         {/* decorative circle */}
         <svg style={{ position: 'absolute', top: -18, right: -18, opacity: 0.15, pointerEvents: 'none' }}
           width="80" height="80" viewBox="0 0 80 80">

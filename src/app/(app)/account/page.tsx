@@ -487,7 +487,6 @@ export default function AccountPage() {
             <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#F2CC8F22' }}>🌐</div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-foreground">{t('account.language')}</p>
-              <p className="text-xs font-semibold text-muted-foreground mt-0.5">{LANGUAGES.find((l) => l.value === language)?.label}</p>
             </div>
             <select
               value={language}

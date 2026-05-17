@@ -19,6 +19,8 @@ export interface ParseResult {
   date?: string;
   /** Human-readable date label, e.g. "9 мая" */
   dateLabel?: string;
+  /** Unknown word from the message — saved as expense comment */
+  note?: string;
 }
 
 export interface ChatMessage {

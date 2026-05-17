@@ -92,5 +92,5 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
   }
 
   // 9. Nothing matched → clarify (preserve date + unknown word as note)
-  return { amount, categoryId: null, parentId: null, confidence: 'failed', date, dateLabel, note: rest };
+  return { amount, categoryId: null, parentId: null, confidence: 'failed', date, dateLabel, note: origNote };
 }

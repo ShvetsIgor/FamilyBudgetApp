@@ -2,26 +2,19 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { format, parseISO, isToday, isYesterday, subMonths, startOfMonth } from 'date-fns';
+import { format, parseISO, isToday, isYesterday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setExpenses, removeExpense } from '@/features/expenses/store/expensesSlice';
-import { setIncome, prependIncome, removeIncome, updateIncome as updateIncomeAction } from '@/features/income/store/incomeSlice';
 import { fetchMonthExpenses, deleteExpense } from '@/features/expenses/services/expensesService';
-import { fetchMonthIncome, addIncome, updateIncome, deleteIncome } from '@/features/income/services/incomeService';
 import { ExpenseCard } from '@/features/expenses/components/ExpenseCard';
-import { IncomeCard } from '@/features/income/components/IncomeCard';
 import { UpcomingBills } from '@/features/recurring/components/UpcomingBills';
-import { IncomeForm } from '@/features/income/components/IncomeForm';
 import { formatAmount } from '@/shared/utils/currency';
 import { cn } from '@/shared/utils/cn';
-import type { SerializableExpense, SerializableIncome } from '@/shared/types';
-import type { AddIncomeInput } from '@/features/income/services/incomeService';
+import type { SerializableExpense } from '@/shared/types';
 import { setExpensesSearch } from '@/features/ui/store/uiSlice';
 import { useT } from '@/shared/hooks/useT';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
-
-type Tab = 'expenses' | 'income';
 
 function groupByDate<T extends { date: string }>(items: T[]): [string, T[]][] {
   const map = new Map<string, T[]>();

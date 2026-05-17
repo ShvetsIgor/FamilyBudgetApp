@@ -128,21 +128,21 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
             <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">Категория</span>
             <span className="text-[11px] font-bold" style={{ color: catColor }}>{parent ? t.cat(parent.name) : ''}</span>
           </div>
-          <div className="grid gap-1.5" style={{ gridTemplateColumns: 'repeat(6, 1fr)' }}>
+          <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
             {parentCats.slice(0, 12).map((cat) => {
               const sel = cat.id === parentId;
               return (
                 <button
                   key={cat.id}
                   onClick={() => changeParent(cat.id)}
-                  className="h-[52px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
+                  className="h-[68px] rounded-[12px] flex flex-col items-center justify-center gap-1 transition-all border-0"
                   style={{
                     background: sel ? cat.color : 'hsl(var(--card))',
                     boxShadow: sel ? `0 3px 10px ${cat.color}55` : '0 1px 3px rgba(61,44,31,.06)',
                   }}
                 >
-                  <StickerIcon icon={cat.icon} color={sel ? '#fff' : cat.color} className="h-4 w-4" />
-                  <span className="text-[10px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
+                  <StickerIcon icon={cat.icon} color={sel ? '#fff' : cat.color} className="h-5 w-5" />
+                  <span className="text-[11px] font-extrabold leading-tight text-center px-1 line-clamp-1"
                     style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}>
                     {t.cat(cat.name)}
                   </span>

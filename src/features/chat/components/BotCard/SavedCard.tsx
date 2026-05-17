@@ -15,7 +15,6 @@ interface SavedCardProps {
 }
 
 export function SavedCard({ icon, color, title, hint, amount, currency, alert, onUndo }: SavedCardProps) {
-  const t = useT();
   return (
     <div>
       {/* Main row */}

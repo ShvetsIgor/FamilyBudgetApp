@@ -265,7 +265,7 @@ export function FastExpenseEntry({ initialExpense }: Props) {
               >
                 <StickerIcon icon={cat.icon} color={sel ? '#fff' : cat.color} className="h-4 w-4" />
                 <span
-                  className="text-[13px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
+                  className="text-[9px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
                   style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}
                 >
                   {t.cat(cat.name)}

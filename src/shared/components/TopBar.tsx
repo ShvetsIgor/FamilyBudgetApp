@@ -87,13 +87,13 @@ export function TopBar() {
           {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </button>
 
-        <Link
-          href="/expenses/new"
+        <button
+          onClick={() => dispatch(openQuickAdd({ tab: 'expense' }))}
           className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all shadow-sm shadow-primary/30"
         >
           <Plus className="h-4 w-4" />
           {t('topbar.addTransaction')}
-        </Link>
+        </button>
       </div>
     </header>
   );

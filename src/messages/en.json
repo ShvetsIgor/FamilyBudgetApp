@@ -411,6 +411,11 @@
       "promise": "tell me — I'll remember this word forever",
       "undo": "Undo"
     },
+    "future": {
+      "question": "Is this a future expense?",
+      "yes": "Yes, schedule it",
+      "no": "No, cancel"
+    },
     "weekly": {
       "envelopes": "Envelopes",
       "best": "Best day",

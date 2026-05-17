@@ -59,11 +59,22 @@ function groupByDay(messages: SerializableChatMessage[]): { day: string; items: 
 
 export default function HomePage() {
   const dispatch = useAppDispatch();
+  const t = useT();
   const userId = useAppSelector((s) => s.auth.user?.id);
   const currency = useAppSelector((s) => s.ui.currency) as Currency;
   const messages = useAppSelector((s) => s.chat.messages);
   const typing = useAppSelector((s) => s.chat.typing);
   const state = useAppSelector((s) => s);
+  const language = useAppSelector((s) => s.ui.language);
+
+  const dateFnsLocale = language === 'ru' ? ru : undefined;
+
+  function dayLabel(iso: string): string {
+    const d = parseISO(iso);
+    if (isToday(d)) return t('common.today');
+    if (isYesterday(d)) return t('common.yesterday');
+    return format(d, 'd MMMM', { locale: dateFnsLocale });
+  }
 
   useChatMessages();
   const learned = useLearnedKeywords();

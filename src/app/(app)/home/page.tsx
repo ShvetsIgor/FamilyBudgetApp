@@ -421,5 +421,6 @@ export default function HomePage() {
         onClose={() => setCategorySheet(null)}
       />
     )}
+    </>
   );
 }

@@ -109,7 +109,7 @@ export default function HomePage() {
     const now = new Date();
     const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     fetchMonthExpenses(userId, month)
-      .then((list) => dispatch(setExpenses(list)))
+      .then((list) => dispatch(mergeExpenses(list)))
       .catch(() => {});
   }, [userId, dispatch]);
 

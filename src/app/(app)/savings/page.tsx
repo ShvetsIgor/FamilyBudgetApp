@@ -6,10 +6,9 @@ import { format, parseISO, differenceInDays, differenceInMonths } from 'date-fns
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setGoals, addGoalItem, updateGoalItem, removeGoalItem } from '@/features/savings/store/savingsSlice';
 import {
-  fetchGoals, addGoal, addContribution, deleteGoal,
-  type AddGoalInput,
+  fetchGoals, addContribution, deleteGoal,
 } from '@/features/savings/services/savingsService';
-import { formatAmount, blockInvalidAmountKeys, parseLocalDate } from '@/shared/utils/currency';
+import { formatAmount, blockInvalidAmountKeys } from '@/shared/utils/currency';
 import { addExpense } from '@/features/expenses/services/expensesService';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
 import { addCategory } from '@/features/categories/services/categoriesService';

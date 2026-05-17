@@ -1,3 +1,5 @@
+import { format, parseISO } from 'date-fns';
+import { ru } from 'date-fns/locale';
 import { addExpense } from '@/features/expenses/services/expensesService';
 import { addMessage, updateMessage } from '@/features/chat/services/messagesService';
 import type { SerializableChatMessage, ParseResult } from '@/shared/types/message';
@@ -23,12 +25,17 @@ function makeBotMsg(
   };
 }
 
+function expenseDate(parsed: ParseResult): Date {
+  if (parsed.date) {
+    const d = parseISO(parsed.date);
+    if (!isNaN(d.getTime())) return d;
+  }
+  return new Date();
+}
+
 export interface BotReply {
-  /** Persist to Firestore via addMessage */
   messages: Omit<SerializableChatMessage, 'id'>[];
-  /** If an expense was created, dispatch prependExpense with this */
   expense?: Awaited<ReturnType<typeof addExpense>>;
-  /** If the user message should be updated (expenseId + status) */
   userMsgUpdate?: { messageId: string; expenseId: string };
 }
 
@@ -62,7 +69,13 @@ export async function respondToUserMessage(
           text: clarifyPhrase(parsed.amount, sym),
           card: {
             kind: 'clarify',
-            data: { amount: parsed.amount, chips },
+            data: {
+              amount: parsed.amount,
+              chips,
+              // Carry date forward so clarify chip can use it
+              parsedDate: parsed.date,
+              parsedDateLabel: parsed.dateLabel,
+            },
           },
           status: 'saved',
         }),
@@ -74,6 +87,7 @@ export async function respondToUserMessage(
   const catId = parsed.categoryId!;
   const cat = categoriesById.get(catId);
   const parentCat = parsed.parentId ? categoriesById.get(parsed.parentId) : cat;
+  const date = expenseDate(parsed);
 
   let expense: Awaited<ReturnType<typeof addExpense>> | undefined;
   try {
@@ -81,7 +95,7 @@ export async function respondToUserMessage(
       userId,
       amount: parsed.amount,
       categoryId: catId,
-      date: new Date(),
+      date,
       paymentMethod: 'card',
       tags: [],
       privacy: 'regular',
@@ -94,7 +108,6 @@ export async function respondToUserMessage(
     };
   }
 
-  // Update user message with expenseId
   await updateMessage(userId, userMsg.id, {
     expenseId: expense.id,
     status: 'saved',
@@ -104,6 +117,13 @@ export async function respondToUserMessage(
   const catPath = cat && parentCat && cat.id !== parentCat.id
     ? `${parentCat.name} · ${cat.name}`
     : (parentCat?.name ?? cat?.name ?? '');
+
+  // Show date hint if it's not today
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const isToday = (parsed.date ?? todayStr) === todayStr;
+  const dateHint = !isToday && parsed.date
+    ? format(parseISO(parsed.date), 'd MMMM', { locale: ru })
+    : undefined;
 
   return {
     messages: [
@@ -115,6 +135,7 @@ export async function respondToUserMessage(
             icon: cat?.icon ?? parentCat?.icon ?? 'box',
             color: parentCat?.color ?? '#E07A5F',
             title: catPath,
+            hint: dateHint,
             amount: parsed.amount,
             currency: sym,
           },

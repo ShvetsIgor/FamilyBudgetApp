@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { Plus, Mic, Send } from 'lucide-react';
 import { C } from '@/features/chat/styles/tokens';
+import { useT } from '@/shared/hooks/useT';
 
 interface ComposerProps {
   onSend: (text: string) => void;
@@ -10,15 +11,27 @@ interface ComposerProps {
 }
 
 const COMMANDS = [
-  { cmd: '/баланс', hint: 'конверты за месяц' },
-  { cmd: '/неделя', hint: 'итог недели' },
-  { cmd: '/помощь', hint: 'как пользоваться' },
-];
+  { cmd: '/баланс', tKey: 'chat.envelopes.title' },
+  { cmd: '/неделя', tKey: 'chat.weekly.envelopes' },
+  { cmd: '/помощь', tKey: 'nav.settings' },
+] as const;
+
+const COMMAND_HINTS: Record<string, string> = {
+  '/баланс': 'chat.envelopes.title',
+  '/неделя': 'chat.weekly.envelopes',
+};
 
 export function Composer({ onSend, disabled }: ComposerProps) {
+  const t = useT();
   const [value, setValue] = useState('');
   const [showHints, setShowHints] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const COMMAND_LIST = [
+    { cmd: '/баланс', hint: t('chat.envelopes.title') },
+    { cmd: '/неделя', hint: t('chat.weekly.envelopes') },
+    { cmd: '/помощь', hint: '?' },
+  ];
 
   function handleSend() {
     const trimmed = value.trim();
@@ -46,7 +59,6 @@ export function Composer({ onSend, disabled }: ComposerProps) {
 
   return (
     <div className="flex-shrink-0" style={{ background: C.bg }}>
-      {/* Command hints popup */}
       {showHints && (
         <div
           className="mx-3 mb-2 overflow-hidden rounded-[18px]"
@@ -56,7 +68,7 @@ export function Composer({ onSend, disabled }: ComposerProps) {
             boxShadow: '0 8px 24px rgba(61,44,31,.10)',
           }}
         >
-          {COMMANDS.map(({ cmd, hint }) => (
+          {COMMAND_LIST.map(({ cmd, hint }) => (
             <button
               key={cmd}
               onClick={() => selectCommand(cmd)}
@@ -73,7 +85,6 @@ export function Composer({ onSend, disabled }: ComposerProps) {
         className="flex items-center gap-2 px-3 pb-3 pt-2.5"
         style={{ borderTop: `1px solid ${C.hairline}` }}
       >
-        {/* + button (placeholder) */}
         <button
           className="flex h-[38px] w-[38px] items-center justify-center rounded-xl transition-colors"
           style={{ color: C.sub }}
@@ -82,7 +93,6 @@ export function Composer({ onSend, disabled }: ComposerProps) {
           <Plus size={22} strokeWidth={2.2} />
         </button>
 
-        {/* Input field */}
         <div
           className="flex flex-1 items-center gap-2 transition-all"
           style={{
@@ -100,12 +110,11 @@ export function Composer({ onSend, disabled }: ComposerProps) {
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={handleKey}
-            placeholder="Запиши быстро…"
+            placeholder={t('chat.composer.placeholder')}
             disabled={disabled}
             className="flex-1 bg-transparent text-[14.5px] font-[700] outline-none"
             style={{ color: C.fg }}
           />
-          {/* ? hint button */}
           <button
             onClick={() => setShowHints((v) => !v)}
             className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-[900] transition-all"
@@ -118,7 +127,6 @@ export function Composer({ onSend, disabled }: ComposerProps) {
           </button>
         </div>
 
-        {/* Send / Mic */}
         {focused ? (
           <button
             onClick={handleSend}

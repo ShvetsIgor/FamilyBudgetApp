@@ -236,7 +236,7 @@ export default function HomePage() {
             if (msg.card?.kind === 'morning') {
               return (
                 <BotCardBubble key={msg.id} tail={tail}>
-                  <MorningCard data={msg.card.data} />
+                  <MorningCard data={msg.card.data as MorningCardData} />
                 </BotCardBubble>
               );
             }
@@ -244,7 +244,7 @@ export default function HomePage() {
             if (msg.card?.kind === 'weekly') {
               return (
                 <BotCardBubble key={msg.id} tail={tail}>
-                  <WeeklyCard data={msg.card.data} />
+                  <WeeklyCard data={msg.card.data as WeeklyCardData} />
                 </BotCardBubble>
               );
             }
@@ -252,35 +252,35 @@ export default function HomePage() {
             if (msg.card?.kind === 'envelopes') {
               return (
                 <BotCardBubble key={msg.id} tail={tail}>
-                  <EnvelopesCard data={msg.card.data} />
+                  <EnvelopesCard data={msg.card.data as EnvelopesCardData} />
                 </BotCardBubble>
               );
             }
 
             if (msg.card?.kind === 'saved') {
-              const d = msg.card.data;
+              const d = msg.card.data as Record<string, unknown>;
               return (
                 <BotCardBubble key={msg.id} tail={tail}>
                   <SavedCard
-                    icon={d.icon}
-                    color={d.color}
-                    title={d.title}
-                    amount={d.amount}
-                    currency={d.currency}
+                    icon={d.icon as string}
+                    color={d.color as string}
+                    title={d.title as string}
+                    amount={d.amount as number}
+                    currency={d.currency as string}
                   />
                 </BotCardBubble>
               );
             }
 
             if (msg.card?.kind === 'clarify') {
-              const d = msg.card.data;
+              const d = msg.card.data as Record<string, unknown>;
               return (
                 <BotCardBubble key={msg.id} tail={tail}>
                   <ClarifyCard
-                    amount={d.amount}
-                    currency={d.currency ?? '₪'}
-                    chips={d.chips}
-                    onSelectChip={(chip) => handleClarifyChip(d.amount, chip)}
+                    amount={d.amount as number}
+                    currency={(d.currency as string | undefined) ?? '₪'}
+                    chips={d.chips as { id: string; name: string; icon: string; color: string }[]}
+                    onSelectChip={(chip) => handleClarifyChip(d.amount as number, chip)}
                     onAllCategories={() => {}}
                   />
                 </BotCardBubble>

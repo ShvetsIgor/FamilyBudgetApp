@@ -39,7 +39,8 @@ export async function respondToUserMessage(
   ctx: BotContext
 ): Promise<BotReply> {
   const { userId, currency, categoriesById, topParentIds } = ctx;
-  const sym = currency === 'ILS' ? '₪' : currency === 'USD' ? '$' : currency === 'EUR' ? '€' : currency;
+  const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
+  const sym = symMap[currency] ?? currency;
 
   // ── Case 1: no number at all
   if (parsed.confidence === 'failed' && parsed.amount === 0) {

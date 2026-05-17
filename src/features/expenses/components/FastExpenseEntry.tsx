@@ -233,25 +233,7 @@ export function FastExpenseEntry({ initialExpense }: Props) {
       {(showDate || showComment) && (
         <div className="mx-4 mt-2 flex-shrink-0">
           {showDate && (
-            <div className="flex items-center gap-2 bg-card rounded-xl border border-border px-2 py-1.5">
-              <button
-                onClick={() => {
-                  const d = new Date(dateStr); d.setDate(d.getDate() - 1);
-                  setDateStr(toDateInput(d));
-                }}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-lg font-bold text-muted-foreground hover:bg-muted transition-colors"
-              >‹</button>
-              <div className="flex-1 text-center text-sm font-bold text-foreground">
-                {new Date(dateStr + 'T12:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
-              </div>
-              <button
-                onClick={() => {
-                  const d = new Date(dateStr); d.setDate(d.getDate() + 1);
-                  setDateStr(toDateInput(d));
-                }}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-lg font-bold text-muted-foreground hover:bg-muted transition-colors"
-              >›</button>
-            </div>
+            <MiniCalendar value={dateStr} onChange={(d) => { setDateStr(d); setShowDate(false); }} color={catColor} />
           )}
           {showComment && (
             <input

@@ -111,6 +111,36 @@ export async function respondToUserMessage(
     };
   }
 
+  // ── Case 2.5: future date → ask confirmation
+  if (parsed.date) {
+    const _now = new Date();
+    const todayStr = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-${String(_now.getDate()).padStart(2, '0')}`;
+    if (parsed.date > todayStr) {
+      return {
+        messages: [
+          makeBotMsg(userId, {
+            text: '',
+            card: {
+              kind: 'future',
+              data: {
+                amount: parsed.amount,
+                currency: sym,
+                note: parsed.note,
+                dateLabel: parsed.dateLabel ?? parsed.date,
+                parsedDate: parsed.date,
+                parsedNote: parsed.note,
+                categoryId: parsed.categoryId,
+                parentId: parsed.parentId,
+                userMsgId: userMsg.id,
+              },
+            },
+            status: 'clarifying',
+          }),
+        ],
+      };
+    }
+  }
+
   // ── Case 3: happy path — save expense
   const cat = resolveCategory(parsed.categoryId, categoriesById);
   const catId = cat?.id ?? parsed.categoryId!;

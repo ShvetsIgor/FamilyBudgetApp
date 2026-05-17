@@ -342,8 +342,6 @@ export default function HomePage() {
                         className="text-[11.5px] font-[700] active:opacity-50 transition-opacity"
                         style={{
                           color: '#9CA3AF',
-                          borderBottom: '1.5px dashed #9CA3AF66',
-                          paddingBottom: 1,
                           background: 'none',
                           border: 'none',
                           borderBottom: '1.5px dashed #9CA3AF77',

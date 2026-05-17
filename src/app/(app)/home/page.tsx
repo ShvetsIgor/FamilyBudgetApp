@@ -37,6 +37,7 @@ import { SavedCard } from '@/features/chat/components/BotCard/SavedCard';
 import { ClarifyCard } from '@/features/chat/components/BotCard/ClarifyCard';
 import { MorningCard } from '@/features/chat/components/BotCard/MorningCard';
 import { WeeklyCard } from '@/features/chat/components/BotCard/WeeklyCard';
+import { EnvelopesCard } from '@/features/chat/components/BotCard/EnvelopesCard';
 import { Typing } from '@/features/chat/components/Typing';
 import type { Currency } from '@/shared/types';
 import type { SerializableChatMessage } from '@/shared/types/message';

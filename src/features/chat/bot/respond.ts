@@ -126,6 +126,7 @@ export async function respondToUserMessage(
       privacy: 'regular',
       currency,
       splits: [],
+      ...(parsed.note ? { comment: parsed.note } : {}),
     });
   } catch {
     return {

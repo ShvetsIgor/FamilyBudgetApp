@@ -309,7 +309,16 @@ export default function ExpensesPage() {
                   </div>
                   <div className="divide-y divide-border">
                     {(items as SerializableExpense[]).map((e) => (
-                      <ExpenseCard key={e.id} expense={e} onClick={() => router.push(`/expenses/${e.id}`)} />
+                      <ExpenseCard
+                        key={e.id}
+                        expense={e}
+                        onClick={() => router.push(`/expenses/${e.id}`)}
+                        onEdit={() => router.push(`/expenses/${e.id}/edit`)}
+                        onDelete={async () => {
+                          dispatch(removeExpense(e.id));
+                          try { await deleteExpense(userId!, e); } catch { /* ignore */ }
+                        }}
+                      />
                     ))}
                   </div>
                 </div>

@@ -278,20 +278,8 @@ export default function HomePage() {
               );
             }
 
-            if (msg.card?.kind === 'morning') {
-              return (
-                <BotCardBubble key={msg.id} tail={tail}>
-                  <MorningCard data={msg.card.data as MorningCardData} />
-                </BotCardBubble>
-              );
-            }
-
-            if (msg.card?.kind === 'weekly') {
-              return (
-                <BotCardBubble key={msg.id} tail={tail}>
-                  <WeeklyCard data={msg.card.data as WeeklyCardData} />
-                </BotCardBubble>
-              );
+            if (msg.card?.kind === 'morning' || msg.card?.kind === 'weekly') {
+              return null;
             }
 
             if (msg.card?.kind === 'envelopes') {

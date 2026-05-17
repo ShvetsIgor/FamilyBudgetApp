@@ -38,6 +38,7 @@ import { DateChip } from '@/features/chat/components/DateChip';
 import { BotBubble, BotCardBubble } from '@/features/chat/components/BotBubble';
 import { UserBubble } from '@/features/chat/components/UserBubble';
 import { SavedCard } from '@/features/chat/components/BotCard/SavedCard';
+import { FutureCard } from '@/features/chat/components/BotCard/FutureCard';
 import { ClarifyCard } from '@/features/chat/components/BotCard/ClarifyCard';
 import { MorningCard } from '@/features/chat/components/BotCard/MorningCard';
 import { WeeklyCard } from '@/features/chat/components/BotCard/WeeklyCard';

@@ -28,7 +28,7 @@ export const DEFAULT_EXPENSE_CATEGORIES: DefaultCategory[] = TAXONOMY.flatMap((p
 
 // Savings special category (no subs)
 DEFAULT_EXPENSE_CATEGORIES.push({
-  name: 'Savings', icon: 'piggy', color: '#81B29A',
+  id: 'savings', name: 'Savings', icon: 'piggy', color: '#81B29A',
   parentId: undefined, isPrivate: false, order: 98, type: 'expense',
 });
 

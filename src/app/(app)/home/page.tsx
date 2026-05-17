@@ -301,12 +301,18 @@ export default function HomePage() {
 
             if (msg.card?.kind === 'saved') {
               const d = msg.card.data as Record<string, unknown>;
+              const parentName = d.parentName as string | null | undefined;
+              const catName = d.catName as string | null | undefined;
+              const translatedTitle = parentName && catName && catName !== parentName
+                ? `${t.cat(parentName)} · ${t.cat(catName)}`
+                : parentName ? t.cat(parentName) : catName ? t.cat(catName) : (d.title as string);
               return (
                 <BotCardBubble key={msg.id} tail={tail}>
                   <SavedCard
                     icon={d.icon as string}
                     color={d.color as string}
-                    title={d.title as string}
+                    title={translatedTitle}
+                    hint={d.hint as string | undefined}
                     amount={d.amount as number}
                     currency={d.currency as string}
                   />

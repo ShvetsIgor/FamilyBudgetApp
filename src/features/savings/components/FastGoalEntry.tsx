@@ -238,5 +238,6 @@ export function FastGoalEntry() {
         </button>
       </div>
     </div>
+    </div>
   );
 }

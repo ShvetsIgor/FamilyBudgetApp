@@ -227,6 +227,7 @@ export default function HomePage() {
         confidence: 'high',
         date: parsedDate,
         dateLabel: parsedDateLabel,
+        note: parsedNote,
       };
 
       const reply = await respondToUserMessage(userMsg, parsed, enrichedCtx);

@@ -140,6 +140,9 @@ export default function HomePage() {
 
   const sendingRef = useRef(false);
 
+  type ClarifyContext = { amount: number; parsedDate?: string; parsedDateLabel?: string; parsedNote?: string };
+  const [categorySheet, setCategorySheet] = useState<ClarifyContext | null>(null);
+
   const buildEnrichedCtx = useCallback(() => {
     const ctx = collectBotContext(state);
     if (!ctx) return null;

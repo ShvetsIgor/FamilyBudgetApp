@@ -353,7 +353,9 @@
     "enable": "Enable notifications",
     "enabled": "✓ Notifications enabled",
     "denied": "Access denied in browser settings",
-    "unsupported": "Browser does not support notifications"
+    "unsupported": "Browser does not support notifications",
+    "empty": "All quiet here",
+    "clear": "Clear all"
   },
   "export": {
     "title": "Export Data",

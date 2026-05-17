@@ -386,80 +386,28 @@ export function FastExpenseEntry({ initialExpense }: Props) {
         )}
       </div>
 
-      {/* ── Payment method + extras ── */}
-      <div className="px-3 pb-1 flex flex-col gap-1.5 flex-shrink-0">
-        {/* Payment method */}
-        <div className="flex gap-2">
-          {(['card', 'cash', 'other'] as const).map((m) => {
-            const icons = { card: '💳', cash: '💵', other: '🔄' };
-            const labels = { card: t('expense.card'), cash: t('expense.cash'), other: t('expense.other') };
-            const sel = paymentMethod === m;
-            return (
-              <button
-                key={m}
-                onClick={() => setPaymentMethod(m)}
-                className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-xl text-[11px] font-bold transition-all border"
-                style={{
-                  background: sel ? catColor + '18' : 'hsl(var(--card))',
-                  borderColor: sel ? catColor : 'transparent',
-                  color: sel ? catColor : 'hsl(var(--muted-foreground))',
-                }}
-              >
-                <span>{icons[m]}</span>
-                <span>{labels[m]}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Extra toggles row */}
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowComment(!showComment)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border flex-1"
-            style={{
-              background: showComment ? catColor + '18' : 'hsl(var(--card))',
-              borderColor: showComment ? catColor : 'transparent',
-              color: showComment ? catColor : 'hsl(var(--muted-foreground))',
-            }}
-          >
-            <MessageSquare className="h-3 w-3" />
-            <span>{comment.trim() ? comment.trim().slice(0, 14) + (comment.length > 14 ? '…' : '') : 'Комментарий'}</span>
-          </button>
-          <button
-            onClick={() => setShowDate(!showDate)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border flex-1"
-            style={{
-              background: showDate ? catColor + '18' : 'hsl(var(--card))',
-              borderColor: showDate ? catColor : 'transparent',
-              color: showDate ? catColor : 'hsl(var(--muted-foreground))',
-            }}
-          >
-            <Calendar className="h-3 w-3" />
-            <span>{dateStr === toDateInput(new Date()) ? 'Сегодня' : dateStr}</span>
-          </button>
-        </div>
-
-        {/* Comment input */}
-        {showComment && (
-          <input
-            type="text"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Заметка к расходу…"
-            className="w-full px-3 py-2 rounded-xl text-sm bg-card border border-border outline-none focus:border-primary transition-colors"
-          />
-        )}
-
-        {/* Date input */}
-        {showDate && (
-          <input
-            type="date"
-            value={dateStr}
-            onChange={(e) => setDateStr(e.target.value)}
-            className="w-full px-3 py-2 rounded-xl text-sm bg-card border border-border outline-none focus:border-primary transition-colors"
-          />
-        )}
+      {/* ── Payment method ── */}
+      <div className="px-3 pb-1 flex gap-2 flex-shrink-0">
+        {(['card', 'cash', 'other'] as const).map((m) => {
+          const icons = { card: '💳', cash: '💵', other: '🔄' };
+          const labels = { card: t('expense.card'), cash: t('expense.cash'), other: t('expense.other') };
+          const sel = paymentMethod === m;
+          return (
+            <button
+              key={m}
+              onClick={() => setPaymentMethod(m)}
+              className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-xl text-[11px] font-bold transition-all border"
+              style={{
+                background: sel ? catColor + '18' : 'hsl(var(--card))',
+                borderColor: sel ? catColor : 'transparent',
+                color: sel ? catColor : 'hsl(var(--muted-foreground))',
+              }}
+            >
+              <span>{icons[m]}</span>
+              <span>{labels[m]}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* ── Numpad ── */}

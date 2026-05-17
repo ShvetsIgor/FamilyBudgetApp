@@ -126,7 +126,7 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
         <div>
           <div className="flex items-center justify-between mb-1.5 px-0.5">
             <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">Категория</span>
-            <span className="text-[11px] font-bold" style={{ color: catColor }}>{parent?.name ?? ''}</span>
+            <span className="text-[11px] font-bold" style={{ color: catColor }}>{parent ? t.cat(parent.name) : ''}</span>
           </div>
           <div className="grid gap-1.5" style={{ gridTemplateColumns: 'repeat(6, 1fr)' }}>
             {parentCats.slice(0, 12).map((cat) => {

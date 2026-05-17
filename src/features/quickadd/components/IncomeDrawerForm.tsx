@@ -10,6 +10,7 @@ import { addIncome } from '@/features/income/services/incomeService';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
+import { useT } from '@/shared/hooks/useT';
 import { cn } from '@/shared/utils/cn';
 
 const INCOME_METHODS = [

@@ -57,7 +57,7 @@ export function NotificationsPanel({ onClose }: Props) {
               <button
                 onClick={() => dispatch(clearNotifications())}
                 className="text-[11px] font-[700] px-2 py-1 rounded-lg"
-                style={{ color: C.sub, background: C.muted }}
+                style={{ color: C.sub, background: C.card }}
               >
                 {t('notifications.clear')}
               </button>
@@ -65,7 +65,7 @@ export function NotificationsPanel({ onClose }: Props) {
             <button
               onClick={() => { handleOpen(); onClose(); }}
               className="flex h-7 w-7 items-center justify-center rounded-full"
-              style={{ background: C.muted, color: C.sub }}
+              style={{ background: C.card, color: C.sub }}
             >
               <X size={14} strokeWidth={2.5} />
             </button>

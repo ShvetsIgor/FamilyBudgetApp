@@ -33,6 +33,12 @@ const expensesSlice = createSlice({
     removeExpense(state, action: PayloadAction<string>) {
       state.list = state.list.filter((e) => e.id !== action.payload);
     },
+    mergeExpenses(state, action: PayloadAction<SerializableExpense[]>) {
+      const existing = new Set(state.list.map((e) => e.id));
+      const fresh = action.payload.filter((e) => !existing.has(e.id));
+      state.list = [...action.payload, ...state.list.filter((e) => !action.payload.find((f) => f.id === e.id))];
+      state.status = 'ready';
+    },
     setStatus(state, action: PayloadAction<ExpensesState['status']>) {
       state.status = action.payload;
     },

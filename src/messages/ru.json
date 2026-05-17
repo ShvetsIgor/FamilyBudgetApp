@@ -1,6 +1,7 @@
 {
   "nav": {
     "chat": "Чат",
+    "notifications": "Уведомления",
     "add": "Добавить",
     "overview": "Обзор",
     "transactions": "Транзакции",

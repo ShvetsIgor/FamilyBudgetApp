@@ -18,7 +18,13 @@ const TABS = [
 
 export function AddDrawer() {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const { open, tab } = useAppSelector((s) => s.quickAdd);
+
+  function switchTab(key: typeof tab) {
+    dispatch(setQuickAddTab(key));
+    router.push(key === 'savings' ? '/savings' : '/expenses');
+  }
 
   const accent = TABS.find((t) => t.key === tab)?.accent ?? '#E07A5F';
 

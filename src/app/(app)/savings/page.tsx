@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { format, parseISO, differenceInDays, differenceInMonths } from 'date-fns';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setGoals, addGoalItem, updateGoalItem, removeGoalItem } from '@/features/savings/store/savingsSlice';
@@ -20,10 +21,11 @@ import type { SavingsGoal, Currency } from '@/shared/types';
 const GOAL_ICONS = ['🎯', '🏠', '🚗', '✈️', '💻', '📱', '👶', '💍', '🎓', '🏖️', '💰', '🛋️'];
 const GOAL_COLORS = ['#6366f1', '#f97316', '#10b981', '#3b82f6', '#ec4899', '#eab308', '#8b5cf6', '#06b6d4'];
 
-type Mode = 'list' | 'add' | { goal: SavingsGoal; action: 'contribute' | 'detail' };
+type Mode = 'list' | { goal: SavingsGoal; action: 'contribute' | 'detail' };
 
 export default function SavingsPage() {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const { list, status } = useAppSelector((s) => s.savings);
@@ -38,12 +40,6 @@ export default function SavingsPage() {
   }, [user, dispatch]);
 
   useEffect(() => { if (status === 'idle') load(); }, [status, load]);
-
-  async function handleAddGoal(data: Omit<AddGoalInput, 'userId'>) {
-    if (!user) return;
-    dispatch(addGoalItem(await addGoal({ ...data, userId: user.id })));
-    setMode('list');
-  }
 
   async function handleContribute(goal: SavingsGoal, amount: number, note: string, recordAsExpense: boolean, expenseCategoryId: string) {
     if (!user) return;
@@ -74,20 +70,9 @@ export default function SavingsPage() {
   }
 
   const totalSaved = list.reduce((s, g) => s + g.currentAmount, 0);
-  const panelOpen = mode !== 'list';
 
   // ── Right panel content ──────────────────────────────────────────────────────
   function RightPanel() {
-    if (mode === 'add') return (
-      <div className="rounded-2xl border border-border bg-card overflow-hidden">
-        <div className="border-b border-border px-4 py-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold">{t('savings.newGoal')}</h2>
-          <button onClick={() => setMode('list')} className="text-muted-foreground text-xs hover:text-foreground">✕</button>
-        </div>
-        <GoalForm currency={currency} onSave={handleAddGoal} onCancel={() => setMode('list')} t={t} />
-      </div>
-    );
-
     if (typeof mode === 'object' && mode.action === 'contribute') return (
       <div className="rounded-2xl border border-border bg-card overflow-hidden">
         <div className="border-b border-border px-4 py-3 flex items-center justify-between">
@@ -179,7 +164,7 @@ export default function SavingsPage() {
         <p className="text-3xl">🎯</p>
         <p className="text-sm text-muted-foreground">{t('savings.selectGoal')}</p>
         <button
-          onClick={() => setMode('add')}
+          onClick={() => router.push('/savings/new')}
           className="mt-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
         >
           + {t('savings.add')}
@@ -210,7 +195,7 @@ export default function SavingsPage() {
           <p className="font-medium">{t('savings.noGoals')}</p>
           <p className="text-sm text-muted-foreground mt-1 mb-6">{t('savings.noGoalsHint')}</p>
           <button
-            onClick={() => setMode('add')}
+            onClick={() => router.push('/savings/new')}
             className="rounded-2xl bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold"
           >
             + {t('savings.add')}
@@ -220,7 +205,7 @@ export default function SavingsPage() {
 
       {list.length > 0 && (
         <button
-          onClick={() => setMode('add')}
+          onClick={() => router.push('/savings/new')}
           className="w-full rounded-2xl border-2 border-dashed border-primary/40 py-3 text-sm font-semibold text-primary/70 hover:border-primary hover:text-primary transition-colors"
         >
           + {t('savings.add')}
@@ -237,29 +222,31 @@ export default function SavingsPage() {
               key={goal.id}
               onClick={() => setMode({ goal, action: 'detail' })}
               className={cn(
-                'rounded-2xl border bg-card p-4 text-left hover:bg-muted/30 transition-colors',
-                isSelected ? 'border-primary' : 'border-border'
+                'rounded-[20px] bg-card shadow text-left transition-colors',
+                isSelected ? 'ring-2 ring-primary' : 'hover:bg-muted/30'
               )}
             >
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-3xl">{goal.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate">{goal.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatAmount(goal.currentAmount, goal.currency)} / {formatAmount(goal.targetAmount, goal.currency)}
-                  </p>
+              <div className="p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-3xl">{goal.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold truncate">{goal.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatAmount(goal.currentAmount, goal.currency)} / {formatAmount(goal.targetAmount, goal.currency)}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-lg font-bold tabular-nums" style={{ color: done ? '#10b981' : goal.color }}>{pct.toFixed(0)}%</p>
+                    {done && <p className="text-xs text-emerald-500">{t('savings.done')}</p>}
+                  </div>
                 </div>
-                <div className="text-right shrink-0">
-                  <p className="text-lg font-bold" style={{ color: done ? '#10b981' : goal.color }}>{pct.toFixed(0)}%</p>
-                  {done && <p className="text-xs text-emerald-500">{t('savings.done')}</p>}
+                <div className="h-2 rounded-full bg-muted overflow-hidden">
+                  <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: goal.color }} />
                 </div>
+                {goal.deadline && !done && (
+                  <p className="text-xs text-muted-foreground mt-2">{format(parseISO(goal.deadline), 'MMM d, yyyy')}</p>
+                )}
               </div>
-              <div className="h-2 rounded-full bg-muted overflow-hidden">
-                <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: goal.color }} />
-              </div>
-              {goal.deadline && !done && (
-                <p className="text-xs text-muted-foreground mt-2">{format(parseISO(goal.deadline), 'MMM d, yyyy')}</p>
-              )}
             </button>
           );
         })}
@@ -275,7 +262,7 @@ export default function SavingsPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold">{t('savings.title')}</h1>
           {mode === 'list' && (
-            <button onClick={() => setMode('add')} className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-medium">
+            <button onClick={() => router.push('/savings/new')} className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-medium">
               {t('savings.add')}
             </button>
           )}
@@ -286,9 +273,6 @@ export default function SavingsPage() {
 
         {mode === 'list' && listContent}
 
-        {mode === 'add' && (
-          <GoalForm currency={currency} onSave={handleAddGoal} onCancel={() => setMode('list')} t={t} />
-        )}
         {typeof mode === 'object' && mode.action === 'contribute' && (
           <ContributeForm
             goal={mode.goal} currency={currency}
@@ -305,7 +289,8 @@ export default function SavingsPage() {
           const done = pct >= 100;
           return (
             <div className="flex flex-col gap-4">
-              <div className="rounded-2xl border border-border bg-card p-6 flex flex-col items-center gap-3">
+              {/* Goal detail card */}
+              <div className="rounded-[20px] bg-card shadow p-6 flex flex-col items-center gap-3">
                 <div className="text-5xl">{goal.icon}</div>
                 <h2 className="text-xl font-bold">{goal.name}</h2>
                 <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
@@ -331,7 +316,7 @@ export default function SavingsPage() {
                 {t('savings.addContribution')}
               </button>
               {goal.contributions.length > 0 && (
-                <div className="rounded-2xl border border-border bg-card overflow-hidden">
+                <div className="rounded-[20px] bg-card shadow overflow-hidden">
                   <p className="px-4 pt-3 pb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('savings.history')}</p>
                   <div className="divide-y divide-border">
                     {[...goal.contributions].reverse().map((c, i) => (
@@ -359,7 +344,7 @@ export default function SavingsPage() {
         <div className="col-span-2 flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold">{t('savings.title')}</h1>
-            <button onClick={() => setMode('add')} className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-medium">
+            <button onClick={() => router.push('/savings/new')} className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-medium">
               {t('savings.add')}
             </button>
           </div>

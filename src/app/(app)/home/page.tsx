@@ -39,15 +39,9 @@ import { MorningCard } from '@/features/chat/components/BotCard/MorningCard';
 import { WeeklyCard } from '@/features/chat/components/BotCard/WeeklyCard';
 import { EnvelopesCard } from '@/features/chat/components/BotCard/EnvelopesCard';
 import { Typing } from '@/features/chat/components/Typing';
+import { useT } from '@/shared/hooks/useT';
 import type { Currency } from '@/shared/types';
 import type { SerializableChatMessage } from '@/shared/types/message';
-
-function dayLabel(iso: string): string {
-  const d = parseISO(iso);
-  if (isToday(d)) return 'Сегодня';
-  if (isYesterday(d)) return 'Вчера';
-  return format(d, 'd MMMM', { locale: ru });
-}
 
 function msgTime(iso: string): string {
   return format(parseISO(iso), 'HH:mm');

@@ -89,7 +89,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
         <div>
           <div className="flex items-center justify-between mb-1.5 px-0.5">
             <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">Источник</span>
-            <span className="text-[11px] font-bold" style={{ color: catColor }}>{selectedCat?.name ?? ''}</span>
+            <span className="text-[11px] font-bold" style={{ color: catColor }}>{selectedCat ? t.cat(selectedCat.name) : ''}</span>
           </div>
           <div className="grid gap-1.5" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
             {parentCats.slice(0, 8).map((cat, i) => {

@@ -20,6 +20,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { icon: 'piggy',    color: '#E07A5F', labelKey: 'nav.chat',        href: '/home'       },
   { icon: 'receipt',  color: '#8AA9D6', labelKey: 'nav.expenses',    href: '/expenses'   },
+  { icon: 'cash',     color: '#81B29A', labelKey: 'nav.income',      href: '/income/new' },
   { icon: 'chart_up', color: '#E07A5F', labelKey: 'nav.statistics',  href: '/statistics' },
   { icon: 'chart_up', color: '#81B29A', labelKey: 'nav.analytics',   href: '/analytics'  },
   { icon: 'piggy',    color: '#A48BC9', labelKey: 'nav.savings',     href: '/savings'    },

@@ -166,6 +166,8 @@ export async function respondToUserMessage(
             hint: dateHint,
             amount: parsed.amount,
             currency: sym,
+            expenseId: expense.id,
+            userMsgId: userMsg.id,
           },
         },
         status: 'saved',

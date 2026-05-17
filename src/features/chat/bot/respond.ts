@@ -61,6 +61,91 @@ function expenseDate(parsed: ParseResult): Date {
   return new Date();
 }
 
+export interface FutureCardData {
+  amount: number;
+  currency: string;
+  note?: string;
+  dateLabel: string;
+  parsedDate: string;
+  parsedNote?: string;
+  categoryId: string | null;
+  parentId: string | null;
+  userMsgId: string;
+}
+
+export async function confirmFutureExpense(
+  data: FutureCardData,
+  botMsgId: string,
+  ctx: BotContext
+): Promise<BotReply & { expense: Awaited<ReturnType<typeof addExpense>> | undefined }> {
+  const { userId, currency, categoriesById } = ctx;
+  const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
+  const sym = symMap[currency] ?? currency;
+
+  const cat = resolveCategory(data.categoryId, categoriesById);
+  const catId = cat?.id ?? data.categoryId!;
+  const parentCat = resolveCategory(data.parentId, categoriesById) ?? cat;
+
+  const parts = data.parsedDate.split('-').map(Number);
+  const date = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
+
+  let expense: Awaited<ReturnType<typeof addExpense>> | undefined;
+  try {
+    expense = await addExpense({
+      userId,
+      amount: data.amount,
+      categoryId: catId,
+      date,
+      paymentMethod: 'card',
+      tags: ['planned'],
+      privacy: 'regular',
+      currency,
+      splits: [],
+      ...(data.parsedNote ? { comment: data.parsedNote } : {}),
+    });
+  } catch {
+    return {
+      messages: [makeBotMsg(userId, { text: 'Не удалось сохранить 😔 Попробуй ещё раз' })],
+      expense: undefined,
+    };
+  }
+
+  await updateMessage(userId, data.userMsgId, { expenseId: expense.id, status: 'saved' });
+  await updateMessage(userId, botMsgId, { status: 'saved' });
+
+  const savedText = `${savedPhrase()} · ${sym}${data.amount}`;
+  const catPath = cat && parentCat && cat.id !== parentCat.id
+    ? `${parentCat.name} · ${cat.name}`
+    : (parentCat?.name ?? cat?.name ?? '');
+
+  const dateHint = format(parseISO(data.parsedDate), 'd MMMM', { locale: ru });
+
+  return {
+    messages: [
+      makeBotMsg(userId, {
+        text: savedText,
+        card: {
+          kind: 'saved',
+          data: {
+            icon: cat?.icon ?? parentCat?.icon ?? 'box',
+            color: parentCat?.color ?? '#E07A5F',
+            title: catPath,
+            catName: cat?.name ?? null,
+            parentName: parentCat?.name ?? null,
+            hint: dateHint,
+            amount: data.amount,
+            currency: sym,
+            expenseId: expense.id,
+            userMsgId: data.userMsgId,
+          },
+        },
+        status: 'saved',
+      }),
+    ],
+    expense,
+  };
+}
+
 export interface BotReply {
   messages: Omit<SerializableChatMessage, 'id'>[];
   expense?: Awaited<ReturnType<typeof addExpense>>;

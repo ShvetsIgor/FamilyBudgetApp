@@ -26,7 +26,7 @@ export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
   const currency = useAppSelector((s) => s.ui.currency);
   const t = useT();
   const [expanded, setExpanded] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const category = allCategories.find((c) => c.id === expense.categoryId);
   // Show parent category name as subtitle

@@ -98,7 +98,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
                 <button
                   key={cat.id}
                   onClick={() => setCategoryId(cat.id)}
-                  className="h-[52px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0 relative"
+                  className="h-[68px] rounded-[12px] flex flex-col items-center justify-center gap-1 transition-all border-0 relative"
                   style={{
                     background: sel ? cat.color : 'hsl(var(--card))',
                     boxShadow: sel ? `0 3px 10px ${cat.color}55` : '0 1px 3px rgba(61,44,31,.06)',

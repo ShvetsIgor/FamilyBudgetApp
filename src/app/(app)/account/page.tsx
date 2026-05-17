@@ -503,7 +503,6 @@ export default function AccountPage() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-foreground">{t('account.currency')}</p>
-              <p className="text-xs font-semibold text-muted-foreground mt-0.5">{CURRENCIES.find((c) => c.value === currency)?.label}</p>
             </div>
             <select
               value={currency}

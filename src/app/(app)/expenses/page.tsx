@@ -316,7 +316,7 @@ export default function ExpensesPage() {
                         onEdit={() => router.push(`/expenses/${e.id}/edit`)}
                         onDelete={async () => {
                           dispatch(removeExpense(e.id));
-                          try { await deleteExpense(userId!, e); } catch { /* ignore */ }
+                          try { await deleteExpense(user.id, e); } catch { /* ignore */ }
                         }}
                       />
                     ))}

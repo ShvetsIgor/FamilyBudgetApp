@@ -7,6 +7,7 @@ import { setRecurring } from '@/features/recurring/store/recurringSlice';
 import { fetchRecurring } from '@/features/recurring/services/recurringService';
 import { setFamily, setMembers, setPendingInvite } from '@/features/family/store/familySlice';
 import { setBudgets } from '@/features/budget/store/budgetSlice';
+import { addNotification } from '@/features/notifications/store/notificationsSlice';
 import { fetchBudgets } from '@/features/budget/services/budgetService';
 import { fetchFamily, fetchFamilyMembers, fetchPendingInvite } from '@/features/family/services/familyService';
 import { AppShell } from '@/shared/components/AppShell';

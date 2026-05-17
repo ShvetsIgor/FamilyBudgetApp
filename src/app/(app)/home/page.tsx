@@ -16,7 +16,8 @@ import { saveLearnedKeyword } from '@/features/chat/parser/learning';
 import { deleteExpense, fetchMonthExpenses } from '@/features/expenses/services/expensesService';
 import { deleteMessageAndExpense } from '@/features/chat/services/messagesService';
 import { collectBotContext } from '@/features/chat/bot/context';
-import { respondToUserMessage } from '@/features/chat/bot/respond';
+import { respondToUserMessage, confirmFutureExpense } from '@/features/chat/bot/respond';
+import type { FutureCardData } from '@/features/chat/bot/respond';
 import { addMessage } from '@/features/chat/services/messagesService';
 import {
   shouldSendMorningGreeting,

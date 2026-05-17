@@ -53,29 +53,22 @@ export default function ExpensesPage() {
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const { list: reduxExpenses, status: expStatus } = useAppSelector((s) => s.expenses);
-  const { list: reduxIncomes, status: incStatus } = useAppSelector((s) => s.income);
   const categories = useAppSelector((s) => s.categories.expense);
   const searchParams = useSearchParams();
 
   const currentMonth = format(new Date(), 'yyyy-MM');
   const yearMonths = getYearMonths();
 
-  const [tab, setTab] = useState<Tab>(searchParams.get('tab') === 'income' ? 'income' : 'expenses');
-  const [showIncomeForm, setShowIncomeForm] = useState(searchParams.get('tab') === 'income');
-  const [editingIncome, setEditingIncome] = useState<SerializableIncome | null>(null);
   const [loading, setLoading] = useState(false);
   const search = useAppSelector((s) => s.ui.expensesSearch);
   const [filterCatId, setFilterCatId] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
-  // Local data for non-current months; current month synced with Redux
   const [localExpenses, setLocalExpenses] = useState<SerializableExpense[] | null>(null);
-  const [localIncomes, setLocalIncomes] = useState<SerializableIncome[] | null>(null);
   const monthBarRef = useRef<HTMLDivElement>(null);
   const t = useT();
 
   const isCurrentMonth = selectedMonth === currentMonth;
   const expenses = isCurrentMonth ? reduxExpenses : (localExpenses ?? []);
-  const incomes = isCurrentMonth ? reduxIncomes : (localIncomes ?? []);
 
   // Load current month into Redux (once)
   const loadCurrentExpenses = useCallback(async () => {

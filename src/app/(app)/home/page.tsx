@@ -245,6 +245,25 @@ export default function HomePage() {
     }
   }, [userId, buildEnrichedCtx, dispatch]);
 
+  const handleUndo = useCallback(async (
+    botMsgId: string,
+    userMsgId: string,
+    expenseId: string,
+  ) => {
+    if (!userId) return;
+    // Remove from Redux immediately
+    dispatch(removeMessage(botMsgId));
+    dispatch(removeMessage(userMsgId));
+    const expense = allExpenses.find((e) => e.id === expenseId);
+    if (expense) dispatch(removeExpense(expenseId));
+    // Delete from Firestore
+    try {
+      await deleteMessageAndExpense(userId, botMsgId);
+      await deleteMessageAndExpense(userId, userMsgId);
+      if (expense) await deleteExpense(userId, expense);
+    } catch { /* ignore */ }
+  }, [userId, allExpenses, dispatch]);
+
   const groups = groupByDay(messages);
 
   if (!userId) return null;

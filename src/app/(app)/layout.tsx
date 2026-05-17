@@ -51,7 +51,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       });
     }
     if (!user.familyId) {
-      fetchPendingInvite(user.email).then((invite) => dispatch(setPendingInvite(invite)));
+      fetchPendingInvite(user.email).then((invite) => {
+        dispatch(setPendingInvite(invite));
+        if (invite) {
+          const alreadyNotified = existingNotifications.some((n) => n.kind === 'family_invite');
+          if (!alreadyNotified) {
+            dispatch(addNotification({
+              kind: 'family_invite',
+              title: 'Приглашение в семью',
+              text: 'Вас пригласили присоединиться к семейному бюджету. Перейдите в Настройки → Семья.',
+              createdAt: new Date().toISOString(),
+            }));
+          }
+        }
+      });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);

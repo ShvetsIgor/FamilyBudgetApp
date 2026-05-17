@@ -107,7 +107,8 @@ export default function HomePage() {
   useEffect(() => {
     if (!userId) return;
     const now = new Date();
-    fetchMonthExpenses(userId, now.getFullYear(), now.getMonth() + 1)
+    const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    fetchMonthExpenses(userId, month)
       .then((list) => dispatch(setExpenses(list)))
       .catch(() => {});
   }, [userId, dispatch]);

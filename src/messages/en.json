@@ -399,6 +399,20 @@
       "spent": "spent",
       "spentPct": "already {pct}%"
     },
+    "budget": {
+      "over": "over budget",
+      "settings": {
+        "title": "Budget settings",
+        "auto": "Auto-calc",
+        "autoDesc": "Remaining income divided by days left in month",
+        "daily": "Daily limit",
+        "dailyDesc": "Fixed amount for each day",
+        "monthly": "Monthly limit",
+        "monthlyDesc": "Monthly budget divided by remaining days",
+        "perDay": "/ day",
+        "save": "Done"
+      }
+    },
     "morning": {
       "greeting": "Good morning ✨",
       "yesterdaySpent": "Yesterday spent",

@@ -1,7 +1,6 @@
 'use client';
 
 import { Settings2 } from 'lucide-react';
-import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { C, SHADOW, RAD } from '@/features/chat/styles/tokens';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
@@ -22,7 +21,6 @@ export function PinnedToday({ spent, total, currency, dayLabel, budgetMode, onSe
   const sym = getCurrencySymbol(currency);
   const left = Math.max(0, total - spent);
   const pct = total > 0 ? Math.min(100, (left / total) * 100) : 0;
-  const spentPct = total > 0 ? Math.round((spent / total) * 100) : 0;
   const isOver = total > 0 && spent > total;
 
   const modeBadge: Record<BudgetMode, string> = {
@@ -32,78 +30,74 @@ export function PinnedToday({ spent, total, currency, dayLabel, budgetMode, onSe
   };
 
   return (
-    <div
-      className="sticky top-0 z-10 px-3.5 pt-3 pb-1"
-      style={{ background: C.bg }}
-    >
+    <div className="sticky top-0 z-10 px-3 pt-2 pb-1" style={{ background: C.bg }}>
       <div
-        className="overflow-hidden"
+        className="flex items-center gap-2.5 px-3.5 py-2.5"
         style={{
-          padding: '14px 18px 14px 16px',
-          borderRadius: RAD.hero,
+          borderRadius: RAD.card,
           background: `linear-gradient(135deg, ${C.primary} 0%, ${C.primaryDeep} 110%)`,
-          color: 'white',
-          position: 'relative',
           boxShadow: SHADOW.pinned,
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
-        <svg
-          style={{ position: 'absolute', top: -20, right: -28, opacity: 0.25, pointerEvents: 'none' }}
-          width="120" height="120" viewBox="0 0 120 120"
-        >
-          <circle cx="60" cy="60" r="58" stroke="white" strokeWidth="1.5" fill="none" />
-          <circle cx="60" cy="60" r="44" stroke="white" strokeWidth="1" fill="none" opacity=".7" />
+        {/* decorative circle */}
+        <svg style={{ position: 'absolute', top: -18, right: -18, opacity: 0.15, pointerEvents: 'none' }}
+          width="80" height="80" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="38" stroke="white" strokeWidth="1.5" fill="none" />
         </svg>
 
-        <div className="relative flex items-start gap-3">
-          <div
-            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-[14px]"
-            style={{ background: 'rgba(255,255,255,.18)', backdropFilter: 'blur(8px)' }}
-          >
-            <StickerIcon icon="coin" color={C.yellow} className="h-8 w-8" />
+        {/* left: label + amount */}
+        <div className="flex-1 relative">
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <span className="text-[10px] font-[800] uppercase tracking-[.08em] opacity-75" style={{ color: 'white' }}>
+              {dayLabel}
+            </span>
+            <span
+              className="rounded-full px-1.5 py-[1px] text-[8.5px] font-[900] uppercase tracking-wider"
+              style={{ background: 'rgba(255,255,255,.18)', color: 'white' }}
+            >
+              {modeBadge[budgetMode]}
+            </span>
           </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-1.5">
-              <p className="m-0 text-[11px] font-[800] uppercase tracking-[.09em] opacity-80">{dayLabel}</p>
-              <span
-                className="rounded-full px-1.5 py-[1px] text-[9px] font-[900] uppercase tracking-wider"
-                style={{ background: 'rgba(255,255,255,.18)', color: 'white' }}
-              >
-                {modeBadge[budgetMode]}
+          <div className="flex items-baseline gap-1.5">
+            <span
+              className="text-[22px] font-[900] tabular-nums leading-none"
+              style={{ letterSpacing: -0.5, color: isOver ? '#FFD166' : 'white' }}
+            >
+              {total > 0 ? `${sym}${left.toLocaleString()}` : `${sym}${spent.toLocaleString()}`}
+            </span>
+            {total > 0 && (
+              <span className="text-[11.5px] font-[700] opacity-80" style={{ color: 'white' }}>
+                {isOver ? t('chat.budget.over') : `${t('chat.today.of')} ${sym}${total.toLocaleString()}`}
               </span>
-            </div>
-            <div className="mt-1 flex items-baseline gap-1.5">
-              <span className="text-[30px] font-[900] tabular-nums" style={{ letterSpacing: -0.8, color: isOver ? '#FFD166' : 'white' }}>
-                {total > 0 ? `${sym}${left.toLocaleString()}` : `${sym}${spent.toLocaleString()}`}
-              </span>
-              {total > 0 && (
-                <span className="text-[13px] font-[800] opacity-80">
-                  {isOver ? t('chat.budget.over') : `${t('chat.today.of')} ${sym}${total.toLocaleString()}`}
-                </span>
-              )}
-            </div>
-            <p className="m-0 mt-0.5 text-[12px] font-[700] opacity-85">
-              {t('chat.today.spent')} {sym}{spent.toLocaleString()}
-              {total > 0 && ` · ${t('chat.today.spentPct').replace('{pct}', String(spentPct))}`}
-            </p>
+            )}
           </div>
-          <button
-            onClick={onSettings}
-            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border-0 transition-opacity active:opacity-60"
-            style={{ background: 'rgba(255,255,255,.16)', color: 'white' }}
-          >
-            <Settings2 size={13} strokeWidth={2.8} />
-          </button>
         </div>
 
+        {/* right: spent + progress + settings */}
+        <div className="flex flex-col items-end gap-1 relative">
+          <button
+            onClick={onSettings}
+            className="flex h-6 w-6 items-center justify-center rounded-full border-0 transition-opacity active:opacity-60"
+            style={{ background: 'rgba(255,255,255,.16)', color: 'white' }}
+          >
+            <Settings2 size={11} strokeWidth={2.8} />
+          </button>
+          <span className="text-[10.5px] font-[700] opacity-80" style={{ color: 'white' }}>
+            {t('chat.today.spent')} {sym}{spent.toLocaleString()}
+          </span>
+        </div>
+
+        {/* progress bar — full width at bottom */}
         {total > 0 && (
           <div
-            className="relative mt-3 h-[5px] overflow-hidden rounded-full"
-            style={{ background: 'rgba(255,255,255,.22)' }}
+            className="absolute bottom-0 left-0 right-0 h-[3px]"
+            style={{ background: 'rgba(255,255,255,.18)' }}
           >
             <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${pct}%`, background: isOver ? '#FFD166' : 'rgba(255,255,255,.95)' }}
+              className="h-full transition-all duration-500"
+              style={{ width: `${pct}%`, background: isOver ? '#FFD166' : 'rgba(255,255,255,.9)' }}
             />
           </div>
         )}

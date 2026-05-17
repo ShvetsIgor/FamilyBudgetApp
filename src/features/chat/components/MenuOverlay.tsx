@@ -24,8 +24,8 @@ const NAV_ITEMS: NavItem[] = [
   { icon: 'chart_up', color: '#81B29A', labelKey: 'nav.analytics',   href: '/analytics'  },
   { icon: 'piggy',    color: '#A48BC9', labelKey: 'nav.savings',     href: '/savings'    },
   { icon: 'refund',   color: '#F2CC8F', labelKey: 'nav.recurring',   href: '/recurring'  },
-  { icon: 'tag',      color: '#D4A574', labelKey: 'nav.categories',  href: '/categories' },
-  { icon: 'cog',      color: '#8E7A66', labelKey: 'nav.settings',    href: '/account'    },
+  { icon: 'book',     color: '#D4A574', labelKey: 'nav.categories',  href: '/categories' },
+  { icon: 'wrench',   color: '#8E7A66', labelKey: 'nav.settings',    href: '/account'    },
 ];
 
 interface MenuOverlayProps {

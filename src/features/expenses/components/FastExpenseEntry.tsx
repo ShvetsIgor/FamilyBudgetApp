@@ -265,7 +265,7 @@ export function FastExpenseEntry({ initialExpense }: Props) {
               >
                 <StickerIcon icon={cat.icon} color={sel ? '#fff' : cat.color} className="h-4 w-4" />
                 <span
-                  className="text-[8px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
+                  className="text-[11px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
                   style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}
                 >
                   {t.cat(cat.name)}
@@ -364,7 +364,7 @@ export function FastExpenseEntry({ initialExpense }: Props) {
                   <button
                     key={s.id}
                     onClick={() => selected ? removeSplit(splits.findIndex((x) => x.categoryId === s.id)) : addSplit(s)}
-                    className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
+                    className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[11px] font-extrabold text-foreground border transition-all"
                     style={{
                       background: selected ? catColor + '30' : catColor + '14',
                       borderColor: selected ? catColor : 'transparent',

@@ -1,17 +1,18 @@
-import { addMessage } from '@/features/chat/services/messagesService';
+import { store } from '@/store/store';
+import { addNotification } from '@/features/notifications/store/notificationsSlice';
 import type { BotContext } from './context';
 import type { MorningCardData } from '@/features/chat/components/BotCard/MorningCard';
 
 const STORAGE_KEY = 'chat_lastMorningAt';
 
 function todayDateStr(): string {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 export function shouldSendMorningGreeting(): boolean {
   try {
-    const last = localStorage.getItem(STORAGE_KEY);
-    return last !== todayDateStr();
+    return localStorage.getItem(STORAGE_KEY) !== todayDateStr();
   } catch {
     return false;
   }
@@ -20,24 +21,20 @@ export function shouldSendMorningGreeting(): boolean {
 export function markMorningGreetingSent(): void {
   try {
     localStorage.setItem(STORAGE_KEY, todayDateStr());
-  } catch {
-    // ignore
-  }
+  } catch {}
 }
 
 export async function sendMorningGreeting(ctx: BotContext): Promise<void> {
-  const { userId, currency, categoriesById, todaySpent } = ctx;
+  const { currency, categoriesById, todaySpent } = ctx;
 
   const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
   const sym = symMap[currency] ?? currency;
 
-  // Yesterday's expenses — passed via ctx.yesterdayExpenses if available
-  const yesterdayExpenses = (ctx as any).yesterdayExpenses as Array<{ amount: number; categoryId: string }> ?? [];
-  const yesterdayAmount = yesterdayExpenses.reduce((s: number, e: { amount: number }) => s + e.amount, 0);
+  const yesterdayExpenses = (ctx as Record<string, unknown>).yesterdayExpenses as Array<{ amount: number; categoryId: string }> ?? [];
+  const yesterdayAmount = yesterdayExpenses.reduce((s, e) => s + e.amount, 0);
 
-  // Top 2 category names for yesterday
   const catFreq: Record<string, number> = {};
-  yesterdayExpenses.forEach((e: { categoryId: string }) => {
+  yesterdayExpenses.forEach((e) => {
     const cat = categoriesById.get(e.categoryId);
     const parentId = cat?.parentId ?? e.categoryId;
     const parent = categoriesById.get(parentId);
@@ -47,27 +44,27 @@ export async function sendMorningGreeting(ctx: BotContext): Promise<void> {
   const topCatNames = Object.entries(catFreq)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 2)
-    .map(([n]) => n);
-  const yesterdayCatNames = topCatNames.join(' и ');
+    .map(([n]) => n)
+    .join(' и ');
 
-  // Daily budget = todayFree from ctx
-  const dailyBudget = (ctx as any).dailyBudget as number ?? 0;
+  const dailyBudget = (ctx as Record<string, unknown>).dailyBudget as number ?? 0;
   const todayFree = Math.max(0, dailyBudget - todaySpent);
 
   const cardData: MorningCardData = {
     yesterdayAmount,
-    yesterdayCatNames,
+    yesterdayCatNames: topCatNames,
     todayFree,
     currency: sym,
     hasBudget: dailyBudget > 0,
   };
 
-  await addMessage({
-    userId,
-    senderId: 'bot',
-    kind: 'bot',
-    text: 'Доброе утро ✨',
-    status: 'saved',
-    card: { kind: 'morning', data: cardData },
-  });
+  store.dispatch(addNotification({
+    kind: 'morning',
+    title: 'Доброе утро ✨',
+    text: yesterdayAmount > 0
+      ? `Вчера потрачено ${sym}${yesterdayAmount.toLocaleString()}. Сегодня свободно ${sym}${todayFree.toLocaleString()}.`
+      : `Сегодня свободно ${sym}${todayFree.toLocaleString()}.`,
+    data: cardData,
+    createdAt: new Date().toISOString(),
+  }));
 }

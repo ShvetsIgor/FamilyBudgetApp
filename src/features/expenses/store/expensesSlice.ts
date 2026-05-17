@@ -56,6 +56,6 @@ const expensesSlice = createSlice({
   },
 });
 
-export const { setExpenses, prependExpense, updateExpense, removeExpense, setStatus, setHasMore, remapExpenseCategories } =
+export const { setExpenses, prependExpense, updateExpense, removeExpense, mergeExpenses, setStatus, setHasMore, remapExpenseCategories } =
   expensesSlice.actions;
 export default expensesSlice.reducer;

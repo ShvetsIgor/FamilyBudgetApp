@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import { format, isToday, isYesterday, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
@@ -16,6 +16,16 @@ import { saveLearnedKeyword } from '@/features/chat/parser/learning';
 import { collectBotContext } from '@/features/chat/bot/context';
 import { respondToUserMessage } from '@/features/chat/bot/respond';
 import { addMessage } from '@/features/chat/services/messagesService';
+import {
+  shouldSendMorningGreeting,
+  markMorningGreetingSent,
+  sendMorningGreeting,
+} from '@/features/chat/bot/morning';
+import {
+  shouldSendWeeklySummary,
+  markWeeklySummarySent,
+  sendWeeklySummary,
+} from '@/features/chat/bot/weekly';
 
 import { ChatScreen } from '@/features/chat/components/ChatScreen';
 import { PinnedToday } from '@/features/chat/components/PinnedToday';
@@ -24,6 +34,8 @@ import { BotBubble, BotCardBubble } from '@/features/chat/components/BotBubble';
 import { UserBubble } from '@/features/chat/components/UserBubble';
 import { SavedCard } from '@/features/chat/components/BotCard/SavedCard';
 import { ClarifyCard } from '@/features/chat/components/BotCard/ClarifyCard';
+import { MorningCard } from '@/features/chat/components/BotCard/MorningCard';
+import { WeeklyCard } from '@/features/chat/components/BotCard/WeeklyCard';
 import { Typing } from '@/features/chat/components/Typing';
 import type { Currency } from '@/shared/types';
 import type { SerializableChatMessage } from '@/shared/types/message';
@@ -64,11 +76,49 @@ export default function HomePage() {
   const monthBudget = useAppSelector((s) =>
     Object.values(s.budget.limits).reduce((acc, v) => acc + v, 0)
   );
+  const budgetLimits = useAppSelector((s) => s.budget.limits);
   const dailyBudget = monthBudget > 0 ? Math.round(monthBudget / 30) : 0;
   const todayStr = new Date().toISOString().slice(0, 10);
   const todaySpent = useAppSelector((s) =>
     s.expenses.list.filter((e) => e.date.startsWith(todayStr)).reduce((acc, e) => acc + e.amount, 0)
   );
+  const allExpenses = useAppSelector((s) => s.expenses.list);
+  const savingsGoals = useAppSelector((s) => (s as any).savings?.goals ?? []);
+
+  // Auto-send morning greeting / weekly summary on first daily mount
+  const autoSentRef = useRef(false);
+  useEffect(() => {
+    if (!userId || autoSentRef.current) return;
+    autoSentRef.current = true;
+
+    const ctx = collectBotContext(state);
+    if (!ctx) return;
+
+    const yesterdayStr = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+    const yesterdayExpenses = allExpenses.filter((e) => e.date.startsWith(yesterdayStr));
+    const firstGoalName = savingsGoals.find((g: any) => !g.name?.toLowerCase().includes('savings'))?.name;
+
+    const enrichedCtx = {
+      ...ctx,
+      yesterdayExpenses,
+      dailyBudget,
+      monthBudget,
+      budgetLimits,
+      allExpenses,
+      firstGoalName,
+    };
+
+    if (shouldSendMorningGreeting()) {
+      markMorningGreetingSent();
+      sendMorningGreeting(enrichedCtx).catch(() => {});
+    }
+
+    if (shouldSendWeeklySummary()) {
+      markWeeklySummarySent();
+      sendWeeklySummary(enrichedCtx).catch(() => {});
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   const sendingRef = useRef(false);
 
@@ -81,7 +131,6 @@ export default function HomePage() {
 
     const parsed = parseMessage(text, { learned });
 
-    // 1. Optimistically add user message
     const userMsgInput = {
       userId,
       senderId: userId,
@@ -93,20 +142,14 @@ export default function HomePage() {
     };
     const userMsg = await addMessage(userMsgInput);
 
-    // 2. Show typing indicator
     dispatch(setTyping(true));
     await new Promise((r) => setTimeout(r, 600));
 
-    // 3. Bot response
     try {
       const reply = await respondToUserMessage(userMsg, parsed, ctx);
-
-      // 4. Save bot messages to Firestore
       for (const botMsg of reply.messages) {
         await addMessage(botMsg);
       }
-
-      // 5. Patch expense into Redux if created
       if (reply.expense) {
         dispatch(prependExpense(reply.expense));
       }
@@ -121,9 +164,7 @@ export default function HomePage() {
     chip: { id: string; name: string; icon: string; color: string }
   ) => {
     if (!userId) return;
-    // Teach bot this association for future
     await saveLearnedKeyword(userId, chip.name.toLowerCase(), { parentId: chip.id });
-    // Re-send with category name
     await handleSend(`${amount} ${chip.name.toLowerCase()}`);
   }, [userId, handleSend]);
 
@@ -142,12 +183,11 @@ export default function HomePage() {
       />
 
       {/* Message groups */}
-      {groups.map(({ day, items }, gi) => (
+      {groups.map(({ day, items }) => (
         <div key={day}>
           <DateChip label={dayLabel(day + 'T00:00:00')} />
           {items.map((msg, idx) => {
-            const isLast = idx === items.length - 1;
-            const nextSameSender = !isLast && items[idx + 1]?.kind === msg.kind;
+            const nextSameSender = idx < items.length - 1 && items[idx + 1]?.kind === msg.kind;
             const tail = !nextSameSender;
             const time = msgTime(msg.createdAt);
 
@@ -163,7 +203,22 @@ export default function HomePage() {
               );
             }
 
-            // Bot message
+            if (msg.card?.kind === 'morning') {
+              return (
+                <BotCardBubble key={msg.id} tail={tail}>
+                  <MorningCard data={msg.card.data} />
+                </BotCardBubble>
+              );
+            }
+
+            if (msg.card?.kind === 'weekly') {
+              return (
+                <BotCardBubble key={msg.id} tail={tail}>
+                  <WeeklyCard data={msg.card.data} />
+                </BotCardBubble>
+              );
+            }
+
             if (msg.card?.kind === 'saved') {
               const d = msg.card.data;
               return (
@@ -195,12 +250,7 @@ export default function HomePage() {
             }
 
             return (
-              <BotBubble
-                key={msg.id}
-                text={msg.text}
-                time={time}
-                tail={tail}
-              />
+              <BotBubble key={msg.id} text={msg.text} time={time} tail={tail} />
             );
           })}
         </div>

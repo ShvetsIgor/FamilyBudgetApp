@@ -31,21 +31,14 @@ export function extractDate(text: string): ExtractedDate | null {
   // "вчера"
   if (t.includes('вчера')) {
     const d = new Date(Date.now() - 86_400_000);
-    return {
-      date: d.toISOString().slice(0, 10),
-      label: 'вчера',
-      rest: text.replace(/вчера/i, '').trim(),
-    };
+    const iso = localDateISO(d);
+    return { date: iso, label: 'вчера', rest: text.replace(/вчера/i, '').trim() };
   }
 
-  // "сегодня" — same as default, but explicit
+  // "сегодня"
   if (t.includes('сегодня')) {
-    const d = new Date();
-    return {
-      date: d.toISOString().slice(0, 10),
-      label: 'сегодня',
-      rest: text.replace(/сегодня/i, '').trim(),
-    };
+    const iso = localDateISO(new Date());
+    return { date: iso, label: 'сегодня', rest: text.replace(/сегодня/i, '').trim() };
   }
 
   // "9 мая [2025]"

@@ -70,7 +70,7 @@ export default function CategoriesPage() {
     <div className="rounded-2xl border border-border bg-card overflow-hidden">
       <div className="border-b border-border px-4 py-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">
-          {sheet.mode === 'add' ? t('categories.newCategory') : `${t('categories.edit')} "${sheet.category.name}"`}
+          {sheet.mode === 'add' ? t('categories.newCategory') : `${t('categories.edit')} "${t.cat(sheet.category.name)}"`}
         </h2>
         <button onClick={() => setSheet(null)} className="text-muted-foreground text-xs hover:text-foreground">✕</button>
       </div>

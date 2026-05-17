@@ -34,6 +34,7 @@ DEFAULT_EXPENSE_CATEGORIES.push({
 
 export const DEFAULT_INCOME_CATEGORIES: DefaultCategory[] = [
   {
+    id:        INCOME_TAXONOMY.id,
     name:      INCOME_TAXONOMY.name,
     icon:      INCOME_TAXONOMY.icon,
     color:     INCOME_TAXONOMY.color,
@@ -43,10 +44,11 @@ export const DEFAULT_INCOME_CATEGORIES: DefaultCategory[] = [
     type:      'income' as const,
   },
   ...INCOME_TAXONOMY.subs.map((sub, subOrder) => ({
+    id:        sub.id,
     name:      sub.name,
     icon:      sub.icon,
     color:     INCOME_TAXONOMY.color,
-    parentId:  makeKey(INCOME_TAXONOMY.name),
+    parentId:  INCOME_TAXONOMY.id,
     isPrivate: false,
     order:     subOrder,
     type:      'income' as const,

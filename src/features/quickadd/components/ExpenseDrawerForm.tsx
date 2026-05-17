@@ -255,7 +255,7 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
                       style={{ background: sel ? catColor + '28' : catColor + '10', borderColor: sel ? catColor : 'transparent' }}
                     >
                       <StickerIcon icon={s.icon} color={catColor} className="h-3.5 w-3.5" />
-                      <span className="leading-tight text-center line-clamp-1 px-0.5">{s.name}</span>
+                      <span className="leading-tight text-center line-clamp-1 px-0.5">{t.cat(s.name)}</span>
                     </button>
                   );
                 })}

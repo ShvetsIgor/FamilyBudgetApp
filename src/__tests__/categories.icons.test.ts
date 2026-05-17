@@ -44,10 +44,7 @@ describe('Default categories structure', () => {
   it('subcategories reference valid parent keys', () => {
     const parentKeys = DEFAULT_EXPENSE_CATEGORIES
       .filter((c) => !c.parentId)
-      .map((c) => {
-        const key = `__${c.name.toLowerCase().replace(/[\s/]+/g, '_')}__`;
-        return key;
-      });
+      .map((c) => c.id);
 
     const orphans: string[] = [];
     for (const cat of DEFAULT_EXPENSE_CATEGORIES.filter((c) => c.parentId)) {

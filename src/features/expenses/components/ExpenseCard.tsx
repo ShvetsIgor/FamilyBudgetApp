@@ -5,12 +5,13 @@ import { useAppSelector } from '@/store/store';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { formatAmount } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
-import { cn } from '@/shared/utils/cn';
 import type { SerializableExpense } from '@/shared/types';
 
 interface Props {
   expense: SerializableExpense;
   onClick?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 const PAYMENT_ICONS: Record<string, string> = {
@@ -19,14 +20,25 @@ const PAYMENT_ICONS: Record<string, string> = {
   other: '🔄',
 };
 
-export function ExpenseCard({ expense, onClick }: Props) {
-  const categories = useAppSelector((s) => s.categories.expense);
+export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
+  const allCategories = useAppSelector((s) => s.categories.expense);
   const currency = useAppSelector((s) => s.ui.currency);
-  const category = categories.find((c) => c.id === expense.categoryId);
   const t = useT();
   const [expanded, setExpanded] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
-  // Only count parts that have non-zero amounts
+  const category = allCategories.find((c) => c.id === expense.categoryId);
+  // Show parent category name as subtitle
+  const parentCat = category?.parentId
+    ? allCategories.find((c) => c.id === category.parentId)
+    : null;
+  const categoryLabel = category ? t.cat(category.name) : '';
+  const parentLabel = parentCat ? t.cat(parentCat.name) : '';
+  const subtitleLabel = categoryLabel || parentLabel || '';
+
+  // Top line: comment or store name; if neither — category name
+  const topLine = expense.comment || expense.store || categoryLabel;
+
   const splitSum = expense.splits.reduce((s, x) => s + x.amount, 0);
   const parentPortion = expense.amount - splitSum;
   const effectiveParts =
@@ -35,22 +47,21 @@ export function ExpenseCard({ expense, onClick }: Props) {
 
   return (
     <div className="flex flex-col">
-      <button
-        onClick={onClick}
-        className="flex w-full items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left"
-      >
-        {category ? (
-          <CategoryIcon icon={category.icon} color={category.color} size="md" />
-        ) : (
-          <div className="h-10 w-10 rounded-xl bg-muted shrink-0" />
-        )}
+      <div className="flex w-full items-center gap-3 px-4 py-3">
+        {/* Icon — clickable to open detail */}
+        <button onClick={onClick} className="shrink-0 active:opacity-70 transition-opacity">
+          {category ? (
+            <CategoryIcon icon={category.icon} color={category.color} size="md" />
+          ) : (
+            <div className="h-10 w-10 rounded-xl bg-muted" />
+          )}
+        </button>
 
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate">
-            {expense.comment || expense.store || (category ? t.cat(category.name) : 'Expense')}
-          </p>
+        {/* Text — clickable to open detail */}
+        <button onClick={onClick} className="flex-1 min-w-0 text-left active:opacity-70 transition-opacity">
+          <p className="text-sm font-medium truncate">{topLine}</p>
           <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-            <span>{category && t.cat(category.name)}</span>
+            <span>{subtitleLabel}</span>
             {hasSplit && (
               <button
                 onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
@@ -63,12 +74,47 @@ export function ExpenseCard({ expense, onClick }: Props) {
             <span>{PAYMENT_ICONS[expense.paymentMethod]}</span>
             {expense.privacy === 'secret' && <span>🔒</span>}
           </p>
-        </div>
+        </button>
 
-        <span className={cn('text-sm font-semibold shrink-0 tabular-nums')}>
-          {expense.amount > 0 ? '-' : ''}{formatAmount(expense.amount, expense.currency)}
-        </span>
-      </button>
+        {/* Amount + action buttons */}
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-sm font-semibold tabular-nums">
+            {expense.amount > 0 ? '-' : ''}{formatAmount(expense.amount, expense.currency || currency)}
+          </span>
+          {onEdit && (
+            <button
+              onClick={onEdit}
+              className="text-muted-foreground hover:text-primary transition-colors text-xs px-1"
+            >
+              ✎
+            </button>
+          )}
+          {onDelete && !confirmDelete && (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="text-muted-foreground hover:text-destructive transition-colors text-xs"
+            >
+              ✕
+            </button>
+          )}
+          {confirmDelete && (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => { onDelete?.(); setConfirmDelete(false); }}
+                className="text-[11px] font-semibold text-destructive hover:opacity-80 transition-opacity"
+              >
+                ✓
+              </button>
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="text-[11px] font-semibold text-muted-foreground hover:opacity-80 transition-opacity"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Expanded split breakdown */}
       {hasSplit && expanded && (
@@ -82,7 +128,7 @@ export function ExpenseCard({ expense, onClick }: Props) {
             </div>
           )}
           {expense.splits.filter((s) => s.amount > 0).map((split, i) => {
-            const splitCat = categories.find((c) => c.id === split.categoryId);
+            const splitCat = allCategories.find((c) => c.id === split.categoryId);
             return (
               <div key={i} className="flex items-center gap-2 py-1.5 pl-12">
                 <span className="text-xs text-muted-foreground flex-1">

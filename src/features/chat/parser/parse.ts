@@ -39,8 +39,8 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
     return { amount, categoryId: null, parentId: null, confidence: 'failed', date, dateLabel };
   }
 
-  // Note with original casing: remove number from original input
-  const origNote = origInput.replace(/\b\d+([.,]\d+)?\b/, '').replace(/\s+/g, ' ').trim();
+  // Note: use `rest` (already stripped of number + date tokens), capitalize each word
+  const origNote = rest.replace(/\b\p{L}/gu, (c) => c.toUpperCase());
 
   // 6. Emoji (highest priority)
   for (const [emo, hit] of Object.entries(EMOJI)) {

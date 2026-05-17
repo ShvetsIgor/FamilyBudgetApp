@@ -95,29 +95,6 @@ export default function ExpensesPage() {
     if (chip) chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }, [selectedMonth]);
 
-  async function handleAddIncome(data: Omit<AddIncomeInput, 'userId'>) {
-    if (!user) return;
-    dispatch(prependIncome(await addIncome({ ...data, userId: user.id })));
-    setShowIncomeForm(false);
-  }
-
-  async function handleEditIncome(data: Omit<AddIncomeInput, 'userId'>) {
-    if (!user || !editingIncome) return;
-    dispatch(updateIncomeAction(await updateIncome({ ...data, userId: user.id, id: editingIncome.id })));
-    setEditingIncome(null);
-  }
-
-  async function handleDeleteIncome(income: SerializableIncome) {
-    if (!user) return;
-    if (!confirm('Удалить эту запись?')) return;
-    await deleteIncome(user.id, income);
-    dispatch(removeIncome(income.id));
-  }
-
-  function closeForm() { setShowIncomeForm(false); setEditingIncome(null); }
-
-  const formOpen = showIncomeForm || !!editingIncome;
-
   const filteredExpenses = expenses.filter((e) => {
     const q = search.toLowerCase();
     const matchesSearch = !q || [e.store, e.comment, categories.find((c) => c.id === e.categoryId)?.name]

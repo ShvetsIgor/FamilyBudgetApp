@@ -47,7 +47,7 @@ export function ExpenseCard({ expense, onClick }: Props) {
 
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">
-            {expense.store || (category ? t.cat(category.name) : 'Expense')}
+            {expense.comment || expense.store || (category ? t.cat(category.name) : 'Expense')}
           </p>
           <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
             <span>{category && t.cat(category.name)}</span>

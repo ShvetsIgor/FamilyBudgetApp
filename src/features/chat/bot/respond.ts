@@ -52,8 +52,11 @@ function makeBotMsg(
 
 function expenseDate(parsed: ParseResult): Date {
   if (parsed.date) {
-    const d = parseISO(parsed.date);
-    if (!isNaN(d.getTime())) return d;
+    const parts = parsed.date.split('-').map(Number);
+    if (parts.length === 3 && parts[0] && parts[1] && parts[2]) {
+      // Use noon local time to avoid UTC day boundary issues (e.g. UTC+3 midnight = prev UTC day)
+      return new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
+    }
   }
   return new Date();
 }

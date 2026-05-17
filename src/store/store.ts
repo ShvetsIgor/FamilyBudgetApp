@@ -26,6 +26,7 @@ export const store = configureStore({
     budget: budgetReducer,
     quickAdd: quickAddReducer,
     chat: chatReducer,
+    notifications: notificationsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

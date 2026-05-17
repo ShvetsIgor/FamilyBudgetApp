@@ -196,12 +196,25 @@ export function FastExpenseEntry({ initialExpense }: Props) {
         <div className="flex-1 text-center text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">
           {isEdit ? 'Редактировать' : `Чек · ${splits.length + 1} ${pluralRu(splits.length + 1)}`}
         </div>
-        <div className="w-8" />
+        <button
+          onClick={() => { setShowDate(!showDate); setShowComment(false); }}
+          className="p-1.5 rounded-full transition-colors"
+          style={{ color: showDate ? catColor : 'hsl(var(--muted-foreground))' }}
+        >
+          <Calendar className="h-4 w-4" />
+        </button>
+        <button
+          onClick={() => { setShowComment(!showComment); setShowDate(false); }}
+          className="p-1.5 rounded-full transition-colors"
+          style={{ color: showComment ? catColor : 'hsl(var(--muted-foreground))' }}
+        >
+          <MessageSquare className="h-4 w-4" />
+        </button>
       </div>
 
       {/* ── Total ── */}
       <div
-        onClick={() => setEditing('total')}
+        onClick={() => { setEditing('total'); setShowDate(false); setShowComment(false); }}
         className={cn(
           'mx-4 px-4 py-1.5 rounded-[18px] cursor-pointer flex items-baseline justify-between flex-shrink-0 transition-all border-[1.5px]',
           editing === 'total' ? 'bg-primary/10 border-primary' : 'bg-transparent border-transparent'
@@ -215,6 +228,30 @@ export function FastExpenseEntry({ initialExpense }: Props) {
           </span>
         </div>
       </div>
+
+      {/* ── Expandable: date / comment ── */}
+      {(showDate || showComment) && (
+        <div className="mx-4 flex-shrink-0">
+          {showDate && (
+            <input
+              type="date"
+              value={dateStr}
+              onChange={(e) => setDateStr(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl text-sm bg-card border border-border outline-none focus:border-primary transition-colors"
+            />
+          )}
+          {showComment && (
+            <input
+              type="text"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Заметка к расходу…"
+              autoFocus
+              className="w-full px-3 py-2 rounded-xl text-sm bg-card border border-border outline-none focus:border-primary transition-colors"
+            />
+          )}
+        </div>
+      )}
 
       {/* ── Parent category grid ── */}
       <div className="overflow-x-auto px-3.5 py-1.5 flex-shrink-0 [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">

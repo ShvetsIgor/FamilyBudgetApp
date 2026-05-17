@@ -59,9 +59,21 @@ const uiSlice = createSlice({
     setExpensesSearch(state, action: PayloadAction<string>) {
       state.expensesSearch = action.payload;
     },
+    setBudgetMode(state, action: PayloadAction<BudgetMode>) {
+      state.budgetMode = action.payload;
+      if (typeof window !== 'undefined') localStorage.setItem('budgetMode', action.payload);
+    },
+    setBudgetDailyLimit(state, action: PayloadAction<number>) {
+      state.budgetDailyLimit = action.payload;
+      if (typeof window !== 'undefined') localStorage.setItem('budgetDailyLimit', String(action.payload));
+    },
+    setBudgetMonthlyLimit(state, action: PayloadAction<number>) {
+      state.budgetMonthlyLimit = action.payload;
+      if (typeof window !== 'undefined') localStorage.setItem('budgetMonthlyLimit', String(action.payload));
+    },
   },
 });
 
-export const { setTheme, setLanguage, setCurrency, setWeekStart, setOffline, setSyncing, setExpensesSearch } =
+export const { setTheme, setLanguage, setCurrency, setWeekStart, setOffline, setSyncing, setExpensesSearch, setBudgetMode, setBudgetDailyLimit, setBudgetMonthlyLimit } =
   uiSlice.actions;
 export default uiSlice.reducer;

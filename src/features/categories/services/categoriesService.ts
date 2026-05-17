@@ -98,13 +98,15 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
   if (existing.length > 0) return;
 
   for (const cat of DEFAULT_EXPENSE_CATEGORIES) {
-    const { id, parentId: _omit, ...catData } = cat;
-    await setDoc(doc(colRef(userId, 'expense'), id), { ...catData, userId });
+    const { id, ...rest } = cat;
+    const clean = Object.fromEntries(Object.entries({ ...rest, userId }).filter(([, v]) => v !== undefined));
+    await setDoc(doc(colRef(userId, 'expense'), id), clean);
   }
 
   for (const cat of DEFAULT_INCOME_CATEGORIES) {
-    const { id, parentId: _omit, ...catData } = cat;
-    await setDoc(doc(colRef(userId, 'income'), id), { ...catData, userId });
+    const { id, ...rest } = cat;
+    const clean = Object.fromEntries(Object.entries({ ...rest, userId }).filter(([, v]) => v !== undefined));
+    await setDoc(doc(colRef(userId, 'income'), id), clean);
   }
 }
 

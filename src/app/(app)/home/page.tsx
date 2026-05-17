@@ -264,7 +264,7 @@ export default function HomePage() {
         userId,
         senderId: userId,
         kind: 'user',
-        text: `${amount} ${chip.name.toLowerCase()}${parsedDateLabel ? ` · ${parsedDateLabel}` : ''}`,
+        text: `${amount} ${t.cat(chip.name).toLowerCase()}${parsedDateLabel ? ` · ${parsedDateLabel}` : ''}`,
         status: 'saved',
       });
 

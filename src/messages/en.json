@@ -1,5 +1,6 @@
 {
   "nav": {
+    "chat": "Chat",
     "add": "Add",
     "overview": "Overview",
     "transactions": "Transactions",

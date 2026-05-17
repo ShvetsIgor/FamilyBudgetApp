@@ -15,10 +15,7 @@ import { addCategory } from '@/features/categories/services/categoriesService';
 import { addCategory as addCategoryRedux } from '@/features/categories/store/categoriesSlice';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
-import type { SavingsGoal, Currency } from '@/shared/types';
-
-const GOAL_ICONS = ['🎯', '🏠', '🚗', '✈️', '💻', '📱', '👶', '💍', '🎓', '🏖️', '💰', '🛋️'];
-const GOAL_COLORS = ['#6366f1', '#f97316', '#10b981', '#3b82f6', '#ec4899', '#eab308', '#8b5cf6', '#06b6d4'];
+import type { SavingsGoal } from '@/shared/types';
 
 type Mode = 'list' | { goal: SavingsGoal; action: 'contribute' | 'detail' };
 

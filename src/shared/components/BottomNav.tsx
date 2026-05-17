@@ -8,7 +8,9 @@ import { useT } from '@/shared/hooks/useT';
 
 export function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const t = useT();
+  const isHome = pathname === '/home';
 
   const NAV_ITEMS = [
     { href: '/home', icon: Plus, label: t('nav.add'), activeOn: ['/home'] },

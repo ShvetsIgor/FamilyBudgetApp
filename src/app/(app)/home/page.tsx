@@ -194,12 +194,14 @@ export default function HomePage() {
     chip: { id: string; name: string; icon: string; color: string },
     parsedDate?: string,
     parsedDateLabel?: string,
+    parsedNote?: string,
   ) => {
     if (!userId || sendingRef.current) return;
     sendingRef.current = true;
 
-    // Teach bot this word → category mapping
-    await saveLearnedKeyword(userId, chip.name.toLowerCase(), { parentId: chip.id });
+    // Teach bot the unknown word → category mapping (not the chip name)
+    const keyword = parsedNote?.trim() || chip.name.toLowerCase();
+    await saveLearnedKeyword(userId, keyword.toLowerCase(), { parentId: chip.id });
 
     dispatch(setTyping(true));
     try {

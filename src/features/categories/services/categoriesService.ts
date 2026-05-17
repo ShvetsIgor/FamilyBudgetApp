@@ -128,32 +128,14 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
   const existing = await fetchCategories(userId, 'expense');
   if (existing.length > 0) return;
 
-  const parentIdMap: Record<string, string> = {};
-
-  for (const cat of DEFAULT_EXPENSE_CATEGORIES.filter((c) => !c.parentId)) {
-    const { parentId: _omit, ...catData } = cat;
-    const ref = await addDoc(colRef(userId, 'expense'), { ...catData, userId });
-    const key = `__${cat.name.toLowerCase().replace(/[\s/]+/g, '_')}__`;
-    parentIdMap[key] = ref.id;
+  for (const cat of DEFAULT_EXPENSE_CATEGORIES) {
+    const { id, parentId: _omit, ...catData } = cat;
+    await setDoc(doc(colRef(userId, 'expense'), id), { ...catData, userId });
   }
 
-  for (const cat of DEFAULT_EXPENSE_CATEGORIES.filter((c) => c.parentId)) {
-    const realParentId = parentIdMap[cat.parentId!] ?? null;
-    const { parentId: _omit, ...catData } = cat;
-    await addDoc(colRef(userId, 'expense'), { ...catData, parentId: realParentId, userId });
-  }
-
-  const incomeParentIdMap: Record<string, string> = {};
-  for (const cat of DEFAULT_INCOME_CATEGORIES.filter((c) => !c.parentId)) {
-    const { parentId: _omit, ...catData } = cat;
-    const ref = await addDoc(colRef(userId, 'income'), { ...catData, userId });
-    const key = `__${cat.name.toLowerCase().replace(/[\s/]+/g, '_')}__`;
-    incomeParentIdMap[key] = ref.id;
-  }
-  for (const cat of DEFAULT_INCOME_CATEGORIES.filter((c) => c.parentId)) {
-    const realParentId = incomeParentIdMap[cat.parentId!] ?? null;
-    const { parentId: _omit, ...catData } = cat;
-    await addDoc(colRef(userId, 'income'), { ...catData, parentId: realParentId, userId });
+  for (const cat of DEFAULT_INCOME_CATEGORIES) {
+    const { id, parentId: _omit, ...catData } = cat;
+    await setDoc(doc(colRef(userId, 'income'), id), { ...catData, userId });
   }
 }
 

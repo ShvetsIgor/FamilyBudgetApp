@@ -405,9 +405,11 @@
       "freeToday": "Free today"
     },
     "clarify": {
+      "unknown": "Unfamiliar, what is this?",
       "common": "Often chosen",
       "all": "All categories",
-      "promise": "tell me — I'll remember this word forever"
+      "promise": "tell me — I'll remember this word forever",
+      "undo": "Undo"
     },
     "weekly": {
       "envelopes": "Envelopes",

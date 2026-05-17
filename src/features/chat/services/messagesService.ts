@@ -62,6 +62,20 @@ export function subscribeMessages(
   });
 }
 
+// Recursively strip undefined from plain objects (Firestore rejects undefined values)
+function stripUndef(v: unknown): unknown {
+  if (v === null || v === undefined) return v;
+  if (Array.isArray(v)) return v.map(stripUndef);
+  if (v !== null && typeof v === 'object' && v.constructor === Object) {
+    return Object.fromEntries(
+      Object.entries(v as Record<string, unknown>)
+        .filter(([, val]) => val !== undefined)
+        .map(([k, val]) => [k, stripUndef(val)])
+    );
+  }
+  return v;
+}
+
 export async function addMessage(input: AddMessageInput): Promise<SerializableChatMessage> {
   const { userId, expenseId, parsed, card, ...rest } = input;
   const data = Object.fromEntries(
@@ -69,8 +83,8 @@ export async function addMessage(input: AddMessageInput): Promise<SerializableCh
       ...rest,
       userId,
       expenseId,
-      parsed,
-      card,
+      parsed: parsed ? stripUndef(parsed) : undefined,
+      card: card ? stripUndef(card) : undefined,
       createdAt: serverTimestamp(),
     }).filter(([, v]) => v !== undefined)
   );

@@ -21,6 +21,12 @@ export interface ParseResult {
   dateLabel?: string;
   /** Unknown word from the message — saved as expense comment */
   note?: string;
+  /** Canonical store ID from STORE_DICTIONARY */
+  storeId?: string;
+  /** Display name of the matched store */
+  storeName?: string;
+  /** Store group, e.g. 'supermarket', 'pharmacy', 'fuel' */
+  storeGroup?: string;
 }
 
 export interface ChatMessage {

@@ -109,7 +109,7 @@ export interface AddExpenseInput {
 }
 
 export async function addExpense(input: AddExpenseInput): Promise<SerializableExpense> {
-  const { userId, date, subcategoryId, store, comment, ...rest } = input;
+  const { userId, date, subcategoryId, store, storeId, storeGroup, comment, ...rest } = input;
 
   const data = Object.fromEntries(
     Object.entries({
@@ -117,6 +117,8 @@ export async function addExpense(input: AddExpenseInput): Promise<SerializableEx
       userId,
       subcategoryId,
       store,
+      storeId,
+      storeGroup,
       comment,
       date: Timestamp.fromDate(date),
       isRecurring: false,

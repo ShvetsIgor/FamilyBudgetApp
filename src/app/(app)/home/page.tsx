@@ -254,10 +254,17 @@ export default function HomePage() {
     if (!userId || sendingRef.current) return;
     sendingRef.current = true;
 
+    // Resolve parent: chip may be a subcategory
+    const chipCat = allExpenseCats.find((c) => c.id === chip.id);
+    const resolvedParentId = chipCat?.parentId ?? chip.id;
+
     // Teach bot the unknown word → category mapping (skip if store was known)
     if (!storeId) {
       const keyword = parsedNote?.trim() || chip.name.toLowerCase();
-      await saveLearnedKeyword(userId, keyword.toLowerCase(), { parentId: chip.id });
+      await saveLearnedKeyword(userId, keyword.toLowerCase(), {
+        parentId: resolvedParentId,
+        ...(chipCat?.parentId ? { subId: chip.id } : {}),
+      });
     }
 
     dispatch(setTyping(true));
@@ -281,7 +288,7 @@ export default function HomePage() {
       const parsed: import('@/shared/types/message').ParseResult = {
         amount,
         categoryId: chip.id,
-        parentId: chip.id,
+        parentId: resolvedParentId,
         confidence: 'high',
         date: parsedDate,
         dateLabel: parsedDateLabel,

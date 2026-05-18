@@ -13,73 +13,21 @@ export interface StoreEntry {
 
 export const STORES: StoreEntry[] = [
   // ── Supermarkets ────────────────────────────────────────────────────────────
-  {
-    id: 'rami_levi', name: 'Рами Леви', storeGroup: 'supermarket',
-    parentId: 'food', subId: 'groceries', needsContext: true,
-    aliases: ['рами леви', 'rami levi', 'רמי לוי'],
-  },
-  {
-    id: 'shufersal', name: 'Шуферсал', storeGroup: 'supermarket',
-    parentId: 'food', subId: 'groceries', needsContext: true,
-    aliases: ['шуферсал', 'шуперсаль', 'shufersal', 'שופרסל'],
-  },
-  {
-    id: 'victory', name: 'Виктори', storeGroup: 'supermarket',
-    parentId: 'food', subId: 'groceries', needsContext: true,
-    aliases: ['виктори', 'victory', 'ויקטורי'],
-  },
-  {
-    id: 'yochananof', name: 'Йоханов', storeGroup: 'supermarket',
-    parentId: 'food', subId: 'groceries', needsContext: true,
-    aliases: ['йоханов', 'йохананов', 'yochananof', 'יוחננוף'],
-  },
-  {
-    id: 'osher_ad', name: 'Ошер Ад', storeGroup: 'supermarket',
-    parentId: 'food', subId: 'groceries', needsContext: true,
-    aliases: ['ошер ад', 'osher ad', 'אושר עד'],
-  },
-  {
-    id: 'am_pm', name: 'Am:Pm', storeGroup: 'supermarket',
-    parentId: 'food', subId: 'groceries', needsContext: true,
-    aliases: ['am pm', 'am:pm', 'ампм'],
-  },
-  {
-    id: 'yellow', name: 'Yellow', storeGroup: 'supermarket',
-    parentId: 'food', subId: 'groceries', needsContext: true,
-    aliases: ['yellow', 'יילו'],
-  },
-  {
-    id: 'dabbah', name: 'Даббах', storeGroup: 'supermarket',
-    parentId: 'food', subId: 'groceries', needsContext: true,
-    aliases: ['даббах', 'dabbah', 'דבאח'],
-  },
-  {
-    id: 'stop_market', name: 'Stop Market', storeGroup: 'supermarket',
-    parentId: 'food', subId: 'groceries', needsContext: true,
-    aliases: ['stop market', 'stopmarket', 'סטופ מרקט'],
-  },
-  {
-    id: 'mahsanei_hashuk', name: 'Mahsanei HaShuk', storeGroup: 'supermarket',
-    parentId: 'food', subId: 'groceries', needsContext: true,
-    aliases: ['מחסני השוק', 'mahsanei hashuk'],
-  },
+  { id: 'rami_levi', name: 'Рами Леви', storeGroup: 'supermarket', needsContext: true, aliases: ['рами леви', 'rami levi', 'רמי לוי'] },
+  { id: 'shufersal', name: 'Шуферсал', storeGroup: 'supermarket', needsContext: true, aliases: ['шуферсал', 'шуперсаль', 'shufersal', 'שופרסל'] },
+  { id: 'victory', name: 'Виктори', storeGroup: 'supermarket', needsContext: true, aliases: ['виктори', 'victory', 'ויקטורי'] },
+  { id: 'yochananof', name: 'Йоханов', storeGroup: 'supermarket', needsContext: true, aliases: ['йоханов', 'йохананов', 'yochananof', 'יוחננוף'] },
+  { id: 'osher_ad', name: 'Ошер Ад', storeGroup: 'supermarket', needsContext: true, aliases: ['ошер ад', 'osher ad', 'אושר עד'] },
+  { id: 'am_pm', name: 'Am:Pm', storeGroup: 'supermarket', needsContext: true, aliases: ['am pm', 'am:pm', 'ампм'] },
+  { id: 'yellow', name: 'Yellow', storeGroup: 'supermarket', needsContext: true, aliases: ['yellow', 'יילו'] },
+  { id: 'dabbah', name: 'Даббах', storeGroup: 'supermarket', needsContext: true, aliases: ['даббах', 'dabbah', 'דבאח'] },
+  { id: 'stop_market', name: 'Stop Market', storeGroup: 'supermarket', needsContext: true, aliases: ['stop market', 'stopmarket', 'סטופ מרקט'] },
+  { id: 'mahsanei_hashuk', name: 'Mahsanei HaShuk', storeGroup: 'supermarket', needsContext: true, aliases: ['מחסני השוק', 'mahsanei hashuk'] },
 
   // ── Pharmacy ────────────────────────────────────────────────────────────────
-  {
-    id: 'super_pharm', name: 'Super-Pharm', storeGroup: 'pharmacy',
-    parentId: 'health', subId: 'pharmacy', needsContext: true,
-    aliases: ['суперфарм', 'super-pharm', 'superpharm', 'super pharm', 'סופר פארם'],
-  },
-  {
-    id: 'new_pharm', name: 'New Pharm', storeGroup: 'pharmacy',
-    parentId: 'health', subId: 'pharmacy', needsContext: true,
-    aliases: ['new pharm', 'ניו פארם'],
-  },
-  {
-    id: 'be_pharm', name: 'Be Pharm', storeGroup: 'pharmacy',
-    parentId: 'health', subId: 'pharmacy', needsContext: true,
-    aliases: ['be pharm', 'בי פארם'],
-  },
+  { id: 'super_pharm', name: 'Super-Pharm', storeGroup: 'pharmacy', needsContext: true, aliases: ['суперфарм', 'super-pharm', 'superpharm', 'super pharm', 'סופר פארם'] },
+  { id: 'new_pharm', name: 'New Pharm', storeGroup: 'pharmacy', needsContext: true, aliases: ['new pharm', 'ניו פארם'] },
+  { id: 'be_pharm', name: 'Be Pharm', storeGroup: 'pharmacy', needsContext: true, aliases: ['be pharm', 'בי פארם'] },
 
   // ── Fast food ───────────────────────────────────────────────────────────────
   {

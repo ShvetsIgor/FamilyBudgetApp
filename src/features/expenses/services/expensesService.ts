@@ -46,6 +46,8 @@ function toSerializable(id: string, data: Record<string, unknown>): Serializable
     date: toISO(data.date),
     paymentMethod: data.paymentMethod as PaymentMethod,
     store: data.store as string | undefined,
+    storeId: data.storeId as string | undefined,
+    storeGroup: data.storeGroup as string | undefined,
     tags: (data.tags as string[]) ?? [],
     comment: data.comment as string | undefined,
     photoUrl: data.photoUrl as string | undefined,

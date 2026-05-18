@@ -563,6 +563,22 @@ I.headphones = ({ c, id }) => <svg viewBox="0 0 32 32"><Defs id={id} c={c} />
   <Hi cx={5} cy={19} />
 </svg>;
 
+I.scissors = ({ c, id }) => <svg viewBox="0 0 32 32"><Defs id={id} c={c} />
+  <circle cx="10" cy="22" r="4.5" fill={dark(c)} /><circle cx="10" cy="22" r="4.5" fill={`url(#${id})`} />
+  <circle cx="22" cy="22" r="4.5" fill={dark(c)} /><circle cx="22" cy="22" r="4.5" fill={`url(#${id})`} />
+  <circle cx="10" cy="22" r="2" fill="white" opacity=".6" /><circle cx="22" cy="22" r="2" fill="white" opacity=".6" />
+  <path d="M10 18 L20 8" stroke={dark(c)} strokeWidth="2.5" strokeLinecap="round" />
+  <path d="M22 18 L12 8" stroke={dark(c)} strokeWidth="2.5" strokeLinecap="round" />
+</svg>;
+I.paw = ({ c, id }) => <svg viewBox="0 0 32 32"><Defs id={id} c={c} />
+  <ellipse cx="16" cy="20" rx="8" ry="7" fill={dark(c)} />
+  <ellipse cx="16" cy="19" rx="8" ry="7" fill={`url(#${id})`} />
+  <ellipse cx="8" cy="13" rx="3" ry="3.8" fill={dark(c)} /><ellipse cx="8" cy="12.5" rx="3" ry="3.8" fill={`url(#${id})`} />
+  <ellipse cx="24" cy="13" rx="3" ry="3.8" fill={dark(c)} /><ellipse cx="24" cy="12.5" rx="3" ry="3.8" fill={`url(#${id})`} />
+  <ellipse cx="12" cy="9" rx="2.5" ry="3.2" fill={dark(c)} /><ellipse cx="12" cy="8.5" rx="2.5" ry="3.2" fill={`url(#${id})`} />
+  <ellipse cx="20" cy="9" rx="2.5" ry="3.2" fill={dark(c)} /><ellipse cx="20" cy="8.5" rx="2.5" ry="3.2" fill={`url(#${id})`} />
+</svg>;
+
 /* ─── OTHER ─── */
 I.box = ({ c, id }) => <svg viewBox="0 0 32 32"><Defs id={id} c={c} />
   <path d="M5 11 L16 6 L27 11 L16 16 Z" fill={dark(c)} />

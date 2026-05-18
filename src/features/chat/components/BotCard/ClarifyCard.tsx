@@ -17,17 +17,24 @@ interface ClarifyCardProps {
   currency: string;
   chips: ClarifyChip[];
   unknownNote?: string;
+  storeName?: string;
   onSelectChip: (chip: ClarifyChip) => void;
   onAllCategories: () => void;
 }
 
-export function ClarifyCard({ amount, currency, chips, unknownNote, onSelectChip, onAllCategories }: ClarifyCardProps) {
+export function ClarifyCard({ amount, currency, chips, unknownNote, storeName, onSelectChip, onAllCategories }: ClarifyCardProps) {
   const t = useT();
+
+  const headerText = storeName
+    ? t('chat.clarify.atStore').replace('{store}', storeName)
+    : unknownNote
+      ? t('chat.clarify.unknown')
+      : t('chat.clarify.common');
 
   return (
     <div className="p-3.5">
       <p className="m-0 mb-2 text-[10px] font-[800] uppercase tracking-[.08em]" style={{ color: C.sub }}>
-        {unknownNote ? t('chat.clarify.unknown') : t('chat.clarify.common')}
+        {headerText}
       </p>
       <div className="flex flex-wrap gap-1.5">
         {chips.map((chip) => (

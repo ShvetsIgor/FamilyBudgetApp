@@ -168,6 +168,37 @@ export async function respondToUserMessage(
     };
   }
 
+  // ── Case 1.5: store known but no items → ask what was bought
+  if (parsed.confidence === 'low' && parsed.storeId) {
+    const chipIds = topParentIds.slice(0, 5);
+    const chips = chipIds
+      .map((id) => categoriesById.get(id))
+      .filter(Boolean)
+      .map((c) => ({ id: c!.id, name: c!.name, icon: c!.icon, color: c!.color }));
+
+    return {
+      messages: [
+        makeBotMsg(userId, {
+          text: clarifyStorePhrase(parsed.storeName!, parsed.amount, sym),
+          card: {
+            kind: 'clarify',
+            data: {
+              amount: parsed.amount,
+              chips,
+              parsedDate: parsed.date,
+              parsedDateLabel: parsed.dateLabel,
+              parsedNote: parsed.note,
+              storeId: parsed.storeId,
+              storeName: parsed.storeName,
+              storeGroup: parsed.storeGroup,
+            },
+          },
+          status: 'saved',
+        }),
+      ],
+    };
+  }
+
   // ── Case 2: have amount but no category → clarify card
   if (parsed.confidence === 'failed') {
     const chipIds = topParentIds.slice(0, 5);

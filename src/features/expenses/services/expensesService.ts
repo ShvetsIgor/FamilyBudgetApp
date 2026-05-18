@@ -145,7 +145,7 @@ export interface UpdateExpenseInput extends AddExpenseInput {
 }
 
 export async function updateExpense(input: UpdateExpenseInput): Promise<SerializableExpense> {
-  const { userId, id, date, subcategoryId, store, comment, goalId, ...rest } = input;
+  const { userId, id, date, subcategoryId, store, storeId, storeGroup, comment, goalId, ...rest } = input;
 
   const data = Object.fromEntries(
     Object.entries({
@@ -153,6 +153,8 @@ export async function updateExpense(input: UpdateExpenseInput): Promise<Serializ
       userId,
       subcategoryId,
       store,
+      storeId,
+      storeGroup,
       comment,
       goalId,
       date: Timestamp.fromDate(date),

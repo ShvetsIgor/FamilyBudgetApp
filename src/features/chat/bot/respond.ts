@@ -71,6 +71,9 @@ export interface FutureCardData {
   categoryId: string | null;
   parentId: string | null;
   userMsgId: string;
+  storeId?: string;
+  storeName?: string;
+  storeGroup?: string;
 }
 
 export async function confirmFutureExpense(

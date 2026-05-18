@@ -246,13 +246,18 @@ export default function HomePage() {
     parsedDate?: string,
     parsedDateLabel?: string,
     parsedNote?: string,
+    storeId?: string,
+    storeName?: string,
+    storeGroup?: string,
   ) => {
     if (!userId || sendingRef.current) return;
     sendingRef.current = true;
 
-    // Teach bot the unknown word → category mapping (not the chip name)
-    const keyword = parsedNote?.trim() || chip.name.toLowerCase();
-    await saveLearnedKeyword(userId, keyword.toLowerCase(), { parentId: chip.id });
+    // Teach bot the unknown word → category mapping (skip if store was known)
+    if (!storeId) {
+      const keyword = parsedNote?.trim() || chip.name.toLowerCase();
+      await saveLearnedKeyword(userId, keyword.toLowerCase(), { parentId: chip.id });
+    }
 
     dispatch(setTyping(true));
     try {
@@ -260,11 +265,12 @@ export default function HomePage() {
       if (!enrichedCtx) return;
 
       // Add visible user message
+      const storeLabel = storeName ? ` · ${storeName}` : '';
       const userMsg = await addMessage({
         userId,
         senderId: userId,
         kind: 'user',
-        text: `${amount} ${t.cat(chip.name).toLowerCase()}${parsedDateLabel ? ` · ${parsedDateLabel}` : ''}`,
+        text: `${amount} ${t.cat(chip.name).toLowerCase()}${storeLabel}${parsedDateLabel ? ` · ${parsedDateLabel}` : ''}`,
         status: 'saved',
       });
 
@@ -279,6 +285,9 @@ export default function HomePage() {
         date: parsedDate,
         dateLabel: parsedDateLabel,
         note: parsedNote,
+        storeId,
+        storeName,
+        storeGroup,
       };
 
       const reply = await respondToUserMessage(userMsg, parsed, enrichedCtx);

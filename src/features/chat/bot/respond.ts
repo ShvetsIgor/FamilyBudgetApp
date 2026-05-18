@@ -102,6 +102,9 @@ export async function confirmFutureExpense(
       currency,
       splits: [],
       ...(data.parsedNote ? { comment: data.parsedNote } : {}),
+      ...(data.storeName ? { store: data.storeName } : {}),
+      ...(data.storeId ? { storeId: data.storeId } : {}),
+      ...(data.storeGroup ? { storeGroup: data.storeGroup } : {}),
     });
   } catch {
     return {

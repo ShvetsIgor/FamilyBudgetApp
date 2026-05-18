@@ -214,6 +214,8 @@ export interface SerializableExpense {
   date: string; // ISO string
   paymentMethod: PaymentMethod;
   store?: string;
+  storeId?: string;
+  storeGroup?: string;
   tags: string[];
   comment?: string;
   photoUrl?: string;

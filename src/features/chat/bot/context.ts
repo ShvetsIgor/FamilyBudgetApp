@@ -11,6 +11,8 @@ export interface BotContext {
   topParentIds: string[];
   /** Today's total spent (from Redux expenses slice) */
   todaySpent: number;
+  /** Store purchase history — keyed by storeId */
+  storeProfiles: Record<string, StoreProfile>;
 }
 
 const TOP_FALLBACK = ['groceries', 'dining', 'transport', 'health', 'home', 'shopping'];

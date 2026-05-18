@@ -10,6 +10,7 @@ import { prependExpense, removeExpense, mergeExpenses } from '@/features/expense
 
 import { useChatMessages } from '@/features/chat/hooks/useChatMessages';
 import { useLearnedKeywords } from '@/features/chat/hooks/useLearnedKeywords';
+import { useStoreProfiles } from '@/features/chat/hooks/useStoreProfiles';
 
 import { parseMessage } from '@/features/chat/parser/parse';
 import { saveLearnedKeyword } from '@/features/chat/parser/learning';

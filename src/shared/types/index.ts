@@ -228,6 +228,22 @@ export interface SerializableExpense {
   updatedAt: string;
 }
 
+// ─── Store Profiles ───────────────────────────────────────────────────────────
+
+export interface StoreSubcategoryUsage {
+  subcategoryId: string;
+  parentId: string;
+  usageCount: number;
+  lastUsed: string; // ISO date YYYY-MM-DD
+}
+
+export interface StoreProfile {
+  id: string; // storeId
+  name: string;
+  storeGroup?: string;
+  probableSubcategories: StoreSubcategoryUsage[];
+}
+
 // ─── UI helpers ───────────────────────────────────────────────────────────────
 
 export type DateRange =

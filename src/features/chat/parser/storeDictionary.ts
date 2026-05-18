@@ -316,8 +316,8 @@ export interface StoreMatch {
   id: string;
   name: string;
   storeGroup: string;
-  parentId: string;
-  subId: string;
+  parentId?: string;
+  subId?: string;
   needsContext: boolean;
   keyword: string;
 }

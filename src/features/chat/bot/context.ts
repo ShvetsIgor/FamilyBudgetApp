@@ -1,5 +1,5 @@
 import type { RootState } from '@/store/store';
-import type { Category } from '@/shared/types';
+import type { Category, StoreProfile } from '@/shared/types';
 import type { Currency } from '@/shared/types';
 
 export interface BotContext {

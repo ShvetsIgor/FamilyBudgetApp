@@ -276,6 +276,9 @@ export async function respondToUserMessage(
       currency,
       splits: [],
       ...(parsed.note ? { comment: parsed.note } : {}),
+      ...(parsed.storeName ? { store: parsed.storeName } : {}),
+      ...(parsed.storeId ? { storeId: parsed.storeId } : {}),
+      ...(parsed.storeGroup ? { storeGroup: parsed.storeGroup } : {}),
     });
   } catch {
     return {

@@ -464,12 +464,16 @@ export default function HomePage() {
                     currency={(d.currency as string | undefined) ?? '₪'}
                     chips={d.chips as { id: string; name: string; icon: string; color: string }[]}
                     unknownNote={d.parsedNote as string | undefined}
+                    storeName={d.storeName as string | undefined}
                     onSelectChip={(chip) => handleClarifyChip(
                       d.amount as number,
                       chip,
                       d.parsedDate as string | undefined,
                       d.parsedDateLabel as string | undefined,
                       d.parsedNote as string | undefined,
+                      d.storeId as string | undefined,
+                      d.storeName as string | undefined,
+                      d.storeGroup as string | undefined,
                     )}
                     onAllCategories={() => setCategorySheet({
                       amount: d.amount as number,

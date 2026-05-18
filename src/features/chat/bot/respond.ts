@@ -174,13 +174,40 @@ export async function respondToUserMessage(
     };
   }
 
-  // ── Case 1.5: store known but no items → ask what was bought
+  // ── Case 1.5: store known but no items → ask what was bought, suggest from profile
   if (parsed.confidence === 'low' && parsed.storeId) {
-    const chipIds = topParentIds.slice(0, 5);
-    const chips = chipIds
-      .map((id) => categoriesById.get(id))
-      .filter(Boolean)
-      .map((c) => ({ id: c!.id, name: c!.name, icon: c!.icon, color: c!.color }));
+    const profile = ctx.storeProfiles?.[parsed.storeId];
+    let chips: { id: string; name: string; icon: string; color: string }[];
+
+    if (profile && profile.probableSubcategories.length > 0) {
+      // Sort by usageCount desc, then by lastUsed desc
+      const sorted = [...profile.probableSubcategories].sort(
+        (a, b) => b.usageCount - a.usageCount || b.lastUsed.localeCompare(a.lastUsed)
+      );
+      const profileChips = sorted
+        .slice(0, 4)
+        .map((u) => categoriesById.get(u.subcategoryId))
+        .filter(Boolean)
+        .map((c) => ({ id: c!.id, name: c!.name, icon: c!.icon, color: c!.color }));
+
+      // Fill remaining slots from top parents not already shown
+      const shownIds = new Set(profileChips.map((c) => c.id));
+      const fillChips = topParentIds
+        .filter((id) => !shownIds.has(id))
+        .slice(0, Math.max(0, 3 - profileChips.length))
+        .map((id) => categoriesById.get(id))
+        .filter(Boolean)
+        .map((c) => ({ id: c!.id, name: c!.name, icon: c!.icon, color: c!.color }));
+
+      chips = [...profileChips, ...fillChips];
+    } else {
+      // No history → show top parent categories
+      chips = topParentIds
+        .slice(0, 4)
+        .map((id) => categoriesById.get(id))
+        .filter(Boolean)
+        .map((c) => ({ id: c!.id, name: c!.name, icon: c!.icon, color: c!.color }));
+    }
 
     return {
       messages: [

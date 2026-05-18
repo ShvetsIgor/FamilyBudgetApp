@@ -55,9 +55,13 @@ export function subscribeMessages(
   msgLimit: number,
   callback: (messages: SerializableChatMessage[]) => void
 ): Unsubscribe {
-  const q = query(col(userId), orderBy('createdAt', 'asc'), fsLimit(msgLimit));
+  // desc + limit gives the NEWEST N messages; reverse for chronological (asc) display
+  const q = query(col(userId), orderBy('createdAt', 'desc'), fsLimit(msgLimit));
   return onSnapshot(q, (snap) => {
-    const msgs = snap.docs.map((d) => toSerializable(d.id, d.data() as Record<string, unknown>));
+    const msgs = snap.docs
+      .slice()
+      .reverse()
+      .map((d) => toSerializable(d.id, d.data() as Record<string, unknown>));
     callback(msgs);
   });
 }

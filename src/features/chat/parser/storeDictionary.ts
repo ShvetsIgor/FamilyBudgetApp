@@ -2,9 +2,11 @@ export interface StoreEntry {
   id: string;
   name: string;
   storeGroup: string;
-  parentId: string;
-  subId: string;
-  /** true = ambiguous store (supermarket, amazon) — ask "what did you buy?" */
+  /** Only set for self-describing stores (needsContext: false) */
+  parentId?: string;
+  /** Only set for self-describing stores (needsContext: false) */
+  subId?: string;
+  /** true = ambiguous store (supermarket, amazon, pharmacy) — always ask clarification */
   needsContext: boolean;
   aliases: string[];
 }

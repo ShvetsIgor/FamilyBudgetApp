@@ -263,8 +263,12 @@ export default function HomePage() {
     const chipCat = allExpenseCats.find((c) => c.id === chip.id);
     const resolvedParentId = chipCat?.parentId ?? chip.id;
 
-    // Teach bot the unknown word → category mapping (skip if store was known)
-    if (!storeId) {
+    if (storeId) {
+      // Update store purchase history (store ≠ category — probabilistic memory)
+      dispatch(upsertProfile({ storeId, storeName: storeName!, storeGroup, subcategoryId: chip.id, parentId: resolvedParentId }));
+      updateStoreProfile(userId, storeId, storeName!, chip.id, resolvedParentId, storeGroup).catch(() => {});
+    } else {
+      // Teach learned keyword for non-store inputs
       const keyword = parsedNote?.trim() || chip.name.toLowerCase();
       await saveLearnedKeyword(userId, keyword.toLowerCase(), {
         parentId: resolvedParentId,

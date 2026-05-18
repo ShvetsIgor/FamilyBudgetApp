@@ -508,6 +508,35 @@ export default function HomePage() {
                       parsedDateLabel: d.parsedDateLabel as string | undefined,
                       parsedNote: d.parsedNote as string | undefined,
                     })}
+                    onOtherText={(text) => {
+                      // Try to resolve via item keywords first
+                      const itemHit = matchItem(text.toLowerCase());
+                      if (itemHit) {
+                        const cat = allExpenseCats.find(
+                          (c) => c.id === itemHit.subId || (c.name.toLowerCase() === itemHit.keyword && !c.parentId)
+                        );
+                        if (cat) {
+                          handleClarifyChip(
+                            d.amount as number,
+                            { id: cat.id, name: cat.name, icon: cat.icon, color: cat.color },
+                            d.parsedDate as string | undefined,
+                            d.parsedDateLabel as string | undefined,
+                            text,
+                            d.storeId as string | undefined,
+                            d.storeName as string | undefined,
+                            d.storeGroup as string | undefined,
+                          );
+                          return;
+                        }
+                      }
+                      // Fallback — open full category picker
+                      setCategorySheet({
+                        amount: d.amount as number,
+                        parsedDate: d.parsedDate as string | undefined,
+                        parsedDateLabel: d.parsedDateLabel as string | undefined,
+                        parsedNote: text,
+                      });
+                    }}
                   />
                 </BotCardBubble>
               );

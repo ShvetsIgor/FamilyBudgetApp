@@ -422,6 +422,7 @@
     "clarify": {
       "unknown": "Unfamiliar, what is this?",
       "common": "Often chosen",
+      "atStore": "What did you buy at {store}?",
       "all": "All categories",
       "promise": "tell me — I'll remember this word forever",
       "undo": "Undo"

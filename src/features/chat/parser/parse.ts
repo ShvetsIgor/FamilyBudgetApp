@@ -51,8 +51,11 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
   }
 
   // 7. Learned keywords (user-specific, priority over built-in)
+  // Skip learned keyword if the text also matches a known store — let the store pipeline handle it
   for (const [kw, hit] of Object.entries(ctx.learned)) {
     if (rest.includes(kw.toLowerCase())) {
+      const storeCheck = matchStore(rest);
+      if (storeCheck) break; // defer to store pipeline
       return { amount, parentId: hit.parentId, categoryId: hit.subId ?? hit.parentId, matchedKeyword: kw, confidence: 'high', note, ...df };
     }
   }

@@ -13,7 +13,10 @@ import { useLearnedKeywords } from '@/features/chat/hooks/useLearnedKeywords';
 import { useStoreProfiles } from '@/features/chat/hooks/useStoreProfiles';
 
 import { parseMessage } from '@/features/chat/parser/parse';
+import { matchItem } from '@/features/chat/parser/itemDictionary';
 import { saveLearnedKeyword } from '@/features/chat/parser/learning';
+import { updateStoreProfile } from '@/features/chat/services/storeProfilesService';
+import { upsertProfile } from '@/features/chat/store/storeProfilesSlice';
 import { deleteExpense, fetchMonthExpenses } from '@/features/expenses/services/expensesService';
 import { deleteMessageAndExpense } from '@/features/chat/services/messagesService';
 import { collectBotContext } from '@/features/chat/bot/context';

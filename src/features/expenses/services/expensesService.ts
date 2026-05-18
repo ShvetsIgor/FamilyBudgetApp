@@ -99,6 +99,8 @@ export interface AddExpenseInput {
   date: Date;
   paymentMethod: PaymentMethod;
   store?: string;
+  storeId?: string;
+  storeGroup?: string;
   tags: string[];
   comment?: string;
   privacy: Privacy;

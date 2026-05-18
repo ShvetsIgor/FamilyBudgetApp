@@ -59,5 +59,7 @@ export function collectBotContext(state: RootState): BotContext | null {
     .filter((e) => e.date.startsWith(todayStr))
     .reduce((s, e) => s + e.amount, 0);
 
-  return { userId, currency, categoriesById, topParentIds, todaySpent };
+  const storeProfiles = state.storeProfiles?.profiles ?? {};
+
+  return { userId, currency, categoriesById, topParentIds, todaySpent, storeProfiles };
 }

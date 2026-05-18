@@ -77,10 +77,10 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
 
   if (storeMatch && !itemMatch) {
     if (storeMatch.needsContext) {
-      // Ambiguous store (supermarket, amazon) → low confidence, ask what was bought
+      // Ambiguous store (supermarket, amazon, pharmacy) → always ask what was bought
       return {
         amount, confidence: 'low',
-        parentId: storeMatch.parentId, categoryId: storeMatch.subId,
+        parentId: null, categoryId: null,
         storeId: storeMatch.id, storeName: storeMatch.name, storeGroup: storeMatch.storeGroup,
         note, ...df,
       };
@@ -88,7 +88,7 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
     // Self-describing store (McDonalds, Uber, Netflix) → high confidence
     return {
       amount, confidence: 'high',
-      parentId: storeMatch.parentId, categoryId: storeMatch.subId,
+      parentId: storeMatch.parentId ?? null, categoryId: storeMatch.subId ?? null,
       storeId: storeMatch.id, storeName: storeMatch.name, storeGroup: storeMatch.storeGroup,
       matchedKeyword: storeMatch.keyword,
       note, ...df,

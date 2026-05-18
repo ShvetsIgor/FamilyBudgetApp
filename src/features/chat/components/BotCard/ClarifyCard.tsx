@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, ChevronLeft } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Search, ChevronLeft, ArrowRight } from 'lucide-react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { C, SHADOW } from '@/features/chat/styles/tokens';
 import { useT } from '@/shared/hooks/useT';
@@ -23,11 +23,22 @@ interface ClarifyCardProps {
   categories?: Category[];
   onSelectChip: (chip: ClarifyChip) => void;
   onAllCategories: () => void;
+  onOtherText?: (text: string) => void;
 }
 
-export function ClarifyCard({ amount, currency, chips, unknownNote, storeName, categories, onSelectChip, onAllCategories }: ClarifyCardProps) {
+export function ClarifyCard({
+  amount, currency, chips, unknownNote, storeName, categories,
+  onSelectChip, onAllCategories, onOtherText,
+}: ClarifyCardProps) {
   const t = useT();
   const [selectedParent, setSelectedParent] = useState<ClarifyChip | null>(null);
+  const [otherMode, setOtherMode] = useState(false);
+  const [otherText, setOtherText] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (otherMode) inputRef.current?.focus();
+  }, [otherMode]);
 
   const headerText = selectedParent
     ? t.cat(selectedParent.name)
@@ -54,12 +65,33 @@ export function ClarifyCard({ amount, currency, chips, unknownNote, storeName, c
     onSelectChip(chip);
   };
 
+  const handleOtherSubmit = () => {
+    const trimmed = otherText.trim();
+    if (!trimmed) return;
+    if (onOtherText) {
+      onOtherText(trimmed);
+    } else {
+      onAllCategories();
+    }
+    setOtherMode(false);
+    setOtherText('');
+  };
+
+  const handleBack = () => {
+    if (otherMode) {
+      setOtherMode(false);
+      setOtherText('');
+    } else {
+      setSelectedParent(null);
+    }
+  };
+
   return (
     <div className="p-3.5">
       <div className="mb-2 flex items-center gap-1.5">
-        {selectedParent && (
+        {(selectedParent || otherMode) && (
           <button
-            onClick={() => setSelectedParent(null)}
+            onClick={handleBack}
             className="flex items-center active:opacity-50 transition-opacity"
             style={{ color: C.sub }}
           >
@@ -67,32 +99,83 @@ export function ClarifyCard({ amount, currency, chips, unknownNote, storeName, c
           </button>
         )}
         <p className="m-0 text-[10px] font-[800] uppercase tracking-[.08em]" style={{ color: C.sub }}>
-          {headerText}
+          {otherMode ? t('chat.clarify.whatBought') : headerText}
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
-        {currentChips.map((chip) => (
-          <button
-            key={chip.id}
-            onClick={() => handleChipClick(chip)}
-            className="inline-flex items-center gap-1.5 text-[12.5px] font-[800] transition-all active:scale-95"
+      {otherMode ? (
+        <div className="flex items-center gap-2">
+          <input
+            ref={inputRef}
+            value={otherText}
+            onChange={(e) => setOtherText(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleOtherSubmit(); }}
+            placeholder={t('chat.clarify.whatBought')}
+            className="flex-1 text-[13px] font-[700] outline-none bg-transparent"
             style={{
-              padding: '7px 12px 7px 7px',
-              borderRadius: 999,
-              background: C.card,
-              border: `1.5px solid ${C.hairline}`,
               color: C.fg,
-              boxShadow: SHADOW.bubble,
+              borderBottom: `1.5px solid ${C.hairline}`,
+              paddingBottom: 4,
+            }}
+          />
+          <button
+            onClick={handleOtherSubmit}
+            disabled={!otherText.trim()}
+            className="flex items-center justify-center active:scale-95 transition-transform disabled:opacity-30"
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 999,
+              background: C.accent,
+              color: '#fff',
+              border: 'none',
+              flexShrink: 0,
             }}
           >
-            <StickerIcon icon={chip.icon} color={chip.color} className="h-5 w-5" />
-            {t.cat(chip.name)}
+            <ArrowRight size={14} strokeWidth={2.5} />
           </button>
-        ))}
-      </div>
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-1.5">
+          {currentChips.map((chip) => (
+            <button
+              key={chip.id}
+              onClick={() => handleChipClick(chip)}
+              className="inline-flex items-center gap-1.5 text-[12.5px] font-[800] transition-all active:scale-95"
+              style={{
+                padding: '7px 12px 7px 7px',
+                borderRadius: 999,
+                background: C.card,
+                border: `1.5px solid ${C.hairline}`,
+                color: C.fg,
+                boxShadow: SHADOW.bubble,
+              }}
+            >
+              <StickerIcon icon={chip.icon} color={chip.color} className="h-5 w-5" />
+              {t.cat(chip.name)}
+            </button>
+          ))}
 
-      {!selectedParent && (
+          {!selectedParent && (
+            <button
+              onClick={() => setOtherMode(true)}
+              className="inline-flex items-center gap-1.5 text-[12.5px] font-[800] transition-all active:scale-95"
+              style={{
+                padding: '7px 12px',
+                borderRadius: 999,
+                background: 'transparent',
+                border: `1.5px dashed ${C.sub}77`,
+                color: C.sub,
+                boxShadow: SHADOW.bubble,
+              }}
+            >
+              {t('chat.clarify.other')}
+            </button>
+          )}
+        </div>
+      )}
+
+      {!selectedParent && !otherMode && (
         <>
           <button
             onClick={onAllCategories}
@@ -101,7 +184,7 @@ export function ClarifyCard({ amount, currency, chips, unknownNote, storeName, c
               padding: '8px 14px',
               borderRadius: 999,
               background: 'transparent',
-              border: `1.5px dashed ${C.sub}77`,
+              border: `1.5px dashed ${C.sub}44`,
               color: C.sub,
             }}
           >

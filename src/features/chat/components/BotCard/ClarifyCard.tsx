@@ -126,7 +126,7 @@ export function ClarifyCard({
               width: 28,
               height: 28,
               borderRadius: 999,
-              background: C.accent,
+              background: C.primary,
               color: '#fff',
               border: 'none',
               flexShrink: 0,

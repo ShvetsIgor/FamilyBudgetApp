@@ -87,6 +87,8 @@ export interface Expense {
   date: Timestamp;
   paymentMethod: PaymentMethod;
   store?: string;
+  storeId?: string;
+  storeGroup?: string;
   tags: string[];
   comment?: string;
   photoUrl?: string;

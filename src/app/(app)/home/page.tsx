@@ -91,6 +91,7 @@ export default function HomePage() {
 
   useChatMessages();
   const learned = useLearnedKeywords();
+  useStoreProfiles();
 
   const budgetMode = useAppSelector((s) => s.ui.budgetMode);
   const budgetDailyLimit = useAppSelector((s) => s.ui.budgetDailyLimit);

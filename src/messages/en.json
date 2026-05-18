@@ -424,6 +424,8 @@
       "common": "Often chosen",
       "atStore": "What did you buy at {store}?",
       "all": "All categories",
+      "other": "Other",
+      "whatBought": "What did you buy?",
       "promise": "tell me — I'll remember this word forever",
       "undo": "Undo"
     },

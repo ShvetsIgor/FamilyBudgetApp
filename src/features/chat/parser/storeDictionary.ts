@@ -165,69 +165,25 @@ export const STORES: StoreEntry[] = [
     parentId: 'shopping', subId: 'clothes', needsContext: false,
     aliases: ['castro', 'קסטרו'],
   },
-  {
-    id: 'fox', name: 'Fox', storeGroup: 'fashion',
-    parentId: 'shopping', subId: 'clothes', needsContext: true,
-    aliases: ['fox fashion', 'פוקס'],
-  },
+  { id: 'fox', name: 'Fox', storeGroup: 'fashion', needsContext: true, aliases: ['fox fashion', 'פוקס'] },
 
   // ── Online retail ───────────────────────────────────────────────────────────
-  {
-    id: 'amazon', name: 'Amazon', storeGroup: 'online_retail',
-    parentId: 'shopping', subId: 'online_shopping', needsContext: true,
-    aliases: ['amazon', 'амазон', 'אמזון'],
-  },
-  {
-    id: 'aliexpress', name: 'AliExpress', storeGroup: 'online_retail',
-    parentId: 'shopping', subId: 'online_shopping', needsContext: true,
-    aliases: ['aliexpress', 'али', 'אליאקספרס'],
-  },
-  {
-    id: 'ebay', name: 'eBay', storeGroup: 'online_retail',
-    parentId: 'shopping', subId: 'online_shopping', needsContext: true,
-    aliases: ['ebay', 'ибей', 'איביי'],
-  },
+  { id: 'amazon', name: 'Amazon', storeGroup: 'online_retail', needsContext: true, aliases: ['amazon', 'амазон', 'אמזון'] },
+  { id: 'aliexpress', name: 'AliExpress', storeGroup: 'online_retail', needsContext: true, aliases: ['aliexpress', 'али', 'אליאקספרס'] },
+  { id: 'ebay', name: 'eBay', storeGroup: 'online_retail', needsContext: true, aliases: ['ebay', 'ибей', 'איביי'] },
 
   // ── Electronics stores ──────────────────────────────────────────────────────
-  {
-    id: 'bug', name: 'Bug', storeGroup: 'electronics_store',
-    parentId: 'technology', subId: 'electronics', needsContext: true,
-    aliases: ['bug', 'באג'],
-  },
-  {
-    id: 'ivory', name: 'Ivory', storeGroup: 'electronics_store',
-    parentId: 'technology', subId: 'electronics', needsContext: true,
-    aliases: ['ivory', 'איבורי'],
-  },
-  {
-    id: 'ksmart', name: 'KSmart', storeGroup: 'electronics_store',
-    parentId: 'technology', subId: 'electronics', needsContext: true,
-    aliases: ['ksmart', 'קסמארט'],
-  },
+  { id: 'bug', name: 'Bug', storeGroup: 'electronics_store', needsContext: true, aliases: ['bug', 'באג'] },
+  { id: 'ivory', name: 'Ivory', storeGroup: 'electronics_store', needsContext: true, aliases: ['ivory', 'איבורי'] },
+  { id: 'ksmart', name: 'KSmart', storeGroup: 'electronics_store', needsContext: true, aliases: ['ksmart', 'קסמארט'] },
 
   // ── Furniture ───────────────────────────────────────────────────────────────
-  {
-    id: 'ikea', name: 'IKEA', storeGroup: 'furniture_store',
-    parentId: 'home', subId: 'furniture', needsContext: false,
-    aliases: ['ikea', 'икеа', 'איקאה'],
-  },
-  {
-    id: 'kika', name: 'Kika', storeGroup: 'furniture_store',
-    parentId: 'home', subId: 'furniture', needsContext: true,
-    aliases: ['kika', 'кика', 'קיקה'],
-  },
+  { id: 'ikea', name: 'IKEA', storeGroup: 'furniture_store', needsContext: true, aliases: ['ikea', 'икеа', 'איקאה'] },
+  { id: 'kika', name: 'Kika', storeGroup: 'furniture_store', needsContext: true, aliases: ['kika', 'кика', 'קיקה'] },
 
   // ── Home improvement ────────────────────────────────────────────────────────
-  {
-    id: 'ace', name: 'ACE', storeGroup: 'home_improvement',
-    parentId: 'home', subId: 'tools', needsContext: true,
-    aliases: ['ace', 'эйс', 'אייס'],
-  },
-  {
-    id: 'obi', name: 'OBI', storeGroup: 'home_improvement',
-    parentId: 'home', subId: 'tools', needsContext: true,
-    aliases: ['obi', 'оби'],
-  },
+  { id: 'ace', name: 'ACE', storeGroup: 'home_improvement', needsContext: true, aliases: ['ace', 'эйс', 'אייס'] },
+  { id: 'obi', name: 'OBI', storeGroup: 'home_improvement', needsContext: true, aliases: ['obi', 'оби'] },
 
   // ── Streaming / Subscriptions ───────────────────────────────────────────────
   {

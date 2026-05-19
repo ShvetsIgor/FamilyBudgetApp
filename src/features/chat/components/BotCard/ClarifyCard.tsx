@@ -20,6 +20,7 @@ interface ClarifyCardProps {
   chips: ClarifyChip[];
   unknownNote?: string;
   storeName?: string;
+  isRepeat?: boolean;
   categories?: Category[];
   onSelectChip: (chip: ClarifyChip) => void;
   onAllCategories: () => void;

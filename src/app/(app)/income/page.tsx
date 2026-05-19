@@ -301,7 +301,7 @@ export default function IncomePage() {
       {/* Mobile FAB */}
       {!formOpen && isCurrentMonth && (
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => router.push('/income/new')}
           className="lg:hidden fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-transform active:scale-95"
           style={{ background: 'hsl(var(--primary))' }}
         >

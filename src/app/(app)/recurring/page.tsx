@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { X, Calendar, MessageSquare, Plus } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import {
   setRecurring, addRecurringItem, removeRecurringItem, updateRecurringItem, toggleRecurringItem,
@@ -15,11 +16,23 @@ import {
 import { addExpense } from '@/features/expenses/services/expensesService';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
 import { CategoryPicker } from '@/features/categories/components/CategoryPicker';
-import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
-import { formatAmount, blockInvalidAmountKeys, parseLocalDate } from '@/shared/utils/currency';
+import { CategoryIcon, StickerIcon } from '@/features/categories/components/CategoryIcon';
+import { formatAmount, parseLocalDate } from '@/shared/utils/currency';
+import { getCurrencySymbol } from '@/shared/utils/currency';
+import { MiniCalendar } from '@/shared/components/MiniCalendar';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
 import type { RecurringFrequency, RecurringType, SerializableRecurringPayment } from '@/shared/types';
+
+const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 'C', 0, '⌫'] as const;
+type NumKey = (typeof NUMPAD_KEYS)[number];
+
+function applyKey(cur: string, key: NumKey): string {
+  if (key === 'C') return '0';
+  if (key === '⌫') { const s = cur.slice(0, -1); return s === '' ? '0' : s; }
+  if (cur === '0') return String(key);
+  return cur + String(key);
+}
 
 function daysUntil(dateStr: string): number {
   return differenceInDays(parseISO(dateStr), new Date());
@@ -141,7 +154,6 @@ export default function RecurringPage() {
       return s + r.amount * m;
     }, 0);
 
-  // ── List items ───────────────────────────────────────────────────────────────
   const listItems = list.map((item) => {
     const cat = categories.find((c) => c.id === item.categoryId);
     const days = daysUntil(item.nextDueDate);
@@ -203,7 +215,7 @@ export default function RecurringPage() {
       <RecurringForm
         initial={formMode.mode === 'edit' ? formMode.item : undefined}
         onSave={handleSave} onCancel={() => setFormMode(null)}
-        currency={currency} freq={FREQ} types={TYPES} t={t}
+        currency={currency} freq={FREQ} types={TYPES}
       />
     </div>
   ) : (
@@ -222,46 +234,48 @@ export default function RecurringPage() {
   return (
     <>
       {/* ── MOBILE ── */}
-      <div className="lg:hidden flex flex-col gap-4 px-4 pt-5 pb-8">
+      <div className="lg:hidden flex flex-col gap-4 px-4 pt-5 pb-24">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold">{t('recurring.title')}</h1>
-          {formMode ? (
-            <button onClick={() => setFormMode(null)} className="text-sm text-muted-foreground">{t('recurring.back')}</button>
-          ) : (
-            <button onClick={() => setFormMode({ mode: 'add' })} className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-medium">
-              {t('recurring.add')}
-            </button>
-          )}
         </div>
 
-        {formMode ? (
+        {list.length > 0 && (
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <p className="text-xs text-muted-foreground">{t('recurring.monthlyTotal')}</p>
+            <p className="text-2xl font-bold tabular-nums mt-1 text-destructive">
+              {monthlyTotal > 0 ? '-' : ''}{formatAmount(monthlyTotal, currency)}
+            </p>
+          </div>
+        )}
+
+        {loading && <div className="flex justify-center py-12"><div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-primary" /></div>}
+        {!loading && list.length === 0 && (
+          <div className="flex flex-col items-center py-12 text-center">
+            <p className="text-4xl mb-3">🔄</p>
+            <p className="font-medium">{t('recurring.noItems')}</p>
+            <p className="text-sm text-muted-foreground mt-1">{t('recurring.noItemsHint')}</p>
+          </div>
+        )}
+        {list.length > 0 && (
+          <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">{listItems}</div>
+        )}
+
+        {/* FAB */}
+        <button
+          onClick={() => setFormMode({ mode: 'add' })}
+          className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-transform active:scale-95"
+          style={{ background: 'hsl(var(--primary))' }}
+        >
+          <Plus size={24} color="white" />
+        </button>
+
+        {/* Full-screen overlay form */}
+        {formMode && (
           <RecurringForm
             initial={formMode.mode === 'edit' ? formMode.item : undefined}
             onSave={handleSave} onCancel={() => setFormMode(null)}
-            currency={currency} freq={FREQ} types={TYPES} t={t}
+            currency={currency} freq={FREQ} types={TYPES}
           />
-        ) : (
-          <>
-            {list.length > 0 && (
-              <div className="rounded-2xl border border-border bg-card p-4">
-                <p className="text-xs text-muted-foreground">{t('recurring.monthlyTotal')}</p>
-                <p className="text-2xl font-bold tabular-nums mt-1 text-destructive">
-                  {monthlyTotal > 0 ? '-' : ''}{formatAmount(monthlyTotal, currency)}
-                </p>
-              </div>
-            )}
-            {loading && <div className="flex justify-center py-12"><div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-primary" /></div>}
-            {!loading && list.length === 0 && (
-              <div className="flex flex-col items-center py-12 text-center">
-                <p className="text-4xl mb-3">🔄</p>
-                <p className="font-medium">{t('recurring.noItems')}</p>
-                <p className="text-sm text-muted-foreground mt-1">{t('recurring.noItemsHint')}</p>
-              </div>
-            )}
-            {list.length > 0 && (
-              <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">{listItems}</div>
-            )}
-          </>
         )}
       </div>
 
@@ -305,18 +319,21 @@ export default function RecurringPage() {
 
 // ── RecurringForm ─────────────────────────────────────────────────────────────
 
-function RecurringForm({ initial, onSave, onCancel, currency, freq, types, t }: {
+function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
   initial?: SerializableRecurringPayment;
   onSave: (d: Omit<AddRecurringInput, 'userId'>) => Promise<void>;
   onCancel: () => void;
   currency: string;
   freq: { value: RecurringFrequency; label: string }[];
   types: { value: RecurringType; label: string; icon: string }[];
-  t: (key: string) => string;
 }) {
+  const t = useT();
+  const allCats = useAppSelector((s) => s.categories.expense).filter((c) => !c.parentId);
+  const symbol = getCurrencySymbol(currency as Parameters<typeof getCurrencySymbol>[0]);
+
   const [name, setName] = useState(initial?.name ?? '');
-  const [amount, setAmount] = useState(initial?.amount.toString() ?? '');
-  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? '');
+  const [amount, setAmount] = useState(initial ? String(initial.amount) : '0');
+  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? allCats[0]?.id ?? '');
   const [frequency, setFrequency] = useState<RecurringFrequency>(initial?.frequency ?? 'monthly');
   const [type, setType] = useState<RecurringType>(initial?.type ?? 'subscription');
   const [startDate, setStartDate] = useState(
@@ -324,87 +341,335 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types, t }: 
   );
   const [reminderDays, setReminderDays] = useState(initial?.reminderDays ?? 3);
   const [comment, setComment] = useState(initial?.comment ?? '');
+  const [showComment, setShowComment] = useState(!!initial?.comment);
+  const [showDate, setShowDate] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const num = parseFloat(amount);
-    if (!name.trim() || !num || num <= 0) { setError(t('common.error')); return; }
+  const amountNum = parseFloat(amount) || 0;
+  const category = allCats.find((c) => c.id === categoryId);
+  const catColor = category?.color ?? '#E07A5F';
+
+  function tap(key: NumKey) { setAmount((cur) => applyKey(cur, key)); }
+
+  async function handleSubmit() {
+    if (!name.trim()) { setError('Введите название'); return; }
+    if (amountNum <= 0 || saving) return;
     setError(''); setSaving(true);
     try {
-      await onSave({ name: name.trim(), amount: num, currency: currency as never, categoryId, frequency, startDate: parseLocalDate(startDate), type, reminderDays, comment: comment.trim() || undefined });
+      await onSave({
+        name: name.trim(), amount: amountNum, currency: currency as never,
+        categoryId, frequency, startDate: parseLocalDate(startDate),
+        type, reminderDays, comment: comment.trim() || undefined,
+      });
     } finally { setSaving(false); }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-4 pb-6 pt-2 max-h-[70vh] overflow-y-auto lg:max-h-none">
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-1 block">{t('recurring.name')}</label>
-        <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={t('recurring.namePlaceholder')}
-          className="w-full bg-transparent text-sm font-medium outline-none" />
-      </div>
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-1 block">{t('recurring.amount')} ({currency})</label>
-        <input type="number" min="0" step="0.01" placeholder="0.00" value={amount}
-          onChange={(e) => setAmount(e.target.value)} onKeyDown={blockInvalidAmountKeys}
-          className="w-full bg-transparent text-2xl font-bold outline-none tabular-nums text-destructive" />
-      </div>
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.type')}</label>
-        <div className="grid grid-cols-3 gap-2">
-          {types.map((tp) => (
-            <button key={tp.value} type="button" onClick={() => setType(tp.value)}
-              className={`flex flex-col items-center gap-1 rounded-xl py-2 text-xs border transition-colors ${type === tp.value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'}`}>
-              <span>{tp.icon}</span><span>{tp.label}</span>
+    <>
+      {/* ── Mobile: full-screen overlay ── */}
+      <div
+        className="lg:hidden fixed inset-0 z-50 flex flex-col bg-background"
+        style={{ height: '100dvh', maxHeight: '100dvh' }}
+      >
+        {/* Top bar */}
+        <div className="flex items-center gap-2 px-4 pt-1 pb-0.5 flex-shrink-0">
+          <button onClick={onCancel} className="p-1.5 rounded-full hover:bg-muted transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+          <div className="flex-1 text-center text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">
+            {initial ? t('recurring.editTitle') : t('recurring.newTitle')}
+          </div>
+          <button
+            onClick={() => { setShowDate(!showDate); setShowComment(false); }}
+            className="p-1.5 rounded-full transition-colors"
+            style={{ color: showDate ? catColor : 'hsl(var(--muted-foreground))' }}
+          >
+            <Calendar className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => { setShowComment(!showComment); setShowDate(false); }}
+            className="p-1.5 rounded-full transition-colors"
+            style={{ color: showComment ? catColor : 'hsl(var(--muted-foreground))' }}
+          >
+            <MessageSquare className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Name input */}
+        <div className="mx-4 mt-1.5 flex-shrink-0">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t('recurring.namePlaceholder')}
+            autoFocus
+            className="block w-full px-4 py-2.5 rounded-[14px] text-sm font-bold bg-card border border-border outline-none focus:border-primary transition-colors"
+          />
+          {error && <p className="text-[11px] text-destructive mt-1 px-1">{error}</p>}
+        </div>
+
+        {/* Amount row */}
+        <div className="mx-4 mt-1.5 px-4 py-1.5 rounded-[18px] flex items-baseline justify-between flex-shrink-0 border-[1.5px] border-primary bg-primary/10">
+          <span className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">
+            {t('recurring.amount')}
+          </span>
+          <div className="flex items-baseline gap-1">
+            <span className="text-base font-bold text-muted-foreground">{symbol}</span>
+            <span className="text-[32px] font-black text-foreground tracking-[-0.03em] leading-none tabular-nums">
+              {amount}
+            </span>
+          </div>
+        </div>
+
+        {/* Expandable: date / comment */}
+        {(showDate || showComment) && (
+          <div className="mx-4 mt-2 flex-shrink-0">
+            {showDate && (
+              <MiniCalendar value={startDate} onChange={(d) => { setStartDate(d); setShowDate(false); }} color={catColor} />
+            )}
+            {showComment && (
+              <input
+                type="text"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder={t('recurring.commentPlaceholder')}
+                autoFocus
+                className="block w-full px-3 py-2 rounded-xl text-sm bg-card border border-border outline-none focus:border-primary transition-colors"
+              />
+            )}
+          </div>
+        )}
+
+        {/* Scrollable middle */}
+        <div className="flex-1 overflow-y-auto px-3.5 py-1.5 flex flex-col gap-2 min-h-0 [scrollbar-width:none]">
+
+          {/* Type grid */}
+          <div>
+            <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider mb-1.5 px-0.5">
+              {t('recurring.type')}
+            </p>
+            <div className="overflow-x-auto [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
+              <div className="grid grid-rows-2 grid-flow-col gap-1.5" style={{ gridAutoColumns: '64px' }}>
+                {types.map((tp) => {
+                  const sel = type === tp.value;
+                  return (
+                    <button
+                      key={tp.value}
+                      onClick={() => setType(tp.value)}
+                      className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
+                      style={{
+                        background: sel ? catColor : 'hsl(var(--card))',
+                        boxShadow: sel ? `0 3px 8px ${catColor}55` : '0 1px 3px rgba(61,44,31,.06)',
+                      }}
+                    >
+                      <span className="text-base leading-none">{tp.icon}</span>
+                      <span
+                        className="text-[9px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
+                        style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}
+                      >
+                        {tp.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Frequency chips */}
+          <div>
+            <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider mb-1.5 px-0.5">
+              {t('recurring.frequency')}
+            </p>
+            <div className="flex gap-1.5">
+              {freq.map((f) => {
+                const sel = frequency === f.value;
+                return (
+                  <button
+                    key={f.value}
+                    onClick={() => setFrequency(f.value)}
+                    className="flex-1 py-1.5 rounded-xl text-[11px] font-bold transition-all border"
+                    style={{
+                      background: sel ? catColor + '18' : 'hsl(var(--card))',
+                      borderColor: sel ? catColor : 'transparent',
+                      color: sel ? catColor : 'hsl(var(--muted-foreground))',
+                    }}
+                  >
+                    {f.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Category grid */}
+          <div>
+            <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider mb-1.5 px-0.5">
+              {t('recurring.category')}
+            </p>
+            <div className="overflow-x-auto [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
+              <div className="grid grid-rows-2 grid-flow-col gap-1.5" style={{ gridAutoColumns: '64px' }}>
+                {allCats.map((cat) => {
+                  const sel = cat.id === categoryId;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setCategoryId(cat.id)}
+                      className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
+                      style={{
+                        background: sel ? cat.color : 'hsl(var(--card))',
+                        boxShadow: sel ? `0 3px 8px ${cat.color}55` : '0 1px 3px rgba(61,44,31,.06)',
+                      }}
+                    >
+                      <StickerIcon icon={cat.icon} color={sel ? '#fff' : cat.color} className="h-4 w-4" />
+                      <span
+                        className="text-[9px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
+                        style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}
+                      >
+                        {t.cat(cat.name)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Reminder */}
+          <div
+            className="bg-card rounded-[14px] px-3.5 py-2.5 flex items-center justify-between flex-shrink-0"
+            style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}
+          >
+            <p className="text-[12.5px] font-bold text-foreground">{t('recurring.remind')}</p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setReminderDays(Math.max(0, reminderDays - 1))}
+                className="h-7 w-7 rounded-lg bg-muted text-muted-foreground text-lg font-bold flex items-center justify-center"
+              >−</button>
+              <span className="w-12 text-center text-sm font-extrabold tabular-nums">
+                {t('recurring.remindDays').replace('{n}', String(reminderDays))}
+              </span>
+              <button
+                onClick={() => setReminderDays(Math.min(14, reminderDays + 1))}
+                className="h-7 w-7 rounded-lg bg-muted text-muted-foreground text-lg font-bold flex items-center justify-center"
+              >+</button>
+            </div>
+          </div>
+        </div>
+
+        {/* Numpad */}
+        <div className="px-3 pt-0.5 grid grid-cols-3 flex-shrink-0" style={{ gridAutoRows: '40px', gap: '4px' }}>
+          {NUMPAD_KEYS.map((k) => (
+            <button
+              key={String(k)}
+              onClick={() => tap(k)}
+              className="bg-card rounded-xl font-extrabold transition-colors active:bg-muted border-0"
+              style={{
+                fontSize: typeof k === 'number' ? 20 : 16,
+                color: k === '⌫' || k === 'C' ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
+                boxShadow: '0 1px 2px rgba(61,44,31,.05)',
+              }}
+            >
+              {k}
             </button>
           ))}
         </div>
-      </div>
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.frequency')}</label>
-        <div className="grid grid-cols-2 gap-2">
-          {freq.map((f) => (
-            <button key={f.value} type="button" onClick={() => setFrequency(f.value)}
-              className={`rounded-xl py-2 text-sm font-medium border transition-colors ${frequency === f.value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'}`}>
-              {f.label}
-            </button>
-          ))}
+
+        {/* Save bar */}
+        <div className="px-4 pt-1.5 flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
+          <button
+            onClick={handleSubmit}
+            disabled={saving || amountNum <= 0}
+            className="w-full py-[12px] rounded-[16px] flex items-center justify-center gap-2 text-[14px] font-black text-white transition-opacity disabled:opacity-50 border-0"
+            style={{ background: catColor, boxShadow: `0 12px 24px ${catColor}60` }}
+          >
+            <span className="text-base leading-none">{types.find((tp) => tp.value === type)?.icon ?? '🔄'}</span>
+            <span>
+              {saving
+                ? t('recurring.saving')
+                : initial
+                  ? `${t('recurring.saveChanges')} · ${symbol}\u202F${amount}`
+                  : `${t('recurring.save')} · ${symbol}\u202F${amount}`}
+            </span>
+          </button>
         </div>
       </div>
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.category')}</label>
-        <CategoryPicker type="expense" value={categoryId} onChange={setCategoryId} parentsOnly />
-      </div>
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-1 block">{t('recurring.nextDue')}</label>
-        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
-          className="w-full bg-transparent text-sm font-medium outline-none" />
-      </div>
-      <div className="rounded-2xl border border-border bg-card p-4 flex items-center justify-between">
-        <label className="text-sm font-medium">{t('recurring.remind')}</label>
-        <div className="flex items-center gap-2">
-          <button type="button" onClick={() => setReminderDays(Math.max(0, reminderDays - 1))}
-            className="h-8 w-8 rounded-lg border border-border text-muted-foreground">−</button>
-          <span className="w-12 text-center text-sm font-semibold">{t('recurring.remindDays').replace('{n}', String(reminderDays))}</span>
-          <button type="button" onClick={() => setReminderDays(Math.min(14, reminderDays + 1))}
-            className="h-8 w-8 rounded-lg border border-border text-muted-foreground">+</button>
+
+      {/* ── Desktop: compact form ── */}
+      <form
+        onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
+        className="hidden lg:flex flex-col gap-4 px-4 pb-6 pt-2 max-h-[70vh] overflow-y-auto"
+      >
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <label className="text-xs text-muted-foreground mb-1 block">{t('recurring.name')}</label>
+          <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={t('recurring.namePlaceholder')}
+            className="w-full bg-transparent text-sm font-medium outline-none" />
         </div>
-      </div>
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs text-muted-foreground mb-1 block">{t('recurring.comment')}</label>
-        <input value={comment} onChange={(e) => setComment(e.target.value)} placeholder={t('recurring.commentPlaceholder')}
-          className="w-full bg-transparent text-sm outline-none" />
-      </div>
-      {error && <p className="text-xs text-destructive px-1">{error}</p>}
-      <div className="flex gap-3">
-        <button type="button" onClick={onCancel} className="flex-1 rounded-2xl border border-border py-3 text-sm font-medium text-muted-foreground">
-          {t('recurring.cancel')}
-        </button>
-        <button type="submit" disabled={saving} className="flex-1 rounded-2xl bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-          {saving ? t('recurring.saving') : initial ? t('recurring.saveChanges') : t('recurring.save')}
-        </button>
-      </div>
-    </form>
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <label className="text-xs text-muted-foreground mb-1 block">{t('recurring.amount')} ({currency})</label>
+          <input
+            type="number" min="0" step="0.01" placeholder="0.00"
+            value={amountNum === 0 ? '' : String(amountNum)}
+            onChange={(e) => setAmount(e.target.value || '0')}
+            className="w-full bg-transparent text-2xl font-bold outline-none tabular-nums text-destructive"
+          />
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.type')}</label>
+          <div className="grid grid-cols-3 gap-2">
+            {types.map((tp) => (
+              <button key={tp.value} type="button" onClick={() => setType(tp.value)}
+                className={`flex flex-col items-center gap-1 rounded-xl py-2 text-xs border transition-colors ${type === tp.value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'}`}>
+                <span>{tp.icon}</span><span>{tp.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.frequency')}</label>
+          <div className="grid grid-cols-2 gap-2">
+            {freq.map((f) => (
+              <button key={f.value} type="button" onClick={() => setFrequency(f.value)}
+                className={`rounded-xl py-2 text-sm font-medium border transition-colors ${frequency === f.value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'}`}>
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.category')}</label>
+          <CategoryPicker type="expense" value={categoryId} onChange={setCategoryId} parentsOnly />
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <label className="text-xs text-muted-foreground mb-1 block">{t('recurring.nextDue')}</label>
+          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
+            className="w-full bg-transparent text-sm font-medium outline-none" />
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-4 flex items-center justify-between">
+          <label className="text-sm font-medium">{t('recurring.remind')}</label>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => setReminderDays(Math.max(0, reminderDays - 1))}
+              className="h-8 w-8 rounded-lg border border-border text-muted-foreground">−</button>
+            <span className="w-12 text-center text-sm font-semibold">{t('recurring.remindDays').replace('{n}', String(reminderDays))}</span>
+            <button type="button" onClick={() => setReminderDays(Math.min(14, reminderDays + 1))}
+              className="h-8 w-8 rounded-lg border border-border text-muted-foreground">+</button>
+          </div>
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <label className="text-xs text-muted-foreground mb-1 block">{t('recurring.comment')}</label>
+          <input value={comment} onChange={(e) => setComment(e.target.value)} placeholder={t('recurring.commentPlaceholder')}
+            className="w-full bg-transparent text-sm outline-none" />
+        </div>
+        {error && <p className="text-xs text-destructive px-1">{error}</p>}
+        <div className="flex gap-3">
+          <button type="button" onClick={onCancel} className="flex-1 rounded-2xl border border-border py-3 text-sm font-medium text-muted-foreground">
+            {t('recurring.cancel')}
+          </button>
+          <button type="submit" disabled={saving} className="flex-1 rounded-2xl bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+            {saving ? t('recurring.saving') : initial ? t('recurring.saveChanges') : t('recurring.save')}
+          </button>
+        </div>
+      </form>
+    </>
   );
 }

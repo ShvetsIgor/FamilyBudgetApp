@@ -4,13 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, MessageSquare, Calendar } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
-import { prependIncome } from '@/features/income/store/incomeSlice';
-import { addIncome } from '@/features/income/services/incomeService';
+import { prependIncome, updateIncome } from '@/features/income/store/incomeSlice';
+import { addIncome, updateIncome as updateIncomeService } from '@/features/income/services/incomeService';
 import { addRecurringIncome } from '@/features/income/services/recurringIncomeService';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
+import type { SerializableIncome } from '@/shared/types';
 
 const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫'] as const;
 type NumKey = (typeof NUMPAD_KEYS)[number];

@@ -111,7 +111,7 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
             </div>
             <div className="relative mt-3 flex items-baseline gap-2">
               <span className="text-[26px] font-[900] tabular-nums" style={{ letterSpacing: -0.8 }}>
-                {sym}{todaySpent.toLocaleString()}
+                {sym}{'\u202F'}{todaySpent.toLocaleString()}
               </span>
               <span className="text-[12px] font-[800] opacity-80">{t('chat.menu.todaySpent')}</span>
             </div>

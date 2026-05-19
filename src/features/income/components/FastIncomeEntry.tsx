@@ -25,7 +25,7 @@ function applyKey(cur: string, key: NumKey): string {
 
 type Method = 'card' | 'cash' | 'bank' | 'other';
 
-export function FastIncomeEntry() {
+export function FastIncomeEntry({ initialIncome }: { initialIncome?: SerializableIncome }) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
@@ -36,12 +36,12 @@ export function FastIncomeEntry() {
 
   const parentCats = allCats.filter((c) => !c.parentId);
 
-  const [amount, setAmount] = useState('0');
-  const [categoryId, setCategoryId] = useState(parentCats[0]?.id ?? '');
-  const [method, setMethod] = useState<Method>('bank');
-  const [comment, setComment] = useState('');
-  const [showComment, setShowComment] = useState(false);
-  const [dateStr, setDateStr] = useState(toDateInput(new Date()));
+  const [amount, setAmount] = useState(initialIncome ? String(initialIncome.amount) : '0');
+  const [categoryId, setCategoryId] = useState(initialIncome?.categoryId ?? parentCats[0]?.id ?? '');
+  const [method, setMethod] = useState<Method>((initialIncome?.method as Method) ?? 'bank');
+  const [comment, setComment] = useState(initialIncome?.comment ?? '');
+  const [showComment, setShowComment] = useState(!!initialIncome?.comment);
+  const [dateStr, setDateStr] = useState(initialIncome ? toDateInput(new Date(initialIncome.date)) : toDateInput(new Date()));
   const [showDate, setShowDate] = useState(false);
   const [saving, setSaving] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);

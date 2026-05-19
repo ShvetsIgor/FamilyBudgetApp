@@ -1,6 +1,7 @@
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { addExpense } from '@/features/expenses/services/expensesService';
+import { addIncome } from '@/features/income/services/incomeService';
 import { addMessage, updateMessage } from '@/features/chat/services/messagesService';
 import type { SerializableChatMessage, ParseResult } from '@/shared/types/message';
 import type { Category } from '@/shared/types';

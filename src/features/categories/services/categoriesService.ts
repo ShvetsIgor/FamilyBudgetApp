@@ -96,19 +96,30 @@ export async function resetCategoriesToDefaults(
 
 
 export async function seedDefaultCategories(userId: string): Promise<void> {
-  const existing = await fetchCategories(userId, 'expense');
-  if (existing.length > 0) return;
+  const [existingExpense, existingIncome] = await Promise.all([
+    fetchCategories(userId, 'expense'),
+    fetchCategories(userId, 'income'),
+  ]);
 
-  for (const cat of DEFAULT_EXPENSE_CATEGORIES) {
-    const { id, ...rest } = cat;
-    const clean = Object.fromEntries(Object.entries({ ...rest, userId }).filter(([, v]) => v !== undefined));
-    await setDoc(doc(colRef(userId, 'expense'), id), clean);
+  const needsExpense = existingExpense.length === 0;
+  const needsIncome = existingIncome.filter((c) => c.parentId).length === 0;
+
+  if (!needsExpense && !needsIncome) return;
+
+  if (needsExpense) {
+    for (const cat of DEFAULT_EXPENSE_CATEGORIES) {
+      const { id, ...rest } = cat;
+      const clean = Object.fromEntries(Object.entries({ ...rest, userId }).filter(([, v]) => v !== undefined));
+      await setDoc(doc(colRef(userId, 'expense'), id), clean);
+    }
   }
 
-  for (const cat of DEFAULT_INCOME_CATEGORIES) {
-    const { id, ...rest } = cat;
-    const clean = Object.fromEntries(Object.entries({ ...rest, userId }).filter(([, v]) => v !== undefined));
-    await setDoc(doc(colRef(userId, 'income'), id), clean);
+  if (needsIncome) {
+    for (const cat of DEFAULT_INCOME_CATEGORIES) {
+      const { id, ...rest } = cat;
+      const clean = Object.fromEntries(Object.entries({ ...rest, userId }).filter(([, v]) => v !== undefined));
+      await setDoc(doc(colRef(userId, 'income'), id), clean);
+    }
   }
 }
 

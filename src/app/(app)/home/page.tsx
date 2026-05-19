@@ -200,7 +200,7 @@ export default function HomePage() {
 
   const sendingRef = useRef(false);
 
-  type ClarifyContext = { amount: number; parsedDate?: string; parsedDateLabel?: string; parsedNote?: string };
+  type ClarifyContext = { amount: number; parsedDate?: string; parsedDateLabel?: string; parsedNote?: string; isIncome?: boolean };
   const [categorySheet, setCategorySheet] = useState<ClarifyContext | null>(null);
 
   const buildEnrichedCtx = useCallback(() => {

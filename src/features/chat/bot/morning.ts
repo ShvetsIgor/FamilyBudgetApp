@@ -62,7 +62,7 @@ export async function sendMorningGreeting(ctx: BotContext): Promise<void> {
     kind: 'morning',
     title: 'Доброе утро ✨',
     text: yesterdayAmount > 0
-      ? `Вчера потрачено ${sym}${yesterdayAmount.toLocaleString()}. Сегодня свободно ${sym}${todayFree.toLocaleString()}.`
+      ? `Вчера потрачено ${sym}\u202F${yesterdayAmount.toLocaleString()}. Сегодня свободно ${sym}\u202F${todayFree.toLocaleString()}.`
       : `Сегодня свободно ${sym}${todayFree.toLocaleString()}.`,
     data: cardData,
     createdAt: new Date().toISOString(),

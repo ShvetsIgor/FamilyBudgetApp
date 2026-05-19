@@ -43,6 +43,7 @@ export function FastIncomeEntry() {
   const [dateStr, setDateStr] = useState(toDateInput(new Date()));
   const [showDate, setShowDate] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
 
   const category = allCats.find((c) => c.id === categoryId);
   const amountNum = parseFloat(amount) || 0;

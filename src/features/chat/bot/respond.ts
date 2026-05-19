@@ -165,9 +165,103 @@ export async function respondToUserMessage(
   parsed: ParseResult,
   ctx: BotContext
 ): Promise<BotReply> {
-  const { userId, currency, categoriesById, topParentIds } = ctx;
+  const { userId, currency, categoriesById, topParentIds, incomeCategoriesById, topIncomeParentIds } = ctx;
   const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
   const sym = symMap[currency] ?? currency;
+
+  // ── Income path: "+" prefix
+  if (parsed.isIncome) {
+    // No number → fail
+    if (parsed.amount <= 0) {
+      return { messages: [makeBotMsg(userId, { text: UNKNOWN_PHRASE })] };
+    }
+
+    // No category selected yet → show income clarify card
+    if (!parsed.categoryId) {
+      const chips = topIncomeParentIds
+        .slice(0, 5)
+        .map((id) => incomeCategoriesById.get(id))
+        .filter(Boolean)
+        .map((c) => ({ id: c!.id, name: c!.name, icon: c!.icon, color: c!.color }));
+
+      return {
+        messages: [
+          makeBotMsg(userId, {
+            text: `+${sym}\u202F${parsed.amount} — куда записать?`,
+            card: {
+              kind: 'clarify',
+              data: {
+                amount: parsed.amount,
+                chips,
+                isIncome: true,
+                parsedDate: parsed.date,
+                parsedDateLabel: parsed.dateLabel,
+                parsedNote: parsed.note,
+              },
+            },
+            status: 'saved',
+          }),
+        ],
+      };
+    }
+
+    // Category selected → save income
+    const incomeCat = incomeCategoriesById.get(parsed.categoryId)
+      ?? [...incomeCategoriesById.values()].find((c) => c.id === parsed.categoryId);
+    const date = expenseDate(parsed);
+
+    let income: Awaited<ReturnType<typeof addIncome>> | undefined;
+    try {
+      income = await addIncome({
+        userId,
+        amount: parsed.amount,
+        currency,
+        categoryId: parsed.categoryId,
+        date,
+        method: 'bank',
+        privacy: 'regular',
+        comment: parsed.note || undefined,
+      });
+    } catch {
+      return { messages: [makeBotMsg(userId, { text: 'Не удалось сохранить 😔 Попробуй ещё раз' })] };
+    }
+
+    await updateMessage(userId, userMsg.id, { status: 'saved' });
+
+    const catName = incomeCat?.name ?? 'Доход';
+    const _now = new Date();
+    const todayStr = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-${String(_now.getDate()).padStart(2, '0')}`;
+    const isToday = (parsed.date ?? todayStr) === todayStr;
+    const dateHint = !isToday && parsed.date
+      ? format(parseISO(parsed.date), 'd MMMM', { locale: ru })
+      : undefined;
+
+    return {
+      messages: [
+        makeBotMsg(userId, {
+          text: `+${sym}\u202F${parsed.amount} · ${catName}`,
+          card: {
+            kind: 'saved',
+            data: {
+              icon: incomeCat?.icon ?? 'trending-up',
+              color: incomeCat?.color ?? '#10b981',
+              title: catName,
+              catName: null,
+              parentName: null,
+              hint: dateHint,
+              amount: parsed.amount,
+              currency: sym,
+              isIncome: true,
+              incomeId: income.id,
+              userMsgId: userMsg.id,
+            },
+          },
+          status: 'saved',
+        }),
+      ],
+      income,
+    };
+  }
 
   // ── Case 1: no number at all
   if (parsed.confidence === 'failed' && parsed.amount === 0) {

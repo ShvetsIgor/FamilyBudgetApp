@@ -522,6 +522,7 @@
     },
     "today": {
       "budgetLabel": "Бюджет на сегодня",
+      "monthLabel": "Бюджет на месяц",
       "of": "из",
       "spent": "потрачено",
       "spentPct": "уже {pct}%"

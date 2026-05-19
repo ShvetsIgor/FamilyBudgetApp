@@ -293,26 +293,6 @@ export function FastExpenseEntry({
         </div>
       </div>
 
-      {/* ── Expandable: date / comment ── */}
-      {(showDate || showComment) && (
-        <div className="mx-4 mt-2 flex-shrink-0">
-          {showDate && (
-            <MiniCalendar value={dateStr} onChange={(d) => { setDateStr(d); setShowDate(false); }} color={catColor} />
-          )}
-          {showComment && (
-            <input
-              type="text"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Заметка к расходу…"
-              autoFocus
-              className="block w-full px-3 py-2 rounded-xl text-sm bg-card border border-border outline-none focus:border-primary transition-colors box-border"
-              style={{ maxWidth: '100%' }}
-            />
-          )}
-        </div>
-      )}
-
       {/* ── Parent category grid (main category for leftover) ── */}
       <div className="overflow-x-auto px-3.5 py-1.5 flex-shrink-0 [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
         <div className="grid grid-rows-2 grid-flow-col gap-1.5" style={{ gridAutoColumns: '64px' }}>

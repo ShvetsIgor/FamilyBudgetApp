@@ -68,37 +68,37 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
         window.history.length > 1 ? router.back() : router.replace('/income');
         return;
       }
-      const income = await addIncome({
-        userId: user.id,
-        amount: amountNum,
-        currency,
-        categoryId,
-        date,
-        method,
-        privacy: 'regular',
-        comment: comment.trim() || undefined,
-      });
-      dispatch(prependIncome(income));
-
       if (isRecurring) {
-        const now = new Date();
-        const nextMonth = now.getMonth() === 11 ? 1 : now.getMonth() + 2;
-        const nextYear = now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear();
-        const daysInNext = new Date(nextYear, nextMonth, 0).getDate();
-        const nextDay = Math.min(dayOfMonth, daysInNext);
-        const nextDue = `${nextYear}-${String(nextMonth).padStart(2, '0')}-${String(nextDay).padStart(2, '0')}`;
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const recurDate = new Date(dateStr); recurDate.setHours(0, 0, 0, 0);
+        const isFuture = recurDate > today;
+        const dayNum = recurDate.getDate();
+
+        // Compute next monthly due date after recurDate
+        const nm = recurDate.getMonth() === 11 ? 0 : recurDate.getMonth() + 1;
+        const ny = recurDate.getMonth() === 11 ? recurDate.getFullYear() + 1 : recurDate.getFullYear();
+        const daysInNext = new Date(ny, nm + 1, 0).getDate();
+        const nextDue = isFuture
+          ? `${recurDate.getFullYear()}-${String(recurDate.getMonth() + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`
+          : `${ny}-${String(nm + 1).padStart(2, '0')}-${String(Math.min(dayNum, daysInNext)).padStart(2, '0')}`;
+
         const catName = category?.name ?? t('income.title');
         await addRecurringIncome({
-          userId: user.id,
-          name: catName,
-          amount: amountNum,
-          currency,
-          categoryId,
-          dayOfMonth,
-          nextDueDate: nextDue,
+          userId: user.id, name: catName, amount: amountNum, currency,
+          categoryId, dayOfMonth: dayNum, nextDueDate: nextDue,
         });
+
+        if (isFuture) {
+          window.history.length > 1 ? router.back() : router.replace('/income');
+          return;
+        }
       }
 
+      const income = await addIncome({
+        userId: user.id, amount: amountNum, currency, categoryId, date,
+        method, privacy: 'regular', comment: comment.trim() || undefined,
+      });
+      dispatch(prependIncome(income));
       window.history.length > 1 ? router.back() : router.replace('/income');
     } catch {
       setSaving(false);

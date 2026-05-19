@@ -2,7 +2,9 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, MessageSquare, Calendar, ChevronLeft, Scissors } from 'lucide-react';
+import { X, MessageSquare, Calendar, ChevronLeft, Scissors, ChevronRight } from 'lucide-react';
+import { format, parseISO, isToday, isYesterday } from 'date-fns';
+import { ru } from 'date-fns/locale';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import { prependExpense, updateExpense as updateExpenseAction } from '@/features/expenses/store/expensesSlice';

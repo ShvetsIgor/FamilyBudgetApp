@@ -58,6 +58,16 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
     setSaving(true);
     try {
       const date = new Date(dateStr);
+      if (initialIncome) {
+        const updated = await updateIncomeService({
+          userId: user.id, id: initialIncome.id, amount: amountNum, currency,
+          categoryId, date, method, privacy: initialIncome.privacy,
+          comment: comment.trim() || undefined,
+        });
+        dispatch(updateIncome(updated));
+        window.history.length > 1 ? router.back() : router.replace('/income');
+        return;
+      }
       const income = await addIncome({
         userId: user.id,
         amount: amountNum,

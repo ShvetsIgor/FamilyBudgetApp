@@ -268,13 +268,6 @@ export default function IncomePage() {
               </div>
               {formPanel}
             </div>
-          ) : isCurrentMonth ? (
-            <button
-              onClick={() => setShowForm(true)}
-              className="w-full rounded-2xl bg-primary py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
-            >
-              <Plus size={16} /> {t('income.addIncome')}
-            </button>
           ) : null}
         </div>
       </div>

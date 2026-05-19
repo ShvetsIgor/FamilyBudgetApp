@@ -76,7 +76,7 @@ export async function sendWeeklySummary(ctx: BotContext): Promise<void> {
   if (dayEntries.length > 0) {
     const sorted = dayEntries.sort((a, b) => a[1] - b[1]);
     const best = sorted[0], worst = sorted[sorted.length - 1];
-    bestDay = `${DAY_NAMES[parseISO(best[0]).getDay()]} · ${sym}${best[1].toLocaleString()}`;
+    bestDay = `${DAY_NAMES[parseISO(best[0]).getDay()]} · ${sym}\u202F${best[1].toLocaleString()}`;
     worstDay = `${DAY_NAMES[parseISO(worst[0]).getDay()]} · ${sym}${worst[1].toLocaleString()}`;
   }
 

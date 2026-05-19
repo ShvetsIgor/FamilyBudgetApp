@@ -611,9 +611,15 @@ export interface ItemMatch {
   keyword: string;
 }
 
+// Check keyword appears as a whole word (not embedded inside another word)
+function matchesWord(text: string, kw: string): boolean {
+  const esc = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(?<![\\p{L}])${esc}(?![\\p{L}])`, 'iu').test(text);
+}
+
 export function matchItem(text: string): ItemMatch | null {
   for (const [kw, hit] of _sorted) {
-    if (text.includes(kw)) {
+    if (matchesWord(text, kw)) {
       return { parentId: hit.parentId, subId: hit.subId, keyword: kw };
     }
   }

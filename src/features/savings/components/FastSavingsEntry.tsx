@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { X } from 'lucide-react';
+import { X, Calendar, MessageSquare, ChevronRight } from 'lucide-react';
+import { format, parseISO, isToday, isYesterday } from 'date-fns';
+import { ru } from 'date-fns/locale';
+import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setGoals, updateGoalItem } from '@/features/savings/store/savingsSlice';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';

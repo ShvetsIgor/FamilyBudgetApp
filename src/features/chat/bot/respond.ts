@@ -156,6 +156,7 @@ export async function confirmFutureExpense(
 export interface BotReply {
   messages: Omit<SerializableChatMessage, 'id'>[];
   expense?: Awaited<ReturnType<typeof addExpense>>;
+  income?: Awaited<ReturnType<typeof addIncome>>;
   userMsgUpdate?: { messageId: string; expenseId: string };
 }
 

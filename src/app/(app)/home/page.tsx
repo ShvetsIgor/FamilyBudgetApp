@@ -496,6 +496,7 @@ export default function HomePage() {
                     currency={(d.currency as string | undefined) ?? '₪'}
                     chips={d.chips as { id: string; name: string; icon: string; color: string }[]}
                     unknownNote={d.parsedNote as string | undefined}
+                    isRepeat={(d.isRepeat as boolean | undefined) ?? false}
                     storeName={d.storeName as string | undefined}
                     categories={allExpenseCats}
                     onSelectChip={(chip) => handleClarifyChip(

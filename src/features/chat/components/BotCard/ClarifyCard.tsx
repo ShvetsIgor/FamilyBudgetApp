@@ -173,6 +173,24 @@ export function ClarifyCard({
               {t('chat.clarify.other')}
             </button>
           )}
+
+          {!selectedParent && onSplit && (
+            <button
+              onClick={onSplit}
+              className="inline-flex items-center gap-1.5 text-[12.5px] font-[800] transition-all active:scale-95"
+              style={{
+                padding: '7px 12px 7px 10px',
+                borderRadius: 999,
+                background: 'transparent',
+                border: `1.5px dashed ${C.sub}77`,
+                color: C.sub,
+                boxShadow: SHADOW.bubble,
+              }}
+            >
+              <Scissors size={13} strokeWidth={2.5} />
+              {t('chat.clarify.split')}
+            </button>
+          )}
         </div>
       )}
 

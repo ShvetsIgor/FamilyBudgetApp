@@ -47,7 +47,8 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
   const familyMembers = useAppSelector((s) => s.family.members);
   const sym = getCurrencySymbol(currency);
 
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const _now = new Date();
+  const todayStr = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-${String(_now.getDate()).padStart(2, '0')}`;
   const todaySpent = expenses
     .filter((e) => e.date.startsWith(todayStr))
     .reduce((s, e) => s + e.amount, 0);

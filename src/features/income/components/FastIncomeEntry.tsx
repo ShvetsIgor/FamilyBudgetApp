@@ -46,7 +46,6 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
   const [showDate, setShowDate] = useState(false);
   const [saving, setSaving] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);
-  const [dayOfMonth, setDayOfMonth] = useState(new Date().getDate());
 
   const category = allCats.find((c) => c.id === categoryId);
   const amountNum = parseFloat(amount) || 0;

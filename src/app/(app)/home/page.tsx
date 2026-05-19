@@ -92,7 +92,7 @@ export default function HomePage() {
   }
 
   useChatMessages();
-  const learned = useLearnedKeywords();
+  const [learned, addLearned] = useLearnedKeywords();
   useStoreProfiles();
 
   const budgetMode = useAppSelector((s) => s.ui.budgetMode);

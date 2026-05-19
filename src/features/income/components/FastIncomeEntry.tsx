@@ -107,13 +107,14 @@ export function FastIncomeEntry() {
   return (
     <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:bg-black/50 lg:backdrop-blur-sm">
     <div className="flex flex-col bg-background w-full lg:max-w-[440px] lg:rounded-2xl lg:shadow-2xl overflow-hidden" style={{ height: '100dvh', maxHeight: '100dvh' }}>
+
       {/* ── Top bar ── */}
       <div className="flex items-center gap-2 px-4 pt-1 pb-0.5 flex-shrink-0">
         <button onClick={() => router.back()} className="p-1.5 rounded-full hover:bg-muted transition-colors">
           <X className="h-4 w-4" />
         </button>
         <div className="flex-1 text-center text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">
-          {t('income.addIncome')}
+          {t('income.title')}
         </div>
         <button
           onClick={() => { setShowDate(!showDate); setShowComment(false); }}
@@ -133,8 +134,7 @@ export function FastIncomeEntry() {
 
       {/* ── Amount display ── */}
       <div
-        className="mx-4 px-4 py-1.5 rounded-[18px] flex items-baseline justify-between flex-shrink-0 border-[1.5px]"
-        style={{ background: catColor + '14', borderColor: catColor + '55' }}
+        className="mx-4 px-4 py-1.5 rounded-[18px] flex items-baseline justify-between flex-shrink-0 border-[1.5px] border-primary bg-primary/10"
       >
         <span className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">
           {t('income.amount')}
@@ -271,7 +271,7 @@ export function FastIncomeEntry() {
       </div>
 
       {/* ── Save bar ── */}
-      <div className="px-4 pt-1.5 pb-safe flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
+      <div className="px-4 pt-1.5 flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
         <button
           onClick={handleSave}
           disabled={saving || amountNum <= 0}

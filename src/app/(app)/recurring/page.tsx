@@ -385,7 +385,11 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
         type, typeLabel: type === 'custom' ? typeLabel.trim() || undefined : undefined,
         reminderDays, comment: comment.trim() || undefined,
       });
-    } finally { setSaving(false); }
+    } catch {
+      setError('Ошибка сохранения. Попробуйте ещё раз.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (

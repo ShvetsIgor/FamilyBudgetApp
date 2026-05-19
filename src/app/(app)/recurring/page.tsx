@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { format, parseISO, differenceInDays, isToday, isYesterday } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { X, Calendar, MessageSquare, Plus } from 'lucide-react';
+import { X, Calendar, MessageSquare, Plus, ChevronRight } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import {
   setRecurring, addRecurringItem, removeRecurringItem, updateRecurringItem, toggleRecurringItem,

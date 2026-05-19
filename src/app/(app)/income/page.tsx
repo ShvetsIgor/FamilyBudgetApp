@@ -49,6 +49,7 @@ function getYearMonths(): string[] {
 
 export default function IncomePage() {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const t = useT();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);

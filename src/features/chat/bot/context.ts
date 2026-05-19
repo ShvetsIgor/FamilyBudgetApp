@@ -9,6 +9,10 @@ export interface BotContext {
   categoriesById: Map<string, Category>;
   /** Top parent categories by usage — for clarify chips */
   topParentIds: string[];
+  /** All income categories indexed by id */
+  incomeCategoriesById: Map<string, Category>;
+  /** Top income parent categories — for income clarify chips */
+  topIncomeParentIds: string[];
   /** Today's total spent (from Redux expenses slice) */
   todaySpent: number;
   /** Store purchase history — keyed by storeId */
@@ -23,9 +27,13 @@ export function collectBotContext(state: RootState): BotContext | null {
 
   const currency = state.ui.currency;
   const allCats = state.categories.expense;
+  const allIncomeCats = state.categories.income;
 
   const categoriesById = new Map<string, Category>();
   allCats.forEach((c) => categoriesById.set(c.id, c));
+
+  const incomeCategoriesById = new Map<string, Category>();
+  allIncomeCats.forEach((c) => incomeCategoriesById.set(c.id, c));
 
   // Build top parent ids from frequency of existing expenses
   const freq: Record<string, number> = {};
@@ -46,12 +54,15 @@ export function collectBotContext(state: RootState): BotContext | null {
   // If not enough from history, pad with fallbacks
   for (const fb of TOP_FALLBACK) {
     if (topParentIds.length >= 5) break;
-    // Find by taxonomy id stored as part of name lookup
     const found = parents.find(
       (c) => !topParentIds.includes(c.id) && c.name.toLowerCase().includes(fb)
     );
     if (found) topParentIds.push(found.id);
   }
+
+  // Top income parent ids (all income parent categories)
+  const incomeParents = allIncomeCats.filter((c) => !c.parentId);
+  const topIncomeParentIds = incomeParents.slice(0, 6).map((c) => c.id);
 
   // Today's spent
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -61,5 +72,5 @@ export function collectBotContext(state: RootState): BotContext | null {
 
   const storeProfiles = state.storeProfiles?.profiles ?? {};
 
-  return { userId, currency, categoriesById, topParentIds, todaySpent, storeProfiles };
+  return { userId, currency, categoriesById, topParentIds, incomeCategoriesById, topIncomeParentIds, todaySpent, storeProfiles };
 }

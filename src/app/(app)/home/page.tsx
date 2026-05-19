@@ -498,6 +498,7 @@ export default function HomePage() {
                       hint={d.hint as string | undefined}
                       amount={d.amount as number}
                       currency={d.currency as string}
+                      isIncome={(d.isIncome as boolean | undefined) ?? false}
                     />
                   </BotCardBubble>
                   {undoHandler && (

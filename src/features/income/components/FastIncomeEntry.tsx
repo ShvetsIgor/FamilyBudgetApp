@@ -223,7 +223,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-sm font-extrabold text-foreground">{t.cat(category?.name ?? '')}</div>
-            <div className="text-[11px] text-muted-foreground font-semibold mt-0.5">доход</div>
+            <div className="text-[11px] text-muted-foreground font-semibold mt-0.5">Доход</div>
           </div>
           <span className="text-lg font-black text-emerald-500 tabular-nums">
             +{symbol}{'\u202F'}{amount}

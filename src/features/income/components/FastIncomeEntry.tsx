@@ -34,10 +34,11 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
   const t = useT();
   const symbol = getCurrencySymbol(currency);
 
-  const parentCats = allCats.filter((c) => !c.parentId);
+  const incomeSubs = allCats.filter((c) => !!c.parentId);
+  const displayCats = incomeSubs.length > 0 ? incomeSubs : allCats.filter((c) => !c.parentId);
 
   const [amount, setAmount] = useState(initialIncome ? String(initialIncome.amount) : '0');
-  const [categoryId, setCategoryId] = useState(initialIncome?.categoryId ?? parentCats[0]?.id ?? '');
+  const [categoryId, setCategoryId] = useState(initialIncome?.categoryId ?? displayCats[0]?.id ?? '');
   const [method, setMethod] = useState<Method>((initialIncome?.method as Method) ?? 'bank');
   const [comment, setComment] = useState(initialIncome?.comment ?? '');
   const [showComment, setShowComment] = useState(!!initialIncome?.comment);

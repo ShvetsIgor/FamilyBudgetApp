@@ -357,8 +357,10 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
   const [error, setError] = useState('');
 
   const amountNum = parseFloat(amount) || 0;
-  const category = allCats.find((c) => c.id === categoryId);
-  const catColor = category?.color ?? '#E07A5F';
+  const category = allExpCats.find((c) => c.id === categoryId);
+  const selectedParentCat = allExpCats.find((c) => c.id === selectedParentCatId);
+  const subCats = selectedParentCatId ? allExpCats.filter((c) => c.parentId === selectedParentCatId) : [];
+  const catColor = selectedParentCat?.color ?? category?.color ?? '#E07A5F';
 
   function tap(key: NumKey) { setAmount((cur) => applyKey(cur, key)); }
 

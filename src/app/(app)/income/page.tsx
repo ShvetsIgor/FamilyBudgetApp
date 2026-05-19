@@ -246,8 +246,14 @@ export default function IncomePage() {
             {isCurrentMonth && (
               <div className="px-4 lg:px-0">
                 <button
+                  onClick={() => router.push('/income/new')}
+                  className="lg:hidden w-full rounded-2xl border border-dashed border-border py-3 text-sm font-medium text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                >
+                  + {t('income.addMore')}
+                </button>
+                <button
                   onClick={() => setShowForm(true)}
-                  className="w-full rounded-2xl border border-dashed border-border py-3 text-sm font-medium text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                  className="hidden lg:block w-full rounded-2xl border border-dashed border-border py-3 text-sm font-medium text-muted-foreground hover:border-primary hover:text-primary transition-colors"
                 >
                   + {t('income.addMore')}
                 </button>

@@ -422,6 +422,7 @@
     },
     "clarify": {
       "unknown": "Unfamiliar, what is this?",
+      "refine": "Clarify:",
       "common": "Often chosen",
       "atStore": "What did you buy at {store}?",
       "all": "All categories",

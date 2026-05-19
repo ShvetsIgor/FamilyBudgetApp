@@ -43,6 +43,10 @@ export function FastSavingsEntry() {
   const [amount, setAmount] = useState('0');
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(preselectedGoalId);
   const [saving, setSaving] = useState(false);
+  const [comment, setComment] = useState('');
+  const [showComment, setShowComment] = useState(false);
+  const [dateStr, setDateStr] = useState(toDateInput(new Date()));
+  const [showDate, setShowDate] = useState(false);
 
   const load = useCallback(async () => {
     if (!user) return;

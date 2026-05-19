@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Plus, Pencil, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Pencil, X } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { CategoryIcon } from './CategoryIcon';
 import { useT } from '@/shared/hooks/useT';

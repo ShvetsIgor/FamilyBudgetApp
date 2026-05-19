@@ -223,7 +223,7 @@ export function FastIncomeEntry() {
           style={{ background: catColor, boxShadow: `0 12px 24px ${catColor}60` }}
         >
           <StickerIcon icon={category?.icon ?? 'trending-up'} color="#fff" className="h-5 w-5" />
-          <span>{saving ? t('common.saving') : `${t('income.record')} ${symbol}${amount}`}</span>
+          <span>{saving ? t('common.saving') : `${t('income.record')} ${symbol}\u202F${amount}`}</span>
         </button>
       </div>
     </div>

@@ -19,6 +19,13 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
     return { amount: 0, categoryId: null, parentId: null, confidence: 'failed' };
   }
 
+  // 2.1 Income prefix "+" → strip and mark as income, skip store/item dictionaries
+  const isIncome = t.startsWith('+');
+  if (isIncome) {
+    t = t.slice(1).trimStart();
+    if (!t) return { amount: 0, categoryId: null, parentId: null, confidence: 'failed', isIncome: true };
+  }
+
   // 3. Extract date (removes date tokens from text)
   const extracted = extractDate(t);
   const date = extracted?.date;
@@ -30,18 +37,27 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
   // 4. Extract number
   const numMatch = t.match(/(\d+([.,]\d+)?)/);
   if (!numMatch) {
-    return { amount: 0, categoryId: null, parentId: null, confidence: 'failed', date, dateLabel };
+    return { amount: 0, categoryId: null, parentId: null, confidence: 'failed', date, dateLabel, ...(isIncome ? { isIncome } : {}) };
   }
   const amount = parseFloat(numMatch[1].replace(',', '.'));
 
   // 5. Context text (without number and date tokens)
   const rest = t.replace(numMatch[0], '').trim();
+
+  const inc = isIncome ? { isIncome: true as const } : {};
+  const df = date != null ? { date, ...(dateLabel != null ? { dateLabel } : {}) } : {};
+
+  // For income: always clarify category (don't use expense store/item dictionaries)
+  if (isIncome) {
+    const note = rest ? rest.replace(/\b\p{L}/gu, (c) => c.toUpperCase()) : undefined;
+    return { amount, categoryId: null, parentId: null, confidence: 'failed', note, ...df, ...inc };
+  }
+
   if (!rest) {
     return { amount, categoryId: null, parentId: null, confidence: 'failed', date, dateLabel };
   }
 
   const note = rest.replace(/\b\p{L}/gu, (c) => c.toUpperCase());
-  const df = date != null ? { date, ...(dateLabel != null ? { dateLabel } : {}) } : {};
 
   // 6. Emoji (highest priority)
   for (const [emo, hit] of Object.entries(EMOJI)) {

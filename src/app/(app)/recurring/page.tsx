@@ -372,7 +372,8 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
       await onSave({
         name: name.trim(), amount: amountNum, currency: currency as never,
         categoryId, frequency, startDate: parseLocalDate(startDate),
-        type, reminderDays, comment: comment.trim() || undefined,
+        type, typeLabel: type === 'custom' ? typeLabel.trim() || undefined : undefined,
+        reminderDays, comment: comment.trim() || undefined,
       });
     } finally { setSaving(false); }
   }

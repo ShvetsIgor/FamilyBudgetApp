@@ -146,6 +146,7 @@ export interface RecurringPayment {
   endDate?: Timestamp;
   nextDueDate: Timestamp;
   type: RecurringType;
+  typeLabel?: string;
   reminderDays: number;
   comment?: string;
   isActive: boolean;
@@ -163,6 +164,7 @@ export interface SerializableRecurringPayment {
   endDate?: string;
   nextDueDate: string;
   type: RecurringType;
+  typeLabel?: string;
   reminderDays: number;
   comment?: string;
   isActive: boolean;

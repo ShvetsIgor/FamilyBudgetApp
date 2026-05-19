@@ -251,9 +251,8 @@ export default function HomePage() {
       for (const botMsg of reply.messages) {
         await addMessage(botMsg);
       }
-      if (reply.expense) {
-        dispatch(prependExpense(reply.expense));
-      }
+      if (reply.expense) dispatch(prependExpense(reply.expense));
+      if (reply.income) dispatch(prependIncome(reply.income));
     } finally {
       dispatch(setTyping(false));
       sendingRef.current = false;

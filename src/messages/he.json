@@ -73,6 +73,7 @@
     },
     "today": {
       "budgetLabel": "תקציב להיום",
+      "monthLabel": "תקציב חודשי",
       "of": "מתוך",
       "spent": "הוצא",
       "spentPct": "כבר {pct}%"

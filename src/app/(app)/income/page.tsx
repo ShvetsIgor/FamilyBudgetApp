@@ -7,6 +7,7 @@ import { Plus } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setIncome, prependIncome, removeIncome, updateIncome as updateIncomeAction } from '@/features/income/store/incomeSlice';
 import { fetchMonthIncome, addIncome, updateIncome, deleteIncome } from '@/features/income/services/incomeService';
+import { fetchRecurringIncome, advanceRecurringIncomeNextDue } from '@/features/income/services/recurringIncomeService';
 import { IncomeCard } from '@/features/income/components/IncomeCard';
 import { IncomeForm } from '@/features/income/components/IncomeForm';
 import { formatAmount } from '@/shared/utils/currency';

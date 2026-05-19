@@ -6,7 +6,7 @@ import { format, parseISO, isToday, isYesterday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Plus } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
-import { setExpenses, removeExpense } from '@/features/expenses/store/expensesSlice';
+import { setExpenses, mergeExpenses, removeExpense } from '@/features/expenses/store/expensesSlice';
 import { fetchMonthExpenses, deleteExpense } from '@/features/expenses/services/expensesService';
 import { ExpenseCard } from '@/features/expenses/components/ExpenseCard';
 import { UpcomingBills } from '@/features/recurring/components/UpcomingBills';

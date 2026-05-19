@@ -73,7 +73,7 @@ export default function ExpensesPage() {
 
   const loadCurrentExpenses = useCallback(async () => {
     if (!user || expStatus !== 'idle') return;
-    dispatch(setExpenses(await fetchMonthExpenses(user.id, currentMonth)));
+    dispatch(mergeExpenses(await fetchMonthExpenses(user.id, currentMonth)));
   }, [user, currentMonth, expStatus, dispatch]);
 
   useEffect(() => { loadCurrentExpenses(); }, [loadCurrentExpenses]);

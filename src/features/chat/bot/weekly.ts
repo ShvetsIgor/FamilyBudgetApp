@@ -98,7 +98,7 @@ export async function sendWeeklySummary(ctx: BotContext): Promise<void> {
   store.dispatch(addNotification({
     kind: 'weekly',
     title: `Неделя ${weekNum} закрыта 💫`,
-    text: `За ${weekRange} потрачено ${sym}${totalSpent.toLocaleString()}${totalBudget > 0 ? `, сэкономлено ${sym}${saved.toLocaleString()}` : ''}.`,
+    text: `За ${weekRange} потрачено ${sym}\u202F${totalSpent.toLocaleString()}${totalBudget > 0 ? `, сэкономлено ${sym}\u202F${saved.toLocaleString()}` : ''}.`,
     data: cardData,
     createdAt: new Date().toISOString(),
   }));

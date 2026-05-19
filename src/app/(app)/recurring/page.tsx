@@ -713,7 +713,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
         </div>
         <div className="rounded-2xl border border-border bg-card p-4">
           <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.category')}</label>
-          <CategoryPicker type="expense" value={categoryId} onChange={setCategoryId} parentsOnly />
+          <CategoryPicker type="expense" value={categoryId} onChange={setCategoryId} />
         </div>
         <div className="rounded-2xl border border-border bg-card p-4">
           <label className="text-xs text-muted-foreground mb-1 block">{t('recurring.nextDue')}</label>

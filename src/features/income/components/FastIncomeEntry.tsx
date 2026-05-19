@@ -270,40 +270,18 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
             </div>
           </button>
 
-          {/* Day-of-month picker — visible when recurring is on */}
+          {/* Recurring info — shows date from calendar */}
           {isRecurring && (
             <div
               className="px-3.5 py-3 flex items-center justify-between"
-              style={{
-                background: catColor + '0a',
-                borderTop: `1px solid ${catColor}22`,
-              }}
+              style={{ background: catColor + '0a', borderTop: `1px solid ${catColor}22` }}
             >
               <p className="text-[12px] font-[700]" style={{ color: 'hsl(var(--muted-foreground))' }}>
                 Зачислять каждое
               </p>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setDayOfMonth((d) => Math.max(1, d - 1))}
-                  className="h-7 w-7 rounded-lg flex items-center justify-center text-base font-bold transition-colors"
-                  style={{ background: catColor + '22', color: catColor }}
-                >
-                  −
-                </button>
-                <span
-                  className="w-14 text-center text-[14px] font-extrabold tabular-nums"
-                  style={{ color: catColor }}
-                >
-                  {dayOfMonth} число
-                </span>
-                <button
-                  onClick={() => setDayOfMonth((d) => Math.min(28, d + 1))}
-                  className="h-7 w-7 rounded-lg flex items-center justify-center text-base font-bold transition-colors"
-                  style={{ background: catColor + '22', color: catColor }}
-                >
-                  +
-                </button>
-              </div>
+              <span className="text-[14px] font-extrabold tabular-nums" style={{ color: catColor }}>
+                {new Date(dateStr).getDate()} число
+              </span>
             </div>
           )}
         </div>

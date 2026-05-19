@@ -8,6 +8,7 @@ import { ru } from 'date-fns/locale';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setTyping, removeMessage } from '@/features/chat/store/chatSlice';
 import { prependExpense, removeExpense, mergeExpenses } from '@/features/expenses/store/expensesSlice';
+import { prependIncome } from '@/features/income/store/incomeSlice';
 
 import { useChatMessages } from '@/features/chat/hooks/useChatMessages';
 import { useLearnedKeywords } from '@/features/chat/hooks/useLearnedKeywords';

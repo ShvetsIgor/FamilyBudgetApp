@@ -217,7 +217,7 @@ export function FastExpenseEntry({
             userId: user.id,
             senderId: 'bot',
             kind: 'bot',
-            text: `Сохранено${storeLabel} · ${sym}${totalNum}`,
+            text: `Сохранено${storeLabel} · ${sym}\u202F${totalNum}`,
             status: 'saved',
             card: {
               kind: 'saved',

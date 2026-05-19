@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Search, ChevronLeft, ArrowRight } from 'lucide-react';
+import { Search, ChevronLeft, ArrowRight, Scissors } from 'lucide-react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { C, SHADOW } from '@/features/chat/styles/tokens';
 import { useT } from '@/shared/hooks/useT';

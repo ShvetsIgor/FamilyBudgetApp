@@ -119,7 +119,7 @@ export async function confirmFutureExpense(
   await updateMessage(userId, data.userMsgId, { expenseId: expense.id, status: 'saved' });
   await updateMessage(userId, botMsgId, { status: 'saved' });
 
-  const savedText = `${savedPhrase()} · ${sym}${data.amount}`;
+  const savedText = `${savedPhrase()} · ${sym}\u202F${data.amount}`;
   const catPath = cat && parentCat && cat.id !== parentCat.id
     ? `${parentCat.name} · ${cat.name}`
     : (parentCat?.name ?? cat?.name ?? '');

@@ -219,7 +219,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
             className="h-10 w-10 rounded-[12px] flex items-center justify-center flex-shrink-0"
             style={{ background: catColor + '20' }}
           >
-            <StickerIcon icon={category?.icon ?? 'trending-up'} color={catColor} className="h-6 w-6" />
+            <StickerIcon icon={category?.icon ?? 'cash'} color={catColor} className="h-6 w-6" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-sm font-extrabold text-foreground">{t.cat(category?.name ?? '')}</div>

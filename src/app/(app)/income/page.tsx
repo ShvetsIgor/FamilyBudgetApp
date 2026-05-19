@@ -233,7 +233,10 @@ export default function IncomePage() {
                       <IncomeCard
                         key={i.id}
                         income={i}
-                        onEdit={() => setEditingIncome(i)}
+                        onEdit={() => {
+                          if (window.innerWidth < 1024) router.push(`/income/${i.id}/edit`);
+                          else setEditingIncome(i);
+                        }}
                         onDelete={() => handleDelete(i)}
                       />
                     ))}

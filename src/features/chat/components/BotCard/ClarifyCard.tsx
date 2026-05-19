@@ -29,7 +29,7 @@ interface ClarifyCardProps {
 }
 
 export function ClarifyCard({
-  amount, currency, chips, unknownNote, storeName, categories,
+  amount, currency, chips, unknownNote, storeName, isRepeat, categories,
   onSelectChip, onAllCategories, onOtherText, onSplit,
 }: ClarifyCardProps) {
   const t = useT();

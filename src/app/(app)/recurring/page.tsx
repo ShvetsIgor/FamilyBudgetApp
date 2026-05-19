@@ -383,20 +383,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
           <div className="flex-1 text-center text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">
             {initial ? t('recurring.editTitle') : t('recurring.newTitle')}
           </div>
-          <button
-            onClick={() => { setShowDate(!showDate); setShowComment(false); }}
-            className="p-1.5 rounded-full transition-colors"
-            style={{ color: showDate ? catColor : 'hsl(var(--muted-foreground))' }}
-          >
-            <Calendar className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => { setShowComment(!showComment); setShowDate(false); }}
-            className="p-1.5 rounded-full transition-colors"
-            style={{ color: showComment ? catColor : 'hsl(var(--muted-foreground))' }}
-          >
-            <MessageSquare className="h-4 w-4" />
-          </button>
+          <div className="w-8" />
         </div>
 
         {/* Name input */}

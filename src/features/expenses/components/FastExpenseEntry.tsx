@@ -542,7 +542,7 @@ export function FastExpenseEntry({
             className="bg-card rounded-xl font-extrabold transition-colors active:bg-muted border-0"
             style={{
               fontSize: typeof k === 'number' ? 20 : 16,
-              color: k === '⌫' || k === 'C' ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
+              color: k === '⌫' ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
               boxShadow: '0 1px 2px rgba(61,44,31,.05)',
             }}
           >

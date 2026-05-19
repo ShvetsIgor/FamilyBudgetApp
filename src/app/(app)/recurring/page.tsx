@@ -340,6 +340,12 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? '');
   const [frequency, setFrequency] = useState<RecurringFrequency>(initial?.frequency ?? 'monthly');
   const [type, setType] = useState<RecurringType>(initial?.type ?? 'subscription');
+  const [typeLabel, setTypeLabel] = useState(initial?.typeLabel ?? '');
+  const [selectedParentCatId, setSelectedParentCatId] = useState<string>(() => {
+    if (!initial?.categoryId) return '';
+    const cat = allExpCats.find((c) => c.id === initial.categoryId);
+    return cat?.parentId ?? cat?.id ?? '';
+  });
   const [startDate, setStartDate] = useState(
     initial ? format(parseISO(initial.startDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')
   );

@@ -364,7 +364,7 @@ export async function respondToUserMessage(
     status: 'saved',
   });
 
-  const savedText = `${savedPhrase()} · ${sym}${parsed.amount}`;
+  const savedText = `${savedPhrase()} · ${sym}\u202F${parsed.amount}`;
   const catPath = cat && parentCat && cat.id !== parentCat.id
     ? `${parentCat.name} · ${cat.name}`
     : (parentCat?.name ?? cat?.name ?? '');

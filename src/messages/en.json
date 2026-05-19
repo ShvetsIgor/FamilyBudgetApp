@@ -128,7 +128,9 @@
     "addIncome": "Add income →",
     "addMore": "+ Add income",
     "confirmDelete": "Delete this income entry?",
-    "record": "Record"
+    "record": "Record",
+    "recurring": "Monthly income",
+    "recurringHint": "will be added automatically each month"
   },
   "expenses": {
     "title": "Expenses",

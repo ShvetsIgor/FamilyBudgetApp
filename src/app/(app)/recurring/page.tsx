@@ -331,12 +331,13 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
   types: { value: RecurringType; label: string; icon: string }[];
 }) {
   const t = useT();
-  const allCats = useAppSelector((s) => s.categories.expense).filter((c) => !c.parentId);
+  const allExpCats = useAppSelector((s) => s.categories.expense);
+  const parentCats = allExpCats.filter((c) => !c.parentId);
   const symbol = getCurrencySymbol(currency as Parameters<typeof getCurrencySymbol>[0]);
 
   const [name, setName] = useState(initial?.name ?? '');
   const [amount, setAmount] = useState(initial ? String(initial.amount) : '0');
-  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? allCats[0]?.id ?? '');
+  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? '');
   const [frequency, setFrequency] = useState<RecurringFrequency>(initial?.frequency ?? 'monthly');
   const [type, setType] = useState<RecurringType>(initial?.type ?? 'subscription');
   const [startDate, setStartDate] = useState(

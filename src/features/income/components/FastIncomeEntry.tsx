@@ -219,6 +219,39 @@ export function FastIncomeEntry() {
         })}
       </div>
 
+      {/* ── Recurring toggle ── */}
+      <div className="px-4 pb-1 flex-shrink-0">
+        <button
+          onClick={() => setIsRecurring((v) => !v)}
+          className="w-full flex items-center justify-between rounded-[14px] px-3.5 py-2.5 border transition-all"
+          style={{
+            background: isRecurring ? catColor + '14' : 'hsl(var(--card))',
+            borderColor: isRecurring ? catColor + '66' : 'hsl(var(--border))',
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-base">🔄</span>
+            <div className="text-left">
+              <p className="text-[12.5px] font-[800] leading-tight" style={{ color: isRecurring ? catColor : 'hsl(var(--foreground))' }}>
+                {t('income.recurring')}
+              </p>
+              <p className="text-[10px] font-[600] opacity-70" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                {t('income.recurringHint')}
+              </p>
+            </div>
+          </div>
+          <div
+            className="relative h-5 w-9 rounded-full transition-colors flex-shrink-0"
+            style={{ background: isRecurring ? catColor : 'hsl(var(--muted))' }}
+          >
+            <span
+              className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all"
+              style={{ left: isRecurring ? 18 : 2 }}
+            />
+          </div>
+        </button>
+      </div>
+
       {/* ── Numpad ── */}
       <div className="px-3 pt-0.5 grid grid-cols-3 flex-shrink-0" style={{ gridAutoRows: '40px', gap: '4px' }}>
         {NUMPAD_KEYS.map((k) => (

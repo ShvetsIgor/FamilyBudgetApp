@@ -232,6 +232,42 @@ export async function respondToUserMessage(
     };
   }
 
+  // ── Case 1.75: learned keyword — ask again with suggested category on top
+  if (parsed.confidence === 'low' && !parsed.storeId && parsed.learnedCategoryId) {
+    const learnedCat = resolveCategory(parsed.learnedCategoryId, categoriesById)
+      ?? resolveCategory(parsed.learnedParentId ?? null, categoriesById);
+    const learnedChip = learnedCat
+      ? [{ id: learnedCat.id, name: learnedCat.name, icon: learnedCat.icon, color: learnedCat.color }]
+      : [];
+    const shownIds = new Set(learnedChip.map((c) => c.id));
+    const fillChips = topParentIds
+      .filter((id) => !shownIds.has(id))
+      .slice(0, 4 - learnedChip.length)
+      .map((id) => categoriesById.get(id))
+      .filter(Boolean)
+      .map((c) => ({ id: c!.id, name: c!.name, icon: c!.icon, color: c!.color }));
+    const chips = [...learnedChip, ...fillChips];
+
+    return {
+      messages: [
+        makeBotMsg(userId, {
+          text: clarifyPhrase(parsed.amount, sym),
+          card: {
+            kind: 'clarify',
+            data: {
+              amount: parsed.amount,
+              chips,
+              parsedDate: parsed.date,
+              parsedDateLabel: parsed.dateLabel,
+              parsedNote: parsed.note,
+            },
+          },
+          status: 'saved',
+        }),
+      ],
+    };
+  }
+
   // ── Case 2: have amount but no category → clarify card
   if (parsed.confidence === 'failed') {
     const chipIds = topParentIds.slice(0, 5);

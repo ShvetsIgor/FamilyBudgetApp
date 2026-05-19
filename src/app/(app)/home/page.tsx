@@ -149,6 +149,7 @@ export default function HomePage() {
 
   const allExpenses = useAppSelector((s) => s.expenses.list);
   const allExpenseCats = useAppSelector((s) => s.categories.expense);
+  const allIncomeCats = useAppSelector((s) => s.categories.income);
   const savingsGoals = useAppSelector((s) => s.savings.list);
   const [budgetSettingsOpen, setBudgetSettingsOpen] = useState(false);
 

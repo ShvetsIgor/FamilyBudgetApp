@@ -216,7 +216,7 @@ export function SavingsDrawerForm({ accent }: { accent: string }) {
           }}
         >
           <span>{selected?.icon ?? '🎯'}</span>
-          <span>{saving ? 'Сохранение…' : `Положить ${symbol}${amount || '0'}`}</span>
+          <span>{saving ? 'Сохранение…' : `Положить ${symbol}\u202F${amount || '0'}`}</span>
           <kbd className="ml-1 px-1.5 py-0.5 rounded bg-white/20 text-[9px] font-mono">⌘↵</kbd>
         </button>
       </div>

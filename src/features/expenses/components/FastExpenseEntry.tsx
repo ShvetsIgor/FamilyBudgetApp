@@ -23,11 +23,14 @@ interface SplitRow {
   amount: string;
 }
 
-const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 'C', 0, '⌫'] as const;
+const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫'] as const;
 type NumKey = (typeof NUMPAD_KEYS)[number];
 
 function applyKey(cur: string, key: NumKey): string {
-  if (key === 'C') return '0';
+  if (key === '.') {
+    if (cur.includes('.')) return cur;
+    return cur + '.';
+  }
   if (key === '⌫') { const s = cur.slice(0, -1); return s === '' ? '0' : s; }
   if (cur === '0') return String(key);
   return cur + String(key);

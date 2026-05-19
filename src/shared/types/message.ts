@@ -27,6 +27,9 @@ export interface ParseResult {
   storeName?: string;
   /** Store group, e.g. 'supermarket', 'pharmacy', 'fuel' */
   storeGroup?: string;
+  /** Previously learned category ID for this keyword — triggers clarify with it as top chip */
+  learnedCategoryId?: string;
+  learnedParentId?: string;
 }
 
 export interface ChatMessage {

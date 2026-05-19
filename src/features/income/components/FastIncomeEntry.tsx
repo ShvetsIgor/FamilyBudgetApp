@@ -6,6 +6,7 @@ import { X, MessageSquare, Calendar } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { prependIncome } from '@/features/income/store/incomeSlice';
 import { addIncome } from '@/features/income/services/incomeService';
+import { addRecurringIncome } from '@/features/income/services/recurringIncomeService';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';

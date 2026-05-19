@@ -180,8 +180,8 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
       )}
 
       {/* ── Category grid ── */}
-      <div className="overflow-x-auto px-3.5 py-1.5 flex-shrink-0 [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
-        <div className="grid grid-rows-2 grid-flow-col gap-1.5" style={{ gridAutoColumns: '64px' }}>
+      <div className="px-3.5 py-1.5 flex-shrink-0">
+        <div className="flex flex-wrap gap-1.5">
           {displayCats.map((cat) => {
             const sel = cat.id === categoryId;
             return (

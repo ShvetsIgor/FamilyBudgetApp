@@ -214,9 +214,11 @@ export function ClarifyCard({
             {t('chat.clarify.all')}
           </button>
 
-          <p className="m-0 mt-2.5 text-[11px] font-[700]" style={{ color: C.sub }}>
-            {t('chat.clarify.promise')}
-          </p>
+          {!isRepeat && (
+            <p className="m-0 mt-2.5 text-[11px] font-[700]" style={{ color: C.sub }}>
+              {t('chat.clarify.promise')}
+            </p>
+          )}
         </>
       )}
     </div>

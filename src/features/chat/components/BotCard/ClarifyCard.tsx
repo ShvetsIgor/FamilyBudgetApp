@@ -29,7 +29,7 @@ interface ClarifyCardProps {
 
 export function ClarifyCard({
   amount, currency, chips, unknownNote, storeName, categories,
-  onSelectChip, onAllCategories, onOtherText,
+  onSelectChip, onAllCategories, onOtherText, onSplit,
 }: ClarifyCardProps) {
   const t = useT();
   const [selectedParent, setSelectedParent] = useState<ClarifyChip | null>(null);

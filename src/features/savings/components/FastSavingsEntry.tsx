@@ -210,7 +210,7 @@ export function FastSavingsEntry() {
             {saving
               ? t('common.saving')
               : selectedGoal
-              ? `${t('savings.contribute')} ${symbol}${amount} → ${selectedGoal.name}`
+              ? `${t('savings.contribute')} ${symbol}\u202F${amount} → ${selectedGoal.name}`
               : t('savings.selectGoal')}
           </span>
         </button>

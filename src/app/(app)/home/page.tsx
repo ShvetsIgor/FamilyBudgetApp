@@ -510,6 +510,16 @@ export default function HomePage() {
                       parsedDateLabel: d.parsedDateLabel as string | undefined,
                       parsedNote: d.parsedNote as string | undefined,
                     })}
+                    onSplit={() => {
+                      const params = new URLSearchParams({
+                        fromChat: 'true',
+                        amount: String(d.amount as number),
+                        ...(d.storeId ? { storeId: d.storeId as string } : {}),
+                        ...(d.storeName ? { storeName: d.storeName as string } : {}),
+                        ...(d.storeGroup ? { storeGroup: d.storeGroup as string } : {}),
+                      });
+                      router.push(`/expenses/new?${params.toString()}`);
+                    }}
                     onOtherText={(text) => {
                       // Try to resolve via item keywords first
                       const itemHit = matchItem(text.toLowerCase());

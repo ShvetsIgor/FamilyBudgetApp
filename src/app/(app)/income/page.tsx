@@ -70,6 +70,29 @@ export default function IncomePage() {
   const loadCurrentIncomes = useCallback(async () => {
     if (!user || incStatus !== 'idle') return;
     dispatch(setIncome(await fetchMonthIncome(user.id, currentMonth)));
+
+    // Auto-apply any due recurring incomes
+    try {
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const recurring = await fetchRecurringIncome(user.id);
+      for (const item of recurring) {
+        if (!item.isActive || item.nextDueDate > todayStr) continue;
+        const [y, m, d] = item.nextDueDate.split('-').map(Number);
+        const income = await addIncome({
+          userId: user.id,
+          amount: item.amount,
+          currency: item.currency,
+          categoryId: item.categoryId,
+          date: new Date(y, m - 1, d, 12, 0, 0),
+          method: 'bank',
+          privacy: 'regular',
+          comment: item.name,
+        });
+        dispatch(prependIncome(income));
+        await advanceRecurringIncomeNextDue(user.id, item);
+      }
+    } catch { /* silent */ }
   }, [user, currentMonth, incStatus, dispatch]);
 
   useEffect(() => { loadCurrentIncomes(); }, [loadCurrentIncomes]);

@@ -15,6 +15,8 @@ export interface ParseResult {
   parentId: string | null;
   matchedKeyword?: string;
   confidence: 'high' | 'medium' | 'low' | 'failed';
+  /** true when input started with "+", meaning this is an income entry */
+  isIncome?: boolean;
   /** ISO date string YYYY-MM-DD if the user specified a date in the message */
   date?: string;
   /** Human-readable date label, e.g. "9 мая" */
@@ -41,6 +43,7 @@ export interface ChatMessage {
   text: string;
   parsed?: ParseResult;
   expenseId?: string;
+  incomeId?: string;
   card?: BotCard;
 
   status: MessageStatus;
@@ -57,6 +60,7 @@ export interface SerializableChatMessage {
   text: string;
   parsed?: ParseResult;
   expenseId?: string;
+  incomeId?: string;
   card?: BotCard;
 
   status: MessageStatus;

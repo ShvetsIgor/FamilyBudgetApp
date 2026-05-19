@@ -333,7 +333,7 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
           style={{ background: catColor, boxShadow: `0 8px 20px ${catColor}55` }}
         >
           <StickerIcon icon={parent?.icon ?? 'box'} color="#fff" className="h-4 w-4" />
-          <span>{saving ? 'Сохранение…' : `Записать чек ${symbol}${amount || '0'}`}</span>
+          <span>{saving ? 'Сохранение…' : `Записать чек ${symbol}\u202F${amount || '0'}`}</span>
           {posCount > 0 && <span className="opacity-70 text-xs">· {posCount} поз.</span>}
           <kbd className="ml-1 px-1.5 py-0.5 rounded bg-white/20 text-[9px] font-mono">⌘↵</kbd>
         </button>

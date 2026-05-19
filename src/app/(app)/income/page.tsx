@@ -265,24 +265,6 @@ export default function IncomePage() {
 
       {/* ── Right column / Form ── */}
       <div>
-        {/* Mobile form */}
-        {formOpen && (
-          <div className="lg:hidden flex flex-col">
-            <div className="px-4 pt-5 pb-3 flex items-center gap-3">
-              <button
-                onClick={() => { setShowForm(false); setEditingIncome(null); }}
-                className="text-muted-foreground text-sm"
-              >
-                {t('common.back')}
-              </button>
-              <h1 className="text-xl font-bold">
-                {editingIncome ? t('income.editTitle') : t('income.title')}
-              </h1>
-            </div>
-            {formPanel}
-          </div>
-        )}
-
         {/* Desktop sidebar */}
         <div className="hidden lg:block sticky top-6">
           {formOpen ? (

@@ -104,7 +104,7 @@ export default function ExpensesPage() {
   });
 
   const monthTotal = expenses.reduce((s, e) => s + e.amount, 0);
-  const expenseGroups = groupByDate(filteredExpenses);
+  const expenseGroups = groupByDate(filteredExpenses).sort(([a], [b]) => b.localeCompare(a));
 
   const monthBar = (
     <div

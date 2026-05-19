@@ -323,9 +323,54 @@ export default function HomePage() {
       for (const botMsg of reply.messages) {
         await addMessage(botMsg);
       }
-      if (reply.expense) {
-        dispatch(prependExpense(reply.expense));
+      if (reply.expense) dispatch(prependExpense(reply.expense));
+      if (reply.income) dispatch(prependIncome(reply.income));
+    } finally {
+      dispatch(setTyping(false));
+      sendingRef.current = false;
+    }
+  }, [userId, buildEnrichedCtx, dispatch]);
+
+  const handleIncomeClarifyChip = useCallback(async (
+    amount: number,
+    chip: { id: string; name: string; icon: string; color: string },
+    parsedDate?: string,
+    parsedDateLabel?: string,
+    parsedNote?: string,
+  ) => {
+    if (!userId || sendingRef.current) return;
+    sendingRef.current = true;
+    dispatch(setTyping(true));
+    try {
+      const enrichedCtx = buildEnrichedCtx();
+      if (!enrichedCtx) return;
+
+      const userMsg = await addMessage({
+        userId,
+        senderId: userId,
+        kind: 'user',
+        text: `+${amount} ${chip.name.toLowerCase()}${parsedDateLabel ? ` · ${parsedDateLabel}` : ''}`,
+        status: 'saved',
+      });
+
+      await new Promise((r) => setTimeout(r, 400));
+
+      const parsed: import('@/shared/types/message').ParseResult = {
+        amount,
+        categoryId: chip.id,
+        parentId: chip.id,
+        confidence: 'high',
+        isIncome: true,
+        date: parsedDate,
+        dateLabel: parsedDateLabel,
+        note: parsedNote,
+      };
+
+      const reply = await respondToUserMessage(userMsg, parsed, enrichedCtx);
+      for (const botMsg of reply.messages) {
+        await addMessage(botMsg);
       }
+      if (reply.income) dispatch(prependIncome(reply.income));
     } finally {
       dispatch(setTyping(false));
       sendingRef.current = false;

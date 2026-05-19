@@ -273,20 +273,7 @@ export function FastExpenseEntry({
               ? `Чек · ${initialStore}`
               : `Чек · ${splits.length + 1} ${pluralRu(splits.length + 1)}`}
         </div>
-        <button
-          onClick={() => { setShowDate(!showDate); setShowComment(false); }}
-          className="p-1.5 rounded-full transition-colors"
-          style={{ color: showDate ? catColor : 'hsl(var(--muted-foreground))' }}
-        >
-          <Calendar className="h-4 w-4" />
-        </button>
-        <button
-          onClick={() => { setShowComment(!showComment); setShowDate(false); }}
-          className="p-1.5 rounded-full transition-colors"
-          style={{ color: showComment ? catColor : 'hsl(var(--muted-foreground))' }}
-        >
-          <MessageSquare className="h-4 w-4" />
-        </button>
+        <div className="w-8" />
       </div>
 
       {/* ── Total ── */}

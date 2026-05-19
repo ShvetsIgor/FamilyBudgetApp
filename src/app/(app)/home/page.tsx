@@ -136,6 +136,11 @@ export default function HomePage() {
     return autoDaily; // 'auto'
   })();
 
+  // PinnedToday display values — monthly mode shows month-level data
+  const displaySpent = budgetMode === 'monthly' ? monthSpent : todaySpent;
+  const displayTotal = budgetMode === 'monthly' ? budgetMonthlyLimit : dailyBudget;
+  const displayLabel = budgetMode === 'monthly' ? t('chat.today.monthLabel') : t('chat.today.budgetLabel');
+
   const allExpenses = useAppSelector((s) => s.expenses.list);
   const allExpenseCats = useAppSelector((s) => s.categories.expense);
   const savingsGoals = useAppSelector((s) => s.savings.list);

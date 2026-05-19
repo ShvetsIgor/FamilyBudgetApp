@@ -70,7 +70,8 @@ export default function StatisticsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const pieData = stats
+  // Parent-level aggregation (top-level pie)
+  const parentPieData = stats
     ? (() => {
         const agg = new Map<string, number>();
         for (const [catId, amount] of Object.entries(stats.byCategory)) {
@@ -88,6 +89,33 @@ export default function StatisticsPage() {
           .slice(0, 8);
       })()
     : [];
+
+  // Drill-down: subcategory breakdown for selected parent
+  const drillPieData = drillCategory && stats
+    ? (() => {
+        const parentCat = categories.find((c) => c.id === drillCategory);
+        const result: typeof parentPieData = [];
+        for (const [catId, amount] of Object.entries(stats.byCategory)) {
+          const cat = categories.find((c) => c.id === catId);
+          if (cat?.parentId === drillCategory) {
+            result.push({ catId, name: t.cat(cat.name), amount, color: parentCat?.color ?? cat.color, icon: cat.icon });
+          } else if (catId === drillCategory && amount > 0) {
+            // Direct expense on parent without subcategory
+            result.push({ catId: drillCategory + '_direct', name: t.cat(parentCat?.name ?? ''), amount, color: parentCat?.color ?? '#6b7280', icon: parentCat?.icon ?? '📦' });
+          }
+        }
+        return result.filter((d) => d.amount > 0).sort((a, b) => b.amount - a.amount);
+      })()
+    : null;
+
+  const pieData = drillPieData ?? parentPieData;
+
+  // Check which parent categories have subcategory data
+  const parentsWithSubs = new Set(
+    (stats ? Object.keys(stats.byCategory) : [])
+      .map((catId) => categories.find((c) => c.id === catId)?.parentId)
+      .filter(Boolean) as string[]
+  );
 
   const barData = history.map((m) => ({
     name: m.month.slice(5),

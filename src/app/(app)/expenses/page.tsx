@@ -254,6 +254,15 @@ export default function ExpensesPage() {
       <div className="hidden lg:block sticky top-6">
         {isCurrentMonth && <UpcomingBills withinDays={30} maxItems={5} />}
       </div>
+
+      {/* ── FAB — add expense ── */}
+      <button
+        onClick={() => router.push('/expenses/new')}
+        className="lg:hidden fixed bottom-24 left-4 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-transform active:scale-95"
+        style={{ background: 'hsl(var(--primary))' }}
+      >
+        <Plus size={24} color="white" />
+      </button>
     </div>
   );
 }

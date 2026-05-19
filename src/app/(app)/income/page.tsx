@@ -204,7 +204,7 @@ export default function IncomePage() {
             <p className="font-medium">{t('income.noIncome')}</p>
             {isCurrentMonth && (
               <button
-                onClick={() => setShowForm(true)}
+                onClick={() => router.push('/income/new')}
                 className="mt-3 text-sm font-medium text-primary hover:underline"
               >
                 {t('income.addIncome')}

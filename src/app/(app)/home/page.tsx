@@ -540,6 +540,7 @@ export default function HomePage() {
 
             if (msg.card?.kind === 'clarify') {
               const d = msg.card.data as Record<string, unknown>;
+              const cardIsIncome = !!(d.isIncome as boolean | undefined);
               return (
                 <BotCardBubble key={msg.id} tail={tail}>
                   <ClarifyCard
@@ -549,24 +550,34 @@ export default function HomePage() {
                     unknownNote={d.parsedNote as string | undefined}
                     isRepeat={(d.isRepeat as boolean | undefined) ?? false}
                     storeName={d.storeName as string | undefined}
-                    categories={allExpenseCats}
-                    onSelectChip={(chip) => handleClarifyChip(
-                      d.amount as number,
-                      chip,
-                      d.parsedDate as string | undefined,
-                      d.parsedDateLabel as string | undefined,
-                      d.parsedNote as string | undefined,
-                      d.storeId as string | undefined,
-                      d.storeName as string | undefined,
-                      d.storeGroup as string | undefined,
-                    )}
+                    categories={cardIsIncome ? allIncomeCats : allExpenseCats}
+                    onSelectChip={(chip) => cardIsIncome
+                      ? handleIncomeClarifyChip(
+                          d.amount as number,
+                          chip,
+                          d.parsedDate as string | undefined,
+                          d.parsedDateLabel as string | undefined,
+                          d.parsedNote as string | undefined,
+                        )
+                      : handleClarifyChip(
+                          d.amount as number,
+                          chip,
+                          d.parsedDate as string | undefined,
+                          d.parsedDateLabel as string | undefined,
+                          d.parsedNote as string | undefined,
+                          d.storeId as string | undefined,
+                          d.storeName as string | undefined,
+                          d.storeGroup as string | undefined,
+                        )
+                    }
                     onAllCategories={() => setCategorySheet({
                       amount: d.amount as number,
                       parsedDate: d.parsedDate as string | undefined,
                       parsedDateLabel: d.parsedDateLabel as string | undefined,
                       parsedNote: d.parsedNote as string | undefined,
+                      isIncome: cardIsIncome,
                     })}
-                    onSplit={() => {
+                    onSplit={cardIsIncome ? undefined : () => {
                       const params = new URLSearchParams({
                         fromChat: 'true',
                         amount: String(d.amount as number),
@@ -576,8 +587,7 @@ export default function HomePage() {
                       });
                       router.push(`/expenses/new?${params.toString()}`);
                     }}
-                    onOtherText={(text) => {
-                      // Try to resolve via item keywords first
+                    onOtherText={cardIsIncome ? undefined : (text) => {
                       const itemHit = matchItem(text.toLowerCase());
                       if (itemHit) {
                         const cat = allExpenseCats.find(
@@ -597,7 +607,6 @@ export default function HomePage() {
                           return;
                         }
                       }
-                      // Fallback — open full category picker
                       setCategorySheet({
                         amount: d.amount as number,
                         parsedDate: d.parsedDate as string | undefined,

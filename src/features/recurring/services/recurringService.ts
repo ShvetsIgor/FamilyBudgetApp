@@ -66,6 +66,7 @@ export interface AddRecurringInput {
   frequency: RecurringFrequency;
   startDate: Date;
   type: RecurringType;
+  typeLabel?: string;
   reminderDays: number;
   comment?: string;
 }

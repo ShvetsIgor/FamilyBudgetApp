@@ -10,11 +10,15 @@ interface SavedCardProps {
   hint?: string;
   amount: number;
   currency: string;
+  isIncome?: boolean;
   alert?: string;
   onUndo?: () => void;
 }
 
-export function SavedCard({ icon, color, title, hint, amount, currency, alert, onUndo }: SavedCardProps) {
+export function SavedCard({ icon, color, title, hint, amount, currency, isIncome, alert, onUndo }: SavedCardProps) {
+  const badgeColor = isIncome ? '#10b981' : C.sage;
+  const amountColor = isIncome ? '#10b981' : C.fg;
+
   return (
     <div>
       {/* Main row */}
@@ -27,14 +31,16 @@ export function SavedCard({ icon, color, title, hint, amount, currency, alert, o
           style={{ background: color + '20' }}
         >
           <StickerIcon icon={icon} color={color} className="h-7 w-7" />
-          {/* Check badge */}
+          {/* Badge: check for expense, "+" for income */}
           <span
-            className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border-2"
-            style={{ background: C.sage, borderColor: C.card }}
+            className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border-2 text-[9px] font-black text-white"
+            style={{ background: badgeColor, borderColor: C.card }}
           >
-            <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
-              <path d="M1 3l2 2 4-4" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            {isIncome ? '+' : (
+              <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
+                <path d="M1 3l2 2 4-4" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
           </span>
         </div>
         <div className="flex-1 min-w-0">
@@ -47,8 +53,8 @@ export function SavedCard({ icon, color, title, hint, amount, currency, alert, o
             </p>
           )}
         </div>
-        <span className="text-[17px] font-[900] tabular-nums" style={{ color: C.fg, letterSpacing: -0.3 }}>
-          {currency}{amount.toLocaleString()}
+        <span className="text-[17px] font-[900] tabular-nums" style={{ color: amountColor, letterSpacing: -0.3 }}>
+          {isIncome ? '+' : ''}{currency}{'\u202F'}{amount.toLocaleString()}
         </span>
       </div>
 
@@ -62,6 +68,18 @@ export function SavedCard({ icon, color, title, hint, amount, currency, alert, o
         </div>
       )}
 
+      {/* Undo row */}
+      {onUndo && !isIncome && (
+        <div style={{ borderTop: `1px solid ${C.hairline}` }}>
+          <button
+            onClick={onUndo}
+            className="w-full px-3.5 py-2 text-left text-[12px] font-[700] transition-colors hover:bg-black/5"
+            style={{ color: C.sub }}
+          >
+            Отменить
+          </button>
+        </div>
+      )}
     </div>
   );
 }

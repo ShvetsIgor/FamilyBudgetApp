@@ -548,37 +548,60 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
             </div>
           </div>
 
-          {/* Category grid */}
+          {/* Category grid — two-level */}
           <div>
             <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider mb-1.5 px-0.5">
               {t('recurring.category')}
             </p>
-            <div className="overflow-x-auto [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
-              <div className="grid grid-rows-2 grid-flow-col gap-1.5" style={{ gridAutoColumns: '64px' }}>
-                {allCats.map((cat) => {
-                  const sel = cat.id === categoryId;
+            {/* Parent row */}
+            <div className="flex flex-wrap gap-1.5">
+              {parentCats.map((cat) => {
+                const sel = selectedParentCatId === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => {
+                      if (sel) { setSelectedParentCatId(''); setCategoryId(''); }
+                      else { setSelectedParentCatId(cat.id); setCategoryId(cat.id); }
+                    }}
+                    className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
+                    style={{
+                      background: sel ? cat.color : 'hsl(var(--card))',
+                      boxShadow: sel ? `0 3px 8px ${cat.color}55` : '0 1px 3px rgba(61,44,31,.06)',
+                    }}
+                  >
+                    <StickerIcon icon={cat.icon} color={sel ? '#fff' : cat.color} className="h-4 w-4" />
+                    <span className="text-[9px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
+                      style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}>
+                      {t.cat(cat.name)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {/* Subcategory row */}
+            {subCats.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-1.5 pl-2" style={{ borderLeft: `2px solid ${catColor}44` }}>
+                {subCats.map((sub) => {
+                  const sel = categoryId === sub.id;
                   return (
                     <button
-                      key={cat.id}
-                      onClick={() => setCategoryId(cat.id)}
-                      className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
+                      key={sub.id}
+                      onClick={() => setCategoryId(sel ? selectedParentCatId : sub.id)}
+                      className="h-[36px] px-3 rounded-[10px] flex items-center gap-1.5 transition-all border-0 text-[10px] font-extrabold"
                       style={{
-                        background: sel ? cat.color : 'hsl(var(--card))',
-                        boxShadow: sel ? `0 3px 8px ${cat.color}55` : '0 1px 3px rgba(61,44,31,.06)',
+                        background: sel ? catColor : catColor + '18',
+                        color: sel ? '#fff' : 'hsl(var(--foreground))',
+                        boxShadow: sel ? `0 2px 6px ${catColor}44` : 'none',
                       }}
                     >
-                      <StickerIcon icon={cat.icon} color={sel ? '#fff' : cat.color} className="h-4 w-4" />
-                      <span
-                        className="text-[9px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
-                        style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}
-                      >
-                        {t.cat(cat.name)}
-                      </span>
+                      <StickerIcon icon={sub.icon} color={sel ? '#fff' : catColor} className="h-3.5 w-3.5" />
+                      {t.cat(sub.name)}
                     </button>
                   );
                 })}
               </div>
-            </div>
+            )}
           </div>
 
           {/* Reminder */}

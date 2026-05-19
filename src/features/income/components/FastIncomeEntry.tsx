@@ -57,17 +57,38 @@ export function FastIncomeEntry() {
     if (!user || amountNum <= 0 || saving) return;
     setSaving(true);
     try {
+      const date = new Date(dateStr);
       const income = await addIncome({
         userId: user.id,
         amount: amountNum,
         currency,
         categoryId,
-        date: new Date(dateStr),
+        date,
         method,
         privacy: 'regular',
         comment: comment.trim() || undefined,
       });
       dispatch(prependIncome(income));
+
+      if (isRecurring) {
+        const day = date.getDate();
+        const nextMonth = date.getMonth() === 11 ? 1 : date.getMonth() + 2;
+        const nextYear = date.getMonth() === 11 ? date.getFullYear() + 1 : date.getFullYear();
+        const daysInNext = new Date(nextYear, nextMonth, 0).getDate();
+        const nextDay = Math.min(day, daysInNext);
+        const nextDue = `${nextYear}-${String(nextMonth).padStart(2, '0')}-${String(nextDay).padStart(2, '0')}`;
+        const catName = allCats.find((c) => c.id === categoryId)?.name ?? t('income.addIncome');
+        await addRecurringIncome({
+          userId: user.id,
+          name: catName,
+          amount: amountNum,
+          currency,
+          categoryId,
+          dayOfMonth: day,
+          nextDueDate: nextDue,
+        });
+      }
+
       router.back();
     } catch {
       setSaving(false);

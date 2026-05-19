@@ -92,34 +92,44 @@ export default function RecurringPage() {
 
   async function handleSave(data: Omit<AddRecurringInput, 'userId'>) {
     if (!user) return;
-    if (formMode?.mode === 'edit') {
-      const { nextDueDate } = await updateRecurring(user.id, formMode.item.id, data);
-      dispatch(updateRecurringItem({
-        ...formMode.item, ...data,
-        startDate: data.startDate.toISOString(),
-        nextDueDate,
-        currency: data.currency,
-      }));
-    } else {
-      const added = await addRecurring({ ...data, userId: user.id });
-      const isPast = data.startDate < new Date();
-      if (isPast) {
-        if (data.categoryId) {
-          const exp = await addExpense({
-            userId: user.id, amount: data.amount, currency: data.currency,
-            categoryId: data.categoryId, date: data.startDate,
-            paymentMethod: 'card', splits: [], tags: ['recurring'], privacy: 'regular',
-            store: data.name,
-            comment: data.comment || undefined,
-          });
-          dispatch(prependExpense(exp));
-        }
-        dispatch(addRecurringItem(await advanceToNextFutureDue(user.id, added)));
+    try {
+      if (formMode?.mode === 'edit') {
+        const { nextDueDate } = await updateRecurring(user.id, formMode.item.id, data);
+        dispatch(updateRecurringItem({
+          ...formMode.item, ...data,
+          startDate: data.startDate.toISOString(),
+          nextDueDate,
+          currency: data.currency,
+        }));
       } else {
-        dispatch(addRecurringItem(added));
+        const added = await addRecurring({ ...data, userId: user.id });
+        const isPast = data.startDate < new Date();
+        if (isPast) {
+          if (data.categoryId) {
+            try {
+              const exp = await addExpense({
+                userId: user.id, amount: data.amount, currency: data.currency,
+                categoryId: data.categoryId, date: new Date(),
+                paymentMethod: 'card', splits: [], tags: ['recurring'], privacy: 'regular',
+                store: data.name, comment: data.comment || undefined,
+              });
+              dispatch(prependExpense(exp));
+            } catch { /* non-critical — recurring still saved */ }
+          }
+          try {
+            dispatch(addRecurringItem(await advanceToNextFutureDue(user.id, added)));
+          } catch {
+            dispatch(addRecurringItem(added));
+          }
+        } else {
+          dispatch(addRecurringItem(added));
+        }
       }
+      setFormMode(null);
+    } catch (e) {
+      console.error('handleSave error:', e);
+      throw e;
     }
-    setFormMode(null);
   }
 
   async function handleMarkPaid(item: SerializableRecurringPayment) {

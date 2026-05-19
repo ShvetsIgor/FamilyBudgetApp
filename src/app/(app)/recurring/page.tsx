@@ -411,25 +411,6 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
           </div>
         </div>
 
-        {/* Expandable: date / comment */}
-        {(showDate || showComment) && (
-          <div className="mx-4 mt-2 flex-shrink-0">
-            {showDate && (
-              <MiniCalendar value={startDate} onChange={(d) => { setStartDate(d); setShowDate(false); }} color={catColor} />
-            )}
-            {showComment && (
-              <input
-                type="text"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder={t('recurring.commentPlaceholder')}
-                autoFocus
-                className="block w-full px-3 py-2 rounded-xl text-sm bg-card border border-border outline-none focus:border-primary transition-colors"
-              />
-            )}
-          </div>
-        )}
-
         {/* Scrollable middle */}
         <div className="flex-1 overflow-y-auto px-3.5 py-1.5 flex flex-col gap-2 min-h-0 [scrollbar-width:none]">
 

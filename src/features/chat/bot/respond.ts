@@ -257,6 +257,7 @@ export async function respondToUserMessage(
             data: {
               amount: parsed.amount,
               chips,
+              isRepeat: true,
               parsedDate: parsed.date,
               parsedDateLabel: parsed.dateLabel,
               parsedNote: parsed.note,

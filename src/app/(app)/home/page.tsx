@@ -385,10 +385,10 @@ export default function HomePage() {
     <ChatScreen onSend={handleSend} disabled={typing}>
       {/* Pinned today hero */}
       <PinnedToday
-        spent={todaySpent}
-        total={dailyBudget}
+        spent={displaySpent}
+        total={displayTotal}
         currency={currency}
-        dayLabel={t('chat.today.budgetLabel')}
+        dayLabel={displayLabel}
         budgetMode={budgetMode}
         onSettings={() => setBudgetSettingsOpen(true)}
       />

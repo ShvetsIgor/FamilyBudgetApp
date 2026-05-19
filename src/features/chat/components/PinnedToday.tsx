@@ -73,7 +73,7 @@ export function PinnedToday({ spent, total, currency, dayLabel, budgetMode, onSe
               </span>
               {total > 0 && (
                 <span className="text-[11.5px] font-[700] opacity-80" style={{ color: 'white' }}>
-                  {isOver ? t('chat.budget.over') : `${t('chat.today.of')} ${sym}${total.toLocaleString()}`}
+                  {isOver ? t('chat.budget.over') : `${t('chat.today.of')} ${sym}\u202F${total.toLocaleString()}`}
                 </span>
               )}
             </div>

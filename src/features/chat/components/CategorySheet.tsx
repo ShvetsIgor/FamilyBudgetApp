@@ -6,6 +6,7 @@ import { useAppSelector } from '@/store/store';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { useT } from '@/shared/hooks/useT';
 import { C } from '@/features/chat/styles/tokens';
+import type { Category } from '@/shared/types';
 
 interface Chip {
   id: string;
@@ -17,19 +18,22 @@ interface Chip {
 interface CategorySheetProps {
   onSelect: (chip: Chip) => void;
   onClose: () => void;
+  /** Override categories list (e.g. for income). Falls back to expense categories. */
+  categories?: Category[];
 }
 
-export function CategorySheet({ onSelect, onClose }: CategorySheetProps) {
+export function CategorySheet({ onSelect, onClose, categories: categoriesOverride }: CategorySheetProps) {
   const t = useT();
   const [query, setQuery] = useState('');
-  const allCats = useAppSelector((s) => s.categories.expense);
+  const expenseCats = useAppSelector((s) => s.categories.expense);
+  const allCats = categoriesOverride ?? expenseCats;
 
   const parents = useMemo(() => allCats.filter((c) => !c.parentId), [allCats]);
   const subs = useMemo(() => allCats.filter((c) => !!c.parentId), [allCats]);
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
-    if (!q) return null; // show grouped view
+    if (!q) return null;
     return allCats.filter((c) =>
       c.name.toLowerCase().includes(q) || t.cat(c.name).toLowerCase().includes(q)
     );
@@ -79,7 +83,6 @@ export function CategorySheet({ onSelect, onClose }: CategorySheetProps) {
         {/* Category list */}
         <div className="overflow-y-auto pb-8 px-4">
           {filtered ? (
-            // Search results — flat list
             <div className="flex flex-col gap-0.5 pt-2">
               {filtered.map((cat) => {
                 const parent = cat.parentId ? allCats.find((c) => c.id === cat.parentId) : null;
@@ -111,7 +114,6 @@ export function CategorySheet({ onSelect, onClose }: CategorySheetProps) {
               )}
             </div>
           ) : (
-            // Grouped by parent
             <div className="flex flex-col gap-4 pt-2">
               {parents.map((parent) => {
                 const children = subs.filter((c) => c.parentId === parent.id);

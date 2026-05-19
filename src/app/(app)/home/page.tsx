@@ -634,14 +634,25 @@ export default function HomePage() {
     {/* All categories sheet */}
     {categorySheet && (
       <CategorySheet
+        categories={categorySheet.isIncome ? allIncomeCats : undefined}
         onSelect={(chip) => {
-          handleClarifyChip(
-            categorySheet.amount,
-            chip,
-            categorySheet.parsedDate,
-            categorySheet.parsedDateLabel,
-            categorySheet.parsedNote,
-          );
+          if (categorySheet.isIncome) {
+            handleIncomeClarifyChip(
+              categorySheet.amount,
+              chip,
+              categorySheet.parsedDate,
+              categorySheet.parsedDateLabel,
+              categorySheet.parsedNote,
+            );
+          } else {
+            handleClarifyChip(
+              categorySheet.amount,
+              chip,
+              categorySheet.parsedDate,
+              categorySheet.parsedDateLabel,
+              categorySheet.parsedNote,
+            );
+          }
           setCategorySheet(null);
         }}
         onClose={() => setCategorySheet(null)}

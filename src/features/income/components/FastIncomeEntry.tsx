@@ -335,7 +335,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
           className="w-full py-[12px] rounded-[16px] flex items-center justify-center gap-2 text-[14px] font-black text-white transition-opacity disabled:opacity-50 border-0"
           style={{ background: catColor, boxShadow: `0 12px 24px ${catColor}60` }}
         >
-          <StickerIcon icon={category?.icon ?? 'trending-up'} color="#fff" className="h-5 w-5" />
+          <StickerIcon icon={category?.icon ?? 'cash'} color="#fff" className="h-5 w-5" />
           <span>
             {saving
               ? t('common.saving')

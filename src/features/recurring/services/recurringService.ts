@@ -27,6 +27,7 @@ function toSerializable(id: string, data: Record<string, unknown>): Serializable
     endDate: data.endDate ? toISO(data.endDate) : undefined,
     nextDueDate: toISO(data.nextDueDate),
     type: data.type as RecurringType,
+    typeLabel: data.typeLabel as string | undefined,
     reminderDays: (data.reminderDays as number) ?? 3,
     comment: data.comment as string | undefined,
     isActive: (data.isActive as boolean) ?? true,

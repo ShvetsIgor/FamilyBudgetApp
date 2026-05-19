@@ -61,10 +61,15 @@ function msgTime(iso: string): string {
   return format(parseISO(iso), 'HH:mm');
 }
 
+function localDateKey(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function groupByDay(messages: SerializableChatMessage[]): { day: string; items: SerializableChatMessage[] }[] {
   const map = new Map<string, SerializableChatMessage[]>();
   for (const m of messages) {
-    const key = m.createdAt.slice(0, 10);
+    const key = localDateKey(m.createdAt);
     if (!map.has(key)) map.set(key, []);
     map.get(key)!.push(m);
   }

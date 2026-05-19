@@ -10,6 +10,7 @@ import { formatAmount, blockInvalidAmountKeys } from '@/shared/utils/currency';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
+import { ChevronRight, ChevronLeft } from 'lucide-react';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,

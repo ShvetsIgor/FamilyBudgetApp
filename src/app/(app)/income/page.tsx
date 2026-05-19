@@ -148,7 +148,7 @@ export default function IncomePage() {
     <div className="lg:grid lg:grid-cols-3 lg:gap-6 lg:items-start">
 
       {/* ── List column ── */}
-      <div className={cn('lg:col-span-2 flex flex-col', formOpen && 'hidden lg:flex')}>
+      <div className={cn('lg:col-span-2 flex flex-col', (formOpen) && 'hidden lg:flex')}>
 
         {/* Header */}
         <div className="px-4 pt-5 pb-2 flex items-center justify-between lg:px-0 lg:pt-0">

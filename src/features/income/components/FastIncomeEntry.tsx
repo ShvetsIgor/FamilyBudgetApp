@@ -88,7 +88,7 @@ export function FastIncomeEntry() {
         });
       }
 
-      router.back();
+      window.history.length > 1 ? router.back() : router.replace('/income');
     } catch {
       setSaving(false);
     }

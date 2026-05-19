@@ -340,7 +340,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
             {saving
               ? t('common.saving')
               : isRecurring
-                ? `${t('income.record')} · ${symbol}\u202F${amount} · ${dayOfMonth} число`
+                ? `${t('income.record')} · ${symbol}\u202F${amount} · ${new Date(dateStr).getDate()} число`
                 : `${t('income.record')} ${symbol}\u202F${amount}`}
           </span>
         </button>

@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, MessageSquare, Calendar } from 'lucide-react';
+import { X, Calendar, MessageSquare, ChevronRight } from 'lucide-react';
+import { format, parseISO, isToday, isYesterday } from 'date-fns';
+import { ru } from 'date-fns/locale';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { prependIncome, updateIncome } from '@/features/income/store/incomeSlice';
 import { addIncome, updateIncome as updateIncomeService } from '@/features/income/services/incomeService';

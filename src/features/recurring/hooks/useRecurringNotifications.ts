@@ -42,7 +42,7 @@ export function useRecurringNotifications() {
 
   useEffect(() => {
     if (!items.length) return;
-    if (typeof window === 'undefined' || Notification.permission !== 'granted') return;
+    if (typeof window === 'undefined' || !('Notification' in window) || Notification.permission !== 'granted') return;
 
     const notified = getNotifiedSet();
     const today = new Date();

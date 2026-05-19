@@ -73,6 +73,7 @@ function groupByDay(messages: SerializableChatMessage[]): { day: string; items: 
 
 export default function HomePage() {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const t = useT();
   const userId = useAppSelector((s) => s.auth.user?.id);
   const currency = useAppSelector((s) => s.ui.currency) as Currency;

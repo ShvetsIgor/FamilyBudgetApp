@@ -689,10 +689,16 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
             {types.map((tp) => (
               <button key={tp.value} type="button" onClick={() => setType(tp.value)}
                 className={`flex flex-col items-center gap-1 rounded-xl py-2 text-xs border transition-colors ${type === tp.value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'}`}>
-                <span>{tp.icon}</span><span>{tp.label}</span>
+                <span>{tp.icon}</span>
+                <span>{tp.value === 'custom' && typeLabel ? typeLabel : tp.label}</span>
               </button>
             ))}
           </div>
+          {type === 'custom' && (
+            <input type="text" value={typeLabel} onChange={(e) => setTypeLabel(e.target.value)}
+              placeholder="Свой тип…"
+              className="mt-2 w-full bg-transparent text-sm outline-none border-b border-border pb-1" />
+          )}
         </div>
         <div className="rounded-2xl border border-border bg-card p-4">
           <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.frequency')}</label>

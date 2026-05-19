@@ -485,32 +485,41 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
             <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider mb-1.5 px-0.5">
               {t('recurring.type')}
             </p>
-            <div className="overflow-x-auto [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
-              <div className="grid grid-rows-2 grid-flow-col gap-1.5" style={{ gridAutoColumns: '64px' }}>
-                {types.map((tp) => {
-                  const sel = type === tp.value;
-                  return (
-                    <button
-                      key={tp.value}
-                      onClick={() => setType(tp.value)}
-                      className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
-                      style={{
-                        background: sel ? catColor : 'hsl(var(--card))',
-                        boxShadow: sel ? `0 3px 8px ${catColor}55` : '0 1px 3px rgba(61,44,31,.06)',
-                      }}
+            <div className="flex flex-wrap gap-1.5">
+              {types.map((tp) => {
+                const sel = type === tp.value;
+                return (
+                  <button
+                    key={tp.value}
+                    onClick={() => setType(tp.value)}
+                    className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
+                    style={{
+                      background: sel ? catColor : 'hsl(var(--card))',
+                      boxShadow: sel ? `0 3px 8px ${catColor}55` : '0 1px 3px rgba(61,44,31,.06)',
+                    }}
+                  >
+                    <span className="text-base leading-none">{tp.icon}</span>
+                    <span
+                      className="text-[9px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
+                      style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}
                     >
-                      <span className="text-base leading-none">{tp.icon}</span>
-                      <span
-                        className="text-[9px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
-                        style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}
-                      >
-                        {tp.label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+                      {tp.value === 'custom' && typeLabel ? typeLabel : tp.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
+            {type === 'custom' && (
+              <input
+                type="text"
+                value={typeLabel}
+                onChange={(e) => setTypeLabel(e.target.value)}
+                placeholder="Свой тип…"
+                autoFocus
+                className="mt-2 block w-full px-3 py-2 rounded-xl text-sm bg-card border border-border outline-none transition-colors"
+                style={{ borderColor: catColor }}
+              />
+            )}
           </div>
 
           {/* Frequency chips */}

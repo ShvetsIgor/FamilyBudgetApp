@@ -90,8 +90,8 @@ export function FastSavingsEntry() {
       }
       dispatch(prependExpense(await addExpense({
         userId: user.id, amount: amountNum, currency: selectedGoal.currency,
-        categoryId: catId, date: new Date(), paymentMethod: 'other',
-        comment: `Savings: ${selectedGoal.name}`, tags: ['savings'],
+        categoryId: catId, date: new Date(dateStr), paymentMethod: 'other',
+        comment: comment.trim() ? `Savings: ${selectedGoal.name} · ${comment.trim()}` : `Savings: ${selectedGoal.name}`, tags: ['savings'],
         privacy: 'regular', splits: [], goalId: selectedGoal.id,
       })));
 

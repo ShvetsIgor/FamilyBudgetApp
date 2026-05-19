@@ -24,6 +24,7 @@ interface ClarifyCardProps {
   onSelectChip: (chip: ClarifyChip) => void;
   onAllCategories: () => void;
   onOtherText?: (text: string) => void;
+  onSplit?: () => void;
 }
 
 export function ClarifyCard({

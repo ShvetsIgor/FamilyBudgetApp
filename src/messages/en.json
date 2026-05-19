@@ -396,6 +396,7 @@
     },
     "today": {
       "budgetLabel": "Today's budget",
+      "monthLabel": "Monthly budget",
       "of": "of",
       "spent": "spent",
       "spentPct": "already {pct}%"

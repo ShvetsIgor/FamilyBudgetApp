@@ -476,6 +476,63 @@ export function FastExpenseEntry({
             )}
           </div>
         )}
+
+        {/* Date row */}
+        <div className="rounded-[14px] overflow-hidden flex-shrink-0" style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}>
+          <button
+            onClick={() => { setShowDate((v) => !v); setShowComment(false); }}
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 transition-all"
+            style={{ background: showDate ? catColor + '14' : 'hsl(var(--card))' }}
+          >
+            <div className="h-8 w-8 rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: catColor + '20' }}>
+              <Calendar className="h-4 w-4" style={{ color: catColor }} />
+            </div>
+            <span className="flex-1 text-left text-[13px] font-bold text-foreground">
+              {(() => {
+                const d = parseISO(dateStr);
+                if (isToday(d)) return 'Сегодня';
+                if (isYesterday(d)) return 'Вчера';
+                return format(d, 'd MMMM yyyy', { locale: ru });
+              })()}
+            </span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </button>
+          {showDate && (
+            <div style={{ borderTop: `1px solid ${catColor}22` }}>
+              <MiniCalendar value={dateStr} onChange={(d) => { setDateStr(d); setShowDate(false); }} color={catColor} />
+            </div>
+          )}
+        </div>
+
+        {/* Comment row */}
+        <div className="rounded-[14px] overflow-hidden flex-shrink-0" style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}>
+          <button
+            onClick={() => { setShowComment((v) => !v); setShowDate(false); }}
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 transition-all"
+            style={{ background: (showComment || comment) ? catColor + '14' : 'hsl(var(--card))' }}
+          >
+            <div className="h-8 w-8 rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: catColor + '20' }}>
+              <MessageSquare className="h-4 w-4" style={{ color: catColor }} />
+            </div>
+            <span className="flex-1 text-left text-[13px] font-bold" style={{ color: comment ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
+              {comment || 'Заметка…'}
+            </span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </button>
+          {showComment && (
+            <div className="px-3.5 pb-3" style={{ borderTop: `1px solid ${catColor}22` }}>
+              <input
+                type="text"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Заметка…"
+                autoFocus
+                className="mt-2 block w-full px-3 py-2 rounded-xl text-sm bg-background border border-border outline-none focus:border-primary transition-colors"
+              />
+            </div>
+          )}
+        </div>
+
       </div>
 
       {/* ── Payment method ── */}

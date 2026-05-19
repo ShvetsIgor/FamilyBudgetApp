@@ -560,7 +560,7 @@ export function FastExpenseEntry({
           }}
         >
           <StickerIcon icon={parent?.icon ?? 'box'} color="#fff" className="h-5 w-5" />
-          <span>{saving ? 'Сохранение…' : isEdit ? `Сохранить ${symbol}${total}` : `Записать чек ${symbol}${total}`}</span>
+          <span>{saving ? 'Сохранение…' : isEdit ? `Сохранить ${symbol}\u202F${total}` : `Записать чек ${symbol}\u202F${total}`}</span>
           {!isEdit && <span className="opacity-75 font-bold text-[13px]">· {posCount} {pluralRu(posCount)}</span>}
         </button>
       </div>

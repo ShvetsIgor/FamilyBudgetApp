@@ -17,6 +17,8 @@ interface Props {
   initial?: Partial<Category>;
   type: CategoryType;
   parentId?: string;
+  folderId?: string;
+  availableFolders?: import('@/shared/types').CategoryFolder[];
   onSave: (cat: Omit<Category, 'id' | 'userId'> & { id?: string }) => void;
   onDelete?: () => void;
   isWizardMode?: boolean;

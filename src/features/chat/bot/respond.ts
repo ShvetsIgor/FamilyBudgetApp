@@ -163,7 +163,7 @@ export async function respondToUserMessage(
   parsed: ParseResult,
   ctx: BotContext
 ): Promise<BotReply> {
-  const { userId, currency, categoriesById, topParentIds, incomeCategoriesById, topIncomeParentIds } = ctx;
+  const { userId, currency, categoriesById, topCategoryIds, incomeCategoriesById, topIncomeCategoryIds } = ctx;
   const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
   const sym = symMap[currency] ?? currency;
 

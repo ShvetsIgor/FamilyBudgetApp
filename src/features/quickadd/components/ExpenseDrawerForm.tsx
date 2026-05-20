@@ -13,6 +13,7 @@ import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import { useT } from '@/shared/hooks/useT';
 import { cn } from '@/shared/utils/cn';
 import type { Category, SplitItem } from '@/shared/types';
+import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
 
 interface SplitRow {
   categoryId: string;

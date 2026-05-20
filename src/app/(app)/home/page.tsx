@@ -357,7 +357,6 @@ export default function HomePage() {
       const parsed: import('@/shared/types/message').ParseResult = {
         amount,
         categoryId: chip.id,
-        parentId: chip.id,
         confidence: 'high',
         isIncome: true,
         date: parsedDate,

@@ -12,7 +12,7 @@ interface ComposerProps {
   variant?: 'mobile' | 'desktop';
 }
 
-export function Composer({ onSend, disabled }: ComposerProps) {
+export function Composer({ onSend, disabled, variant = 'mobile' }: ComposerProps) {
   const t = useT();
   const [value, setValue] = useState('');
   const [helpOpen, setHelpOpen] = useState(false);

@@ -327,8 +327,7 @@ export async function respondToUserMessage(
 
   // ── Case 1.75: learned keyword — ask again with suggested category on top
   if (parsed.confidence === 'low' && !parsed.storeId && parsed.learnedCategoryId) {
-    const learnedCat = resolveCategory(parsed.learnedCategoryId, categoriesById)
-      ?? resolveCategory(parsed.learnedParentId ?? null, categoriesById);
+    const learnedCat = resolveCategory(parsed.learnedCategoryId, categoriesById);
     const learnedChip = learnedCat
       ? [{ id: learnedCat.id, name: learnedCat.name, icon: learnedCat.icon, color: learnedCat.color }]
       : [];

@@ -14,6 +14,7 @@ import { getCurrencySymbol } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import type { SerializableIncome } from '@/shared/types';
+import { isRootCategory } from '@/shared/utils/categoryHelpers';
 
 const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫'] as const;
 type NumKey = (typeof NUMPAD_KEYS)[number];

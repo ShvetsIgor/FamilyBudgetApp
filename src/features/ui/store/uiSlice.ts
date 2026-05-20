@@ -73,6 +73,9 @@ const uiSlice = createSlice({
       state.budgetMonthlyLimit = action.payload;
       if (typeof window !== 'undefined') localStorage.setItem('budgetMonthlyLimit', String(action.payload));
     },
+    setDesktopRightPanelOpen(state, action: PayloadAction<boolean>) {
+      state.desktopRightPanelOpen = action.payload;
+    },
   },
 });
 

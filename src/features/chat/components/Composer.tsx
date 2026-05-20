@@ -9,6 +9,7 @@ import { HelpSheet } from './HelpSheet';
 interface ComposerProps {
   onSend: (text: string) => void;
   disabled?: boolean;
+  variant?: 'mobile' | 'desktop';
 }
 
 export function Composer({ onSend, disabled }: ComposerProps) {

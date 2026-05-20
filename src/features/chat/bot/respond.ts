@@ -408,7 +408,6 @@ export async function respondToUserMessage(
                 parsedDate: parsed.date,
                 parsedNote: parsed.note,
                 categoryId: parsed.categoryId,
-                parentId: parsed.parentId,
                 userMsgId: userMsg.id,
                 storeId: parsed.storeId,
                 storeName: parsed.storeName,

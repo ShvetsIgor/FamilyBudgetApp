@@ -19,7 +19,7 @@ function resolveCategory(alias: string | null, categoriesById: Map<string, Categ
   for (const parent of [...TAXONOMY, INCOME_TAXONOMY as typeof TAXONOMY[0]]) {
     if (parent.id === alias) {
       for (const [, cat] of categoriesById) {
-        if (cat.name === parent.name && !cat.parentId) return cat;
+        if (cat.name === parent.name && isRootCategory(cat)) return cat;
       }
     }
     for (const sub of parent.subs ?? []) {

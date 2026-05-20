@@ -111,6 +111,7 @@ export function CategoryEditorSheet({
       color,
       isPrivate,
       parentId,
+      folderId: selectedFolderId ?? undefined,
       type,
       order: initial?.order ?? 0,
     });

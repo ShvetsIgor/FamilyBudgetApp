@@ -79,6 +79,6 @@ const uiSlice = createSlice({
   },
 });
 
-export const { setTheme, setLanguage, setCurrency, setWeekStart, setOffline, setSyncing, setExpensesSearch, setBudgetMode, setBudgetDailyLimit, setBudgetMonthlyLimit } =
+export const { setTheme, setLanguage, setCurrency, setWeekStart, setOffline, setSyncing, setExpensesSearch, setBudgetMode, setBudgetDailyLimit, setBudgetMonthlyLimit, setDesktopRightPanelOpen } =
   uiSlice.actions;
 export default uiSlice.reducer;

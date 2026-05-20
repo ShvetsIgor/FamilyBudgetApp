@@ -314,8 +314,7 @@ export interface StoreMatch {
   id: string;
   name: string;
   storeGroup: string;
-  parentId?: string;
-  subId?: string;
+  categoryId?: string;
   needsContext: boolean;
   keyword: string;
 }
@@ -325,7 +324,7 @@ export function matchStore(text: string): StoreMatch | null {
     if (text.includes(alias)) {
       return {
         id: store.id, name: store.name, storeGroup: store.storeGroup,
-        parentId: undefined, subId: store.categoryId,
+        categoryId: store.categoryId,
         needsContext: store.needsContext, keyword: alias,
       };
     }

@@ -58,16 +58,28 @@ export interface FamilyInvite {
 
 // ─── Category ────────────────────────────────────────────────────────────────
 
+export interface CategoryFolder {
+  id: string;
+  userId: string;
+  name: string;
+  icon?: string;
+  color?: string;
+  type: CategoryType;
+  order: number;
+}
+
 export interface Category {
   id: string;
   userId: string;
   name: string;
   icon: string;
   color: string;
-  parentId?: string;
+  folderId?: string | null;  // replaces parentId conceptually
+  parentId?: string;         // kept for backward compat during migration
   isPrivate: boolean;
   order: number;
   type: CategoryType;
+  archived?: boolean;        // soft delete for used categories
 }
 
 // ─── Expense ─────────────────────────────────────────────────────────────────

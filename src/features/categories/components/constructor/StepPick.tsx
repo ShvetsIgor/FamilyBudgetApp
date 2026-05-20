@@ -11,8 +11,6 @@ interface Props {
 }
 
 export function StepPick({ state, onToggle, onAddCustom, locale = 'ru' }: Props) {
-  const [showCustomForm, setShowCustomForm] = useState(false);
-
   return (
     <div className="flex-1 overflow-y-auto px-5 py-4">
       <h2 className="text-lg font-bold text-[#3D2C1F] mb-1">Какие расходы вы отслеживаете?</h2>

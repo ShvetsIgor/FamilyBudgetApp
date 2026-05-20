@@ -549,9 +549,9 @@
         "example": "TV 15000 June 20"
       },
       "tip6": {
-        "title": "Add income via +",
-        "desc": "Tap + in the bottom nav → Income. Enter amount, pick category (salary, freelance, bonus…), add comment and date",
-        "example": "₪15,000 · Salary"
+        "title": "Add income right in chat",
+        "desc": "Type + before the amount — the bot knows it's income, not an expense. Add a category word too",
+        "example": "+15000 salary · +3000 freelance"
       },
       "tip7": {
         "title": "Category Constructor",

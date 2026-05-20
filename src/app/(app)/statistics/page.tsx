@@ -91,17 +91,19 @@ export default function StatisticsPage() {
       })()
     : [];
 
-  // Drill-down: subcategory breakdown for selected parent
+  // Drill-down: subcategory breakdown for selected category
+  // In the flat model, drillCategory IS the category — show legacy parentId-based subs if any exist
   const drillPieData = drillCategory && stats
     ? (() => {
         const parentCat = categories.find((c) => c.id === drillCategory);
         const result: typeof parentPieData = [];
         for (const [catId, amount] of Object.entries(stats.byCategory)) {
           const cat = categories.find((c) => c.id === catId);
-          if (cat && (cat.folderId ?? cat.parentId) === drillCategory) {
+          // Legacy fallback: show subcategories that reference this category via parentId
+          if (cat && cat.parentId === drillCategory) {
             result.push({ catId, name: t.cat(cat.name), amount, color: parentCat?.color ?? cat.color, icon: cat.icon });
           } else if (catId === drillCategory && amount > 0) {
-            // Direct expense on parent without subcategory
+            // Direct expense on this category
             result.push({ catId: drillCategory + '_direct', name: t.cat(parentCat?.name ?? ''), amount, color: parentCat?.color ?? '#6b7280', icon: parentCat?.icon ?? '📦' });
           }
         }

@@ -59,6 +59,7 @@ export function CategoryEditorSheet({
   const [isPrivate, setIsPrivate] = useState(false);
   const [budgetVal, setBudgetVal] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
 
   // subs state
   const [enabledSubIds, setEnabledSubIds] = useState<Set<string>>(new Set());

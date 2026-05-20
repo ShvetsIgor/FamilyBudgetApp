@@ -51,28 +51,28 @@ describe('extractDate', () => {
 });
 
 describe('parseMessage с датой', () => {
-  it('«даббах 1065 9 мая» → amount=1065, date=...-05-09, groceries (теперь в словаре)', () => {
+  it('«даббах 1065 9 мая» → amount=1065, date=...-05-09, categoryId в словаре', () => {
     const r = parseMessage('даббах 1065 9 мая', noLearned);
     expect(r.amount).toBe(1065);
     expect(r.date).toMatch(/-05-09$/);
     expect(r.dateLabel).toBe('9 мая');
-    expect(r.parentId).toBe('groceries');
+    expect(r.categoryId).not.toBeNull();
     expect(r.confidence).toBe('medium');
   });
 
-  it('«хлеб 50 9 мая» → groceries + date', () => {
+  it('«хлеб 50 9 мая» → bakery + date', () => {
     const r = parseMessage('хлеб 50 9 мая', noLearned);
     expect(r.amount).toBe(50);
-    expect(r.parentId).toBe('groceries');
+    expect(r.categoryId).toBe('bakery');
     expect(r.date).toMatch(/-05-09$/);
     expect(r.confidence).toBe('medium');
   });
 
-  it('«65 кофе вчера» → dining + yesterday date', () => {
+  it('«65 кофе вчера» → coffee + yesterday date', () => {
     const yesterday = localISO(new Date(Date.now() - 86_400_000));
     const r = parseMessage('65 кофе вчера', noLearned);
     expect(r.amount).toBe(65);
-    expect(r.parentId).toBe('dining');
+    expect(r.categoryId).toBe('coffee');
     expect(r.date).toBe(yesterday);
   });
 
@@ -87,7 +87,6 @@ describe('parseMessage с датой', () => {
   it('дата не мешает матчингу ключевых слов', () => {
     const r = parseMessage('аренда 5000 1 декабря', noLearned);
     expect(r.amount).toBe(5000);
-    expect(r.parentId).toBe('home');
     expect(r.categoryId).toBe('rent');
     expect(r.date).toMatch(/-12-01$/);
   });

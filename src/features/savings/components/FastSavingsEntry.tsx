@@ -14,6 +14,7 @@ import { addContribution, fetchGoals } from '@/features/savings/services/savings
 import { addExpense } from '@/features/expenses/services/expensesService';
 import { addCategory } from '@/features/categories/services/categoriesService';
 import { getCurrencySymbol, formatAmount } from '@/shared/utils/currency';
+import { isRootCategory } from '@/shared/utils/categoryHelpers';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
 import type { SavingsGoal } from '@/shared/types';

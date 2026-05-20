@@ -5,6 +5,7 @@ import { addCategory, updateCategory, removeCategory } from '@/features/categori
 import { setBudgetLimit } from '@/features/budget/store/budgetSlice';
 import {
   addCategory as addCategoryToDb,
+  addCategoryWithId,
   updateCategory as updateCategoryInDb,
   deleteCategory as deleteCategoryFromDb,
 } from '@/features/categories/services/categoriesService';
@@ -14,12 +15,17 @@ import { CategoryRow } from './CategoryRow';
 import { CategoryEditorSheet } from './CategoryEditorSheet';
 import { ConstructorWizard } from './constructor/ConstructorWizard';
 import { StickerIcon } from './CategoryIcon';
-import { selectActiveParents, selectSubsOf, selectBudgetFor, selectAvailableLibrary } from '../store/selectors';
+import { TAXONOMY, INCOME_TAXONOMY } from '../icons/icons';
+import { selectActiveParents, selectAvailableLibrary } from '../store/selectors';
+
+interface TaxSub { id: string; name: string; ru?: string; icon: string }
 
 interface EditorState {
   open: boolean;
   category?: Category;
   parentId?: string;
+  existingSubs?: Category[];
+  taxonomySubs?: TaxSub[];
 }
 
 export function CategoriesHub() {
@@ -46,26 +52,80 @@ export function CategoriesHub() {
 
   if (!user) return null;
 
-  const handleSave = async (cat: Omit<Category, 'id' | 'userId'> & { id?: string }) => {
-    if (!user) return;
-    const { id, ...data } = cat;
+  const openEditor = (cat: Category) => {
+    const subs = allCategories.filter((c) => c.parentId === cat.id);
+    const taxEntry = TAXONOMY.find((p) => p.id === cat.id)
+      ?? (INCOME_TAXONOMY.id === cat.id ? INCOME_TAXONOMY : null);
+    setEditor({
+      open: true,
+      category: cat,
+      existingSubs: subs,
+      taxonomySubs: taxEntry ? (taxEntry.subs as TaxSub[]) : undefined,
+    });
+  };
 
+  const handleSave = async (catData: Omit<Category, 'id' | 'userId'> & { id?: string }) => {
+    if (!user) return;
+    const { id, ...data } = catData;
     if (id) {
-      // Update existing
       const updated: Category = { ...data, id, userId: user.id };
       await updateCategoryInDb(user.id, updated);
       dispatch(updateCategory(updated));
     } else {
-      // Add new
       const created = await addCategoryToDb(user.id, data);
       dispatch(addCategory(created));
     }
-    setEditor({ open: false });
+  };
+
+  const handleSubsChange = async (
+    toAdd: TaxSub[],
+    toRemove: string[],
+    customNames: string[],
+  ) => {
+    if (!user || !editor.category) return;
+    const parentCat = editor.category;
+    // Add taxonomy subs with stable IDs
+    for (const sub of toAdd) {
+      const created = await addCategoryWithId(user.id, sub.id, {
+        name: sub.name,
+        icon: sub.icon,
+        color: parentCat.color,
+        type: parentCat.type,
+        parentId: parentCat.id,
+        order: 0,
+        isPrivate: false,
+      });
+      dispatch(addCategory(created));
+    }
+    // Add custom subs with auto IDs
+    for (const n of customNames) {
+      const created = await addCategoryToDb(user.id, {
+        name: n,
+        icon: parentCat.icon,
+        color: parentCat.color,
+        type: parentCat.type,
+        parentId: parentCat.id,
+        order: 0,
+        isPrivate: false,
+      });
+      dispatch(addCategory(created));
+    }
+    // Remove subs
+    for (const id of toRemove) {
+      await deleteCategoryFromDb(user.id, id, parentCat.type);
+      dispatch(removeCategory({ id, type: parentCat.type }));
+    }
   };
 
   const handleDelete = async () => {
     if (!editor.category || !user) return;
     if (!confirm('Удалить эту категорию?')) return;
+    // Also delete all subs
+    const subs = allCategories.filter((c) => c.parentId === editor.category!.id);
+    for (const sub of subs) {
+      await deleteCategoryFromDb(user.id, sub.id, sub.type);
+      dispatch(removeCategory({ id: sub.id, type: sub.type }));
+    }
     await deleteCategoryFromDb(user.id, editor.category.id, editor.category.type);
     dispatch(removeCategory({ id: editor.category.id, type: editor.category.type }));
     setEditor({ open: false });
@@ -82,6 +142,22 @@ export function CategoriesHub() {
       isPrivate: false,
     });
     dispatch(addCategory(created));
+    // Also add all TAXONOMY subs for this parent
+    const taxEntry = TAXONOMY.find((p) => p.id === libraryParent.id);
+    if (taxEntry) {
+      for (const sub of taxEntry.subs) {
+        const s = await addCategoryWithId(user.id, sub.id, {
+          name: sub.name,
+          icon: sub.icon,
+          color: libraryParent.color,
+          type: tab,
+          parentId: created.id,
+          order: 0,
+          isPrivate: false,
+        });
+        dispatch(addCategory(s));
+      }
+    }
   };
 
   return (
@@ -128,13 +204,7 @@ export function CategoriesHub() {
             {totalBudget > 0 ? ` · ₪${totalBudget.toLocaleString()}/мес` : ''}
           </span>
           <button
-            onClick={() =>
-              setEditor({
-                open: true,
-                parentId: undefined,
-                category: undefined,
-              })
-            }
+            onClick={() => setEditor({ open: true })}
             className="text-xs font-semibold text-[#E07A5F]"
           >
             + Добавить
@@ -170,7 +240,7 @@ export function CategoriesHub() {
                 category={cat}
                 subs={subs}
                 budget={budget}
-                onEdit={() => setEditor({ open: true, category: cat })}
+                onEdit={() => openEditor(cat)}
               />
             );
           })
@@ -234,6 +304,8 @@ export function CategoriesHub() {
         initial={editor.category}
         type={tab}
         parentId={editor.parentId}
+        existingSubs={editor.existingSubs}
+        taxonomySubs={editor.taxonomySubs}
         budget={editor.category ? (budgetLimits[editor.category.id] ?? 0) || undefined : undefined}
         onBudgetChange={async (v) => {
           if (!editor.category || !user) return;
@@ -242,6 +314,7 @@ export function CategoriesHub() {
           dispatch(setBudgetLimit({ categoryId: editor.category.id, limit }));
         }}
         onSave={handleSave}
+        onSubsChange={handleSubsChange}
         onDelete={editor.category ? handleDelete : undefined}
       />
 

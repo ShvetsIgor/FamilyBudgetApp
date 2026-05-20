@@ -114,7 +114,7 @@ export default function StatisticsPage() {
   // Check which parent categories have subcategory data
   const parentsWithSubs = new Set(
     (stats ? Object.keys(stats.byCategory) : [])
-      .map((catId) => categories.find((c) => c.id === catId)?.parentId)
+      .map((catId) => { const c = categories.find((x) => x.id === catId); return c?.folderId ?? c?.parentId; })
       .filter(Boolean) as string[]
   );
 

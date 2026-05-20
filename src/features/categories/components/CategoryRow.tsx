@@ -1,6 +1,8 @@
 'use client';
+import { useAppSelector } from '@/store/store';
 import type { Category } from '@/shared/types';
 import { StickerIcon } from './CategoryIcon';
+import { TAXONOMY, INCOME_TAXONOMY } from '../icons/icons';
 
 interface Props {
   category: Category;
@@ -11,9 +13,24 @@ interface Props {
   onActivate?: () => void;
 }
 
+function getTaxName(id: string, lang: string): string | null {
+  const parent = TAXONOMY.find((p) => p.id === id) ?? (INCOME_TAXONOMY.id === id ? INCOME_TAXONOMY : null);
+  if (parent) return lang === 'ru' ? parent.ru : parent.name;
+  for (const p of TAXONOMY) {
+    const sub = p.subs.find((s) => s.id === id);
+    if (sub) return lang === 'ru' ? (sub.ru ?? sub.name) : sub.name;
+  }
+  const incomeSub = INCOME_TAXONOMY.subs.find((s) => s.id === id);
+  if (incomeSub) return lang === 'ru' ? (incomeSub.ru ?? incomeSub.name) : incomeSub.name;
+  return null;
+}
+
 export function CategoryRow({ category, subs, budget, onEdit, fromLibrary, onActivate }: Props) {
+  const lang = useAppSelector((s) => s.ui.language) ?? 'ru';
   const firstThree = subs.slice(0, 3);
   const remaining = subs.length - 3;
+
+  const displayName = getTaxName(category.id, lang) ?? category.name;
 
   return (
     <div
@@ -31,7 +48,7 @@ export function CategoryRow({ category, subs, budget, onEdit, fromLibrary, onAct
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-[#3D2C1F] truncate">{category.name}</span>
+          <span className="text-sm font-semibold text-[#3D2C1F] truncate">{displayName}</span>
           {fromLibrary && (
             <span className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-[#8E7A66] bg-[#F4ECDE]">
               в библиотеке
@@ -47,7 +64,7 @@ export function CategoryRow({ category, subs, budget, onEdit, fromLibrary, onAct
               className="text-[10px] rounded-md px-1.5 py-0.5 font-medium"
               style={{ backgroundColor: `${category.color}15`, color: category.color }}
             >
-              {sub.name}
+              {getTaxName(sub.id, lang) ?? sub.name}
             </span>
           ))}
           {remaining > 0 && (

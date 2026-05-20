@@ -11,6 +11,7 @@ const cats = (s: RootState, type: CategoryType) =>
 export const selectActiveParents = (s: RootState, type: CategoryType) =>
   cats(s, type).filter((c) => isRootCategory(c));
 
+/** @deprecated Use selectCategoriesInFolder for new data. This reads legacy parentId only. */
 export const selectSubsOf = (s: RootState, parentId: string, type: CategoryType) =>
   cats(s, type).filter((c) => c.parentId === parentId && !c.archived);
 

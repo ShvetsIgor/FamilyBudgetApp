@@ -3,9 +3,7 @@ export interface StoreEntry {
   name: string;
   storeGroup: string;
   /** Only set for self-describing stores (needsContext: false) */
-  parentId?: string;
-  /** Only set for self-describing stores (needsContext: false) */
-  subId?: string;
+  categoryId?: string;
   /** true = ambiguous store (supermarket, amazon, pharmacy) — always ask clarification */
   needsContext: boolean;
   aliases: string[];
@@ -32,137 +30,137 @@ export const STORES: StoreEntry[] = [
   // ── Fast food ───────────────────────────────────────────────────────────────
   {
     id: 'mcdonalds', name: "McDonald's", storeGroup: 'fast_food',
-    parentId: 'food', subId: 'fast_food', needsContext: false,
+    categoryId: 'fast_food', needsContext: false,
     aliases: ['макдональдс', 'mcdonalds', 'mac donalds', 'макдак', 'מקדונלדס'],
   },
   {
     id: 'burger_king', name: 'Burger King', storeGroup: 'fast_food',
-    parentId: 'food', subId: 'fast_food', needsContext: false,
+    categoryId: 'fast_food', needsContext: false,
     aliases: ['бургер кинг', 'burger king', 'בורגר קינג'],
   },
   {
     id: 'kfc', name: 'KFC', storeGroup: 'fast_food',
-    parentId: 'food', subId: 'fast_food', needsContext: false,
+    categoryId: 'fast_food', needsContext: false,
     aliases: ['kfc', 'кфс'],
   },
   {
     id: 'dominos', name: "Domino's", storeGroup: 'fast_food',
-    parentId: 'food', subId: 'fast_food', needsContext: false,
+    categoryId: 'fast_food', needsContext: false,
     aliases: ['dominos', "domino's", 'доминос', 'דומינוס'],
   },
 
   // ── Coffee ──────────────────────────────────────────────────────────────────
   {
     id: 'aroma', name: 'Aroma', storeGroup: 'coffee',
-    parentId: 'food', subId: 'coffee', needsContext: false,
+    categoryId: 'coffee', needsContext: false,
     aliases: ['aroma', 'арома', 'ארומה'],
   },
   {
     id: 'cofix', name: 'Cofix', storeGroup: 'coffee',
-    parentId: 'food', subId: 'coffee', needsContext: false,
+    categoryId: 'coffee', needsContext: false,
     aliases: ['cofix', 'кофикс', 'קופיקס'],
   },
   {
     id: 'starbucks', name: 'Starbucks', storeGroup: 'coffee',
-    parentId: 'food', subId: 'coffee', needsContext: false,
+    categoryId: 'coffee', needsContext: false,
     aliases: ['starbucks', 'старбакс', 'סטארבקס'],
   },
 
   // ── Delivery apps ───────────────────────────────────────────────────────────
   {
     id: 'wolt', name: 'Wolt', storeGroup: 'delivery',
-    parentId: 'food', subId: 'delivery', needsContext: false,
+    categoryId: 'delivery', needsContext: false,
     aliases: ['wolt', 'וולט'],
   },
   {
     id: 'tenbis', name: 'Ten Bis', storeGroup: 'delivery',
-    parentId: 'food', subId: 'delivery', needsContext: false,
+    categoryId: 'delivery', needsContext: false,
     aliases: ['tenbis', 'ten bis', 'тен бис', 'טן ביס', '10bis'],
   },
   {
     id: 'bolt_food', name: 'Bolt Food', storeGroup: 'delivery',
-    parentId: 'food', subId: 'delivery', needsContext: false,
+    categoryId: 'delivery', needsContext: false,
     aliases: ['bolt food'],
   },
   {
     id: 'mishloha', name: 'Mishloha', storeGroup: 'delivery',
-    parentId: 'food', subId: 'delivery', needsContext: false,
+    categoryId: 'delivery', needsContext: false,
     aliases: ['mishloha', 'מישלוחה'],
   },
 
   // ── Taxi ────────────────────────────────────────────────────────────────────
   {
     id: 'gett', name: 'Gett', storeGroup: 'taxi',
-    parentId: 'transport', subId: 'taxi', needsContext: false,
+    categoryId: 'taxi', needsContext: false,
     aliases: ['gett', 'גט'],
   },
   {
     id: 'yango', name: 'Yango', storeGroup: 'taxi',
-    parentId: 'transport', subId: 'taxi', needsContext: false,
+    categoryId: 'taxi', needsContext: false,
     aliases: ['yango', 'янго'],
   },
   {
     id: 'uber', name: 'Uber', storeGroup: 'taxi',
-    parentId: 'transport', subId: 'taxi', needsContext: false,
+    categoryId: 'taxi', needsContext: false,
     aliases: ['uber', 'убер'],
   },
   {
     id: 'bolt_taxi', name: 'Bolt', storeGroup: 'taxi',
-    parentId: 'transport', subId: 'taxi', needsContext: false,
+    categoryId: 'taxi', needsContext: false,
     aliases: ['bolt taxi', 'bolt'],
   },
 
   // ── Fuel stations ───────────────────────────────────────────────────────────
   {
     id: 'sonol', name: 'Sonol', storeGroup: 'fuel_station',
-    parentId: 'car', subId: 'fuel', needsContext: false,
+    categoryId: 'fuel', needsContext: false,
     aliases: ['sonol', 'сонол', 'סונול'],
   },
   {
     id: 'delek', name: 'Delek', storeGroup: 'fuel_station',
-    parentId: 'car', subId: 'fuel', needsContext: false,
+    categoryId: 'fuel', needsContext: false,
     aliases: ['delek', 'дилек', 'דלק'],
   },
   {
     id: 'paz', name: 'Paz', storeGroup: 'fuel_station',
-    parentId: 'car', subId: 'fuel', needsContext: false,
+    categoryId: 'fuel', needsContext: false,
     aliases: ['paz', 'פז'],
   },
   {
     id: 'dor_alon', name: 'Dor Alon', storeGroup: 'fuel_station',
-    parentId: 'car', subId: 'fuel', needsContext: false,
+    categoryId: 'fuel', needsContext: false,
     aliases: ['dor alon', 'דור אלון'],
   },
 
   // ── Clothing brands ─────────────────────────────────────────────────────────
   {
     id: 'zara', name: 'Zara', storeGroup: 'fashion',
-    parentId: 'shopping', subId: 'clothes', needsContext: false,
+    categoryId: 'clothes', needsContext: false,
     aliases: ['zara', 'зара', 'זארה'],
   },
   {
     id: 'hm', name: 'H&M', storeGroup: 'fashion',
-    parentId: 'shopping', subId: 'clothes', needsContext: false,
+    categoryId: 'clothes', needsContext: false,
     aliases: ['h&m', 'hm', 'h & m'],
   },
   {
     id: 'nike', name: 'Nike', storeGroup: 'fashion',
-    parentId: 'shopping', subId: 'shoes', needsContext: false,
+    categoryId: 'shoes', needsContext: false,
     aliases: ['nike', 'найк', 'נייק'],
   },
   {
     id: 'adidas', name: 'Adidas', storeGroup: 'fashion',
-    parentId: 'shopping', subId: 'shoes', needsContext: false,
+    categoryId: 'shoes', needsContext: false,
     aliases: ['adidas', 'адидас', 'אדידס'],
   },
   {
     id: 'pull_bear', name: 'Pull&Bear', storeGroup: 'fashion',
-    parentId: 'shopping', subId: 'clothes', needsContext: false,
+    categoryId: 'clothes', needsContext: false,
     aliases: ['pull&bear', 'pull bear'],
   },
   {
     id: 'castro', name: 'Castro', storeGroup: 'fashion',
-    parentId: 'shopping', subId: 'clothes', needsContext: false,
+    categoryId: 'clothes', needsContext: false,
     aliases: ['castro', 'קסטרו'],
   },
   { id: 'fox', name: 'Fox', storeGroup: 'fashion', needsContext: true, aliases: ['fox fashion', 'פוקס'] },
@@ -188,121 +186,121 @@ export const STORES: StoreEntry[] = [
   // ── Streaming / Subscriptions ───────────────────────────────────────────────
   {
     id: 'netflix', name: 'Netflix', storeGroup: 'streaming',
-    parentId: 'subscriptions', subId: 'streaming', needsContext: false,
+    categoryId: 'streaming', needsContext: false,
     aliases: ['netflix', 'нетфликс', 'נטפליקס'],
   },
   {
     id: 'spotify', name: 'Spotify', storeGroup: 'streaming',
-    parentId: 'subscriptions', subId: 'music_sub', needsContext: false,
+    categoryId: 'music_sub', needsContext: false,
     aliases: ['spotify', 'спотифай', 'ספוטיפיי'],
   },
   {
     id: 'youtube_premium', name: 'YouTube Premium', storeGroup: 'streaming',
-    parentId: 'subscriptions', subId: 'streaming', needsContext: false,
+    categoryId: 'streaming', needsContext: false,
     aliases: ['youtube premium', 'ютуб премиум'],
   },
   {
     id: 'apple_music', name: 'Apple Music', storeGroup: 'streaming',
-    parentId: 'subscriptions', subId: 'music_sub', needsContext: false,
+    categoryId: 'music_sub', needsContext: false,
     aliases: ['apple music'],
   },
   {
     id: 'apple_tv', name: 'Apple TV+', storeGroup: 'streaming',
-    parentId: 'subscriptions', subId: 'streaming', needsContext: false,
+    categoryId: 'streaming', needsContext: false,
     aliases: ['apple tv', 'apple tv+'],
   },
   {
     id: 'disney', name: 'Disney+', storeGroup: 'streaming',
-    parentId: 'subscriptions', subId: 'streaming', needsContext: false,
+    categoryId: 'streaming', needsContext: false,
     aliases: ['disney+', 'disney plus', 'диснейплюс'],
   },
   {
     id: 'icloud', name: 'iCloud', storeGroup: 'cloud',
-    parentId: 'subscriptions', subId: 'cloud_storage', needsContext: false,
+    categoryId: 'cloud_storage', needsContext: false,
     aliases: ['icloud', 'айклауд'],
   },
   {
     id: 'google_one', name: 'Google One', storeGroup: 'cloud',
-    parentId: 'subscriptions', subId: 'cloud_storage', needsContext: false,
+    categoryId: 'cloud_storage', needsContext: false,
     aliases: ['google one'],
   },
   {
     id: 'chatgpt', name: 'ChatGPT', storeGroup: 'software',
-    parentId: 'subscriptions', subId: 'software_sub', needsContext: false,
+    categoryId: 'software_sub', needsContext: false,
     aliases: ['chatgpt', 'openai', 'chat gpt'],
   },
   {
     id: 'telegram_premium', name: 'Telegram Premium', storeGroup: 'software',
-    parentId: 'subscriptions', subId: 'software_sub', needsContext: false,
+    categoryId: 'software_sub', needsContext: false,
     aliases: ['telegram premium', 'телеграм премиум'],
   },
   {
     id: 'claude', name: 'Claude', storeGroup: 'software',
-    parentId: 'subscriptions', subId: 'software_sub', needsContext: false,
+    categoryId: 'software_sub', needsContext: false,
     aliases: ['claude', 'anthropic', 'клод'],
   },
 
   // ── Telecom ─────────────────────────────────────────────────────────────────
   {
     id: 'bezeq', name: 'Bezeq', storeGroup: 'internet_provider',
-    parentId: 'home', subId: 'internet', needsContext: false,
+    categoryId: 'internet', needsContext: false,
     aliases: ['bezeq', 'безек', 'בזק'],
   },
   {
     id: 'hot', name: 'HOT', storeGroup: 'internet_provider',
-    parentId: 'home', subId: 'internet', needsContext: false,
+    categoryId: 'internet', needsContext: false,
     aliases: ['hot mobile', 'hot net', 'הוט'],
   },
   {
     id: 'cellcom', name: 'Cellcom', storeGroup: 'mobile_carrier',
-    parentId: 'home', subId: 'mobile_bill', needsContext: false,
+    categoryId: 'mobile_bill', needsContext: false,
     aliases: ['cellcom', 'сэлком', 'סלקום'],
   },
   {
     id: 'partner', name: 'Partner', storeGroup: 'mobile_carrier',
-    parentId: 'home', subId: 'mobile_bill', needsContext: false,
+    categoryId: 'mobile_bill', needsContext: false,
     aliases: ['partner', 'פרטנר'],
   },
   {
     id: 'pelephone', name: 'Pelephone', storeGroup: 'mobile_carrier',
-    parentId: 'home', subId: 'mobile_bill', needsContext: false,
+    categoryId: 'mobile_bill', needsContext: false,
     aliases: ['pelephone', 'פלאפון'],
   },
   {
     id: 'hot_mobile', name: 'HOT Mobile', storeGroup: 'mobile_carrier',
-    parentId: 'home', subId: 'mobile_bill', needsContext: false,
+    categoryId: 'mobile_bill', needsContext: false,
     aliases: ['hot mobile', 'הוט מובייל'],
   },
   {
     id: '012_mobile', name: '012 Mobile', storeGroup: 'mobile_carrier',
-    parentId: 'home', subId: 'mobile_bill', needsContext: false,
+    categoryId: 'mobile_bill', needsContext: false,
     aliases: ['012', '012 mobile'],
   },
 
   // ── Travel ──────────────────────────────────────────────────────────────────
   {
     id: 'airbnb', name: 'Airbnb', storeGroup: 'accommodation',
-    parentId: 'travel', subId: 'hotels', needsContext: false,
+    categoryId: 'hotels', needsContext: false,
     aliases: ['airbnb', 'эирбнб', 'אירבנב'],
   },
   {
     id: 'booking', name: 'Booking.com', storeGroup: 'accommodation',
-    parentId: 'travel', subId: 'hotels', needsContext: false,
+    categoryId: 'hotels', needsContext: false,
     aliases: ['booking.com', 'booking', 'букинг'],
   },
   {
     id: 'elal', name: 'El Al', storeGroup: 'airline',
-    parentId: 'travel', subId: 'flights', needsContext: false,
+    categoryId: 'flights', needsContext: false,
     aliases: ['el al', 'elal', 'אל על'],
   },
   {
     id: 'ryanair', name: 'Ryanair', storeGroup: 'airline',
-    parentId: 'travel', subId: 'flights', needsContext: false,
+    categoryId: 'flights', needsContext: false,
     aliases: ['ryanair', 'райанэйр'],
   },
   {
     id: 'wizzair', name: 'Wizz Air', storeGroup: 'airline',
-    parentId: 'travel', subId: 'flights', needsContext: false,
+    categoryId: 'flights', needsContext: false,
     aliases: ['wizz air', 'wizzair', 'виззэйр'],
   },
 ];
@@ -327,7 +325,7 @@ export function matchStore(text: string): StoreMatch | null {
     if (text.includes(alias)) {
       return {
         id: store.id, name: store.name, storeGroup: store.storeGroup,
-        parentId: store.parentId, subId: store.subId,
+        parentId: undefined, subId: store.categoryId,
         needsContext: store.needsContext, keyword: alias,
       };
     }

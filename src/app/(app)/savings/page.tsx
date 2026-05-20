@@ -45,7 +45,7 @@ export default function SavingsPage() {
     if (recordAsExpense) {
       let catId = expenseCategoryId;
       if (!catId) {
-        const created = await addCategory(user.id, { name: 'Savings', icon: '🐷', color: '#10b981', type: 'expense', isPrivate: false, order: 8, parentId: undefined });
+        const created = await addCategory(user.id, { name: 'Savings', icon: '🐷', color: '#10b981', type: 'expense', isPrivate: false, order: 8 });
         dispatch(addCategoryRedux(created));
         catId = created.id;
       }

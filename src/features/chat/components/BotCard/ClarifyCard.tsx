@@ -54,13 +54,13 @@ export function ClarifyCard({
 
   const currentChips: ClarifyChip[] = selectedParent && categories
     ? categories
-        .filter((c) => c.parentId === selectedParent.id)
+        .filter((c) => c.folderId === selectedParent.id || c.parentId === selectedParent.id)
         .map((c) => ({ id: c.id, name: c.name, icon: c.icon, color: c.color }))
     : chips;
 
   const handleChipClick = (chip: ClarifyChip) => {
     if (!selectedParent && categories) {
-      const subs = categories.filter((c) => c.parentId === chip.id);
+      const subs = categories.filter((c) => c.folderId === chip.id || c.parentId === chip.id);
       if (subs.length > 0) {
         setSelectedParent(chip);
         return;

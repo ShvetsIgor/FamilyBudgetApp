@@ -156,13 +156,14 @@ export function CategoriesHub() {
   const handleDelete = async () => {
     if (!editor.category || !user) return;
     if (!confirm('Удалить эту категорию?')) return;
+    // Archive (soft-delete) — never hard-delete categories that may have expenses
     const subs = allCategories.filter((c) => c.parentId === editor.category!.id);
     for (const sub of subs) {
-      await deleteCategoryFromDb(user.id, sub.id, sub.type);
-      dispatch(removeCategory({ id: sub.id, type: sub.type }));
+      await archiveCategoryInFirestore(user.id, sub.id, sub.type);
+      dispatch(archiveCategory({ id: sub.id, type: sub.type }));
     }
-    await deleteCategoryFromDb(user.id, editor.category.id, editor.category.type);
-    dispatch(removeCategory({ id: editor.category.id, type: editor.category.type }));
+    await archiveCategoryInFirestore(user.id, editor.category.id, editor.category.type);
+    dispatch(archiveCategory({ id: editor.category.id, type: editor.category.type }));
     setEditor({ open: false });
   };
 

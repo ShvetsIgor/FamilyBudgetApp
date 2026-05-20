@@ -2,6 +2,7 @@
 
 import { Plus, Trash2, ChevronDown } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
+import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
 import { calculateSplit } from '@/features/expenses/utils/splitAlgorithm';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';

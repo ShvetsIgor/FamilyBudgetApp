@@ -1,0 +1,127 @@
+import type { ItemEntry } from './types';
+
+export const SERVICES_ITEMS: Record<string, ItemEntry> = {
+
+  // ── Entertainment ─────────────────────────────────────────────────────────
+  'кино':             { categoryId: 'movies' },
+  'cinema':           { categoryId: 'movies' },
+  'movies':           { categoryId: 'movies' },
+  'קולנוע':           { categoryId: 'movies' },
+  'билет':            { categoryId: 'events' },
+  'концерт':          { categoryId: 'events' },
+  'театр':            { categoryId: 'events' },
+  'ticket':           { categoryId: 'events' },
+  'concert':          { categoryId: 'events' },
+  'theatre':          { categoryId: 'events' },
+  'כרטיס':            { categoryId: 'events' },
+  'хобби':            { categoryId: 'hobbies' },
+  'hobby':            { categoryId: 'hobbies' },
+  'зоопарк':          { categoryId: 'parks' },
+  'парк':             { categoryId: 'parks' },
+  'zoo':              { categoryId: 'parks' },
+  'park':             { categoryId: 'parks' },
+  'игры':             { categoryId: 'games' },
+  'games':            { categoryId: 'games' },
+  'gaming':           { categoryId: 'games' },
+
+  // ── Subscriptions / streaming ─────────────────────────────────────────────
+  'подписка':         { categoryId: 'streaming' },
+  'subscription':     { categoryId: 'streaming' },
+  'стриминг':         { categoryId: 'streaming' },
+  'streaming':        { categoryId: 'streaming' },
+  'מנוי':             { categoryId: 'streaming' },
+  'облако':           { categoryId: 'cloud_storage' },
+  'cloud':            { categoryId: 'cloud_storage' },
+
+  // ── Travel ────────────────────────────────────────────────────────────────
+  'перелёт':          { categoryId: 'flights' },
+  'авиа':             { categoryId: 'flights' },
+  'авиабилеты':       { categoryId: 'flights' },
+  'самолет':          { categoryId: 'flights' },
+  'flight':           { categoryId: 'flights' },
+  'flights':          { categoryId: 'flights' },
+  'airplane':         { categoryId: 'flights' },
+  'airport':          { categoryId: 'flights' },
+  'טיסה':             { categoryId: 'flights' },
+  'отель':            { categoryId: 'hotels' },
+  'гостиница':        { categoryId: 'hotels' },
+  'hotel':            { categoryId: 'hotels' },
+  'hostel':           { categoryId: 'hotels' },
+  'מלון':             { categoryId: 'hotels' },
+
+  // ── Education ─────────────────────────────────────────────────────────────
+  'курсы':            { categoryId: 'courses' },
+  'курс':             { categoryId: 'courses' },
+  'courses':          { categoryId: 'courses' },
+  'course':           { categoryId: 'courses' },
+  'קורס':             { categoryId: 'courses' },
+  'книги':            { categoryId: 'books' },
+  'книга':            { categoryId: 'books' },
+  'books':            { categoryId: 'books' },
+  'book':             { categoryId: 'books' },
+  'ספר':              { categoryId: 'books' },
+  'репетитор':        { categoryId: 'tutoring' },
+  'tutor':            { categoryId: 'tutoring' },
+
+  // ── Kids ──────────────────────────────────────────────────────────────────
+  'садик':            { categoryId: 'kindergarten' },
+  'детский сад':      { categoryId: 'kindergarten' },
+  'kindergarten':     { categoryId: 'kindergarten' },
+  'גן ילדים':         { categoryId: 'kindergarten' },
+  'школа':            { categoryId: 'kids_school' },
+  'school':           { categoryId: 'kids_school' },
+  'кружок':           { categoryId: 'kids_activities' },
+  'activities':       { categoryId: 'kids_activities' },
+  'חוג':              { categoryId: 'kids_activities' },
+  'игрушки':          { categoryId: 'toys' },
+  'toys':             { categoryId: 'toys' },
+  'צעצוע':            { categoryId: 'toys' },
+
+  // ── Pets ──────────────────────────────────────────────────────────────────
+  'корм для':         { categoryId: 'pet_food' },
+  'pet food':         { categoryId: 'pet_food' },
+  'ветеринар':        { categoryId: 'vet' },
+  'vet':              { categoryId: 'vet' },
+  'veterinary':       { categoryId: 'vet' },
+  'וטרינר':           { categoryId: 'vet' },
+
+  // ── Gifts ─────────────────────────────────────────────────────────────────
+  'подарок':          { categoryId: 'birthday_gifts' },
+  'подарки':          { categoryId: 'birthday_gifts' },
+  'gift':             { categoryId: 'birthday_gifts' },
+  'present':          { categoryId: 'birthday_gifts' },
+  'מתנה':             { categoryId: 'birthday_gifts' },
+  'благотворит':      { categoryId: 'charity' },
+  'charity':          { categoryId: 'charity' },
+  'donation':         { categoryId: 'charity' },
+  'צדקה':             { categoryId: 'charity' },
+
+  // ── Work / Office ─────────────────────────────────────────────────────────
+  'канцелярия':       { categoryId: 'office_supplies' },
+  'бумага':           { categoryId: 'office_supplies' },
+  'office supplies':  { categoryId: 'office_supplies' },
+  'коворкинг':        { categoryId: 'coworking' },
+  'coworking':        { categoryId: 'coworking' },
+
+  // ── Finance ───────────────────────────────────────────────────────────────
+  'страховка':        { categoryId: 'insurance' },
+  'страхование':      { categoryId: 'insurance' },
+  'insurance':        { categoryId: 'insurance' },
+  'ביטוח':            { categoryId: 'insurance' },
+  'налоги':           { categoryId: 'taxes' },
+  'налог':            { categoryId: 'taxes' },
+  'taxes':            { categoryId: 'taxes' },
+  'инвестиции':       { categoryId: 'investments' },
+  'investments':      { categoryId: 'investments' },
+
+  // ── Household services ────────────────────────────────────────────────────
+  'уборка':           { categoryId: 'cleaning' },
+  'cleaning':         { categoryId: 'cleaning' },
+  'ניקיון':           { categoryId: 'cleaning' },
+  'прачечная':        { categoryId: 'laundry' },
+  'laundry':          { categoryId: 'laundry' },
+  'почта':            { categoryId: 'postal' },
+  'postal':           { categoryId: 'postal' },
+  'shipping':         { categoryId: 'postal' },
+  'דואר':             { categoryId: 'postal' },
+};

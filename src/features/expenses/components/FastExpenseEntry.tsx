@@ -379,7 +379,7 @@ export function FastExpenseEntry({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-bold text-foreground">{t.cat(sp.name)}</div>
-                {sp.parentName && sp.parentId !== parentId && (
+                {sp.parentName && sp.groupCatId !== selectedCatId && (
                   <div className="text-[10px] text-muted-foreground font-semibold">{t.cat(sp.parentName)}</div>
                 )}
               </div>

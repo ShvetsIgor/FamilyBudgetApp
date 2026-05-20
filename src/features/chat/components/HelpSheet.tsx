@@ -62,6 +62,27 @@ export function HelpSheet({ onClose }: HelpSheetProps) {
       desc: t('chat.help.tip5.desc'),
       example: t('chat.help.tip5.example'),
     },
+    {
+      icon: 'briefcase',
+      color: '#81B29A',
+      title: t('chat.help.tip6.title'),
+      desc: t('chat.help.tip6.desc'),
+      example: t('chat.help.tip6.example'),
+    },
+    {
+      icon: 'chart_up',
+      color: '#E07A5F',
+      title: t('chat.help.tip7.title'),
+      desc: t('chat.help.tip7.desc'),
+      example: t('chat.help.tip7.example'),
+    },
+    {
+      icon: 'card',
+      color: '#A48BC9',
+      title: t('chat.help.tip8.title'),
+      desc: t('chat.help.tip8.desc'),
+      example: t('chat.help.tip8.example'),
+    },
   ];
 
   return (

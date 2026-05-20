@@ -113,10 +113,11 @@ export default function StatisticsPage() {
 
   const pieData = drillPieData ?? parentPieData;
 
-  // Check which parent categories have subcategory data
+  // Check which categories have legacy subcategory data (parentId-based, for drill-down chevron)
+  // In the flat model this will be empty; in legacy data it tracks which cats have sub-entries
   const parentsWithSubs = new Set(
     (stats ? Object.keys(stats.byCategory) : [])
-      .map((catId) => { const c = categories.find((x) => x.id === catId); return c?.folderId ?? c?.parentId; })
+      .map((catId) => { const c = categories.find((x) => x.id === catId); return c?.parentId; })
       .filter(Boolean) as string[]
   );
 

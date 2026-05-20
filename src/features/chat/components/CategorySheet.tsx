@@ -118,7 +118,7 @@ export function CategorySheet({ onSelect, onClose, categories: categoriesOverrid
           ) : (
             <div className="flex flex-col gap-4 pt-2">
               {parents.map((parent) => {
-                const children = subs.filter((c) => c.parentId === parent.id);
+                const children = subs.filter((c) => (c.folderId ?? c.parentId) === parent.id);
                 const chips: Chip[] = [
                   { id: parent.id, name: parent.name, icon: parent.icon, color: parent.color },
                   ...children.map((c) => ({ id: c.id, name: c.name, icon: c.icon, color: c.color })),

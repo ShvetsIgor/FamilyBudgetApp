@@ -323,7 +323,76 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "confirmDelete": "Delete this category?",
-    "selectToEdit": "Select a category to edit or add a new one"
+    "selectToEdit": "Select a category to edit or add a new one",
+    "hub": {
+      "summary": "{n} active · {currency}{total}/mo",
+      "active": "Active",
+      "library": "In library",
+      "show": "Show",
+      "hide": "Hide",
+      "sort": "Sort",
+      "createManual": "Create category manually",
+      "tabExpense": "Expenses",
+      "tabIncome": "Income"
+    },
+    "row": {
+      "subs": "{n} subcategories",
+      "more": "+{n}",
+      "inLibrary": "in library"
+    },
+    "constructor": {
+      "cardTitle": "Constructor",
+      "cardSubtitle": "Set up your full category set step by step",
+      "step": "Step {current} of {total}",
+      "next": "Next",
+      "back": "Back",
+      "skip": "Skip",
+      "pick": {
+        "title": "Categories",
+        "h": "What expenses do you track?",
+        "sub": "Pick all that apply to you. You can change later.",
+        "ownTile": "Custom",
+        "nextWithCount": "Next · {n}",
+        "nextEmpty": "Pick at least one"
+      },
+      "refine": {
+        "title": "Refine",
+        "h": "Refine each category",
+        "sub": "More subcategories = better stats.",
+        "ownChip": "Custom",
+        "nextLabel": "Budgets"
+      },
+      "budget": {
+        "title": "Budget",
+        "h": "How much per month?",
+        "sub": "You can leave blank and set later.",
+        "totalLabel": "Total budget",
+        "nextLabel": "Done"
+      },
+      "done": {
+        "title": "Done",
+        "headline": "All set!",
+        "sub": "You can start tracking your budget. Change categories anytime in settings.",
+        "statCats": "categories",
+        "statSubs": "subcategories",
+        "statBudget": "per month",
+        "cta": "Get Started"
+      }
+    },
+    "editor": {
+      "title": "Edit",
+      "titleNew": "New Category",
+      "name": "Name",
+      "icon": "Icon",
+      "color": "Color",
+      "budget": "Monthly Budget",
+      "budgetOptional": "optional",
+      "private": "Private",
+      "privateHint": "Hide from family",
+      "save": "Save Category",
+      "delete": "Delete",
+      "confirmDelete": "Delete this category?"
+    }
   },
   "auth": {
     "signIn": "Sign In",

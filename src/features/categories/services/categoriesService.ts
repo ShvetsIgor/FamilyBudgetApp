@@ -33,6 +33,15 @@ export async function addCategory(userId: string, data: Omit<Category, 'id' | 'u
   return { id: ref.id, userId, ...data };
 }
 
+// Add category with a stable known ID (e.g. TAXONOMY slug) instead of auto-generated
+export async function addCategoryWithId(userId: string, id: string, data: Omit<Category, 'id' | 'userId'>): Promise<Category> {
+  const clean = Object.fromEntries(
+    Object.entries({ ...data, userId }).filter(([, v]) => v !== undefined)
+  );
+  await setDoc(doc(getDb(), 'categories', userId, data.type, id), clean);
+  return { id, userId, ...data };
+}
+
 export async function updateCategory(userId: string, category: Category): Promise<void> {
   const { id, ...data } = category;
   await updateDoc(doc(getDb(), 'categories', userId, data.type, id), data);

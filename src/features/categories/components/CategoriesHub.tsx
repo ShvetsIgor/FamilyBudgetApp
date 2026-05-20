@@ -147,9 +147,10 @@ export function CategoriesHub() {
       });
       dispatch(addCategory(created));
     }
+    // Archive (soft-delete) instead of hard-delete — categories may have historical expenses
     for (const id of toRemove) {
-      await deleteCategoryFromDb(user.id, id, parentCat.type);
-      dispatch(removeCategory({ id, type: parentCat.type }));
+      await archiveCategoryInFirestore(user.id, id, parentCat.type);
+      dispatch(archiveCategory({ id, type: parentCat.type }));
     }
   };
 

@@ -12,7 +12,6 @@ export interface BotCard {
 export interface ParseResult {
   amount: number;
   categoryId: string | null;
-  parentId: string | null;
   matchedKeyword?: string;
   confidence: 'high' | 'medium' | 'low' | 'failed';
   /** true when input started with "+", meaning this is an income entry */
@@ -31,7 +30,6 @@ export interface ParseResult {
   storeGroup?: string;
   /** Previously learned category ID for this keyword — triggers clarify with it as top chip */
   learnedCategoryId?: string;
-  learnedParentId?: string;
 }
 
 export interface ChatMessage {

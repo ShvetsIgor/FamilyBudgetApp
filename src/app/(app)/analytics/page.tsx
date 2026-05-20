@@ -73,11 +73,11 @@ export default function AnalyticsPage() {
 
   const trendData = months.map((m) => ({ name: m.month.slice(5), expenses: m.totalExpenses, income: m.totalIncome }));
 
+  // Analytics aggregates by categoryId only — folderId is UI-only and must not affect domain layer
   const catTotals: Record<string, number> = {};
   for (const m of months) {
     for (const [id, amt] of Object.entries(m.byCategory)) {
-      const cat = categories.find((c) => c.id === id);
-      const resolvedId = cat?.folderId ?? id;
+      const resolvedId = id; // categoryId is the only business classification key
       catTotals[resolvedId] = (catTotals[resolvedId] ?? 0) + amt;
     }
   }

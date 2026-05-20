@@ -73,7 +73,7 @@ function makeCtx(overrides: Partial<BotContext> = {}): BotContext {
     foldersById,
     topCategoryIds: ['dining', 'groceries'],
     incomeCategoriesById: incomeMap,
-    topIncomeParentIds: ['salary'],
+    topIncomeCategoryIds: ['salary'],
     todaySpent: 0,
     storeProfiles: {},
     ...overrides,

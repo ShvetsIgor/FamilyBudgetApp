@@ -272,18 +272,16 @@ export default function HomePage() {
     if (!userId || sendingRef.current) return;
     sendingRef.current = true;
 
-    // Resolve parent: chip may be a subcategory
     const chipCat = allExpenseCats.find((c) => c.id === chip.id);
-    const resolvedParentId = chipCat?.parentId ?? chip.id;
 
     if (storeId) {
       // Update store purchase history (store ≠ category — probabilistic memory)
-      dispatch(upsertProfile({ storeId, storeName: storeName!, storeGroup, subcategoryId: chip.id, parentId: resolvedParentId }));
-      updateStoreProfile(userId, storeId, storeName!, chip.id, resolvedParentId, storeGroup).catch(() => {});
+      dispatch(upsertProfile({ storeId, storeName: storeName!, storeGroup, categoryId: chip.id }));
+      updateStoreProfile(userId, storeId, storeName!, chip.id, storeGroup).catch(() => {});
     } else {
       // Teach learned keyword for non-store inputs
       const keyword = parsedNote?.trim() || chip.name.toLowerCase();
-      const hit = { categoryId: chipCat?.parentId ? chip.id : resolvedParentId };
+      const hit = { categoryId: chip.id };
       await saveLearnedKeyword(userId, keyword.toLowerCase(), hit);
       addLearned(keyword.toLowerCase(), hit); // optimistic update so next parse uses it immediately
     }

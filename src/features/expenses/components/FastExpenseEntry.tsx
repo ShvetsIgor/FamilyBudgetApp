@@ -304,7 +304,7 @@ export function FastExpenseEntry({
       <div className="overflow-x-auto px-3.5 py-1.5 flex-shrink-0 [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
         <div className="grid grid-rows-2 grid-flow-col gap-1.5" style={{ gridAutoColumns: '64px' }}>
           {topCats.map((cat) => {
-            const sel = cat.id === parentId;
+            const sel = cat.id === selectedCatId;
             const catColor = cat.color ?? '#E07A5F';
             return (
               <button

@@ -74,7 +74,7 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
       if (storeCheck) break; // defer to store pipeline
       return {
         amount, parentId: null, categoryId: null, matchedKeyword: kw, confidence: 'low',
-        learnedCategoryId: hit.subId ?? hit.parentId, learnedParentId: hit.parentId,
+        learnedCategoryId: hit.categoryId, learnedParentId: null,
         note, ...df,
       };
     }

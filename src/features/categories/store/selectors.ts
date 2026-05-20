@@ -1,6 +1,7 @@
 import type { RootState } from '@/store/store';
 import type { CategoryType } from '@/shared/types';
 import { TAXONOMY, INCOME_TAXONOMY } from '../icons/icons';
+import { isRootCategory } from '@/shared/utils/categoryHelpers';
 
 const cats = (s: RootState, type: CategoryType) =>
   type === 'expense' ? s.categories.expense : s.categories.income;
@@ -8,7 +9,7 @@ const cats = (s: RootState, type: CategoryType) =>
 // ─── Legacy selectors (parentId-based) — kept during migration ───────────────
 
 export const selectActiveParents = (s: RootState, type: CategoryType) =>
-  cats(s, type).filter((c) => !c.parentId && !c.archived);
+  cats(s, type).filter((c) => isRootCategory(c));
 
 export const selectSubsOf = (s: RootState, parentId: string, type: CategoryType) =>
   cats(s, type).filter((c) => c.parentId === parentId && !c.archived);

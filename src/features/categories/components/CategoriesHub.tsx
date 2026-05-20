@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import {
-  addCategory, updateCategory, removeCategory,
+  addCategory, updateCategory, removeCategory, archiveCategory,
   addFolder, updateFolder as updateFolderAction, removeFolder,
 } from '@/features/categories/store/categoriesSlice';
 import { setBudgetLimit } from '@/features/budget/store/budgetSlice';

@@ -79,11 +79,11 @@ export function FastSavingsEntry() {
       dispatch(updateGoalItem(updated));
 
       // Record as expense in Savings category
-      let catId = expenseCategories.find((c) => c.name === 'Savings' && !c.parentId)?.id ?? '';
+      let catId = expenseCategories.find((c) => c.name === 'Savings' && isRootCategory(c))?.id ?? '';
       if (!catId) {
         const created = await addCategory(user.id, {
           name: 'Savings', icon: '🐷', color: '#10b981', type: 'expense',
-          isPrivate: false, order: 8, parentId: undefined,
+          isPrivate: false, order: 8,
         });
         dispatch(addCategoryRedux(created));
         catId = created.id;

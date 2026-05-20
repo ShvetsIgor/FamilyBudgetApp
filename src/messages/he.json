@@ -115,5 +115,98 @@
       "online": "משפחה מחוברת · {n}",
       "onlyYou": "רק אתה"
     }
+  },
+  "categories": {
+    "title": "קטגוריות",
+    "expense": "הוצאות",
+    "income": "הכנסות",
+    "add": "+ הוסף קטגוריה",
+    "addSub": "+ תת-קטגוריה",
+    "reset": "↺ איפוס",
+    "resetting": "מאפס…",
+    "newCategory": "קטגוריה חדשה",
+    "edit": "ערוך",
+    "name": "שם",
+    "namePlaceholder": "שם הקטגוריה",
+    "icon": "אייקון",
+    "color": "צבע",
+    "private": "פרטי (מוסתר מהמשפחה)",
+    "search": "חיפוש…",
+    "selectCategory": "בחר קטגוריה",
+    "save": "שמור",
+    "saving": "שומר…",
+    "cancel": "ביטול",
+    "delete": "מחק",
+    "confirmDelete": "למחוק קטגוריה זו?",
+    "selectToEdit": "בחר קטגוריה לעריכה או הוסף חדשה",
+    "hub": {
+      "summary": "{n} פעילות · {currency}{total}/חודש",
+      "active": "פעילות",
+      "library": "בספרייה",
+      "show": "הצג",
+      "hide": "הסתר",
+      "sort": "מיון",
+      "createManual": "צור קטגוריה ידנית",
+      "tabExpense": "הוצאות",
+      "tabIncome": "הכנסות"
+    },
+    "row": {
+      "subs": "{n} תתי-קטגוריות",
+      "more": "+{n}",
+      "inLibrary": "בספרייה"
+    },
+    "constructor": {
+      "cardTitle": "בונה קטגוריות",
+      "cardSubtitle": "הגדר את כל הקטגוריות שלך שלב אחר שלב",
+      "step": "שלב {current} מתוך {total}",
+      "next": "הבא",
+      "back": "חזור",
+      "skip": "דלג",
+      "pick": {
+        "title": "קטגוריות",
+        "h": "אילו הוצאות אתה עוקב?",
+        "sub": "בחר הכל שמתאים לך. ניתן לשנות בהמשך.",
+        "ownTile": "מותאם",
+        "nextWithCount": "הבא · {n}",
+        "nextEmpty": "בחר לפחות אחת"
+      },
+      "refine": {
+        "title": "עדכון",
+        "h": "עדכן כל קטגוריה",
+        "sub": "יותר תתי-קטגוריות = סטטיסטיקה טובה יותר.",
+        "ownChip": "מותאם",
+        "nextLabel": "תקציבים"
+      },
+      "budget": {
+        "title": "תקציב",
+        "h": "כמה בחודש?",
+        "sub": "ניתן להשאיר ריק ולהגדיר מאוחר יותר.",
+        "totalLabel": "תקציב כולל",
+        "nextLabel": "סיום"
+      },
+      "done": {
+        "title": "סיום",
+        "headline": "הכל מוכן!",
+        "sub": "ניתן להתחיל לעקוב אחר התקציב. שנה קטגוריות בכל עת בהגדרות.",
+        "statCats": "קטגוריות",
+        "statSubs": "תתי-קטגוריות",
+        "statBudget": "בחודש",
+        "cta": "התחל לנהל תקציב"
+      }
+    },
+    "editor": {
+      "title": "ערוך",
+      "titleNew": "קטגוריה חדשה",
+      "name": "שם",
+      "icon": "אייקון",
+      "color": "צבע",
+      "budget": "תקציב חודשי",
+      "budgetOptional": "אופציונלי",
+      "private": "פרטי",
+      "privateHint": "הסתר מהמשפחה",
+      "save": "שמור קטגוריה",
+      "delete": "מחק",
+      "confirmDelete": "למחוק קטגוריה זו?"
+    }
   }
 }

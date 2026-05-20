@@ -40,6 +40,8 @@ export function CategoryEditorSheet({
   initial,
   type,
   parentId,
+  folderId: folderIdProp,
+  availableFolders = [],
   onSave,
   onDelete,
   isWizardMode = false,

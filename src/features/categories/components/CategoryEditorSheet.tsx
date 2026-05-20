@@ -301,6 +301,42 @@ export function CategoryEditorSheet({
             </div>
           )}
 
+          {/* Folder picker — only shown when folders are available and no parentId */}
+          {!parentId && availableFolders.length > 0 && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-[#8E7A66] uppercase tracking-wide">Папка</label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedFolderId(null)}
+                  className="rounded-full px-3 py-1.5 text-xs font-semibold transition-all"
+                  style={
+                    selectedFolderId === null
+                      ? { backgroundColor: '#3D2C1F', color: '#fff' }
+                      : { backgroundColor: '#F4ECDE', color: '#8E7A66' }
+                  }
+                >
+                  Без папки
+                </button>
+                {availableFolders.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setSelectedFolderId(f.id)}
+                    className="rounded-full px-3 py-1.5 text-xs font-semibold transition-all"
+                    style={
+                      selectedFolderId === f.id
+                        ? { backgroundColor: f.color ?? CC.primary, color: '#fff' }
+                        : { backgroundColor: '#F4ECDE', color: '#8E7A66' }
+                    }
+                  >
+                    {selectedFolderId === f.id ? '✓ ' : ''}{f.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Privacy */}
           <label className="flex items-center justify-between cursor-pointer">
             <div>

@@ -18,8 +18,8 @@ export async function fetchLearnedKeywords(
   const snap = await getDocs(collection(getDb(), 'users', userId, 'learnedKeywords'));
   const result: Record<string, KeywordHit> = {};
   snap.docs.forEach((d) => {
-    const data = d.data() as { parentId: string; subId: string | null };
-    result[d.id] = { parentId: data.parentId, ...(data.subId ? { subId: data.subId } : {}) };
+    const data = d.data() as { categoryId: string };
+    result[d.id] = { categoryId: data.categoryId };
   });
   return result;
 }

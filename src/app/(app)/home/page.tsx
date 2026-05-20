@@ -589,7 +589,7 @@ export default function HomePage() {
                       const itemHit = matchItem(text.toLowerCase());
                       if (itemHit) {
                         const cat = allExpenseCats.find(
-                          (c) => c.id === itemHit.categoryId || (c.name.toLowerCase() === itemHit.keyword && !c.parentId)
+                          (c) => c.id === itemHit.categoryId || (c.name.toLowerCase() === itemHit.keyword && isRootCategory(c))
                         );
                         if (cat) {
                           handleClarifyChip(

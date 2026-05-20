@@ -79,7 +79,7 @@ export function FastExpenseEntry({
     [catGroups]
   );
 
-  function initParentId() {
+  function initSelectedCatId() {
     if (!initialExpense) return topCats[0]?.id ?? '';
     const cat = allCats.find((c) => c.id === initialExpense.categoryId);
     return getGroupOf(cat) || cat?.id ?? topCats[0]?.id ?? '';
@@ -90,16 +90,16 @@ export function FastExpenseEntry({
     return initialExpense.splits
       .map((sp: SplitItem) => {
         const cat = allCats.find((c) => c.id === sp.categoryId);
-        const parentId = getGroupOf(cat);
-        const parentCat = parentId ? allCats.find((c) => c.id === parentId) : undefined;
+        const groupId = getGroupOf(cat);
+        const groupCat = groupId ? allCats.find((c) => c.id === groupId) : undefined;
         if (!cat) return null;
         return {
           categoryId: sp.categoryId,
-          parentId: parentCat?.id ?? cat.id,
+          groupCatId: groupCat?.id ?? cat.id,
           name: cat.name,
-          parentName: parentCat?.name ?? cat.name,
+          parentName: groupCat?.name ?? cat.name,
           icon: cat.icon,
-          color: parentCat?.color ?? cat.color,
+          color: groupCat?.color ?? cat.color,
           amount: String(sp.amount),
         };
       })
@@ -109,7 +109,7 @@ export function FastExpenseEntry({
   const startTotal = initialAmount != null ? String(initialAmount) : (initialExpense ? String(initialExpense.amount) : '0');
 
   const [total, setTotal] = useState(startTotal);
-  const [parentId, setParentId] = useState(initParentId);
+  const [selectedCatId, setSelectedCatId] = useState(initSelectedCatId);
   const [splits, setSplits] = useState<SplitRow[]>(initSplits);
   const [editing, setEditing] = useState<'total' | number>('total');
   const [pickerOpen, setPickerOpen] = useState(false);

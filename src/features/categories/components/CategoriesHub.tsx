@@ -1,7 +1,10 @@
 'use client';
 import { useState } from 'react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
-import { addCategory, updateCategory, removeCategory } from '@/features/categories/store/categoriesSlice';
+import {
+  addCategory, updateCategory, removeCategory,
+  addFolder, updateFolder as updateFolderAction, removeFolder,
+} from '@/features/categories/store/categoriesSlice';
 import { setBudgetLimit } from '@/features/budget/store/budgetSlice';
 import {
   addCategory as addCategoryToDb,
@@ -9,14 +12,26 @@ import {
   updateCategory as updateCategoryInDb,
   deleteCategory as deleteCategoryFromDb,
 } from '@/features/categories/services/categoriesService';
+import {
+  addFolder as addFolderToDb,
+  updateFolder as updateFolderInDb,
+  deleteFolder as deleteFolderFromDb,
+} from '@/features/categories/services/categoryFoldersService';
 import { saveBudget } from '@/features/budget/services/budgetService';
-import type { Category, CategoryType } from '@/shared/types';
+import type { Category, CategoryFolder, CategoryType } from '@/shared/types';
 import { CategoryRow } from './CategoryRow';
+import { FolderSection } from './FolderSection';
 import { CategoryEditorSheet } from './CategoryEditorSheet';
+import { FolderEditorSheet } from './FolderEditorSheet';
 import { ConstructorWizard } from './constructor/ConstructorWizard';
 import { StickerIcon } from './CategoryIcon';
 import { TAXONOMY, INCOME_TAXONOMY } from '../icons/icons';
-import { selectActiveParents, selectAvailableLibrary } from '../store/selectors';
+import {
+  selectActiveParents,
+  selectAvailableLibrary,
+  selectFolders,
+  selectCategoriesInFolder,
+} from '../store/selectors';
 
 interface TaxSub { id: string; name: string; ru?: string; icon: string }
 
@@ -24,8 +39,14 @@ interface EditorState {
   open: boolean;
   category?: Category;
   parentId?: string;
+  folderId?: string;
   existingSubs?: Category[];
   taxonomySubs?: TaxSub[];
+}
+
+interface FolderEditorState {
+  open: boolean;
+  folder?: CategoryFolder;
 }
 
 export function CategoriesHub() {
@@ -35,22 +56,35 @@ export function CategoriesHub() {
   const [showWizard, setShowWizard] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
   const [editor, setEditor] = useState<EditorState>({ open: false });
+  const [folderEditor, setFolderEditor] = useState<FolderEditorState>({ open: false });
 
+  const folders = useAppSelector((s) => selectFolders(s, tab));
   const activeParents = useAppSelector((s) => selectActiveParents(s, tab));
   const libraryItems = useAppSelector((s) => selectAvailableLibrary(s, tab));
   const allCategories = useAppSelector((s) =>
     tab === 'expense' ? s.categories.expense : s.categories.income,
   );
   const budgetLimits = useAppSelector((s) => s.budget.limits);
-
-  const existingCategoryIds = new Set(allCategories.map((c) => c.id));
-
-  const totalBudget = activeParents.reduce(
-    (sum, p) => sum + (budgetLimits[p.id] ?? 0),
-    0,
+  const categoriesInFolderMap = useAppSelector((s) =>
+    Object.fromEntries(
+      folders.map((f) => [f.id, selectCategoriesInFolder(s, f.id, tab)])
+    )
   );
 
+  const hasFolders = folders.length > 0;
+  const existingCategoryIds = new Set(allCategories.map((c) => c.id));
+
+  // For summary bar — count active items depending on model
+  const activeCount = hasFolders
+    ? folders.length
+    : activeParents.length;
+  const totalBudget = hasFolders
+    ? Object.values(categoriesInFolderMap).flat().reduce((s, c) => s + (budgetLimits[c.id] ?? 0), 0)
+    : activeParents.reduce((s, p) => s + (budgetLimits[p.id] ?? 0), 0);
+
   if (!user) return null;
+
+  // ── Category editor ────────────────────────────────────────────────────────
 
   const openEditor = (cat: Category) => {
     const subs = allCategories.filter((c) => c.parentId === cat.id);
@@ -62,6 +96,10 @@ export function CategoriesHub() {
       existingSubs: subs,
       taxonomySubs: taxEntry ? (taxEntry.subs as TaxSub[]) : undefined,
     });
+  };
+
+  const openNewCategoryInFolder = (folderId: string) => {
+    setEditor({ open: true, folderId });
   };
 
   const handleSave = async (catData: Omit<Category, 'id' | 'userId'> & { id?: string }) => {
@@ -84,7 +122,6 @@ export function CategoriesHub() {
   ) => {
     if (!user || !editor.category) return;
     const parentCat = editor.category;
-    // Add taxonomy subs with stable IDs
     for (const sub of toAdd) {
       const created = await addCategoryWithId(user.id, sub.id, {
         name: sub.name,
@@ -97,7 +134,6 @@ export function CategoriesHub() {
       });
       dispatch(addCategory(created));
     }
-    // Add custom subs with auto IDs
     for (const n of customNames) {
       const created = await addCategoryToDb(user.id, {
         name: n,
@@ -110,7 +146,6 @@ export function CategoriesHub() {
       });
       dispatch(addCategory(created));
     }
-    // Remove subs
     for (const id of toRemove) {
       await deleteCategoryFromDb(user.id, id, parentCat.type);
       dispatch(removeCategory({ id, type: parentCat.type }));
@@ -120,7 +155,6 @@ export function CategoriesHub() {
   const handleDelete = async () => {
     if (!editor.category || !user) return;
     if (!confirm('Удалить эту категорию?')) return;
-    // Also delete all subs
     const subs = allCategories.filter((c) => c.parentId === editor.category!.id);
     for (const sub of subs) {
       await deleteCategoryFromDb(user.id, sub.id, sub.type);
@@ -130,6 +164,38 @@ export function CategoriesHub() {
     dispatch(removeCategory({ id: editor.category.id, type: editor.category.type }));
     setEditor({ open: false });
   };
+
+  // ── Folder editor ──────────────────────────────────────────────────────────
+
+  const handleFolderSave = async (data: Omit<CategoryFolder, 'id' | 'userId'> & { id?: string }) => {
+    if (!user) return;
+    const { id, ...rest } = data;
+    if (id) {
+      const updated: CategoryFolder = { ...rest, id, userId: user.id };
+      await updateFolderInDb(user.id, updated);
+      dispatch(updateFolderAction(updated));
+    } else {
+      const created = await addFolderToDb(user.id, rest);
+      dispatch(addFolder(created));
+    }
+  };
+
+  const handleFolderDelete = async () => {
+    if (!folderEditor.folder || !user) return;
+    if (!confirm('Удалить папку? Категории останутся, но потеряют группу.')) return;
+    // Unlink all categories in this folder
+    const catsInFolder = categoriesInFolderMap[folderEditor.folder.id] ?? [];
+    for (const cat of catsInFolder) {
+      const updated: Category = { ...cat, folderId: null };
+      await updateCategoryInDb(user.id, updated);
+      dispatch(updateCategory(updated));
+    }
+    await deleteFolderFromDb(user.id, folderEditor.folder.id, folderEditor.folder.type);
+    dispatch(removeFolder({ id: folderEditor.folder.id, type: folderEditor.folder.type }));
+    setFolderEditor({ open: false });
+  };
+
+  // ── Library activation ─────────────────────────────────────────────────────
 
   const handleActivateFromLibrary = async (libraryParent: ReturnType<typeof selectAvailableLibrary>[number]) => {
     if (!user) return;
@@ -142,7 +208,6 @@ export function CategoriesHub() {
       isPrivate: false,
     });
     dispatch(addCategory(created));
-    // Also add all TAXONOMY subs for this parent
     const taxEntry = TAXONOMY.find((p) => p.id === libraryParent.id);
     if (taxEntry) {
       for (const sub of taxEntry.subs) {
@@ -160,6 +225,8 @@ export function CategoriesHub() {
     }
   };
 
+  const isEmpty = hasFolders ? folders.length === 0 : activeParents.length === 0;
+
   return (
     <div className="px-4 pt-4 pb-24 space-y-4 max-w-lg mx-auto">
       {/* Tab bar */}
@@ -169,9 +236,7 @@ export function CategoriesHub() {
             key={tp}
             onClick={() => setTab(tp)}
             className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all ${
-              tab === tp
-                ? 'bg-white text-[#3D2C1F] shadow-sm'
-                : 'text-[#8E7A66]'
+              tab === tp ? 'bg-white text-[#3D2C1F] shadow-sm' : 'text-[#8E7A66]'
             }`}
           >
             {tp === 'expense' ? 'Расходы' : 'Доходы'}
@@ -197,24 +262,34 @@ export function CategoriesHub() {
       )}
 
       {/* Summary */}
-      {activeParents.length > 0 && (
+      {activeCount > 0 && (
         <div className="flex items-center justify-between px-1">
           <span className="text-xs text-[#8E7A66]">
-            {activeParents.length} активных
+            {hasFolders ? `${activeCount} папок` : `${activeCount} активных`}
             {totalBudget > 0 ? ` · ₪${totalBudget.toLocaleString()}/мес` : ''}
           </span>
-          <button
-            onClick={() => setEditor({ open: true })}
-            className="text-xs font-semibold text-[#E07A5F]"
-          >
-            + Добавить
-          </button>
+          <div className="flex gap-3">
+            {hasFolders && (
+              <button
+                onClick={() => setFolderEditor({ open: true })}
+                className="text-xs font-semibold text-[#8E7A66]"
+              >
+                + Папка
+              </button>
+            )}
+            <button
+              onClick={() => setEditor({ open: true })}
+              className="text-xs font-semibold text-[#E07A5F]"
+            >
+              + Добавить
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Active categories */}
+      {/* Categories / Folders list */}
       <div className="space-y-2">
-        {activeParents.length === 0 ? (
+        {isEmpty ? (
           <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#EDE0CC] py-10 text-center gap-3">
             <div className="h-14 w-14 rounded-2xl bg-[#F4ECDE] flex items-center justify-center">
               <StickerIcon icon="box" color="#8E7A66" className="h-9 w-9" />
@@ -230,7 +305,21 @@ export function CategoriesHub() {
               </button>
             )}
           </div>
+        ) : hasFolders ? (
+          // ── New model: folder-based view ──────────────────────────────────
+          folders.map((folder) => (
+            <FolderSection
+              key={folder.id}
+              folder={folder}
+              categories={categoriesInFolderMap[folder.id] ?? []}
+              budgetLimits={budgetLimits}
+              onEditFolder={() => setFolderEditor({ open: true, folder })}
+              onEditCategory={openEditor}
+              onAddCategory={() => openNewCategoryInFolder(folder.id)}
+            />
+          ))
         ) : (
+          // ── Legacy model: parentId-based view ─────────────────────────────
           activeParents.map((cat) => {
             const subs = allCategories.filter((c) => c.parentId === cat.id);
             const budget = budgetLimits[cat.id] ?? 0;
@@ -290,20 +379,32 @@ export function CategoriesHub() {
       )}
 
       {/* Create manually */}
-      <button
-        onClick={() => setEditor({ open: true })}
-        className="w-full rounded-2xl border-2 border-dashed border-[#EDE0CC] py-3 text-sm font-semibold text-[#8E7A66] hover:border-[#E07A5F]/40 hover:text-[#E07A5F] transition-colors"
-      >
-        + Создать категорию вручную
-      </button>
+      <div className="flex gap-2">
+        {hasFolders && (
+          <button
+            onClick={() => setFolderEditor({ open: true })}
+            className="flex-1 rounded-2xl border-2 border-dashed border-[#EDE0CC] py-3 text-sm font-semibold text-[#8E7A66] hover:border-[#8E7A66]/40 transition-colors"
+          >
+            + Папка
+          </button>
+        )}
+        <button
+          onClick={() => setEditor({ open: true })}
+          className="flex-1 rounded-2xl border-2 border-dashed border-[#EDE0CC] py-3 text-sm font-semibold text-[#8E7A66] hover:border-[#E07A5F]/40 hover:text-[#E07A5F] transition-colors"
+        >
+          + Создать категорию
+        </button>
+      </div>
 
-      {/* Editor Sheet */}
+      {/* Category Editor Sheet */}
       <CategoryEditorSheet
         open={editor.open}
         onClose={() => setEditor({ open: false })}
         initial={editor.category}
         type={tab}
         parentId={editor.parentId}
+        folderId={editor.folderId}
+        availableFolders={folders}
         existingSubs={editor.existingSubs}
         taxonomySubs={editor.taxonomySubs}
         budget={editor.category ? (budgetLimits[editor.category.id] ?? 0) || undefined : undefined}
@@ -316,6 +417,16 @@ export function CategoriesHub() {
         onSave={handleSave}
         onSubsChange={handleSubsChange}
         onDelete={editor.category ? handleDelete : undefined}
+      />
+
+      {/* Folder Editor Sheet */}
+      <FolderEditorSheet
+        open={folderEditor.open}
+        onClose={() => setFolderEditor({ open: false })}
+        initial={folderEditor.folder}
+        type={tab}
+        onSave={handleFolderSave}
+        onDelete={folderEditor.folder ? handleFolderDelete : undefined}
       />
 
       {/* Constructor Wizard */}

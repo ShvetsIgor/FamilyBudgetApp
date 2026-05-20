@@ -14,8 +14,7 @@ export async function updateStoreProfile(
   userId: string,
   storeId: string,
   storeName: string,
-  subcategoryId: string,
-  parentId: string,
+  categoryId: string,
   storeGroup?: string,
 ): Promise<void> {
   const ref = doc(getDb(), 'storeProfiles', userId, 'profiles', storeId);
@@ -27,21 +26,21 @@ export async function updateStoreProfile(
       id: storeId,
       name: storeName,
       ...(storeGroup ? { storeGroup } : {}),
-      probableSubcategories: [{ subcategoryId, parentId, usageCount: 1, lastUsed: now }],
+      probableCategories: [{ categoryId, usageCount: 1, lastUsed: now }],
     };
     await setDoc(ref, profile);
     return;
   }
 
   const existing = snap.data() as StoreProfile;
-  const subs = [...existing.probableSubcategories];
-  const idx = subs.findIndex((s) => s.subcategoryId === subcategoryId);
+  const cats = [...(existing.probableCategories ?? [])];
+  const idx = cats.findIndex((c) => c.categoryId === categoryId);
 
   if (idx >= 0) {
-    subs[idx] = { ...subs[idx], usageCount: subs[idx].usageCount + 1, lastUsed: now };
+    cats[idx] = { ...cats[idx], usageCount: cats[idx].usageCount + 1, lastUsed: now };
   } else {
-    subs.push({ subcategoryId, parentId, usageCount: 1, lastUsed: now });
+    cats.push({ categoryId, usageCount: 1, lastUsed: now });
   }
 
-  await setDoc(ref, { ...existing, probableSubcategories: subs }, { merge: true });
+  await setDoc(ref, { ...existing, probableCategories: cats }, { merge: true });
 }

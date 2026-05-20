@@ -16,14 +16,14 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
 
   // 2. Slash-command → not an expense
   if (t.startsWith('/')) {
-    return { amount: 0, categoryId: null, parentId: null, confidence: 'failed' };
+    return { amount: 0, categoryId: null, confidence: 'failed' };
   }
 
   // 2.1 Income prefix "+" → strip and mark as income, skip store/item dictionaries
   const isIncome = t.startsWith('+');
   if (isIncome) {
     t = t.slice(1).trimStart();
-    if (!t) return { amount: 0, categoryId: null, parentId: null, confidence: 'failed', isIncome: true };
+    if (!t) return { amount: 0, categoryId: null, confidence: 'failed', isIncome: true };
   }
 
   // 3. Extract date (removes date tokens from text)
@@ -37,7 +37,7 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
   // 4. Extract number
   const numMatch = t.match(/(\d+([.,]\d+)?)/);
   if (!numMatch) {
-    return { amount: 0, categoryId: null, parentId: null, confidence: 'failed', date, dateLabel, ...(isIncome ? { isIncome } : {}) };
+    return { amount: 0, categoryId: null, confidence: 'failed', date, dateLabel, ...(isIncome ? { isIncome } : {}) };
   }
   const amount = parseFloat(numMatch[1].replace(',', '.'));
 
@@ -50,11 +50,11 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
   // For income: always clarify category (don't use expense store/item dictionaries)
   if (isIncome) {
     const note = rest ? rest.replace(/\b\p{L}/gu, (c) => c.toUpperCase()) : undefined;
-    return { amount, categoryId: null, parentId: null, confidence: 'failed', note, ...df, ...inc };
+    return { amount, categoryId: null, confidence: 'failed', note, ...df, ...inc };
   }
 
   if (!rest) {
-    return { amount, categoryId: null, parentId: null, confidence: 'failed', date, dateLabel };
+    return { amount, categoryId: null, confidence: 'failed', date, dateLabel };
   }
 
   const note = rest.replace(/\b\p{L}/gu, (c) => c.toUpperCase());
@@ -62,7 +62,7 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
   // 6. Emoji (highest priority)
   for (const [emo, hit] of Object.entries(EMOJI)) {
     if (rest.includes(emo)) {
-      return { amount, parentId: null, categoryId: hit.categoryId, matchedKeyword: emo, confidence: 'high', note, ...df };
+      return { amount, categoryId: hit.categoryId, matchedKeyword: emo, confidence: 'high', note, ...df };
     }
   }
 
@@ -73,7 +73,7 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
       const storeCheck = matchStore(rest);
       if (storeCheck) break; // defer to store pipeline
       return {
-        amount, parentId: null, categoryId: null, matchedKeyword: kw, confidence: 'low',
+        amount, categoryId: null, matchedKeyword: kw, confidence: 'low',
         learnedCategoryId: hit.categoryId,
         note, ...df,
       };
@@ -88,7 +88,7 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
     // Both known → high confidence; use item category (more specific)
     return {
       amount, confidence: 'high',
-      parentId: itemMatch.parentId, categoryId: itemMatch.subId,
+      categoryId: itemMatch.categoryId,
       storeId: storeMatch.id, storeName: storeMatch.name, storeGroup: storeMatch.storeGroup,
       matchedKeyword: itemMatch.keyword,
       note, ...df,
@@ -100,7 +100,7 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
       // Ambiguous store (supermarket, amazon, pharmacy) → always ask what was bought
       return {
         amount, confidence: 'low',
-        parentId: null, categoryId: null,
+        categoryId: null,
         storeId: storeMatch.id, storeName: storeMatch.name, storeGroup: storeMatch.storeGroup,
         note, ...df,
       };
@@ -108,7 +108,7 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
     // Self-describing store (McDonalds, Uber, Netflix) → high confidence
     return {
       amount, confidence: 'high',
-      parentId: storeMatch.parentId ?? null, categoryId: storeMatch.subId ?? null,
+      categoryId: storeMatch.categoryId ?? null,
       storeId: storeMatch.id, storeName: storeMatch.name, storeGroup: storeMatch.storeGroup,
       matchedKeyword: storeMatch.keyword,
       note, ...df,
@@ -119,12 +119,12 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
     // Item only (no store known) → medium confidence
     return {
       amount, confidence: 'medium',
-      parentId: itemMatch.parentId, categoryId: itemMatch.subId,
+      categoryId: itemMatch.categoryId,
       matchedKeyword: itemMatch.keyword,
       note, ...df,
     };
   }
 
   // 9. Nothing matched → clarify
-  return { amount, categoryId: null, parentId: null, confidence: 'failed', note, ...df };
+  return { amount, categoryId: null, confidence: 'failed', note, ...df };
 }

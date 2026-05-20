@@ -20,11 +20,10 @@ const storeProfilesSlice = createSlice({
         storeId: string;
         storeName: string;
         storeGroup?: string;
-        subcategoryId: string;
-        parentId: string;
+        categoryId: string;
       }>
     ) {
-      const { storeId, storeName, storeGroup, subcategoryId, parentId } = action.payload;
+      const { storeId, storeName, storeGroup, categoryId } = action.payload;
       const now = new Date().toISOString().slice(0, 10);
       const existing = state.profiles[storeId];
 
@@ -33,19 +32,19 @@ const storeProfilesSlice = createSlice({
           id: storeId,
           name: storeName,
           ...(storeGroup ? { storeGroup } : {}),
-          probableSubcategories: [{ subcategoryId, parentId, usageCount: 1, lastUsed: now }],
+          probableCategories: [{ categoryId, usageCount: 1, lastUsed: now }],
         };
         return;
       }
 
-      const subs = [...existing.probableSubcategories];
-      const idx = subs.findIndex((s) => s.subcategoryId === subcategoryId);
+      const cats = [...existing.probableCategories];
+      const idx = cats.findIndex((c) => c.categoryId === categoryId);
       if (idx >= 0) {
-        subs[idx] = { ...subs[idx], usageCount: subs[idx].usageCount + 1, lastUsed: now };
+        cats[idx] = { ...cats[idx], usageCount: cats[idx].usageCount + 1, lastUsed: now };
       } else {
-        subs.push({ subcategoryId, parentId, usageCount: 1, lastUsed: now });
+        cats.push({ categoryId, usageCount: 1, lastUsed: now });
       }
-      state.profiles[storeId] = { ...existing, probableSubcategories: subs };
+      state.profiles[storeId] = { ...existing, probableCategories: cats };
     },
   },
 });

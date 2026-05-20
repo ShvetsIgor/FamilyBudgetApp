@@ -36,9 +36,7 @@ export async function sendMorningGreeting(ctx: BotContext): Promise<void> {
   const catFreq: Record<string, number> = {};
   yesterdayExpenses.forEach((e) => {
     const cat = categoriesById.get(e.categoryId);
-    const parentId = cat?.parentId ?? e.categoryId;
-    const parent = categoriesById.get(parentId);
-    const name = (parent?.name ?? cat?.name ?? '').toLowerCase();
+    const name = (cat?.name ?? e.categoryId).toLowerCase();
     if (name) catFreq[name] = (catFreq[name] ?? 0) + 1;
   });
   const topCatNames = Object.entries(catFreq)

@@ -355,7 +355,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
   const [selectedParentCatId, setSelectedParentCatId] = useState<string>(() => {
     if (!initial?.categoryId) return '';
     const cat = allExpCats.find((c) => c.id === initial.categoryId);
-    return getGroupOf(cat) || cat?.id ?? '';
+    return getGroupOf(cat) || (cat?.id ?? '');
   });
   const [startDate, setStartDate] = useState(
     initial ? format(parseISO(initial.startDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')

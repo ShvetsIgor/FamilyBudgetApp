@@ -11,8 +11,9 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
-import type { Category, CategoryType } from '@/shared/types';
-import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES } from './defaultCategories';
+import type { Category, CategoryFolder, CategoryType } from '@/shared/types';
+import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES, legacyCategoryMap } from './defaultCategories';
+import { bulkCreateFolders } from './categoryFoldersService';
 
 function colRef(userId: string, type: CategoryType) {
   return collection(getDb(), 'categories', userId, type);

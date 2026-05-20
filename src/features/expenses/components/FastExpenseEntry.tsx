@@ -127,7 +127,7 @@ export function FastExpenseEntry({
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const parent = allCats.find((c) => c.id === parentId);
+  const selectedCat = allCats.find((c) => c.id === selectedCatId);
 
   const totalNum = parseFloat(total) || 0;
   const splitsSum = splits.reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);

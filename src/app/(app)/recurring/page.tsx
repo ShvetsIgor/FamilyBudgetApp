@@ -343,7 +343,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
 }) {
   const t = useT();
   const allExpCats = useAppSelector((s) => s.categories.expense);
-  const parentCats = allExpCats.filter((c) => !c.parentId);
+  const { groups: expenseCatGroups, getCatsInGroup: getSubCats, getGroupOf } = useCategoryGroups('expense');
   const symbol = getCurrencySymbol(currency as Parameters<typeof getCurrencySymbol>[0]);
 
   const [name, setName] = useState(initial?.name ?? '');

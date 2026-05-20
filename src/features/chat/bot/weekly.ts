@@ -80,9 +80,7 @@ export async function sendWeeklySummary(ctx: BotContext): Promise<void> {
 
   const catCount: Record<string, number> = {};
   weekExpenses.forEach((e) => {
-    const cat = categoriesById.get(e.categoryId);
-    const parentId = cat?.parentId ?? e.categoryId;
-    catCount[parentId] = (catCount[parentId] ?? 0) + 1;
+    catCount[e.categoryId] = (catCount[e.categoryId] ?? 0) + 1;
   });
   let mostFrequent = '—';
   if (Object.keys(catCount).length > 0) {

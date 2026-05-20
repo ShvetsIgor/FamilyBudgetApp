@@ -21,7 +21,8 @@ interface Props {
 
 export function SplitEditor({ total, currency, parentCategoryId, splits, onChange, open, onToggle }: Props) {
   const allCategories = useAppSelector((s) => s.categories.expense);
-  const subcategories = allCategories.filter((c) => c.parentId === parentCategoryId);
+  const { getCatsInGroup } = useCategoryGroups('expense');
+  const subcategories = getCatsInGroup(parentCategoryId);
   const { mainAmount, isValid } = calculateSplit(total, splits);
   const symbol = getCurrencySymbol(currency);
 

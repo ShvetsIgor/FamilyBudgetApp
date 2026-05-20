@@ -258,7 +258,7 @@ export function FastExpenseEntry({
 
   if (!user) return null;
 
-  const catColor = parent?.color ?? '#E07A5F';
+  const catColor = selectedCat?.color ?? '#E07A5F';
 
   // Picker: two-level — all parents → subs of selected parent
   const pickerParentCat = pickerParent ? allCats.find((c) => c.id === pickerParent) : null;

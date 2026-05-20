@@ -29,9 +29,8 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const allCats = useAppSelector((s) => s.categories.income);
+  const { groups: parentCats } = useCategoryGroups('income');
   const symbol = getCurrencySymbol(currency);
-
-  const parentCats = allCats.filter((c) => !c.parentId);
 
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState(parentCats[0]?.id ?? '');

@@ -34,7 +34,7 @@ export function CategoryEditorSheet({
 }: Props) {
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('box');
-  const [color, setColor] = useState(CC.primary);
+  const [color, setColor] = useState<string>(CC.primary);
   const [isPrivate, setIsPrivate] = useState(false);
   const [budgetVal, setBudgetVal] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);

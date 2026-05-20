@@ -79,8 +79,9 @@ export function CategoryEditorSheet({
       setCustomSubs([]);
       setCustomSubName('');
       setShowAddSub(false);
+      setSelectedFolderId(initial?.folderId ?? folderIdProp ?? null);
     }
-  }, [open, initial, budget, existingSubs]);
+  }, [open, initial, budget, existingSubs, folderIdProp]);
 
   if (!open) return null;
 

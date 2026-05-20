@@ -12,6 +12,7 @@ import { getCurrencySymbol } from '@/shared/utils/currency';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import { useT } from '@/shared/hooks/useT';
 import { cn } from '@/shared/utils/cn';
+import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
 
 const INCOME_METHODS = [
   { value: 'bank'  as const, label: 'Перевод', icon: '🏦' },

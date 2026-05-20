@@ -19,6 +19,7 @@ interface UIState {
   budgetMode: BudgetMode;
   budgetDailyLimit: number;
   budgetMonthlyLimit: number;
+  desktopRightPanelOpen: boolean;
 }
 
 const initialState: UIState = {

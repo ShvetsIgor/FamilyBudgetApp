@@ -29,8 +29,8 @@ export function CategorySheet({ onSelect, onClose, categories: categoriesOverrid
   const expenseCats = useAppSelector((s) => s.categories.expense);
   const allCats = categoriesOverride ?? expenseCats;
 
-  const parents = useMemo(() => allCats.filter((c) => !c.parentId), [allCats]);
-  const subs = useMemo(() => allCats.filter((c) => !!c.parentId), [allCats]);
+  const parents = useMemo(() => allCats.filter(isRootCategory), [allCats]);
+  const subs = useMemo(() => allCats.filter((c) => !isRootCategory(c)), [allCats]);
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();

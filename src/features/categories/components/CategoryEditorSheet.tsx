@@ -1,11 +1,15 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useAppSelector } from '@/store/store';
 import type { Category, CategoryType } from '@/shared/types';
 import { StickerIcon } from './CategoryIcon';
 import { ColorPaletteRow } from './ColorPaletteRow';
 import { BudgetField } from './BudgetField';
 import { IconPickerGrid } from './IconPickerGrid';
 import { CC } from '../styles/tokens';
+import { TAXONOMY, INCOME_TAXONOMY } from '../icons/icons';
+
+interface TaxSub { id: string; name: string; ru?: string; icon: string }
 
 interface Props {
   open: boolean;
@@ -18,6 +22,14 @@ interface Props {
   isWizardMode?: boolean;
   budget?: number;
   onBudgetChange?: (v: number | null) => void;
+  // subcategory management
+  existingSubs?: Category[];
+  taxonomySubs?: TaxSub[];
+  onSubsChange?: (toAdd: TaxSub[], toRemove: string[], customNames: string[]) => void;
+}
+
+function getTaxSubName(sub: TaxSub, lang: string) {
+  return lang === 'ru' ? (sub.ru ?? sub.name) : sub.name;
 }
 
 export function CategoryEditorSheet({
@@ -31,13 +43,24 @@ export function CategoryEditorSheet({
   isWizardMode = false,
   budget,
   onBudgetChange,
+  existingSubs,
+  taxonomySubs,
+  onSubsChange,
 }: Props) {
+  const lang = useAppSelector((s) => s.ui.language) ?? 'ru';
+
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('box');
   const [color, setColor] = useState<string>(CC.primary);
   const [isPrivate, setIsPrivate] = useState(false);
   const [budgetVal, setBudgetVal] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  // subs state
+  const [enabledSubIds, setEnabledSubIds] = useState<Set<string>>(new Set());
+  const [customSubName, setCustomSubName] = useState('');
+  const [showAddSub, setShowAddSub] = useState(false);
+  const [customSubs, setCustomSubs] = useState<string[]>([]);
 
   useEffect(() => {
     if (open) {
@@ -47,10 +70,31 @@ export function CategoryEditorSheet({
       setIsPrivate(initial?.isPrivate ?? false);
       setBudgetVal(budget ?? null);
       setConfirmDelete(false);
+      setEnabledSubIds(new Set(existingSubs?.map((s) => s.id) ?? []));
+      setCustomSubs([]);
+      setCustomSubName('');
+      setShowAddSub(false);
     }
-  }, [open, initial, budget]);
+  }, [open, initial, budget, existingSubs]);
 
   if (!open) return null;
+
+  const toggleSub = (id: string) =>
+    setEnabledSubIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const addCustomSub = () => {
+    const trimmed = customSubName.trim();
+    if (trimmed) {
+      setCustomSubs((prev) => [...prev, trimmed]);
+      setCustomSubName('');
+      setShowAddSub(false);
+    }
+  };
 
   const handleSave = () => {
     if (!name.trim()) return;
@@ -67,18 +111,34 @@ export function CategoryEditorSheet({
     if (onBudgetChange && budgetVal !== null) {
       onBudgetChange(budgetVal);
     }
+    // subcategory diff
+    if (onSubsChange && (taxonomySubs || customSubs.length > 0)) {
+      const existingIds = new Set(existingSubs?.map((s) => s.id) ?? []);
+      const toAdd = (taxonomySubs ?? []).filter(
+        (s) => enabledSubIds.has(s.id) && !existingIds.has(s.id),
+      );
+      const toRemove = (existingSubs ?? [])
+        .filter((s) => !enabledSubIds.has(s.id))
+        .map((s) => s.id);
+      if (toAdd.length > 0 || toRemove.length > 0 || customSubs.length > 0) {
+        onSubsChange(toAdd, toRemove, customSubs);
+      }
+    }
     onClose();
   };
+
+  // merged list: taxonomy subs (known) + existing custom subs (not in taxonomy)
+  const taxIds = new Set((taxonomySubs ?? []).map((s) => s.id));
+  const existingCustomSubs = (existingSubs ?? []).filter((s) => !taxIds.has(s.id));
+
+  const hasSubsSection = !parentId && (taxonomySubs && taxonomySubs.length > 0 || existingCustomSubs.length > 0);
 
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-40 bg-black/40"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose} />
       {/* Sheet */}
-      <div className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl bg-white dark:bg-neutral-900 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl bg-white dark:bg-neutral-900 shadow-2xl max-h-[92vh] overflow-y-auto">
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
           <div className="h-1 w-10 rounded-full bg-[#EDE0CC]" />
@@ -138,6 +198,99 @@ export function CategoryEditorSheet({
                 Бюджет в месяц <span className="normal-case font-normal">(необязательно)</span>
               </label>
               <BudgetField value={budgetVal} onChange={(v) => { setBudgetVal(v); onBudgetChange?.(v); }} />
+            </div>
+          )}
+
+          {/* Subcategories */}
+          {hasSubsSection && (
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-[#8E7A66] uppercase tracking-wide">
+                Подкатегории
+              </label>
+
+              <div className="flex flex-wrap gap-2">
+                {/* Taxonomy subs */}
+                {(taxonomySubs ?? []).map((sub) => {
+                  const active = enabledSubIds.has(sub.id);
+                  return (
+                    <button
+                      key={sub.id}
+                      type="button"
+                      onClick={() => toggleSub(sub.id)}
+                      className="rounded-full px-3 py-1.5 text-xs font-semibold transition-all"
+                      style={
+                        active
+                          ? { backgroundColor: color, color: '#fff' }
+                          : { backgroundColor: '#F4ECDE', color: '#8E7A66' }
+                      }
+                    >
+                      {active ? '✓ ' : ''}{getTaxSubName(sub, lang)}
+                    </button>
+                  );
+                })}
+
+                {/* Existing custom subs (not from taxonomy) */}
+                {existingCustomSubs.map((sub) => {
+                  const active = enabledSubIds.has(sub.id);
+                  return (
+                    <button
+                      key={sub.id}
+                      type="button"
+                      onClick={() => toggleSub(sub.id)}
+                      className="rounded-full px-3 py-1.5 text-xs font-semibold transition-all"
+                      style={
+                        active
+                          ? { backgroundColor: color, color: '#fff' }
+                          : { backgroundColor: '#F4ECDE', color: '#8E7A66' }
+                      }
+                    >
+                      {active ? '✓ ' : ''}{sub.name}
+                    </button>
+                  );
+                })}
+
+                {/* Newly added custom subs (not yet saved) */}
+                {customSubs.map((n, i) => (
+                  <span
+                    key={`custom-${i}`}
+                    className="rounded-full px-3 py-1.5 text-xs font-semibold text-white"
+                    style={{ backgroundColor: color }}
+                  >
+                    ✓ {n}
+                  </span>
+                ))}
+
+                {/* Add custom */}
+                <button
+                  type="button"
+                  onClick={() => setShowAddSub((v) => !v)}
+                  className="rounded-full px-3 py-1.5 text-xs font-semibold text-[#E07A5F] border border-dashed border-[#E07A5F]/50"
+                >
+                  + Своя
+                </button>
+              </div>
+
+              {showAddSub && (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={customSubName}
+                    onChange={(e) => setCustomSubName(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && addCustomSub()}
+                    placeholder="Название подкатегории"
+                    className="flex-1 rounded-xl border border-[#EDE0CC] px-3 py-2 text-sm text-[#3D2C1F] outline-none focus:border-[#E07A5F]"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={addCustomSub}
+                    className="rounded-xl px-4 py-2 text-sm font-bold text-white"
+                    style={{ backgroundColor: CC.primary }}
+                  >
+                    +
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

@@ -549,8 +549,8 @@
         "example": "TV 15000 June 20"
       },
       "tip6": {
-        "title": "Add income right in chat",
-        "desc": "Type + before the amount — the bot knows it's income, not an expense. Add a category word too",
+        "title": "Type + before amount for income",
+        "desc": "Just add + at the start — the bot saves it as income, not an expense",
         "example": "+15000 salary · +3000 freelance"
       },
       "tip7": {

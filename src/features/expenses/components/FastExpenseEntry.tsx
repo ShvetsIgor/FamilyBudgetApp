@@ -234,9 +234,9 @@ export function FastExpenseEntry({
             card: {
               kind: 'saved',
               data: {
-                icon: parent?.icon ?? 'box',
-                color: parent?.color ?? '#E07A5F',
-                title: initialStore ?? t.cat(parent?.name ?? ''),
+                icon: selectedCat?.icon ?? 'box',
+                color: selectedCat?.color ?? '#E07A5F',
+                title: initialStore ?? t.cat(selectedCat?.name ?? ''),
                 catName: null,
                 parentName: null,
                 hint: `сплит · ${posCount} ${pluralRu(posCount)}`,

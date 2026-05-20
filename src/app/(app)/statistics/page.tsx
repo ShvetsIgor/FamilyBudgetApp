@@ -77,7 +77,7 @@ export default function StatisticsPage() {
         const agg = new Map<string, number>();
         for (const [catId, amount] of Object.entries(stats.byCategory)) {
           const cat = categories.find((c) => c.id === catId);
-          const resolvedId = cat?.parentId ?? catId;
+          const resolvedId = (cat?.folderId ?? cat?.parentId) ?? catId;
           agg.set(resolvedId, (agg.get(resolvedId) ?? 0) + amount);
         }
         return Array.from(agg.entries())

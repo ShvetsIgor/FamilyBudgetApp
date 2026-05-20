@@ -51,13 +51,13 @@ describe('extractDate', () => {
 });
 
 describe('parseMessage с датой', () => {
-  it('«даббах 1065 9 мая» → amount=1065, date=...-05-09, categoryId в словаре', () => {
+  it('«даббах 1065 9 мая» → amount=1065, date=...-05-09, неизвестное слово → failed', () => {
     const r = parseMessage('даббах 1065 9 мая', noLearned);
     expect(r.amount).toBe(1065);
     expect(r.date).toMatch(/-05-09$/);
     expect(r.dateLabel).toBe('9 мая');
-    expect(r.categoryId).not.toBeNull();
-    expect(r.confidence).toBe('medium');
+    expect(r.categoryId).toBeNull();
+    expect(r.confidence).toBe('failed');
   });
 
   it('«хлеб 50 9 мая» → bakery + date', () => {

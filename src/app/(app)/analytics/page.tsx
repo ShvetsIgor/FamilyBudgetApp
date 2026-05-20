@@ -77,7 +77,7 @@ export default function AnalyticsPage() {
   for (const m of months) {
     for (const [id, amt] of Object.entries(m.byCategory)) {
       const cat = categories.find((c) => c.id === id);
-      const resolvedId = cat?.parentId ?? id;
+      const resolvedId = cat?.folderId ?? id;
       catTotals[resolvedId] = (catTotals[resolvedId] ?? 0) + amt;
     }
   }

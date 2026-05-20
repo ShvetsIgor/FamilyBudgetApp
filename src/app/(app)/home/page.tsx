@@ -309,7 +309,6 @@ export default function HomePage() {
       const parsed: import('@/shared/types/message').ParseResult = {
         amount,
         categoryId: chip.id,
-        parentId: resolvedParentId,
         confidence: 'high',
         date: parsedDate,
         dateLabel: parsedDateLabel,

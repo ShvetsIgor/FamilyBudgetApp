@@ -64,9 +64,7 @@ export async function handleSlashCommand(
     allExpenses
       .filter((e) => e.date.startsWith(monthStr))
       .forEach((e) => {
-        const cat = categoriesById.get(e.categoryId);
-        const parentId = cat?.parentId ?? e.categoryId;
-        catSpent[parentId] = (catSpent[parentId] ?? 0) + e.amount;
+        catSpent[e.categoryId] = (catSpent[e.categoryId] ?? 0) + e.amount;
       });
 
     // Build envelopes — union of limits and spending

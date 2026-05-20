@@ -246,10 +246,8 @@ export interface SerializableExpense {
 
 // ─── Store Profiles ───────────────────────────────────────────────────────────
 
-export interface StoreSubcategoryUsage {
-  subcategoryId: string;
-  parentId?: string;   // legacy, kept for backward compat
-  folderId?: string;   // new — folder the subcategory belongs to
+export interface StoreCategoryUsage {
+  categoryId: string;
   usageCount: number;
   lastUsed: string; // ISO date YYYY-MM-DD
 }
@@ -258,7 +256,7 @@ export interface StoreProfile {
   id: string; // storeId
   name: string;
   storeGroup?: string;
-  probableSubcategories: StoreSubcategoryUsage[];
+  probableCategories: StoreCategoryUsage[];
 }
 
 // ─── UI helpers ───────────────────────────────────────────────────────────────

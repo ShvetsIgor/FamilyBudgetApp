@@ -88,6 +88,7 @@ export function CategoriesHub() {
   // ── Category editor ────────────────────────────────────────────────────────
 
   const openEditor = (cat: Category) => {
+    // Legacy model: find sub-categories by parentId. In folder model, subs are found via folderId.
     const subs = allCategories.filter((c) => c.parentId === cat.id);
     const taxEntry = TAXONOMY.find((p) => p.id === cat.id)
       ?? (INCOME_TAXONOMY.id === cat.id ? INCOME_TAXONOMY : null);

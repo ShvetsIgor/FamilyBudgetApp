@@ -81,13 +81,13 @@ export async function confirmFutureExpense(
   botMsgId: string,
   ctx: BotContext
 ): Promise<BotReply & { expense: Awaited<ReturnType<typeof addExpense>> | undefined }> {
-  const { userId, currency, categoriesById } = ctx;
+  const { userId, currency, categoriesById, foldersById } = ctx;
   const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
   const sym = symMap[currency] ?? currency;
 
   const cat = resolveCategory(data.categoryId, categoriesById);
   const catId = cat?.id ?? data.categoryId!;
-  const parentCat = resolveCategory(data.parentId, categoriesById) ?? cat;
+  const folderCat = cat?.folderId ? foldersById.get(cat.folderId) : undefined;
 
   const parts = data.parsedDate.split('-').map(Number);
   const date = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);

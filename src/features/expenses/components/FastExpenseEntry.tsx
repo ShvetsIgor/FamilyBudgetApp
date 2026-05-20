@@ -262,7 +262,7 @@ export function FastExpenseEntry({
 
   // Picker: two-level — all parents → subs of selected parent
   const pickerParentCat = pickerParent ? allCats.find((c) => c.id === pickerParent) : null;
-  const pickerSubCats = pickerParent ? allCats.filter((c) => c.parentId === pickerParent) : [];
+  const pickerSubCats = pickerParent ? getCatsInGroup(pickerParent) : [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:bg-black/50 lg:backdrop-blur-sm">

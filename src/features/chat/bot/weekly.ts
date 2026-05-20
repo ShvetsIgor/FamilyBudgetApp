@@ -54,9 +54,7 @@ export async function sendWeeklySummary(ctx: BotContext): Promise<void> {
 
   const catSpent: Record<string, number> = {};
   weekExpenses.forEach((e) => {
-    const cat = categoriesById.get(e.categoryId);
-    const parentId = cat?.parentId ?? e.categoryId;
-    catSpent[parentId] = (catSpent[parentId] ?? 0) + e.amount;
+    catSpent[e.categoryId] = (catSpent[e.categoryId] ?? 0) + e.amount;
   });
 
   const limits = (ctx as unknown as Record<string, unknown>).budgetLimits as Record<string, number> ?? {};

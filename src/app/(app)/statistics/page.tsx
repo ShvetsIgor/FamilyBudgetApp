@@ -72,12 +72,12 @@ export default function StatisticsPage() {
   useEffect(() => { load(); }, [load]);
 
   // Parent-level aggregation (top-level pie)
+  // Stats aggregate by categoryId only — folders are UI-only and must not affect domain/analytics layer
   const parentPieData = stats
     ? (() => {
         const agg = new Map<string, number>();
         for (const [catId, amount] of Object.entries(stats.byCategory)) {
-          const cat = categories.find((c) => c.id === catId);
-          const resolvedId = (cat?.folderId ?? cat?.parentId) ?? catId;
+          const resolvedId = catId; // stats aggregate by categoryId only — no folder/parent grouping
           agg.set(resolvedId, (agg.get(resolvedId) ?? 0) + amount);
         }
         return Array.from(agg.entries())

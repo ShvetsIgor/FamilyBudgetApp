@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  LayoutDashboard, List, BarChart2,
+  MessageCircle, List, BarChart2,
   PiggyBank, Repeat2,
   LogOut, UserCircle,
 } from 'lucide-react';

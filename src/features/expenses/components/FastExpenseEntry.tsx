@@ -177,7 +177,7 @@ export function FastExpenseEntry({
   }
 
   function changeParent(id: string) {
-    setParentId(id);
+    setSelectedCatId(id);
     setEditing('total');
   }
 

@@ -176,7 +176,7 @@ export async function respondToUserMessage(
 
     // No category selected yet → show income clarify card
     if (!parsed.categoryId) {
-      const chips = topIncomeParentIds
+      const chips = topIncomeCategoryIds
         .slice(0, 5)
         .map((id) => incomeCategoriesById.get(id))
         .filter(Boolean)

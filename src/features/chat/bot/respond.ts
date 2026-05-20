@@ -6,6 +6,7 @@ import { addMessage, updateMessage } from '@/features/chat/services/messagesServ
 import type { SerializableChatMessage, ParseResult } from '@/shared/types/message';
 import type { Category } from '@/shared/types';
 import type { BotContext } from './context';
+import { isRootCategory } from '@/shared/utils/categoryHelpers';
 import { savedPhrase, clarifyPhrase, clarifyStorePhrase, UNKNOWN_PHRASE } from './templates';
 import { TAXONOMY, INCOME_TAXONOMY } from '@/features/categories/icons/icons';
 

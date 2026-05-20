@@ -76,15 +76,16 @@ export function CategoryPicker({
       }
     }
 
-    // Unfoldered / legacy parentId-less
+    // Unfoldered / legacy parentId-less categories (no folder assigned)
     const unfoldered = list.filter((c) => !c.folderId && !c.parentId);
     if (unfoldered.length > 0) {
       groups.push({ folderId: null, folderName: '', cats: unfoldered });
     }
 
-    // Legacy parentId-based (during migration)
+    // ── Legacy fallback: parentId-based grouping (pre-folder data) ──────────
+    // Only active when no folders exist. Once migrated to folder model, this path is dead.
     const legacyParents = list.filter((c) => !c.parentId && !c.folderId && !hasFolders);
-    const legacyChildren = list.filter((c) => !!c.parentId);
+    const legacyChildren = list.filter((c) => !!c.parentId); // @legacy: parentId sub-categories
 
     if (!hasFolders && legacyParents.length > 0) {
       return [

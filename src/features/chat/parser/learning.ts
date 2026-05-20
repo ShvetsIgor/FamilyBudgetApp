@@ -8,7 +8,7 @@ export async function saveLearnedKeyword(
   hit: KeywordHit
 ): Promise<void> {
   const ref = doc(getDb(), 'users', userId, 'learnedKeywords', keyword.toLowerCase());
-  await setDoc(ref, { parentId: hit.parentId, subId: hit.subId ?? null });
+  await setDoc(ref, { categoryId: hit.categoryId });
 }
 
 export async function fetchLearnedKeywords(

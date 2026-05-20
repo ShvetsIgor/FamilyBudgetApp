@@ -547,6 +547,21 @@
         "title": "Future expenses",
         "desc": "Type a future date and the bot will ask if you want to schedule it",
         "example": "TV 15000 June 20"
+      },
+      "tip6": {
+        "title": "Add income via +",
+        "desc": "Tap + in the bottom nav → Income. Enter amount, pick category (salary, freelance, bonus…), add comment and date",
+        "example": "₪15,000 · Salary"
+      },
+      "tip7": {
+        "title": "Category Constructor",
+        "desc": "Categories tab → orange Constructor card. 4 steps: pick groups → refine subcategories → set monthly budgets → done",
+        "example": "Food · Transport · Health…"
+      },
+      "tip8": {
+        "title": "Recurring payments",
+        "desc": "Set up subscriptions, rent, mortgage once — the app reminds you before each due date and shows upcoming bills on Home",
+        "example": "Netflix · Rent · Gym"
       }
     },
     "menu": {

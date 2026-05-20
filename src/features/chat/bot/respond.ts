@@ -272,14 +272,14 @@ export async function respondToUserMessage(
     const profile = ctx.storeProfiles?.[parsed.storeId];
     let chips: { id: string; name: string; icon: string; color: string }[];
 
-    if (profile && profile.probableSubcategories.length > 0) {
+    if (profile && (profile.probableCategories ?? []).length > 0) {
       // Sort by usageCount desc, then by lastUsed desc
-      const sorted = [...profile.probableSubcategories].sort(
+      const sorted = [...profile.probableCategories].sort(
         (a, b) => b.usageCount - a.usageCount || b.lastUsed.localeCompare(a.lastUsed)
       );
       const profileChips = sorted
         .slice(0, 4)
-        .map((u) => categoriesById.get(u.subcategoryId))
+        .map((u) => categoriesById.get(u.categoryId))
         .filter(Boolean)
         .map((c) => ({ id: c!.id, name: c!.name, icon: c!.icon, color: c!.color }));
 

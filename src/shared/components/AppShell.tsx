@@ -34,21 +34,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {bellOpen && <NotificationsPanel onClose={() => setBellOpen(false)} />}
       </div>
 
-      {/* Desktop */}
+      {/* Desktop (≥lg) */}
       <div className="hidden lg:flex h-screen overflow-hidden">
         <Sidebar />
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <UpdateBanner />
-          <TopBar />
-          <main className={isChat ? 'flex-1 overflow-hidden flex flex-col' : 'flex-1 overflow-y-auto'}>
-            {isChat ? (
-              <div className="mx-auto w-full max-w-[480px] flex-1 flex flex-col overflow-hidden h-full">
-                {children}
-              </div>
-            ) : (
-              <div className="mx-auto max-w-[1280px] p-6">{children}</div>
-            )}
-          </main>
+        <div className="relative flex flex-1 overflow-hidden">
+          {isChat ? (
+            <DesktopChatLayout>{children}</DesktopChatLayout>
+          ) : (
+            <div className="flex flex-1 flex-col overflow-hidden">
+              <UpdateBanner />
+              <TopBar />
+              <main className="flex-1 overflow-y-auto">
+                <div className="mx-auto max-w-[1280px] p-6">{children}</div>
+              </main>
+            </div>
+          )}
         </div>
         <AddDrawer />
       </div>

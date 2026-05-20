@@ -1,5 +1,4 @@
 'use client';
-import { useState } from 'react';
 import type { WizardParent } from '../../hooks/useConstructorState';
 import { StickerIcon } from '../CategoryIcon';
 import { CC } from '../../styles/tokens';

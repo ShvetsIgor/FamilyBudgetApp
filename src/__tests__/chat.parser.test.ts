@@ -69,7 +69,7 @@ describe('parseMessage', () => {
   it('50,5 хлеб → amount 50.5 (запятая как разделитель)', () => {
     const r = parseMessage('50,5 хлеб', noLearned);
     expect(r.amount).toBe(50.5);
-    expect(r.categoryId).toBe('supermarket');
+    expect(r.categoryId).toBe('bakery');
   });
 
   it('learned keyword совпадает → confidence low, learnedCategoryId передаётся', () => {

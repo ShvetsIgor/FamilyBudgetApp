@@ -11,6 +11,7 @@ import {
   addCategoryWithId,
   updateCategory as updateCategoryInDb,
   deleteCategory as deleteCategoryFromDb,
+  archiveCategoryInFirestore,
 } from '@/features/categories/services/categoriesService';
 import {
   addFolder as addFolderToDb,

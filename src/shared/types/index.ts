@@ -96,6 +96,7 @@ export interface Expense {
   amount: number;
   currency: Currency;
   categoryId: string;
+  /** @deprecated Legacy field from old subcategory model. Read-only for backward compat. */
   subcategoryId?: string;
   date: Timestamp;
   paymentMethod: PaymentMethod;

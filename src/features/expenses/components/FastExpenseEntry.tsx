@@ -339,10 +339,10 @@ export function FastExpenseEntry({
           className="bg-card rounded-[14px] p-3 flex items-center gap-3 flex-shrink-0"
           style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}
         >
-          <CategoryIcon icon={parent?.icon ?? 'box'} color={catColor} size="md" />
+          <CategoryIcon icon={selectedCat?.icon ?? 'box'} color={catColor} size="md" />
           <div className="flex-1 min-w-0">
             <div className="text-sm font-extrabold text-foreground">
-              {t.cat(parent?.name ?? '')}
+              {t.cat(selectedCat?.name ?? '')}
               {splits.length > 0 && (
                 <span className="text-xs font-semibold text-muted-foreground ml-1">· общее</span>
               )}

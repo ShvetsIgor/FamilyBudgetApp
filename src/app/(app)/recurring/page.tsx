@@ -23,6 +23,7 @@ import { MiniCalendar } from '@/shared/components/MiniCalendar';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
 import type { RecurringFrequency, RecurringType, SerializableRecurringPayment } from '@/shared/types';
+import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
 
 const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫'] as const;
 type NumKey = (typeof NUMPAD_KEYS)[number];

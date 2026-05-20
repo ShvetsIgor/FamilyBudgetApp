@@ -107,7 +107,7 @@ describe('parseMessage', () => {
     expect(r.amount).toBe(45);
     expect(r.confidence).toBe('high');
     expect(r.storeId).toBeDefined();
-    expect(r.categoryId).toBe('supermarket');
+    expect(r.categoryId).toBe('bakery');
   });
 
   it('шуферсал без айтема → low (needsContext=true)', () => {

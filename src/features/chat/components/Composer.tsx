@@ -33,6 +33,7 @@ export function Composer({ onSend, disabled, variant = 'mobile' }: ComposerProps
   }
 
   const focused = value.length > 0;
+  const isDesktop = variant === 'desktop';
 
   return (
     <div className="flex-shrink-0" style={{ background: C.bg }}>

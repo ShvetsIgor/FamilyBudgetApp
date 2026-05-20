@@ -286,7 +286,7 @@ export async function respondToUserMessage(
 
       // Fill remaining slots from top parents not already shown
       const shownIds = new Set(profileChips.map((c) => c.id));
-      const fillChips = topParentIds
+      const fillChips = topCategoryIds
         .filter((id) => !shownIds.has(id))
         .slice(0, Math.max(0, 3 - profileChips.length))
         .map((id) => categoriesById.get(id))
@@ -296,7 +296,7 @@ export async function respondToUserMessage(
       chips = [...profileChips, ...fillChips];
     } else {
       // No history → show top parent categories
-      chips = topParentIds
+      chips = topCategoryIds
         .slice(0, 4)
         .map((id) => categoriesById.get(id))
         .filter(Boolean)
@@ -333,7 +333,7 @@ export async function respondToUserMessage(
       ? [{ id: learnedCat.id, name: learnedCat.name, icon: learnedCat.icon, color: learnedCat.color }]
       : [];
     const shownIds = new Set(learnedChip.map((c) => c.id));
-    const fillChips = topParentIds
+    const fillChips = topCategoryIds
       .filter((id) => !shownIds.has(id))
       .slice(0, 4 - learnedChip.length)
       .map((id) => categoriesById.get(id))
@@ -364,7 +364,7 @@ export async function respondToUserMessage(
 
   // ── Case 2: have amount but no category → clarify card
   if (parsed.confidence === 'failed') {
-    const chipIds = topParentIds.slice(0, 5);
+    const chipIds = topCategoryIds.slice(0, 5);
     const chips = chipIds
       .map((id) => categoriesById.get(id))
       .filter(Boolean)

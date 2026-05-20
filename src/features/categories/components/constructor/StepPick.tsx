@@ -66,12 +66,6 @@ export function StepPick({ state, onToggle, onAddCustom, locale = 'ru' }: Props)
         </button>
       </div>
 
-      {showCustomForm && (
-        <div className="mt-4 text-sm text-[#8E7A66]">
-          {/* Custom form placeholder — handled by wizard via onAddCustom */}
-          <button onClick={() => setShowCustomForm(false)}>Закрыть</button>
-        </div>
-      )}
     </div>
   );
 }

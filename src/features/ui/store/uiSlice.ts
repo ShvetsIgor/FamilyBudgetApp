@@ -33,6 +33,7 @@ const initialState: UIState = {
   budgetMode: (ls('budgetMode') as BudgetMode) ?? 'auto',
   budgetDailyLimit: Number(ls('budgetDailyLimit')) || 0,
   budgetMonthlyLimit: Number(ls('budgetMonthlyLimit')) || 0,
+  desktopRightPanelOpen: true,
 };
 
 const uiSlice = createSlice({

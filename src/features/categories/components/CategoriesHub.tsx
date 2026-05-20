@@ -326,6 +326,7 @@ export function CategoriesHub() {
           ))
         ) : (
           // ── Legacy model: parentId-based view ─────────────────────────────
+          // Used when no folders exist. parentId filter is correct for this migration-adapter path.
           activeParents.map((cat) => {
             const subs = allCategories.filter((c) => c.parentId === cat.id);
             const budget = budgetLimits[cat.id] ?? 0;

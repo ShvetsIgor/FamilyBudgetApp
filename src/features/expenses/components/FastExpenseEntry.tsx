@@ -153,9 +153,9 @@ export function FastExpenseEntry({
         ...prev,
         {
           categoryId: sub.id,
-          parentId: subParent?.id ?? parentId,
+          groupCatId: subParent?.id ?? selectedCatId,
           name: sub.name,
-          parentName: subParent?.name ?? parent?.name ?? '',
+          parentName: subParent?.name ?? selectedCat?.name ?? '',
           icon: sub.icon,
           color,
           amount: '0',

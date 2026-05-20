@@ -7,6 +7,7 @@ import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { useT } from '@/shared/hooks/useT';
 import { C } from '@/features/chat/styles/tokens';
 import type { Category } from '@/shared/types';
+import { isRootCategory } from '@/shared/utils/categoryHelpers';
 
 interface Chip {
   id: string;

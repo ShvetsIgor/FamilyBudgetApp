@@ -53,7 +53,7 @@ export function Composer({ onSend, disabled, variant = 'mobile' }: ComposerProps
           className="flex flex-1 items-center gap-2 transition-all"
           style={{
             background: C.card,
-            borderRadius: 22,
+            borderRadius: isDesktop ? 14 : 22,
             padding: '9px 14px',
             border: `1.5px solid ${focused ? C.primary : C.hairline}`,
             minHeight: 40,

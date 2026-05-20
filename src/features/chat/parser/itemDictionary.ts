@@ -1,6 +1,5 @@
 export interface ItemEntry {
-  parentId: string;
-  subId: string;
+  categoryId: string;
 }
 
 /**
@@ -11,596 +10,596 @@ export interface ItemEntry {
 export const ITEMS: Record<string, ItemEntry> = {
 
   // ── FOOD › Bakery ─────────────────────────────────────────────────────────
-  'לחם':              { parentId: 'food', subId: 'bakery' },  // HE bread
-  'хлеб':             { parentId: 'food', subId: 'bakery' },
-  'батон':            { parentId: 'food', subId: 'bakery' },
-  'булка':            { parentId: 'food', subId: 'bakery' },
-  'лаваш':            { parentId: 'food', subId: 'bakery' },
-  'пита':             { parentId: 'food', subId: 'bakery' },
-  'выпечка':          { parentId: 'food', subId: 'bakery' },
-  'пирог':            { parentId: 'food', subId: 'bakery' },
-  'булочка':          { parentId: 'food', subId: 'bakery' },
-  'bagel':            { parentId: 'food', subId: 'bakery' },
-  'bread':            { parentId: 'food', subId: 'bakery' },
-  'pita':             { parentId: 'food', subId: 'bakery' },
-  'challah':          { parentId: 'food', subId: 'bakery' },
-  'croissant':        { parentId: 'food', subId: 'bakery' },
-  'bakery':           { parentId: 'food', subId: 'bakery' },
-  'מאפייה':           { parentId: 'food', subId: 'bakery' },  // HE bakery
+  'לחם':              { categoryId: 'bakery' },  // HE bread
+  'хлеб':             { categoryId: 'bakery' },
+  'батон':            { categoryId: 'bakery' },
+  'булка':            { categoryId: 'bakery' },
+  'лаваш':            { categoryId: 'bakery' },
+  'пита':             { categoryId: 'bakery' },
+  'выпечка':          { categoryId: 'bakery' },
+  'пирог':            { categoryId: 'bakery' },
+  'булочка':          { categoryId: 'bakery' },
+  'bagel':            { categoryId: 'bakery' },
+  'bread':            { categoryId: 'bakery' },
+  'pita':             { categoryId: 'bakery' },
+  'challah':          { categoryId: 'bakery' },
+  'croissant':        { categoryId: 'bakery' },
+  'bakery':           { categoryId: 'bakery' },
+  'מאפייה':           { categoryId: 'bakery' },  // HE bakery
 
   // ── FOOD › Dairy ──────────────────────────────────────────────────────────
-  'חלב':              { parentId: 'food', subId: 'dairy' },   // HE milk
-  'גבינה':            { parentId: 'food', subId: 'dairy' },   // HE cheese
-  'יוגורט':           { parentId: 'food', subId: 'dairy' },   // HE yogurt
-  'молоко':           { parentId: 'food', subId: 'dairy' },
-  'сыр':              { parentId: 'food', subId: 'dairy' },
-  'творог':           { parentId: 'food', subId: 'dairy' },
-  'йогурт':           { parentId: 'food', subId: 'dairy' },
-  'кефир':            { parentId: 'food', subId: 'dairy' },
-  'ряженка':          { parentId: 'food', subId: 'dairy' },
-  'сметана':          { parentId: 'food', subId: 'dairy' },
-  'масло':            { parentId: 'food', subId: 'dairy' },
-  'milk':             { parentId: 'food', subId: 'dairy' },
-  'cheese':           { parentId: 'food', subId: 'dairy' },
-  'butter':           { parentId: 'food', subId: 'dairy' },
-  'yogurt':           { parentId: 'food', subId: 'dairy' },
-  'cream':            { parentId: 'food', subId: 'dairy' },
-  'cottage':          { parentId: 'food', subId: 'dairy' },
-  'dairy':            { parentId: 'food', subId: 'dairy' },
+  'חלב':              { categoryId: 'dairy' },   // HE milk
+  'גבינה':            { categoryId: 'dairy' },   // HE cheese
+  'יוגורט':           { categoryId: 'dairy' },   // HE yogurt
+  'молоко':           { categoryId: 'dairy' },
+  'сыр':              { categoryId: 'dairy' },
+  'творог':           { categoryId: 'dairy' },
+  'йогурт':           { categoryId: 'dairy' },
+  'кефир':            { categoryId: 'dairy' },
+  'ряженка':          { categoryId: 'dairy' },
+  'сметана':          { categoryId: 'dairy' },
+  'масло':            { categoryId: 'dairy' },
+  'milk':             { categoryId: 'dairy' },
+  'cheese':           { categoryId: 'dairy' },
+  'butter':           { categoryId: 'dairy' },
+  'yogurt':           { categoryId: 'dairy' },
+  'cream':            { categoryId: 'dairy' },
+  'cottage':          { categoryId: 'dairy' },
+  'dairy':            { categoryId: 'dairy' },
 
   // ── FOOD › Meat & Fish ────────────────────────────────────────────────────
-  'עוף':              { parentId: 'food', subId: 'meat_fish' }, // HE chicken
-  'בשר':              { parentId: 'food', subId: 'meat_fish' }, // HE meat
-  'דגים':             { parentId: 'food', subId: 'meat_fish' }, // HE fish
-  'סלמון':            { parentId: 'food', subId: 'meat_fish' }, // HE salmon
-  'טונה':             { parentId: 'food', subId: 'meat_fish' }, // HE tuna
-  'курица':           { parentId: 'food', subId: 'meat_fish' },
-  'говядина':         { parentId: 'food', subId: 'meat_fish' },
-  'мясо':             { parentId: 'food', subId: 'meat_fish' },
-  'фарш':             { parentId: 'food', subId: 'meat_fish' },
-  'рыба':             { parentId: 'food', subId: 'meat_fish' },
-  'лосось':           { parentId: 'food', subId: 'meat_fish' },
-  'тунец':            { parentId: 'food', subId: 'meat_fish' },
-  'колбаса':          { parentId: 'food', subId: 'meat_fish' },
-  'сосиски':          { parentId: 'food', subId: 'meat_fish' },
-  'chicken':          { parentId: 'food', subId: 'meat_fish' },
-  'beef':             { parentId: 'food', subId: 'meat_fish' },
-  'meat':             { parentId: 'food', subId: 'meat_fish' },
-  'salmon':           { parentId: 'food', subId: 'meat_fish' },
-  'tuna':             { parentId: 'food', subId: 'meat_fish' },
-  'fish':             { parentId: 'food', subId: 'meat_fish' },
-  'sausage':          { parentId: 'food', subId: 'meat_fish' },
-  'turkey':           { parentId: 'food', subId: 'meat_fish' },
-  'steak':            { parentId: 'food', subId: 'meat_fish' },
+  'עוף':              { categoryId: 'meat_fish' }, // HE chicken
+  'בשר':              { categoryId: 'meat_fish' }, // HE meat
+  'דגים':             { categoryId: 'meat_fish' }, // HE fish
+  'סלמון':            { categoryId: 'meat_fish' }, // HE salmon
+  'טונה':             { categoryId: 'meat_fish' }, // HE tuna
+  'курица':           { categoryId: 'meat_fish' },
+  'говядина':         { categoryId: 'meat_fish' },
+  'мясо':             { categoryId: 'meat_fish' },
+  'фарш':             { categoryId: 'meat_fish' },
+  'рыба':             { categoryId: 'meat_fish' },
+  'лосось':           { categoryId: 'meat_fish' },
+  'тунец':            { categoryId: 'meat_fish' },
+  'колбаса':          { categoryId: 'meat_fish' },
+  'сосиски':          { categoryId: 'meat_fish' },
+  'chicken':          { categoryId: 'meat_fish' },
+  'beef':             { categoryId: 'meat_fish' },
+  'meat':             { categoryId: 'meat_fish' },
+  'salmon':           { categoryId: 'meat_fish' },
+  'tuna':             { categoryId: 'meat_fish' },
+  'fish':             { categoryId: 'meat_fish' },
+  'sausage':          { categoryId: 'meat_fish' },
+  'turkey':           { categoryId: 'meat_fish' },
+  'steak':            { categoryId: 'meat_fish' },
 
   // ── FOOD › Fruits & Veg ───────────────────────────────────────────────────
-  'ירקות':            { parentId: 'food', subId: 'fruits_veg' }, // HE vegetables
-  'פירות':            { parentId: 'food', subId: 'fruits_veg' }, // HE fruits
-  'עגבניות':          { parentId: 'food', subId: 'fruits_veg' }, // HE tomatoes
-  'מלפפון':           { parentId: 'food', subId: 'fruits_veg' }, // HE cucumber
-  'תפוח':             { parentId: 'food', subId: 'fruits_veg' }, // HE apple
-  'בננה':             { parentId: 'food', subId: 'fruits_veg' }, // HE banana
-  'банан':            { parentId: 'food', subId: 'fruits_veg' },
-  'яблоко':           { parentId: 'food', subId: 'fruits_veg' },
-  'яблоки':           { parentId: 'food', subId: 'fruits_veg' },
-  'апельсин':         { parentId: 'food', subId: 'fruits_veg' },
-  'мандарины':        { parentId: 'food', subId: 'fruits_veg' },
-  'огурцы':           { parentId: 'food', subId: 'fruits_veg' },
-  'помидоры':         { parentId: 'food', subId: 'fruits_veg' },
-  'картошка':         { parentId: 'food', subId: 'fruits_veg' },
-  'картофель':        { parentId: 'food', subId: 'fruits_veg' },
-  'лук':              { parentId: 'food', subId: 'fruits_veg' },
-  'чеснок':           { parentId: 'food', subId: 'fruits_veg' },
-  'овощи':            { parentId: 'food', subId: 'fruits_veg' },
-  'фрукты':           { parentId: 'food', subId: 'fruits_veg' },
-  'salad':            { parentId: 'food', subId: 'fruits_veg' },
-  'banana':           { parentId: 'food', subId: 'fruits_veg' },
-  'apple':            { parentId: 'food', subId: 'fruits_veg' },
-  'tomatoes':         { parentId: 'food', subId: 'fruits_veg' },
-  'vegetables':       { parentId: 'food', subId: 'fruits_veg' },
-  'fruits':           { parentId: 'food', subId: 'fruits_veg' },
-  'avocado':          { parentId: 'food', subId: 'fruits_veg' },
-  'авокадо':          { parentId: 'food', subId: 'fruits_veg' },
-  'авокадо ':         { parentId: 'food', subId: 'fruits_veg' },
+  'ירקות':            { categoryId: 'fruits_veg' }, // HE vegetables
+  'פירות':            { categoryId: 'fruits_veg' }, // HE fruits
+  'עגבניות':          { categoryId: 'fruits_veg' }, // HE tomatoes
+  'מלפפון':           { categoryId: 'fruits_veg' }, // HE cucumber
+  'תפוח':             { categoryId: 'fruits_veg' }, // HE apple
+  'בננה':             { categoryId: 'fruits_veg' }, // HE banana
+  'банан':            { categoryId: 'fruits_veg' },
+  'яблоко':           { categoryId: 'fruits_veg' },
+  'яблоки':           { categoryId: 'fruits_veg' },
+  'апельсин':         { categoryId: 'fruits_veg' },
+  'мандарины':        { categoryId: 'fruits_veg' },
+  'огурцы':           { categoryId: 'fruits_veg' },
+  'помидоры':         { categoryId: 'fruits_veg' },
+  'картошка':         { categoryId: 'fruits_veg' },
+  'картофель':        { categoryId: 'fruits_veg' },
+  'лук':              { categoryId: 'fruits_veg' },
+  'чеснок':           { categoryId: 'fruits_veg' },
+  'овощи':            { categoryId: 'fruits_veg' },
+  'фрукты':           { categoryId: 'fruits_veg' },
+  'salad':            { categoryId: 'fruits_veg' },
+  'banana':           { categoryId: 'fruits_veg' },
+  'apple':            { categoryId: 'fruits_veg' },
+  'tomatoes':         { categoryId: 'fruits_veg' },
+  'vegetables':       { categoryId: 'fruits_veg' },
+  'fruits':           { categoryId: 'fruits_veg' },
+  'avocado':          { categoryId: 'fruits_veg' },
+  'авокадо':          { categoryId: 'fruits_veg' },
+  'авокадо ':         { categoryId: 'fruits_veg' },
 
   // ── FOOD › Groceries (generic) ────────────────────────────────────────────
-  'яйца':             { parentId: 'food', subId: 'groceries' },
-  'яйцо':             { parentId: 'food', subId: 'groceries' },
-  'рис':              { parentId: 'food', subId: 'groceries' },
-  'гречка':           { parentId: 'food', subId: 'groceries' },
-  'макароны':         { parentId: 'food', subId: 'groceries' },
-  'спагетти':         { parentId: 'food', subId: 'groceries' },
-  'сок':              { parentId: 'food', subId: 'groceries' },
-  'вода':             { parentId: 'food', subId: 'groceries' },
-  'чай':              { parentId: 'food', subId: 'groceries' },
-  'продукты':         { parentId: 'food', subId: 'groceries' },
-  'eggs':             { parentId: 'food', subId: 'groceries' },
-  'rice':             { parentId: 'food', subId: 'groceries' },
-  'pasta':            { parentId: 'food', subId: 'groceries' },
-  'juice':            { parentId: 'food', subId: 'groceries' },
-  'tea':              { parentId: 'food', subId: 'groceries' },
-  'groceries':        { parentId: 'food', subId: 'groceries' },
-  'grocery':          { parentId: 'food', subId: 'groceries' },
-  'ביצים':            { parentId: 'food', subId: 'groceries' }, // HE eggs
-  'אורז':             { parentId: 'food', subId: 'groceries' }, // HE rice
+  'яйца':             { categoryId: 'groceries' },
+  'яйцо':             { categoryId: 'groceries' },
+  'рис':              { categoryId: 'groceries' },
+  'гречка':           { categoryId: 'groceries' },
+  'макароны':         { categoryId: 'groceries' },
+  'спагетти':         { categoryId: 'groceries' },
+  'сок':              { categoryId: 'groceries' },
+  'вода':             { categoryId: 'groceries' },
+  'чай':              { categoryId: 'groceries' },
+  'продукты':         { categoryId: 'groceries' },
+  'eggs':             { categoryId: 'groceries' },
+  'rice':             { categoryId: 'groceries' },
+  'pasta':            { categoryId: 'groceries' },
+  'juice':            { categoryId: 'groceries' },
+  'tea':              { categoryId: 'groceries' },
+  'groceries':        { categoryId: 'groceries' },
+  'grocery':          { categoryId: 'groceries' },
+  'ביצים':            { categoryId: 'groceries' }, // HE eggs
+  'אורז':             { categoryId: 'groceries' }, // HE rice
 
   // ── FOOD › Snacks ─────────────────────────────────────────────────────────
-  'шоколад':          { parentId: 'food', subId: 'snacks' },
-  'печенье':          { parentId: 'food', subId: 'snacks' },
-  'чипсы':            { parentId: 'food', subId: 'snacks' },
-  'мороженое':        { parentId: 'food', subId: 'snacks' },
-  'десерт':           { parentId: 'food', subId: 'snacks' },
-  'конфеты':          { parentId: 'food', subId: 'snacks' },
-  'снэк':             { parentId: 'food', subId: 'snacks' },
-  'chocolate':        { parentId: 'food', subId: 'snacks' },
-  'chips':            { parentId: 'food', subId: 'snacks' },
-  'ice cream':        { parentId: 'food', subId: 'snacks' },
-  'dessert':          { parentId: 'food', subId: 'snacks' },
-  'candy':            { parentId: 'food', subId: 'snacks' },
-  'snack':            { parentId: 'food', subId: 'snacks' },
-  'שוקולד':           { parentId: 'food', subId: 'snacks' }, // HE chocolate
-  'גלידה':            { parentId: 'food', subId: 'snacks' }, // HE ice cream
+  'шоколад':          { categoryId: 'snacks' },
+  'печенье':          { categoryId: 'snacks' },
+  'чипсы':            { categoryId: 'snacks' },
+  'мороженое':        { categoryId: 'snacks' },
+  'десерт':           { categoryId: 'snacks' },
+  'конфеты':          { categoryId: 'snacks' },
+  'снэк':             { categoryId: 'snacks' },
+  'chocolate':        { categoryId: 'snacks' },
+  'chips':            { categoryId: 'snacks' },
+  'ice cream':        { categoryId: 'snacks' },
+  'dessert':          { categoryId: 'snacks' },
+  'candy':            { categoryId: 'snacks' },
+  'snack':            { categoryId: 'snacks' },
+  'שוקולד':           { categoryId: 'snacks' }, // HE chocolate
+  'גלידה':            { categoryId: 'snacks' }, // HE ice cream
 
   // ── FOOD › Alcohol ────────────────────────────────────────────────────────
-  'вино':             { parentId: 'food', subId: 'alcohol' },
-  'пиво':             { parentId: 'food', subId: 'alcohol' },
-  'алкоголь':         { parentId: 'food', subId: 'alcohol' },
-  'виски':            { parentId: 'food', subId: 'alcohol' },
-  'водка':            { parentId: 'food', subId: 'alcohol' },
-  'wine':             { parentId: 'food', subId: 'alcohol' },
-  'beer':             { parentId: 'food', subId: 'alcohol' },
-  'whiskey':          { parentId: 'food', subId: 'alcohol' },
-  'alcohol':          { parentId: 'food', subId: 'alcohol' },
-  'יין':              { parentId: 'food', subId: 'alcohol' }, // HE wine
-  'בירה':             { parentId: 'food', subId: 'alcohol' }, // HE beer
+  'вино':             { categoryId: 'alcohol' },
+  'пиво':             { categoryId: 'alcohol' },
+  'алкоголь':         { categoryId: 'alcohol' },
+  'виски':            { categoryId: 'alcohol' },
+  'водка':            { categoryId: 'alcohol' },
+  'wine':             { categoryId: 'alcohol' },
+  'beer':             { categoryId: 'alcohol' },
+  'whiskey':          { categoryId: 'alcohol' },
+  'alcohol':          { categoryId: 'alcohol' },
+  'יין':              { categoryId: 'alcohol' }, // HE wine
+  'בירה':             { categoryId: 'alcohol' }, // HE beer
 
   // ── FOOD › Coffee ─────────────────────────────────────────────────────────
-  'кофе':             { parentId: 'food', subId: 'coffee' },
-  'капучино':         { parentId: 'food', subId: 'coffee' },
-  'латте':            { parentId: 'food', subId: 'coffee' },
-  'эспрессо':         { parentId: 'food', subId: 'coffee' },
-  'americano':        { parentId: 'food', subId: 'coffee' },
-  'cappuccino':       { parentId: 'food', subId: 'coffee' },
-  'coffee':           { parentId: 'food', subId: 'coffee' },
-  'latte':            { parentId: 'food', subId: 'coffee' },
-  'espresso':         { parentId: 'food', subId: 'coffee' },
-  'קפה':              { parentId: 'food', subId: 'coffee' }, // HE coffee
-  'קפוצ\'ינו':        { parentId: 'food', subId: 'coffee' }, // HE cappuccino
+  'кофе':             { categoryId: 'coffee' },
+  'капучино':         { categoryId: 'coffee' },
+  'латте':            { categoryId: 'coffee' },
+  'эспрессо':         { categoryId: 'coffee' },
+  'americano':        { categoryId: 'coffee' },
+  'cappuccino':       { categoryId: 'coffee' },
+  'coffee':           { categoryId: 'coffee' },
+  'latte':            { categoryId: 'coffee' },
+  'espresso':         { categoryId: 'coffee' },
+  'קפה':              { categoryId: 'coffee' }, // HE coffee
+  'קפוצ\'ינו':        { categoryId: 'coffee' }, // HE cappuccino
 
   // ── FOOD › Fast Food ──────────────────────────────────────────────────────
-  'пицца':            { parentId: 'food', subId: 'fast_food' },
-  'бургер':           { parentId: 'food', subId: 'fast_food' },
-  'шаурма':           { parentId: 'food', subId: 'fast_food' },
-  'шаверма':          { parentId: 'food', subId: 'fast_food' },
-  'фалафель':         { parentId: 'food', subId: 'fast_food' },
-  'донер':            { parentId: 'food', subId: 'fast_food' },
-  'хот-дог':          { parentId: 'food', subId: 'fast_food' },
-  'pizza':            { parentId: 'food', subId: 'fast_food' },
-  'burger':           { parentId: 'food', subId: 'fast_food' },
-  'shawarma':         { parentId: 'food', subId: 'fast_food' },
-  'falafel':          { parentId: 'food', subId: 'fast_food' },
-  'hotdog':           { parentId: 'food', subId: 'fast_food' },
-  'פיצה':             { parentId: 'food', subId: 'fast_food' }, // HE pizza
-  'שווארמה':          { parentId: 'food', subId: 'fast_food' }, // HE shawarma
-  'פלאפל':            { parentId: 'food', subId: 'fast_food' }, // HE falafel
-  'המבורגר':          { parentId: 'food', subId: 'fast_food' }, // HE burger
+  'пицца':            { categoryId: 'fast_food' },
+  'бургер':           { categoryId: 'fast_food' },
+  'шаурма':           { categoryId: 'fast_food' },
+  'шаверма':          { categoryId: 'fast_food' },
+  'фалафель':         { categoryId: 'fast_food' },
+  'донер':            { categoryId: 'fast_food' },
+  'хот-дог':          { categoryId: 'fast_food' },
+  'pizza':            { categoryId: 'fast_food' },
+  'burger':           { categoryId: 'fast_food' },
+  'shawarma':         { categoryId: 'fast_food' },
+  'falafel':          { categoryId: 'fast_food' },
+  'hotdog':           { categoryId: 'fast_food' },
+  'פיצה':             { categoryId: 'fast_food' }, // HE pizza
+  'שווארמה':          { categoryId: 'fast_food' }, // HE shawarma
+  'פלאפל':            { categoryId: 'fast_food' }, // HE falafel
+  'המבורגר':          { categoryId: 'fast_food' }, // HE burger
 
   // ── FOOD › Restaurant ─────────────────────────────────────────────────────
-  'суши':             { parentId: 'food', subId: 'restaurant' },
-  'роллы':            { parentId: 'food', subId: 'restaurant' },
-  'обед':             { parentId: 'food', subId: 'restaurant' },
-  'ужин':             { parentId: 'food', subId: 'restaurant' },
-  'завтрак':          { parentId: 'food', subId: 'restaurant' },
-  'ресторан':         { parentId: 'food', subId: 'restaurant' },
-  'sushi':            { parentId: 'food', subId: 'restaurant' },
-  'lunch':            { parentId: 'food', subId: 'restaurant' },
-  'dinner':           { parentId: 'food', subId: 'restaurant' },
-  'breakfast':        { parentId: 'food', subId: 'restaurant' },
-  'restaurant':       { parentId: 'food', subId: 'restaurant' },
-  'סושי':             { parentId: 'food', subId: 'restaurant' }, // HE sushi
-  'מסעדה':            { parentId: 'food', subId: 'restaurant' }, // HE restaurant
+  'суши':             { categoryId: 'restaurant' },
+  'роллы':            { categoryId: 'restaurant' },
+  'обед':             { categoryId: 'restaurant' },
+  'ужин':             { categoryId: 'restaurant' },
+  'завтрак':          { categoryId: 'restaurant' },
+  'ресторан':         { categoryId: 'restaurant' },
+  'sushi':            { categoryId: 'restaurant' },
+  'lunch':            { categoryId: 'restaurant' },
+  'dinner':           { categoryId: 'restaurant' },
+  'breakfast':        { categoryId: 'restaurant' },
+  'restaurant':       { categoryId: 'restaurant' },
+  'סושי':             { categoryId: 'restaurant' }, // HE sushi
+  'מסעדה':            { categoryId: 'restaurant' }, // HE restaurant
 
   // ── FOOD › Delivery ───────────────────────────────────────────────────────
-  'доставка':         { parentId: 'food', subId: 'delivery' },
-  'delivery':         { parentId: 'food', subId: 'delivery' },
-  'משלוח':            { parentId: 'food', subId: 'delivery' }, // HE delivery
+  'доставка':         { categoryId: 'delivery' },
+  'delivery':         { categoryId: 'delivery' },
+  'משלוח':            { categoryId: 'delivery' }, // HE delivery
 
   // ── HOME › Rent / Mortgage ────────────────────────────────────────────────
-  'аренда':           { parentId: 'home', subId: 'rent' },
-  'квартплата':       { parentId: 'home', subId: 'rent' },
-  'квартира':         { parentId: 'home', subId: 'rent' },
-  'съем':             { parentId: 'home', subId: 'rent' },
-  'rent':             { parentId: 'home', subId: 'rent' },
-  'שכר דירה':         { parentId: 'home', subId: 'rent' },   // HE rent
-  'ипотека':          { parentId: 'home', subId: 'mortgage' },
-  'mortgage':         { parentId: 'home', subId: 'mortgage' },
-  'משכנתא':           { parentId: 'home', subId: 'mortgage' }, // HE mortgage
+  'аренда':           { categoryId: 'rent' },
+  'квартплата':       { categoryId: 'rent' },
+  'квартира':         { categoryId: 'rent' },
+  'съем':             { categoryId: 'rent' },
+  'rent':             { categoryId: 'rent' },
+  'שכר דירה':         { categoryId: 'rent' },   // HE rent
+  'ипотека':          { categoryId: 'mortgage' },
+  'mortgage':         { categoryId: 'mortgage' },
+  'משכנתא':           { categoryId: 'mortgage' }, // HE mortgage
 
   // ── HOME › Utilities ──────────────────────────────────────────────────────
-  'электричество':    { parentId: 'home', subId: 'utilities' },
-  'свет':             { parentId: 'home', subId: 'utilities' },
-  'газ':              { parentId: 'home', subId: 'utilities' },
-  'коммунальные':     { parentId: 'home', subId: 'utilities' },
-  'electricity':      { parentId: 'home', subId: 'utilities' },
-  'חשמל':             { parentId: 'home', subId: 'utilities' }, // HE electricity
-  'מים':              { parentId: 'home', subId: 'utilities' }, // HE water/utilities
-  'גז':               { parentId: 'home', subId: 'utilities' }, // HE gas
+  'электричество':    { categoryId: 'utilities' },
+  'свет':             { categoryId: 'utilities' },
+  'газ':              { categoryId: 'utilities' },
+  'коммунальные':     { categoryId: 'utilities' },
+  'electricity':      { categoryId: 'utilities' },
+  'חשמל':             { categoryId: 'utilities' }, // HE electricity
+  'מים':              { categoryId: 'utilities' }, // HE water/utilities
+  'גז':               { categoryId: 'utilities' }, // HE gas
 
   // ── HOME › Internet / Mobile ──────────────────────────────────────────────
-  'интернет':         { parentId: 'home', subId: 'internet' },
-  'wifi':             { parentId: 'home', subId: 'internet' },
-  'internet':         { parentId: 'home', subId: 'internet' },
-  'אינטרנט':          { parentId: 'home', subId: 'internet' }, // HE internet
-  'мобильная':        { parentId: 'home', subId: 'mobile_bill' },
-  'мобильный':        { parentId: 'home', subId: 'mobile_bill' },
-  'сотовый':          { parentId: 'home', subId: 'mobile_bill' },
-  'mobile plan':      { parentId: 'home', subId: 'mobile_bill' },
-  'cell phone':       { parentId: 'home', subId: 'mobile_bill' },
+  'интернет':         { categoryId: 'internet' },
+  'wifi':             { categoryId: 'internet' },
+  'internet':         { categoryId: 'internet' },
+  'אינטרנט':          { categoryId: 'internet' }, // HE internet
+  'мобильная':        { categoryId: 'mobile_bill' },
+  'мобильный':        { categoryId: 'mobile_bill' },
+  'сотовый':          { categoryId: 'mobile_bill' },
+  'mobile plan':      { categoryId: 'mobile_bill' },
+  'cell phone':       { categoryId: 'mobile_bill' },
 
   // ── HOME › Furniture / Appliances ────────────────────────────────────────
-  'мебель':           { parentId: 'home', subId: 'furniture' },
-  'диван':            { parentId: 'home', subId: 'furniture' },
-  'кровать':          { parentId: 'home', subId: 'furniture' },
-  'стол':             { parentId: 'home', subId: 'furniture' },
-  'шкаф':             { parentId: 'home', subId: 'furniture' },
-  'furniture':        { parentId: 'home', subId: 'furniture' },
-  'ריהוט':            { parentId: 'home', subId: 'furniture' }, // HE furniture
-  'холодильник':      { parentId: 'home', subId: 'appliances' },
-  'стиральная':       { parentId: 'home', subId: 'appliances' },
-  'духовка':          { parentId: 'home', subId: 'appliances' },
-  'микроволновка':    { parentId: 'home', subId: 'appliances' },
-  'кондиционер':      { parentId: 'home', subId: 'appliances' },
-  'fridge':           { parentId: 'home', subId: 'appliances' },
-  'washing machine':  { parentId: 'home', subId: 'appliances' },
-  'air conditioner':  { parentId: 'home', subId: 'appliances' },
-  'appliance':        { parentId: 'home', subId: 'appliances' },
+  'мебель':           { categoryId: 'furniture' },
+  'диван':            { categoryId: 'furniture' },
+  'кровать':          { categoryId: 'furniture' },
+  'стол':             { categoryId: 'furniture' },
+  'шкаф':             { categoryId: 'furniture' },
+  'furniture':        { categoryId: 'furniture' },
+  'ריהוט':            { categoryId: 'furniture' }, // HE furniture
+  'холодильник':      { categoryId: 'appliances' },
+  'стиральная':       { categoryId: 'appliances' },
+  'духовка':          { categoryId: 'appliances' },
+  'микроволновка':    { categoryId: 'appliances' },
+  'кондиционер':      { categoryId: 'appliances' },
+  'fridge':           { categoryId: 'appliances' },
+  'washing machine':  { categoryId: 'appliances' },
+  'air conditioner':  { categoryId: 'appliances' },
+  'appliance':        { categoryId: 'appliances' },
 
   // ── HOME › Tools ──────────────────────────────────────────────────────────
-  'дрель':            { parentId: 'home', subId: 'tools' },
-  'молоток':          { parentId: 'home', subId: 'tools' },
-  'отвертка':         { parentId: 'home', subId: 'tools' },
-  'шуруповерт':       { parentId: 'home', subId: 'tools' },
-  'пила':             { parentId: 'home', subId: 'tools' },
-  'гвозди':           { parentId: 'home', subId: 'tools' },
-  'инструменты':      { parentId: 'home', subId: 'tools' },
-  'drill':            { parentId: 'home', subId: 'tools' },
-  'hammer':           { parentId: 'home', subId: 'tools' },
-  'screwdriver':      { parentId: 'home', subId: 'tools' },
-  'tools':            { parentId: 'home', subId: 'tools' },
-  'מברגה':            { parentId: 'home', subId: 'tools' }, // HE screwdriver
-  'פטיש':             { parentId: 'home', subId: 'tools' }, // HE hammer
-  'מקדחה':            { parentId: 'home', subId: 'tools' }, // HE drill
+  'дрель':            { categoryId: 'tools' },
+  'молоток':          { categoryId: 'tools' },
+  'отвертка':         { categoryId: 'tools' },
+  'шуруповерт':       { categoryId: 'tools' },
+  'пила':             { categoryId: 'tools' },
+  'гвозди':           { categoryId: 'tools' },
+  'инструменты':      { categoryId: 'tools' },
+  'drill':            { categoryId: 'tools' },
+  'hammer':           { categoryId: 'tools' },
+  'screwdriver':      { categoryId: 'tools' },
+  'tools':            { categoryId: 'tools' },
+  'מברגה':            { categoryId: 'tools' }, // HE screwdriver
+  'פטיש':             { categoryId: 'tools' }, // HE hammer
+  'מקדחה':            { categoryId: 'tools' }, // HE drill
 
   // ── HOME › Repairs ────────────────────────────────────────────────────────
-  'ремонт':           { parentId: 'home', subId: 'repairs' },
-  'repairs':          { parentId: 'home', subId: 'repairs' },
-  'renovation':       { parentId: 'home', subId: 'repairs' },
-  'תיקון':            { parentId: 'home', subId: 'repairs' }, // HE repair
+  'ремонт':           { categoryId: 'repairs' },
+  'repairs':          { categoryId: 'repairs' },
+  'renovation':       { categoryId: 'repairs' },
+  'תיקון':            { categoryId: 'repairs' }, // HE repair
 
   // ── HOME › Household ──────────────────────────────────────────────────────
-  'шампунь':          { parentId: 'home', subId: 'household' },
-  'мыло':             { parentId: 'home', subId: 'household' },
-  'стиральный порошок': { parentId: 'home', subId: 'household' },
-  'химия':            { parentId: 'home', subId: 'household' },
-  'туалетная бумага': { parentId: 'home', subId: 'household' },
-  'посуда':           { parentId: 'home', subId: 'household' },
-  'кастрюля':         { parentId: 'home', subId: 'household' },
-  'shampoo':          { parentId: 'home', subId: 'household' },
-  'soap':             { parentId: 'home', subId: 'household' },
-  'detergent':        { parentId: 'home', subId: 'household' },
-  'toilet paper':     { parentId: 'home', subId: 'household' },
-  'שמפו':             { parentId: 'home', subId: 'household' }, // HE shampoo
-  'סבון':             { parentId: 'home', subId: 'household' }, // HE soap
+  'шампунь':          { categoryId: 'household' },
+  'мыло':             { categoryId: 'household' },
+  'стиральный порошок': { categoryId: 'household' },
+  'химия':            { categoryId: 'household' },
+  'туалетная бумага': { categoryId: 'household' },
+  'посуда':           { categoryId: 'household' },
+  'кастрюля':         { categoryId: 'household' },
+  'shampoo':          { categoryId: 'household' },
+  'soap':             { categoryId: 'household' },
+  'detergent':        { categoryId: 'household' },
+  'toilet paper':     { categoryId: 'household' },
+  'שמפו':             { categoryId: 'household' }, // HE shampoo
+  'סבון':             { categoryId: 'household' }, // HE soap
 
   // ── HOME › Arnona / Committee ─────────────────────────────────────────────
-  'арнона':           { parentId: 'home', subId: 'arnona' },
-  'arnona':           { parentId: 'home', subId: 'arnona' },
-  'ארנונה':           { parentId: 'home', subId: 'arnona' }, // HE arnona
-  'ваад':             { parentId: 'home', subId: 'committee' },
-  'ועד בית':          { parentId: 'home', subId: 'committee' }, // HE committee
+  'арнона':           { categoryId: 'arnona' },
+  'arnona':           { categoryId: 'arnona' },
+  'ארנונה':           { categoryId: 'arnona' }, // HE arnona
+  'ваад':             { categoryId: 'committee' },
+  'ועד בית':          { categoryId: 'committee' }, // HE committee
 
   // ── TRANSPORT ─────────────────────────────────────────────────────────────
-  'автобус':          { parentId: 'transport', subId: 'public_transport' },
-  'метро':            { parentId: 'transport', subId: 'public_transport' },
-  'проезд':           { parentId: 'transport', subId: 'public_transport' },
-  'bus':              { parentId: 'transport', subId: 'public_transport' },
-  'metro':            { parentId: 'transport', subId: 'public_transport' },
-  'אוטובוס':          { parentId: 'transport', subId: 'public_transport' }, // HE bus
-  'такси':            { parentId: 'transport', subId: 'taxi' },
-  'taxi':             { parentId: 'transport', subId: 'taxi' },
-  'מונית':            { parentId: 'transport', subId: 'taxi' }, // HE taxi
-  'поезд':            { parentId: 'transport', subId: 'train' },
-  'электричка':       { parentId: 'transport', subId: 'train' },
-  'train':            { parentId: 'transport', subId: 'train' },
-  'רכבת':             { parentId: 'transport', subId: 'train' }, // HE train
-  'проездной':        { parentId: 'transport', subId: 'bus_pass' },
-  'рав кав':          { parentId: 'transport', subId: 'bus_pass' },
-  'rav kav':          { parentId: 'transport', subId: 'bus_pass' },
-  'bus pass':         { parentId: 'transport', subId: 'bus_pass' },
-  'רב קו':            { parentId: 'transport', subId: 'bus_pass' }, // HE Rav Kav
+  'автобус':          { categoryId: 'public_transport' },
+  'метро':            { categoryId: 'public_transport' },
+  'проезд':           { categoryId: 'public_transport' },
+  'bus':              { categoryId: 'public_transport' },
+  'metro':            { categoryId: 'public_transport' },
+  'אוטובוס':          { categoryId: 'public_transport' }, // HE bus
+  'такси':            { categoryId: 'taxi' },
+  'taxi':             { categoryId: 'taxi' },
+  'מונית':            { categoryId: 'taxi' }, // HE taxi
+  'поезд':            { categoryId: 'train' },
+  'электричка':       { categoryId: 'train' },
+  'train':            { categoryId: 'train' },
+  'רכבת':             { categoryId: 'train' }, // HE train
+  'проездной':        { categoryId: 'bus_pass' },
+  'рав кав':          { categoryId: 'bus_pass' },
+  'rav kav':          { categoryId: 'bus_pass' },
+  'bus pass':         { categoryId: 'bus_pass' },
+  'רב קו':            { categoryId: 'bus_pass' }, // HE Rav Kav
 
   // ── CAR ───────────────────────────────────────────────────────────────────
-  'бензин':           { parentId: 'car', subId: 'fuel' },
-  'топливо':          { parentId: 'car', subId: 'fuel' },
-  'дизель':           { parentId: 'car', subId: 'fuel' },
-  'заправка':         { parentId: 'car', subId: 'fuel' },
-  'fuel':             { parentId: 'car', subId: 'fuel' },
-  'petrol':           { parentId: 'car', subId: 'fuel' },
-  'diesel':           { parentId: 'car', subId: 'fuel' },
-  'gas station':      { parentId: 'car', subId: 'fuel' },
-  'בנזין':            { parentId: 'car', subId: 'fuel' }, // HE petrol
-  'דלק':              { parentId: 'car', subId: 'fuel' }, // HE fuel/Delek
-  'парковка':         { parentId: 'car', subId: 'parking' },
-  'parking':          { parentId: 'car', subId: 'parking' },
-  'חניה':             { parentId: 'car', subId: 'parking' }, // HE parking
-  'шины':             { parentId: 'car', subId: 'car_service' },
-  'резина':           { parentId: 'car', subId: 'car_service' },
-  'tires':            { parentId: 'car', subId: 'car_service' },
-  'мойка':            { parentId: 'car', subId: 'car_wash' },
-  'car wash':         { parentId: 'car', subId: 'car_wash' },
+  'бензин':           { categoryId: 'fuel' },
+  'топливо':          { categoryId: 'fuel' },
+  'дизель':           { categoryId: 'fuel' },
+  'заправка':         { categoryId: 'fuel' },
+  'fuel':             { categoryId: 'fuel' },
+  'petrol':           { categoryId: 'fuel' },
+  'diesel':           { categoryId: 'fuel' },
+  'gas station':      { categoryId: 'fuel' },
+  'בנזין':            { categoryId: 'fuel' }, // HE petrol
+  'דלק':              { categoryId: 'fuel' }, // HE fuel/Delek
+  'парковка':         { categoryId: 'parking' },
+  'parking':          { categoryId: 'parking' },
+  'חניה':             { categoryId: 'parking' }, // HE parking
+  'шины':             { categoryId: 'car_service' },
+  'резина':           { categoryId: 'car_service' },
+  'tires':            { categoryId: 'car_service' },
+  'мойка':            { categoryId: 'car_wash' },
+  'car wash':         { categoryId: 'car_wash' },
 
   // ── HEALTH ────────────────────────────────────────────────────────────────
-  'таблетки':         { parentId: 'health', subId: 'pharmacy' },
-  'лекарства':        { parentId: 'health', subId: 'pharmacy' },
-  'лекарство':        { parentId: 'health', subId: 'pharmacy' },
-  'витамины':         { parentId: 'health', subId: 'pharmacy' },
-  'medicine':         { parentId: 'health', subId: 'pharmacy' },
-  'vitamins':         { parentId: 'health', subId: 'pharmacy' },
-  'pharmacy':         { parentId: 'health', subId: 'pharmacy' },
-  'תרופה':            { parentId: 'health', subId: 'pharmacy' }, // HE medicine
-  'בית מרקחת':        { parentId: 'health', subId: 'pharmacy' }, // HE pharmacy
-  'врач':             { parentId: 'health', subId: 'doctors' },
-  'доктор':           { parentId: 'health', subId: 'doctors' },
-  'клиника':          { parentId: 'health', subId: 'doctors' },
-  'doctor':           { parentId: 'health', subId: 'doctors' },
-  'clinic':           { parentId: 'health', subId: 'doctors' },
-  'רופא':             { parentId: 'health', subId: 'doctors' }, // HE doctor
-  'анализы':          { parentId: 'health', subId: 'lab_tests' },
-  'lab tests':        { parentId: 'health', subId: 'lab_tests' },
-  'בדיקות':           { parentId: 'health', subId: 'lab_tests' }, // HE tests
-  'стоматолог':       { parentId: 'health', subId: 'dentist' },
-  'дантист':          { parentId: 'health', subId: 'dentist' },
-  'зубы':             { parentId: 'health', subId: 'dentist' },
-  'dentist':          { parentId: 'health', subId: 'dentist' },
-  'דנטיסט':           { parentId: 'health', subId: 'dentist' }, // HE dentist
+  'таблетки':         { categoryId: 'pharmacy' },
+  'лекарства':        { categoryId: 'pharmacy' },
+  'лекарство':        { categoryId: 'pharmacy' },
+  'витамины':         { categoryId: 'pharmacy' },
+  'medicine':         { categoryId: 'pharmacy' },
+  'vitamins':         { categoryId: 'pharmacy' },
+  'pharmacy':         { categoryId: 'pharmacy' },
+  'תרופה':            { categoryId: 'pharmacy' }, // HE medicine
+  'בית מרקחת':        { categoryId: 'pharmacy' }, // HE pharmacy
+  'врач':             { categoryId: 'doctors' },
+  'доктор':           { categoryId: 'doctors' },
+  'клиника':          { categoryId: 'doctors' },
+  'doctor':           { categoryId: 'doctors' },
+  'clinic':           { categoryId: 'doctors' },
+  'רופא':             { categoryId: 'doctors' }, // HE doctor
+  'анализы':          { categoryId: 'lab_tests' },
+  'lab tests':        { categoryId: 'lab_tests' },
+  'בדיקות':           { categoryId: 'lab_tests' }, // HE tests
+  'стоматолог':       { categoryId: 'dentist' },
+  'дантист':          { categoryId: 'dentist' },
+  'зубы':             { categoryId: 'dentist' },
+  'dentist':          { categoryId: 'dentist' },
+  'דנטיסט':           { categoryId: 'dentist' }, // HE dentist
 
   // ── SPORTS ────────────────────────────────────────────────────────────────
-  'спортзал':         { parentId: 'sports', subId: 'gym' },
-  'фитнес':           { parentId: 'sports', subId: 'gym' },
-  'тренировка':       { parentId: 'sports', subId: 'gym' },
-  'абонемент':        { parentId: 'sports', subId: 'gym' },
-  'gym':              { parentId: 'sports', subId: 'gym' },
-  'fitness':          { parentId: 'sports', subId: 'gym' },
-  'workout':          { parentId: 'sports', subId: 'gym' },
-  'חדר כושר':         { parentId: 'sports', subId: 'gym' }, // HE gym
-  'йога':             { parentId: 'sports', subId: 'sports_classes' },
-  'пилатес':          { parentId: 'sports', subId: 'sports_classes' },
-  'секция':           { parentId: 'sports', subId: 'sports_classes' },
-  'yoga':             { parentId: 'sports', subId: 'sports_classes' },
-  'pilates':          { parentId: 'sports', subId: 'sports_classes' },
-  'гантели':          { parentId: 'sports', subId: 'sports_equip' },
-  'dumbbells':        { parentId: 'sports', subId: 'sports_equip' },
+  'спортзал':         { categoryId: 'gym' },
+  'фитнес':           { categoryId: 'gym' },
+  'тренировка':       { categoryId: 'gym' },
+  'абонемент':        { categoryId: 'gym' },
+  'gym':              { categoryId: 'gym' },
+  'fitness':          { categoryId: 'gym' },
+  'workout':          { categoryId: 'gym' },
+  'חדר כושר':         { categoryId: 'gym' }, // HE gym
+  'йога':             { categoryId: 'sports_classes' },
+  'пилатес':          { categoryId: 'sports_classes' },
+  'секция':           { categoryId: 'sports_classes' },
+  'yoga':             { categoryId: 'sports_classes' },
+  'pilates':          { categoryId: 'sports_classes' },
+  'гантели':          { categoryId: 'sports_equip' },
+  'dumbbells':        { categoryId: 'sports_equip' },
 
   // ── SHOPPING › Clothes ────────────────────────────────────────────────────
-  'одежда':           { parentId: 'shopping', subId: 'clothes' },
-  'шмотки':           { parentId: 'shopping', subId: 'clothes' },
-  'футболка':         { parentId: 'shopping', subId: 'clothes' },
-  'майка':            { parentId: 'shopping', subId: 'clothes' },
-  'рубашка':          { parentId: 'shopping', subId: 'clothes' },
-  'штаны':            { parentId: 'shopping', subId: 'clothes' },
-  'джинсы':           { parentId: 'shopping', subId: 'clothes' },
-  'шорты':            { parentId: 'shopping', subId: 'clothes' },
-  'куртка':           { parentId: 'shopping', subId: 'clothes' },
-  'носки':            { parentId: 'shopping', subId: 'clothes' },
-  'белье':            { parentId: 'shopping', subId: 'clothes' },
-  'платье':           { parentId: 'shopping', subId: 'clothes' },
-  'юбка':             { parentId: 'shopping', subId: 'clothes' },
-  'clothes':          { parentId: 'shopping', subId: 'clothes' },
-  'dress':            { parentId: 'shopping', subId: 'clothes' },
-  'shirt':            { parentId: 'shopping', subId: 'clothes' },
-  'jeans':            { parentId: 'shopping', subId: 'clothes' },
-  'jacket':           { parentId: 'shopping', subId: 'clothes' },
-  'בגדים':            { parentId: 'shopping', subId: 'clothes' }, // HE clothes
+  'одежда':           { categoryId: 'clothes' },
+  'шмотки':           { categoryId: 'clothes' },
+  'футболка':         { categoryId: 'clothes' },
+  'майка':            { categoryId: 'clothes' },
+  'рубашка':          { categoryId: 'clothes' },
+  'штаны':            { categoryId: 'clothes' },
+  'джинсы':           { categoryId: 'clothes' },
+  'шорты':            { categoryId: 'clothes' },
+  'куртка':           { categoryId: 'clothes' },
+  'носки':            { categoryId: 'clothes' },
+  'белье':            { categoryId: 'clothes' },
+  'платье':           { categoryId: 'clothes' },
+  'юбка':             { categoryId: 'clothes' },
+  'clothes':          { categoryId: 'clothes' },
+  'dress':            { categoryId: 'clothes' },
+  'shirt':            { categoryId: 'clothes' },
+  'jeans':            { categoryId: 'clothes' },
+  'jacket':           { categoryId: 'clothes' },
+  'בגדים':            { categoryId: 'clothes' }, // HE clothes
 
   // ── SHOPPING › Shoes ──────────────────────────────────────────────────────
-  'кроссовки':        { parentId: 'shopping', subId: 'shoes' },
-  'ботинки':          { parentId: 'shopping', subId: 'shoes' },
-  'туфли':            { parentId: 'shopping', subId: 'shoes' },
-  'сандалии':         { parentId: 'shopping', subId: 'shoes' },
-  'shoes':            { parentId: 'shopping', subId: 'shoes' },
-  'sneakers':         { parentId: 'shopping', subId: 'shoes' },
-  'boots':            { parentId: 'shopping', subId: 'shoes' },
-  'sandals':          { parentId: 'shopping', subId: 'shoes' },
-  'נעליים':           { parentId: 'shopping', subId: 'shoes' }, // HE shoes
+  'кроссовки':        { categoryId: 'shoes' },
+  'ботинки':          { categoryId: 'shoes' },
+  'туфли':            { categoryId: 'shoes' },
+  'сандалии':         { categoryId: 'shoes' },
+  'shoes':            { categoryId: 'shoes' },
+  'sneakers':         { categoryId: 'shoes' },
+  'boots':            { categoryId: 'shoes' },
+  'sandals':          { categoryId: 'shoes' },
+  'נעליים':           { categoryId: 'shoes' }, // HE shoes
 
   // ── SHOPPING › Accessories ────────────────────────────────────────────────
-  'рюкзак':           { parentId: 'shopping', subId: 'accessories' },
-  'сумка':            { parentId: 'shopping', subId: 'accessories' },
-  'кошелек':          { parentId: 'shopping', subId: 'accessories' },
-  'backpack':         { parentId: 'shopping', subId: 'accessories' },
-  'bag':              { parentId: 'shopping', subId: 'accessories' },
-  'watch':            { parentId: 'shopping', subId: 'accessories' },
-  'часы':             { parentId: 'shopping', subId: 'accessories' },
+  'рюкзак':           { categoryId: 'accessories' },
+  'сумка':            { categoryId: 'accessories' },
+  'кошелек':          { categoryId: 'accessories' },
+  'backpack':         { categoryId: 'accessories' },
+  'bag':              { categoryId: 'accessories' },
+  'watch':            { categoryId: 'accessories' },
+  'часы':             { categoryId: 'accessories' },
 
   // ── SHOPPING › Online ─────────────────────────────────────────────────────
-  'онлайн':           { parentId: 'shopping', subId: 'online_shopping' },
-  'online':           { parentId: 'shopping', subId: 'online_shopping' },
+  'онлайн':           { categoryId: 'online_shopping' },
+  'online':           { categoryId: 'online_shopping' },
 
   // ── BEAUTY ────────────────────────────────────────────────────────────────
-  'стрижка':          { parentId: 'beauty', subId: 'haircut' },
-  'парикмахер':       { parentId: 'beauty', subId: 'haircut' },
-  'haircut':          { parentId: 'beauty', subId: 'haircut' },
-  'barber':           { parentId: 'beauty', subId: 'haircut' },
-  'hairdresser':      { parentId: 'beauty', subId: 'haircut' },
-  'תספורת':           { parentId: 'beauty', subId: 'haircut' }, // HE haircut
-  'косметика':        { parentId: 'beauty', subId: 'cosmetics' },
-  'крем':             { parentId: 'beauty', subId: 'cosmetics' },
-  'духи':             { parentId: 'beauty', subId: 'cosmetics' },
-  'помада':           { parentId: 'beauty', subId: 'cosmetics' },
-  'cosmetics':        { parentId: 'beauty', subId: 'cosmetics' },
-  'perfume':          { parentId: 'beauty', subId: 'cosmetics' },
-  'makeup':           { parentId: 'beauty', subId: 'cosmetics' },
-  'lipstick':         { parentId: 'beauty', subId: 'cosmetics' },
-  'קוסמטיקה':         { parentId: 'beauty', subId: 'cosmetics' }, // HE cosmetics
-  'маникюр':          { parentId: 'beauty', subId: 'manicure' },
-  'педикюр':          { parentId: 'beauty', subId: 'manicure' },
-  'manicure':         { parentId: 'beauty', subId: 'manicure' },
-  'pedicure':         { parentId: 'beauty', subId: 'manicure' },
-  'спа':              { parentId: 'beauty', subId: 'spa_massage' },
-  'массаж':           { parentId: 'beauty', subId: 'spa_massage' },
-  'spa':              { parentId: 'beauty', subId: 'spa_massage' },
-  'massage':          { parentId: 'beauty', subId: 'spa_massage' },
+  'стрижка':          { categoryId: 'haircut' },
+  'парикмахер':       { categoryId: 'haircut' },
+  'haircut':          { categoryId: 'haircut' },
+  'barber':           { categoryId: 'haircut' },
+  'hairdresser':      { categoryId: 'haircut' },
+  'תספורת':           { categoryId: 'haircut' }, // HE haircut
+  'косметика':        { categoryId: 'cosmetics' },
+  'крем':             { categoryId: 'cosmetics' },
+  'духи':             { categoryId: 'cosmetics' },
+  'помада':           { categoryId: 'cosmetics' },
+  'cosmetics':        { categoryId: 'cosmetics' },
+  'perfume':          { categoryId: 'cosmetics' },
+  'makeup':           { categoryId: 'cosmetics' },
+  'lipstick':         { categoryId: 'cosmetics' },
+  'קוסמטיקה':         { categoryId: 'cosmetics' }, // HE cosmetics
+  'маникюр':          { categoryId: 'manicure' },
+  'педикюр':          { categoryId: 'manicure' },
+  'manicure':         { categoryId: 'manicure' },
+  'pedicure':         { categoryId: 'manicure' },
+  'спа':              { categoryId: 'spa_massage' },
+  'массаж':           { categoryId: 'spa_massage' },
+  'spa':              { categoryId: 'spa_massage' },
+  'massage':          { categoryId: 'spa_massage' },
 
   // ── TECHNOLOGY ────────────────────────────────────────────────────────────
-  'электроника':      { parentId: 'technology', subId: 'electronics' },
-  'ноутбук':          { parentId: 'technology', subId: 'electronics' },
-  'телевизор':        { parentId: 'technology', subId: 'electronics' },
-  'наушники':         { parentId: 'technology', subId: 'electronics' },
-  'laptop':           { parentId: 'technology', subId: 'electronics' },
-  'tv':               { parentId: 'technology', subId: 'electronics' },
-  'headphones':       { parentId: 'technology', subId: 'electronics' },
-  'electronics':      { parentId: 'technology', subId: 'electronics' },
-  'מחשב':             { parentId: 'technology', subId: 'electronics' }, // HE computer
-  'телефон':          { parentId: 'technology', subId: 'gadgets' },
-  'смартфон':         { parentId: 'technology', subId: 'gadgets' },
-  'айфон':            { parentId: 'technology', subId: 'gadgets' },
-  'планшет':          { parentId: 'technology', subId: 'gadgets' },
-  'iphone':           { parentId: 'technology', subId: 'gadgets' },
-  'samsung':          { parentId: 'technology', subId: 'gadgets' },
-  'phone':            { parentId: 'technology', subId: 'gadgets' },
-  'tablet':           { parentId: 'technology', subId: 'gadgets' },
-  'טלפון':            { parentId: 'technology', subId: 'gadgets' }, // HE phone
-  'мышка':            { parentId: 'technology', subId: 'phone_acc' },
-  'клавиатура':       { parentId: 'technology', subId: 'phone_acc' },
-  'зарядка':          { parentId: 'technology', subId: 'phone_acc' },
-  'кабель':           { parentId: 'technology', subId: 'phone_acc' },
-  'charger':          { parentId: 'technology', subId: 'phone_acc' },
-  'cable':            { parentId: 'technology', subId: 'phone_acc' },
-  'airpods':          { parentId: 'technology', subId: 'phone_acc' },
-  'macbook':          { parentId: 'technology', subId: 'electronics' },
+  'электроника':      { categoryId: 'electronics' },
+  'ноутбук':          { categoryId: 'electronics' },
+  'телевизор':        { categoryId: 'electronics' },
+  'наушники':         { categoryId: 'electronics' },
+  'laptop':           { categoryId: 'electronics' },
+  'tv':               { categoryId: 'electronics' },
+  'headphones':       { categoryId: 'electronics' },
+  'electronics':      { categoryId: 'electronics' },
+  'מחשב':             { categoryId: 'electronics' }, // HE computer
+  'телефон':          { categoryId: 'gadgets' },
+  'смартфон':         { categoryId: 'gadgets' },
+  'айфон':            { categoryId: 'gadgets' },
+  'планшет':          { categoryId: 'gadgets' },
+  'iphone':           { categoryId: 'gadgets' },
+  'samsung':          { categoryId: 'gadgets' },
+  'phone':            { categoryId: 'gadgets' },
+  'tablet':           { categoryId: 'gadgets' },
+  'טלפון':            { categoryId: 'gadgets' }, // HE phone
+  'мышка':            { categoryId: 'phone_acc' },
+  'клавиатура':       { categoryId: 'phone_acc' },
+  'зарядка':          { categoryId: 'phone_acc' },
+  'кабель':           { categoryId: 'phone_acc' },
+  'charger':          { categoryId: 'phone_acc' },
+  'cable':            { categoryId: 'phone_acc' },
+  'airpods':          { categoryId: 'phone_acc' },
+  'macbook':          { categoryId: 'electronics' },
 
   // ── ENTERTAINMENT ─────────────────────────────────────────────────────────
-  'кино':             { parentId: 'entertainment', subId: 'movies' },
-  'cinema':           { parentId: 'entertainment', subId: 'movies' },
-  'movies':           { parentId: 'entertainment', subId: 'movies' },
-  'קולנוע':           { parentId: 'entertainment', subId: 'movies' }, // HE cinema
-  'билет':            { parentId: 'entertainment', subId: 'events' },
-  'концерт':          { parentId: 'entertainment', subId: 'events' },
-  'театр':            { parentId: 'entertainment', subId: 'events' },
-  'ticket':           { parentId: 'entertainment', subId: 'events' },
-  'concert':          { parentId: 'entertainment', subId: 'events' },
-  'theatre':          { parentId: 'entertainment', subId: 'events' },
-  'כרטיס':            { parentId: 'entertainment', subId: 'events' }, // HE ticket
-  'хобби':            { parentId: 'entertainment', subId: 'hobbies' },
-  'hobby':            { parentId: 'entertainment', subId: 'hobbies' },
-  'зоопарк':          { parentId: 'entertainment', subId: 'parks' },
-  'парк':             { parentId: 'entertainment', subId: 'parks' },
-  'zoo':              { parentId: 'entertainment', subId: 'parks' },
-  'park':             { parentId: 'entertainment', subId: 'parks' },
-  'игры':             { parentId: 'entertainment', subId: 'games' },
-  'games':            { parentId: 'entertainment', subId: 'games' },
-  'gaming':           { parentId: 'entertainment', subId: 'games' },
+  'кино':             { categoryId: 'movies' },
+  'cinema':           { categoryId: 'movies' },
+  'movies':           { categoryId: 'movies' },
+  'קולנוע':           { categoryId: 'movies' }, // HE cinema
+  'билет':            { categoryId: 'events' },
+  'концерт':          { categoryId: 'events' },
+  'театр':            { categoryId: 'events' },
+  'ticket':           { categoryId: 'events' },
+  'concert':          { categoryId: 'events' },
+  'theatre':          { categoryId: 'events' },
+  'כרטיס':            { categoryId: 'events' }, // HE ticket
+  'хобби':            { categoryId: 'hobbies' },
+  'hobby':            { categoryId: 'hobbies' },
+  'зоопарк':          { categoryId: 'parks' },
+  'парк':             { categoryId: 'parks' },
+  'zoo':              { categoryId: 'parks' },
+  'park':             { categoryId: 'parks' },
+  'игры':             { categoryId: 'games' },
+  'games':            { categoryId: 'games' },
+  'gaming':           { categoryId: 'games' },
 
   // ── SUBSCRIPTIONS ─────────────────────────────────────────────────────────
-  'подписка':         { parentId: 'subscriptions', subId: 'streaming' },
-  'subscription':     { parentId: 'subscriptions', subId: 'streaming' },
-  'стриминг':         { parentId: 'subscriptions', subId: 'streaming' },
-  'streaming':        { parentId: 'subscriptions', subId: 'streaming' },
-  'מנוי':             { parentId: 'subscriptions', subId: 'streaming' }, // HE subscription
-  'облако':           { parentId: 'subscriptions', subId: 'cloud_storage' },
-  'cloud':            { parentId: 'subscriptions', subId: 'cloud_storage' },
+  'подписка':         { categoryId: 'streaming' },
+  'subscription':     { categoryId: 'streaming' },
+  'стриминг':         { categoryId: 'streaming' },
+  'streaming':        { categoryId: 'streaming' },
+  'מנוי':             { categoryId: 'streaming' }, // HE subscription
+  'облако':           { categoryId: 'cloud_storage' },
+  'cloud':            { categoryId: 'cloud_storage' },
 
   // ── TRAVEL ────────────────────────────────────────────────────────────────
-  'перелёт':          { parentId: 'travel', subId: 'flights' },
-  'авиа':             { parentId: 'travel', subId: 'flights' },
-  'авиабилеты':       { parentId: 'travel', subId: 'flights' },
-  'самолет':          { parentId: 'travel', subId: 'flights' },
-  'flight':           { parentId: 'travel', subId: 'flights' },
-  'flights':          { parentId: 'travel', subId: 'flights' },
-  'airplane':         { parentId: 'travel', subId: 'flights' },
-  'airport':          { parentId: 'travel', subId: 'flights' },
-  'טיסה':             { parentId: 'travel', subId: 'flights' }, // HE flight
-  'отель':            { parentId: 'travel', subId: 'hotels' },
-  'гостиница':        { parentId: 'travel', subId: 'hotels' },
-  'hotel':            { parentId: 'travel', subId: 'hotels' },
-  'hostel':           { parentId: 'travel', subId: 'hotels' },
-  'מלון':             { parentId: 'travel', subId: 'hotels' }, // HE hotel
+  'перелёт':          { categoryId: 'flights' },
+  'авиа':             { categoryId: 'flights' },
+  'авиабилеты':       { categoryId: 'flights' },
+  'самолет':          { categoryId: 'flights' },
+  'flight':           { categoryId: 'flights' },
+  'flights':          { categoryId: 'flights' },
+  'airplane':         { categoryId: 'flights' },
+  'airport':          { categoryId: 'flights' },
+  'טיסה':             { categoryId: 'flights' }, // HE flight
+  'отель':            { categoryId: 'hotels' },
+  'гостиница':        { categoryId: 'hotels' },
+  'hotel':            { categoryId: 'hotels' },
+  'hostel':           { categoryId: 'hotels' },
+  'מלון':             { categoryId: 'hotels' }, // HE hotel
 
   // ── EDUCATION ─────────────────────────────────────────────────────────────
-  'курсы':            { parentId: 'education', subId: 'courses' },
-  'курс':             { parentId: 'education', subId: 'courses' },
-  'courses':          { parentId: 'education', subId: 'courses' },
-  'course':           { parentId: 'education', subId: 'courses' },
-  'קורס':             { parentId: 'education', subId: 'courses' }, // HE course
-  'книги':            { parentId: 'education', subId: 'books' },
-  'книга':            { parentId: 'education', subId: 'books' },
-  'books':            { parentId: 'education', subId: 'books' },
-  'book':             { parentId: 'education', subId: 'books' },
-  'ספר':              { parentId: 'education', subId: 'books' }, // HE book
-  'репетитор':        { parentId: 'education', subId: 'tutoring' },
-  'tutor':            { parentId: 'education', subId: 'tutoring' },
+  'курсы':            { categoryId: 'courses' },
+  'курс':             { categoryId: 'courses' },
+  'courses':          { categoryId: 'courses' },
+  'course':           { categoryId: 'courses' },
+  'קורס':             { categoryId: 'courses' }, // HE course
+  'книги':            { categoryId: 'books' },
+  'книга':            { categoryId: 'books' },
+  'books':            { categoryId: 'books' },
+  'book':             { categoryId: 'books' },
+  'ספר':              { categoryId: 'books' }, // HE book
+  'репетитор':        { categoryId: 'tutoring' },
+  'tutor':            { categoryId: 'tutoring' },
 
   // ── KIDS ──────────────────────────────────────────────────────────────────
-  'садик':            { parentId: 'kids', subId: 'kindergarten' },
-  'детский сад':      { parentId: 'kids', subId: 'kindergarten' },
-  'kindergarten':     { parentId: 'kids', subId: 'kindergarten' },
-  'גן ילדים':         { parentId: 'kids', subId: 'kindergarten' }, // HE kindergarten
-  'школа':            { parentId: 'kids', subId: 'kids_school' },
-  'school':           { parentId: 'kids', subId: 'kids_school' },
-  'кружок':           { parentId: 'kids', subId: 'kids_activities' },
-  'activities':       { parentId: 'kids', subId: 'kids_activities' },
-  'חוג':              { parentId: 'kids', subId: 'kids_activities' }, // HE class/activity
-  'игрушки':          { parentId: 'kids', subId: 'toys' },
-  'toys':             { parentId: 'kids', subId: 'toys' },
-  'צעצוע':            { parentId: 'kids', subId: 'toys' }, // HE toy
+  'садик':            { categoryId: 'kindergarten' },
+  'детский сад':      { categoryId: 'kindergarten' },
+  'kindergarten':     { categoryId: 'kindergarten' },
+  'גן ילדים':         { categoryId: 'kindergarten' }, // HE kindergarten
+  'школа':            { categoryId: 'kids_school' },
+  'school':           { categoryId: 'kids_school' },
+  'кружок':           { categoryId: 'kids_activities' },
+  'activities':       { categoryId: 'kids_activities' },
+  'חוג':              { categoryId: 'kids_activities' }, // HE class/activity
+  'игрушки':          { categoryId: 'toys' },
+  'toys':             { categoryId: 'toys' },
+  'צעצוע':            { categoryId: 'toys' }, // HE toy
 
   // ── PETS ──────────────────────────────────────────────────────────────────
-  'корм для':         { parentId: 'pets', subId: 'pet_food' },
-  'pet food':         { parentId: 'pets', subId: 'pet_food' },
-  'ветеринар':        { parentId: 'pets', subId: 'vet' },
-  'vet':              { parentId: 'pets', subId: 'vet' },
-  'veterinary':       { parentId: 'pets', subId: 'vet' },
-  'וטרינר':           { parentId: 'pets', subId: 'vet' }, // HE vet
+  'корм для':         { categoryId: 'pet_food' },
+  'pet food':         { categoryId: 'pet_food' },
+  'ветеринар':        { categoryId: 'vet' },
+  'vet':              { categoryId: 'vet' },
+  'veterinary':       { categoryId: 'vet' },
+  'וטרינר':           { categoryId: 'vet' }, // HE vet
 
   // ── GIFTS ─────────────────────────────────────────────────────────────────
-  'подарок':          { parentId: 'gifts', subId: 'birthday_gifts' },
-  'подарки':          { parentId: 'gifts', subId: 'birthday_gifts' },
-  'gift':             { parentId: 'gifts', subId: 'birthday_gifts' },
-  'present':          { parentId: 'gifts', subId: 'birthday_gifts' },
-  'מתנה':             { parentId: 'gifts', subId: 'birthday_gifts' }, // HE gift
-  'благотворит':      { parentId: 'gifts', subId: 'charity' },
-  'charity':          { parentId: 'gifts', subId: 'charity' },
-  'donation':         { parentId: 'gifts', subId: 'charity' },
-  'צדקה':             { parentId: 'gifts', subId: 'charity' }, // HE charity
+  'подарок':          { categoryId: 'birthday_gifts' },
+  'подарки':          { categoryId: 'birthday_gifts' },
+  'gift':             { categoryId: 'birthday_gifts' },
+  'present':          { categoryId: 'birthday_gifts' },
+  'מתנה':             { categoryId: 'birthday_gifts' }, // HE gift
+  'благотворит':      { categoryId: 'charity' },
+  'charity':          { categoryId: 'charity' },
+  'donation':         { categoryId: 'charity' },
+  'צדקה':             { categoryId: 'charity' }, // HE charity
 
   // ── WORK ──────────────────────────────────────────────────────────────────
-  'канцелярия':       { parentId: 'work', subId: 'office_supplies' },
-  'бумага':           { parentId: 'work', subId: 'office_supplies' },
-  'office supplies':  { parentId: 'work', subId: 'office_supplies' },
-  'коворкинг':        { parentId: 'work', subId: 'coworking' },
-  'coworking':        { parentId: 'work', subId: 'coworking' },
+  'канцелярия':       { categoryId: 'office_supplies' },
+  'бумага':           { categoryId: 'office_supplies' },
+  'office supplies':  { categoryId: 'office_supplies' },
+  'коворкинг':        { categoryId: 'coworking' },
+  'coworking':        { categoryId: 'coworking' },
 
   // ── FINANCE ───────────────────────────────────────────────────────────────
-  'страховка':        { parentId: 'finance', subId: 'insurance' },
-  'страхование':      { parentId: 'finance', subId: 'insurance' },
-  'insurance':        { parentId: 'finance', subId: 'insurance' },
-  'ביטוח':            { parentId: 'finance', subId: 'insurance' }, // HE insurance
-  'налоги':           { parentId: 'finance', subId: 'taxes' },
-  'налог':            { parentId: 'finance', subId: 'taxes' },
-  'taxes':            { parentId: 'finance', subId: 'taxes' },
-  'инвестиции':       { parentId: 'finance', subId: 'investments' },
-  'investments':      { parentId: 'finance', subId: 'investments' },
+  'страховка':        { categoryId: 'insurance' },
+  'страхование':      { categoryId: 'insurance' },
+  'insurance':        { categoryId: 'insurance' },
+  'ביטוח':            { categoryId: 'insurance' }, // HE insurance
+  'налоги':           { categoryId: 'taxes' },
+  'налог':            { categoryId: 'taxes' },
+  'taxes':            { categoryId: 'taxes' },
+  'инвестиции':       { categoryId: 'investments' },
+  'investments':      { categoryId: 'investments' },
 
   // ── SERVICES ──────────────────────────────────────────────────────────────
-  'уборка':           { parentId: 'services', subId: 'cleaning' },
-  'cleaning':         { parentId: 'services', subId: 'cleaning' },
-  'ניקיון':           { parentId: 'services', subId: 'cleaning' }, // HE cleaning
-  'прачечная':        { parentId: 'services', subId: 'laundry' },
-  'laundry':          { parentId: 'services', subId: 'laundry' },
-  'почта':            { parentId: 'services', subId: 'postal' },
-  'postal':           { parentId: 'services', subId: 'postal' },
-  'shipping':         { parentId: 'services', subId: 'postal' },
-  'דואר':             { parentId: 'services', subId: 'postal' }, // HE postal
+  'уборка':           { categoryId: 'cleaning' },
+  'cleaning':         { categoryId: 'cleaning' },
+  'ניקיון':           { categoryId: 'cleaning' }, // HE cleaning
+  'прачечная':        { categoryId: 'laundry' },
+  'laundry':          { categoryId: 'laundry' },
+  'почта':            { categoryId: 'postal' },
+  'postal':           { categoryId: 'postal' },
+  'shipping':         { categoryId: 'postal' },
+  'דואר':             { categoryId: 'postal' }, // HE postal
 };
 
 const _sorted = Object.entries(ITEMS).sort((a, b) => b[0].length - a[0].length);
@@ -620,7 +619,7 @@ function matchesWord(text: string, kw: string): boolean {
 export function matchItem(text: string): ItemMatch | null {
   for (const [kw, hit] of _sorted) {
     if (matchesWord(text, kw)) {
-      return { parentId: hit.parentId, subId: hit.subId, keyword: kw };
+      return { parentId: '', subId: hit.categoryId, keyword: kw };
     }
   }
   return null;

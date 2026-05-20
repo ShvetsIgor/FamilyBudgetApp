@@ -86,7 +86,8 @@ export function CategorySheet({ onSelect, onClose, categories: categoriesOverrid
           {filtered ? (
             <div className="flex flex-col gap-0.5 pt-2">
               {filtered.map((cat) => {
-                const parent = cat.parentId ? allCats.find((c) => c.id === cat.parentId) : null;
+                const parentId = cat.folderId || cat.parentId;
+                const parent = parentId ? allCats.find((c) => c.id === parentId) : null;
                 return (
                   <button
                     key={cat.id}

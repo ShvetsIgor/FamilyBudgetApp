@@ -133,17 +133,18 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
           <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
             {parentCats.slice(0, 12).map((cat) => {
               const sel = cat.id === parentId;
+              const c = cat.color ?? '#E07A5F';
               return (
                 <button
                   key={cat.id}
                   onClick={() => changeParent(cat.id)}
                   className="h-[68px] rounded-[12px] flex flex-col items-center justify-center gap-1 transition-all border-0"
                   style={{
-                    background: sel ? cat.color : 'hsl(var(--card))',
-                    boxShadow: sel ? `0 3px 10px ${cat.color}55` : '0 1px 3px rgba(61,44,31,.06)',
+                    background: sel ? c : 'hsl(var(--card))',
+                    boxShadow: sel ? `0 3px 10px ${c}55` : '0 1px 3px rgba(61,44,31,.06)',
                   }}
                 >
-                  <StickerIcon icon={cat.icon} color={sel ? '#fff' : cat.color} className="h-5 w-5" />
+                  <StickerIcon icon={cat.icon ?? 'box'} color={sel ? '#fff' : c} className="h-5 w-5" />
                   <span className="text-[11px] font-extrabold leading-tight text-center px-1 line-clamp-1"
                     style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}>
                     {t.cat(cat.name)}

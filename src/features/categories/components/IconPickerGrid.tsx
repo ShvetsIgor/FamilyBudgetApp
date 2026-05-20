@@ -80,7 +80,7 @@ export function IconPickerGrid({ selected, color, onSelect }: Props) {
             }`}
             style={
               selected === icon
-                ? { backgroundColor: `${color}20`, ringColor: color }
+                ? { backgroundColor: `${color}20`, outline: `2px solid ${color}`, outlineOffset: '2px' }
                 : {}
             }
             aria-label={icon}

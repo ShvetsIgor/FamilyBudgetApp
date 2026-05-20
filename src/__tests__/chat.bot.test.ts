@@ -71,7 +71,7 @@ function makeCtx(overrides: Partial<BotContext> = {}): BotContext {
     currency: 'ILS',
     categoriesById: map,
     foldersById,
-    topParentIds: ['dining', 'groceries'],
+    topCategoryIds: ['dining', 'groceries'],
     incomeCategoriesById: incomeMap,
     topIncomeParentIds: ['salary'],
     todaySpent: 0,
@@ -186,7 +186,7 @@ describe('respondToUserMessage', () => {
 
   it('«clarify» → chips содержат top-категории из ctx', async () => {
     const parsed = parseMessage('150', { learned: {} });
-    const reply = await respondToUserMessage(makeUserMsg('150'), parsed, makeCtx({ topParentIds: ['dining', 'groceries'] }));
+    const reply = await respondToUserMessage(makeUserMsg('150'), parsed, makeCtx({ topCategoryIds: ['dining', 'groceries'] }));
     const chips = reply.messages[0].card?.data.chips as { id: string }[];
     expect(chips.some((c) => c.id === 'dining')).toBe(true);
   });

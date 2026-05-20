@@ -283,7 +283,7 @@ export default function HomePage() {
     } else {
       // Teach learned keyword for non-store inputs
       const keyword = parsedNote?.trim() || chip.name.toLowerCase();
-      const hit = { parentId: resolvedParentId, ...(chipCat?.parentId ? { subId: chip.id } : {}) };
+      const hit = { categoryId: chipCat?.parentId ? chip.id : resolvedParentId };
       await saveLearnedKeyword(userId, keyword.toLowerCase(), hit);
       addLearned(keyword.toLowerCase(), hit); // optimistic update so next parse uses it immediately
     }

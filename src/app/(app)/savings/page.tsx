@@ -16,6 +16,7 @@ import { addCategory as addCategoryRedux } from '@/features/categories/store/cat
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
 import type { SavingsGoal } from '@/shared/types';
+import { isRootCategory } from '@/shared/utils/categoryHelpers';
 
 type Mode = 'list' | { goal: SavingsGoal; action: 'contribute' | 'detail' };
 

@@ -605,8 +605,7 @@ export const ITEMS: Record<string, ItemEntry> = {
 const _sorted = Object.entries(ITEMS).sort((a, b) => b[0].length - a[0].length);
 
 export interface ItemMatch {
-  parentId: string;
-  subId: string;
+  categoryId: string;
   keyword: string;
 }
 
@@ -619,7 +618,7 @@ function matchesWord(text: string, kw: string): boolean {
 export function matchItem(text: string): ItemMatch | null {
   for (const [kw, hit] of _sorted) {
     if (matchesWord(text, kw)) {
-      return { parentId: '', subId: hit.categoryId, keyword: kw };
+      return { categoryId: hit.categoryId, keyword: kw };
     }
   }
   return null;

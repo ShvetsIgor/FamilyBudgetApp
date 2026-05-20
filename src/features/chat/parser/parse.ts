@@ -62,7 +62,7 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
   // 6. Emoji (highest priority)
   for (const [emo, hit] of Object.entries(EMOJI)) {
     if (rest.includes(emo)) {
-      return { amount, parentId: hit.parentId, categoryId: hit.subId ?? hit.parentId, matchedKeyword: emo, confidence: 'high', note, ...df };
+      return { amount, parentId: null, categoryId: hit.categoryId, matchedKeyword: emo, confidence: 'high', note, ...df };
     }
   }
 

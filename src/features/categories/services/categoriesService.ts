@@ -12,7 +12,6 @@ import {
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import type { Category, CategoryType } from '@/shared/types';
-export type { CategoryType };
 import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES } from './defaultCategories';
 
 function colRef(userId: string, type: CategoryType) {

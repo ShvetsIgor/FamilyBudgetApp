@@ -74,8 +74,9 @@ export interface Category {
   name: string;
   icon: string;
   color: string;
-  folderId?: string | null;  // replaces parentId conceptually
-  parentId?: string;         // kept for backward compat during migration
+  folderId?: string | null;
+  /** @deprecated Use folderId. Kept only for legacy Firestore docs during migration. */
+  parentId?: string;
   isPrivate: boolean;
   order: number;
   type: CategoryType;

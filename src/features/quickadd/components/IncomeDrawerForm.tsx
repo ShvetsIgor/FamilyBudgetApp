@@ -94,18 +94,19 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
           <div className="grid gap-1.5" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
             {parentCats.slice(0, 8).map((cat, i) => {
               const sel = cat.id === categoryId;
+              const c = cat.color ?? '#10b981';
               return (
                 <button
                   key={cat.id}
                   onClick={() => setCategoryId(cat.id)}
                   className="h-[68px] rounded-[12px] flex flex-col items-center justify-center gap-1 transition-all border-0 relative"
                   style={{
-                    background: sel ? cat.color : 'hsl(var(--card))',
-                    boxShadow: sel ? `0 3px 10px ${cat.color}55` : '0 1px 3px rgba(61,44,31,.06)',
+                    background: sel ? c : 'hsl(var(--card))',
+                    boxShadow: sel ? `0 3px 10px ${c}55` : '0 1px 3px rgba(61,44,31,.06)',
                   }}
                 >
                   <kbd className="absolute top-1 left-1.5 text-[8px] font-mono opacity-40">{i + 1}</kbd>
-                  <StickerIcon icon={cat.icon} color={sel ? '#fff' : cat.color} className="h-5 w-5" />
+                  <StickerIcon icon={cat.icon ?? 'cash'} color={sel ? '#fff' : c} className="h-5 w-5" />
                   <span className="text-[11px] font-extrabold leading-tight text-center px-1 line-clamp-1"
                     style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}>
                     {t.cat(cat.name)}

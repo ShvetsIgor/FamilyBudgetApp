@@ -98,7 +98,7 @@ export default function StatisticsPage() {
         const result: typeof parentPieData = [];
         for (const [catId, amount] of Object.entries(stats.byCategory)) {
           const cat = categories.find((c) => c.id === catId);
-          if (cat?.parentId === drillCategory) {
+          if ((cat?.folderId ?? cat?.parentId) === drillCategory) {
             result.push({ catId, name: t.cat(cat.name), amount, color: parentCat?.color ?? cat.color, icon: cat.icon });
           } else if (catId === drillCategory && amount > 0) {
             // Direct expense on parent without subcategory

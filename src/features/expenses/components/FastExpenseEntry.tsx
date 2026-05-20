@@ -203,7 +203,7 @@ export function FastExpenseEntry({
       privacy: 'regular' as const,
       comment: comment.trim() || undefined,
       amount: totalNum,
-      categoryId: parentId,
+      categoryId: selectedCatId,
       splits: splitItems,
       ...(initialStore ? { store: initialStore } : {}),
       ...(initialStoreId ? { storeId: initialStoreId } : {}),

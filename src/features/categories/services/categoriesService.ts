@@ -48,8 +48,14 @@ export async function updateCategory(userId: string, category: Category): Promis
   await updateDoc(doc(getDb(), 'categories', userId, data.type, id), data);
 }
 
+/** Hard-deletes a category. Only call when the category has never been used in any expense. */
 export async function deleteCategory(userId: string, categoryId: string, type: CategoryType): Promise<void> {
   await deleteDoc(doc(getDb(), 'categories', userId, type, categoryId));
+}
+
+/** Soft-deletes: marks archived=true. Use instead of deleteCategory when the category may have expenses. */
+export async function archiveCategoryInFirestore(userId: string, categoryId: string, type: CategoryType): Promise<void> {
+  await updateDoc(doc(getDb(), 'categories', userId, type, categoryId), { archived: true });
 }
 
 // Resets categories to TAXONOMY defaults using stable taxonomy IDs.

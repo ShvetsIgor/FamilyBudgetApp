@@ -4,10 +4,10 @@ import { parseMessage } from '@/features/chat/parser/parse';
 const noLearned = { learned: {} };
 
 describe('parseMessage', () => {
-  it('хлеб 50 → categoryId=supermarket, medium', () => {
+  it('хлеб 50 → categoryId=bakery, medium', () => {
     const r = parseMessage('хлеб 50', noLearned);
     expect(r.amount).toBe(50);
-    expect(r.categoryId).toBe('supermarket');
+    expect(r.categoryId).toBe('bakery');
     expect(r.confidence).toBe('medium');
   });
 

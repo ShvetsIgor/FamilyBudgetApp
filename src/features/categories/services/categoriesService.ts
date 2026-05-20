@@ -133,6 +133,61 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
   }
 }
 
+/**
+ * Migrates categories from old parentId hierarchy to new folderId model.
+ * - Creates CategoryFolder docs for each unique parentId
+ * - Updates each child category: sets folderId = parentId, clears parentId
+ * - Returns a map of oldParentId → folderId for reference
+ */
+export async function migrateCategoryHierarchyToFolders(
+  userId: string,
+): Promise<{ folderMap: Record<string, string>; legacyExpenseMap: Record<string, string> }> {
+  const db = getDb();
+
+  const allCats: Category[] = [];
+  for (const type of ['expense', 'income'] as CategoryType[]) {
+    const snap = await getDocs(colRef(userId, type));
+    snap.docs.forEach((d) => allCats.push({ id: d.id, ...d.data() } as Category));
+  }
+
+  // Find all parent categories (those with no parentId and with children)
+  const parentIds = new Set(allCats.filter((c) => c.parentId).map((c) => c.parentId!));
+  const parents = allCats.filter((c) => parentIds.has(c.id) || (!c.parentId && allCats.some((s) => s.parentId === c.id)));
+
+  // Create folder for each parent
+  const folderDefs: Array<Omit<CategoryFolder, 'userId'>> = parents.map((p) => ({
+    id: p.id,
+    name: p.name,
+    icon: p.icon,
+    color: p.color,
+    type: p.type,
+    order: p.order,
+  }));
+
+  const folderMap: Record<string, string> = {};
+  if (folderDefs.length > 0) {
+    const created = await bulkCreateFolders(userId, folderDefs);
+    for (const f of created) folderMap[f.id] = f.id;
+  }
+
+  // Update child categories: set folderId, remove parentId
+  const batch = writeBatch(db);
+  for (const cat of allCats) {
+    if (cat.parentId && folderMap[cat.parentId]) {
+      batch.update(doc(db, 'categories', userId, cat.type, cat.id), {
+        folderId: cat.parentId,
+        parentId: null,
+      });
+    }
+  }
+  await batch.commit();
+
+  // Build legacy expense map: old parent categoryId → primary subcategory ID
+  const legacyExpenseMap: Record<string, string> = { ...legacyCategoryMap };
+
+  return { folderMap, legacyExpenseMap };
+}
+
 export async function bulkApplyConstructorDiff(
   userId: string,
   toAdd: Array<{ id: string; name: string; ru?: string; icon: string; color?: string; parentId?: string; type: CategoryType; order: number; isPrivate: boolean }>,

@@ -14,6 +14,8 @@ import { getCurrencySymbol } from '@/shared/utils/currency';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
 import type { Category, SerializableExpense, SplitItem } from '@/shared/types';
+import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
+import { useMemo } from 'react';
 
 interface SplitRow {
   categoryId: string;

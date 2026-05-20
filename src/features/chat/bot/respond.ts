@@ -120,9 +120,7 @@ export async function confirmFutureExpense(
   await updateMessage(userId, botMsgId, { status: 'saved' });
 
   const savedText = `${savedPhrase()} · ${sym}\u202F${data.amount}`;
-  const catPath = cat && parentCat && cat.id !== parentCat.id
-    ? `${parentCat.name} · ${cat.name}`
-    : (parentCat?.name ?? cat?.name ?? '');
+  const catPath = folderCat ? `${folderCat.name} · ${cat?.name ?? ''}` : (cat?.name ?? '');
 
   const dateHint = format(parseISO(data.parsedDate), 'd MMMM', { locale: ru });
 
@@ -133,11 +131,11 @@ export async function confirmFutureExpense(
         card: {
           kind: 'saved',
           data: {
-            icon: cat?.icon ?? parentCat?.icon ?? 'box',
-            color: parentCat?.color ?? '#E07A5F',
+            icon: cat?.icon ?? folderCat?.icon ?? 'box',
+            color: cat?.color ?? folderCat?.color ?? '#E07A5F',
             title: catPath,
             catName: cat?.name ?? null,
-            parentName: parentCat?.name ?? null,
+            parentName: folderCat?.name ?? null,
             hint: dateHint,
             amount: data.amount,
             currency: sym,

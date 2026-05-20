@@ -456,9 +456,7 @@ export async function respondToUserMessage(
   });
 
   const savedText = `${savedPhrase()} · ${sym}\u202F${parsed.amount}`;
-  const catPath = cat && parentCat && cat.id !== parentCat.id
-    ? `${parentCat.name} · ${cat.name}`
-    : (parentCat?.name ?? cat?.name ?? '');
+  const catPath = folderCat2 ? `${folderCat2.name} · ${cat?.name ?? ''}` : (cat?.name ?? '');
 
   // Show date hint if it's not today (use local date to avoid UTC offset issues)
   const _now = new Date();
@@ -475,11 +473,11 @@ export async function respondToUserMessage(
         card: {
           kind: 'saved',
           data: {
-            icon: cat?.icon ?? parentCat?.icon ?? 'box',
-            color: parentCat?.color ?? '#E07A5F',
+            icon: cat?.icon ?? folderCat2?.icon ?? 'box',
+            color: cat?.color ?? folderCat2?.color ?? '#E07A5F',
             title: catPath,
             catName: cat?.name ?? null,
-            parentName: parentCat?.name ?? null,
+            parentName: folderCat2?.name ?? null,
             hint: dateHint,
             amount: parsed.amount,
             currency: sym,

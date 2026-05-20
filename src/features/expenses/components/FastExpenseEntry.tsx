@@ -69,16 +69,20 @@ export function FastExpenseEntry({
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const allCats = useAppSelector((s) => s.categories.expense);
+  const { groups: catGroups, getCatsInGroup, getGroupOf } = useCategoryGroups('expense');
   const t = useT();
   const symbol = getCurrencySymbol(currency);
   const isEdit = !!initialExpense;
 
-  const parentCats = allCats.filter((c) => !c.parentId && c.name !== 'Savings');
+  const topCats = useMemo(
+    () => catGroups.filter((g) => g.name !== 'Savings'),
+    [catGroups]
+  );
 
   function initParentId() {
-    if (!initialExpense) return parentCats[0]?.id ?? '';
+    if (!initialExpense) return topCats[0]?.id ?? '';
     const cat = allCats.find((c) => c.id === initialExpense.categoryId);
-    return cat?.parentId ?? cat?.id ?? parentCats[0]?.id ?? '';
+    return getGroupOf(cat) || cat?.id ?? topCats[0]?.id ?? '';
   }
 
   function initSplits(): SplitRow[] {
@@ -86,7 +90,8 @@ export function FastExpenseEntry({
     return initialExpense.splits
       .map((sp: SplitItem) => {
         const cat = allCats.find((c) => c.id === sp.categoryId);
-        const parentCat = allCats.find((c) => c.id === cat?.parentId);
+        const parentId = getGroupOf(cat);
+        const parentCat = parentId ? allCats.find((c) => c.id === parentId) : undefined;
         if (!cat) return null;
         return {
           categoryId: sp.categoryId,

@@ -570,7 +570,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
             </p>
             {/* Parent row */}
             <div className="flex flex-wrap gap-1.5">
-              {parentCats.map((cat) => {
+              {expenseCatGroups.map((cat) => {
                 const sel = selectedParentCatId === cat.id;
                 return (
                   <button
@@ -581,11 +581,11 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
                     }}
                     className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
                     style={{
-                      background: sel ? cat.color : 'hsl(var(--card))',
-                      boxShadow: sel ? `0 3px 8px ${cat.color}55` : '0 1px 3px rgba(61,44,31,.06)',
+                      background: sel ? (cat.color ?? '#E07A5F') : 'hsl(var(--card))',
+                      boxShadow: sel ? `0 3px 8px ${cat.color ?? '#E07A5F'}55` : '0 1px 3px rgba(61,44,31,.06)',
                     }}
                   >
-                    <StickerIcon icon={cat.icon} color={sel ? '#fff' : cat.color} className="h-4 w-4" />
+                    <StickerIcon icon={cat.icon ?? 'box'} color={sel ? '#fff' : (cat.color ?? '#E07A5F')} className="h-4 w-4" />
                     <span className="text-[9px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
                       style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}>
                       {t.cat(cat.name)}

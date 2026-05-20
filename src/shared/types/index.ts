@@ -246,7 +246,8 @@ export interface SerializableExpense {
 
 export interface StoreSubcategoryUsage {
   subcategoryId: string;
-  parentId: string;
+  parentId?: string;   // legacy, kept for backward compat
+  folderId?: string;   // new — folder the subcategory belongs to
   usageCount: number;
   lastUsed: string; // ISO date YYYY-MM-DD
 }

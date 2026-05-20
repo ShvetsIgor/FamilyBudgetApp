@@ -70,7 +70,6 @@ export interface FutureCardData {
   parsedDate: string;
   parsedNote?: string;
   categoryId: string | null;
-  parentId: string | null;
   userMsgId: string;
   storeId?: string;
   storeName?: string;

@@ -7,6 +7,7 @@ import { CategoryIcon } from './CategoryIcon';
 import { useT } from '@/shared/hooks/useT';
 import { cn } from '@/shared/utils/cn';
 import type { Category, CategoryType } from '@/shared/types';
+import { selectFolders, selectCategoriesInFolder, selectUnfolderedCategories } from '../store/selectors';
 
 interface Props {
   type: CategoryType;
@@ -17,27 +18,34 @@ interface Props {
   childrenOnly?: boolean;
 }
 
-export function CategoryPicker({ type, value, onChange, placeholder = 'Select category', parentsOnly = false, childrenOnly = false }: Props) {
+export function CategoryPicker({
+  type,
+  value,
+  onChange,
+  placeholder = 'Select category',
+  parentsOnly = false,
+  childrenOnly = false,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const allCategories = useAppSelector((s) => s.categories[type]);
+  const folders = useAppSelector((s) => selectFolders(s, type));
   const t = useT();
 
+  const hasFolders = folders.length > 0;
+
   const categories = parentsOnly
-    ? allCategories.filter((c) => !c.parentId)
+    ? allCategories.filter((c) => !c.parentId && !c.folderId)
     : childrenOnly
-      ? allCategories.filter((c) => !!c.parentId)
-      : allCategories;
+      ? allCategories.filter((c) => !!c.parentId || !!c.folderId)
+      : allCategories.filter((c) => !c.archived);
 
   const selected = allCategories.find((c) => c.id === value);
-  const defaultList = childrenOnly
-    ? categories
-    : categories.filter((c) => !c.parentId);
 
   const filtered = search
     ? categories.filter((c) =>
         c.name.toLowerCase().includes(search.toLowerCase()) ||
-        t.cat(c.name).toLowerCase().includes(search.toLowerCase())
+        t.cat(c.name).toLowerCase().includes(search.toLowerCase()),
       )
     : null;
 
@@ -47,6 +55,60 @@ export function CategoryPicker({ type, value, onChange, placeholder = 'Select ca
     setSearch('');
   }
 
+  // Build grouped list when folders are available
+  const renderList = () => {
+    const list = filtered ?? categories;
+
+    if (!hasFolders || search) {
+      // Flat list (search mode or no folders)
+      return list.map((cat) => (
+        <CategoryRowItem key={cat.id} cat={cat} displayName={t.cat(cat.name)} selected={value} onSelect={select} />
+      ));
+    }
+
+    // Group by folder
+    const groups: Array<{ folderId: string | null; folderName: string; cats: Category[] }> = [];
+
+    for (const folder of folders) {
+      const catsInFolder = list.filter((c) => c.folderId === folder.id);
+      if (catsInFolder.length > 0) {
+        groups.push({ folderId: folder.id, folderName: folder.name, cats: catsInFolder });
+      }
+    }
+
+    // Unfoldered / legacy parentId-less
+    const unfoldered = list.filter((c) => !c.folderId && !c.parentId);
+    if (unfoldered.length > 0) {
+      groups.push({ folderId: null, folderName: '', cats: unfoldered });
+    }
+
+    // Legacy parentId-based (during migration)
+    const legacyParents = list.filter((c) => !c.parentId && !c.folderId && !hasFolders);
+    const legacyChildren = list.filter((c) => !!c.parentId);
+
+    if (!hasFolders && legacyParents.length > 0) {
+      return [
+        ...legacyParents.map((cat) => (
+          <CategoryRowItem key={cat.id} cat={cat} displayName={t.cat(cat.name)} selected={value} onSelect={select} indent={false} />
+        )),
+        ...legacyChildren.map((cat) => (
+          <CategoryRowItem key={cat.id} cat={cat} displayName={t.cat(cat.name)} selected={value} onSelect={select} indent />
+        )),
+      ];
+    }
+
+    return groups.flatMap(({ folderId, folderName, cats }) => [
+      folderId ? (
+        <div key={`header-${folderId}`} className="px-2 pt-2 pb-0.5">
+          <span className="text-[10px] font-bold text-[#8E7A66] uppercase tracking-wide">{folderName}</span>
+        </div>
+      ) : null,
+      ...cats.map((cat) => (
+        <CategoryRowItem key={cat.id} cat={cat} displayName={t.cat(cat.name)} selected={value} onSelect={select} indent={!!folderId} />
+      )),
+    ].filter(Boolean));
+  };
+
   return (
     <div className="relative">
       <button
@@ -54,7 +116,7 @@ export function CategoryPicker({ type, value, onChange, placeholder = 'Select ca
         onClick={() => setOpen(!open)}
         className={cn(
           'flex w-full items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-left text-sm transition-colors',
-          open && 'border-primary ring-2 ring-primary/20'
+          open && 'border-primary ring-2 ring-primary/20',
         )}
       >
         {selected ? (
@@ -79,10 +141,8 @@ export function CategoryPicker({ type, value, onChange, placeholder = 'Select ca
               className="w-full rounded-lg bg-muted px-3 py-2 text-sm outline-none placeholder:text-muted-foreground"
             />
           </div>
-          <div className="max-h-64 overflow-y-auto p-2 flex flex-col gap-1">
-            {(filtered ?? defaultList).map((cat) => (
-              <CategoryRow key={cat.id} cat={cat} displayName={t.cat(cat.name)} selected={value} onSelect={select} />
-            ))}
+          <div className="max-h-64 overflow-y-auto p-2 flex flex-col gap-0.5">
+            {renderList()}
           </div>
         </div>
       )}
@@ -94,14 +154,27 @@ export function CategoryPicker({ type, value, onChange, placeholder = 'Select ca
   );
 }
 
-function CategoryRow({ cat, displayName, selected, onSelect }: { cat: Category; displayName: string; selected?: string; onSelect: (c: Category) => void }) {
+function CategoryRowItem({
+  cat,
+  displayName,
+  selected,
+  onSelect,
+  indent = false,
+}: {
+  cat: Category;
+  displayName: string;
+  selected?: string;
+  onSelect: (c: Category) => void;
+  indent?: boolean;
+}) {
   return (
     <button
       type="button"
       onClick={() => onSelect(cat)}
       className={cn(
         'flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm transition-colors hover:bg-muted',
-        selected === cat.id && 'bg-primary/10'
+        selected === cat.id && 'bg-primary/10',
+        indent && 'pl-5',
       )}
     >
       <CategoryIcon icon={cat.icon} color={cat.color} size="sm" />

@@ -1,2 +1,2 @@
-export type { StoreEntry, StoreMatch } from './dictionaries/types';
+export type { StoreEntry, StoreMatch } from './dictionaries/stores';
 export { STORES, matchStore } from './dictionaries/stores';

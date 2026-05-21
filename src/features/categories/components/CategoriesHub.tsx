@@ -26,14 +26,12 @@ import { CategoryEditorSheet } from './CategoryEditorSheet';
 import { FolderEditorSheet } from './FolderEditorSheet';
 import { ConstructorWizard } from './constructor/ConstructorWizard';
 import { StickerIcon } from './CategoryIcon';
-import { TAXONOMY, INCOME_TAXONOMY } from '../icons/icons';
+import { getTaxonomySubs, type TaxSub } from '../utils/categoryAliasMap';
 import {
   selectAvailableLibrary,
   selectFolders,
   selectCategoriesInFolder,
 } from '../store/selectors';
-
-interface TaxSub { id: string; name: string; ru?: string; icon: string }
 
 interface EditorState {
   open: boolean;

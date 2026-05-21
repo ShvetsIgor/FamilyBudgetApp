@@ -30,10 +30,7 @@ export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
 
   const category = allCategories.find((c) => c.id === expense.categoryId);
   const folders = useAppSelector((s) => s.categories.folders.expense);
-  // Show folder/parent name as subtitle — folder takes priority (new model), parentId is legacy fallback
-  const parentCat = category?.folderId
-    ? folders.find((f) => f.id === category.folderId)
-    : (category?.parentId ? allCategories.find((c) => c.id === category.parentId) : null);
+  const parentCat = category?.folderId ? folders.find((f) => f.id === category.folderId) : null;
   const categoryLabel = category ? t.cat(category.name) : '';
   const parentLabel = parentCat ? t.cat(parentCat.name) : '';
   const subtitleLabel = categoryLabel || parentLabel || '';

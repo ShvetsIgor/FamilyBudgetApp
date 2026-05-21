@@ -1,6 +1,7 @@
 'use client';
 import { useMemo } from 'react';
 import { useAppSelector } from '@/store/store';
+import { isActiveCategory } from '@/features/categories/policy/categoryPolicy';
 import type { Category, CategoryType } from '@/shared/types';
 
 export interface CategoryGroup {

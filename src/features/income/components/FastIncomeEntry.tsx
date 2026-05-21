@@ -10,6 +10,7 @@ import { prependIncome, updateIncome } from '@/features/income/store/incomeSlice
 import { addIncome, updateIncome as updateIncomeService } from '@/features/income/services/incomeService';
 import { addRecurringIncome } from '@/features/income/services/recurringIncomeService';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
+import { selectAllActiveCategories } from '@/features/categories/store/selectors';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';

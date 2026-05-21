@@ -82,7 +82,7 @@ export function FastExpenseEntry({
   function initSelectedCatId() {
     if (!initialExpense) return topCats[0]?.id ?? '';
     const cat = allCats.find((c) => c.id === initialExpense.categoryId);
-    return getGroupOf(cat) || cat?.id ?? topCats[0]?.id ?? '';
+    return getGroupOf(cat) || (cat?.id ?? topCats[0]?.id ?? '');
   }
 
   function initSplits(): SplitRow[] {

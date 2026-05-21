@@ -75,18 +75,7 @@ export default function AnalyticsPage() {
   const trendData = months.map((m) => ({ name: m.month.slice(5), expenses: m.totalExpenses, income: m.totalIncome }));
 
   // Analytics aggregates by categoryId only — folderId is UI-only and must not affect domain layer
-  const catTotals: Record<string, number> = {};
-  for (const m of months) {
-    for (const [id, amt] of Object.entries(m.byCategory)) {
-      const resolvedId = id; // categoryId is the only business classification key
-      catTotals[resolvedId] = (catTotals[resolvedId] ?? 0) + amt;
-    }
-  }
-  const topCats = Object.entries(catTotals)
-    .map(([id, total]) => ({ id, total, cat: categories.find((c) => c.id === id) }))
-    .filter((d) => d.total > 0 && d.cat)
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 6);
+  const topCats = aggregateTopCategories(months, categories, 6);
 
   const totalSpend = topCats.reduce((s, c) => s + c.total, 0);
   const thisMonth = months[months.length - 1];

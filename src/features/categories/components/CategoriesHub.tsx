@@ -384,10 +384,8 @@ export function CategoriesHub() {
         onClose={() => setEditor({ open: false })}
         initial={editor.category}
         type={tab}
-        parentId={editor.parentId}
         folderId={editor.folderId}
         availableFolders={folders}
-        existingSubs={editor.existingSubs}
         taxonomySubs={editor.taxonomySubs}
         budget={editor.category ? (budgetLimits[editor.category.id] ?? 0) || undefined : undefined}
         onBudgetChange={async (v) => {

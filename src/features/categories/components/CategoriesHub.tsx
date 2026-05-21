@@ -36,7 +36,6 @@ interface EditorState {
   open: boolean;
   category?: Category;
   folderId?: string;
-  taxonomySubs?: TaxSub[];
 }
 
 interface FolderEditorState {

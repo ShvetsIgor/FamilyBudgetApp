@@ -200,20 +200,20 @@ export default function AnalyticsPage() {
     <div className="rounded-2xl border border-border bg-card p-4">
       <h2 className="text-sm font-semibold mb-3">{t('analytics.topCategories')}</h2>
       <div className="flex flex-col gap-3">
-        {topCats.map(({ id, total, cat }) => {
+        {topCats.map(({ catId, total, name, color, icon }) => {
           const pct = totalSpend > 0 ? (total / totalSpend) * 100 : 0;
           return (
-            <div key={id}>
+            <div key={catId}>
               <div className="flex items-center gap-2 mb-1">
-                <div className="h-8 w-8 flex shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: `${cat!.color}20` }}>
-                  <StickerIcon icon={cat!.icon} color={cat!.color} className="h-5 w-5" />
+                <div className="h-8 w-8 flex shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: `${color}20` }}>
+                  <StickerIcon icon={icon} color={color} className="h-5 w-5" />
                 </div>
-                <span className="flex-1 text-sm">{t.cat(cat!.name)}</span>
+                <span className="flex-1 text-sm">{t.cat(name)}</span>
                 <span className="text-sm font-semibold tabular-nums">{formatAmount(total, currency)}</span>
                 <span className="text-xs text-muted-foreground w-9 text-right">{pct.toFixed(0)}%</span>
               </div>
               <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: cat!.color }} />
+                <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
               </div>
             </div>
           );

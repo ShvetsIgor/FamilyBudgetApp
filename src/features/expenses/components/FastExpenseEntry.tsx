@@ -404,7 +404,7 @@ export function FastExpenseEntry({
           Уточнить позицию
         </button>
 
-        {/* Two-level subcategory picker */}
+        {/* Group category picker */}
         {pickerOpen && (
           <div
             className="bg-card rounded-[14px] p-2.5 flex-shrink-0"

@@ -67,21 +67,9 @@ export function CategoryPicker({
     }
 
     // Group by folder; ungrouped categories shown at the end without a header
-    const groups: Array<{ folderId: string | null; folderName: string; cats: Category[] }> = [];
+    const sections = buildFolderSections(folders, list);
 
-    for (const folder of folders) {
-      const catsInFolder = list.filter((c) => c.folderId === folder.id);
-      if (catsInFolder.length > 0) {
-        groups.push({ folderId: folder.id, folderName: folder.name, cats: catsInFolder });
-      }
-    }
-
-    const ungrouped = list.filter((c) => !c.folderId);
-    if (ungrouped.length > 0) {
-      groups.push({ folderId: null, folderName: '', cats: ungrouped });
-    }
-
-    return groups.flatMap(({ folderId, folderName, cats }) => [
+    return sections.flatMap(({ folderId, folderName, cats }) => [
       folderId ? (
         <div key={`header-${folderId}`} className="px-2 pt-2 pb-0.5">
           <span className="text-[10px] font-bold text-[#8E7A66] uppercase tracking-wide">{folderName}</span>

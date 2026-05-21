@@ -176,7 +176,7 @@ export default function ExpensesPage() {
                 {t('expenses.all')}
               </button>
               {categories
-                .filter((c) => !c.archived && expenses.some((e) => e.categoryId === c.id))
+                .filter((c) => isActiveCategory(c) && expenses.some((e) => e.categoryId === c.id))
                 .map((c) => (
                   <button
                     key={c.id}

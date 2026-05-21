@@ -595,9 +595,9 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
               })}
             </div>
             {/* Folder category row */}
-            {subCats.length > 0 && (
+            {catsInGroup.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-1.5 pl-2" style={{ borderLeft: `2px solid ${catColor}44` }}>
-                {subCats.map((sub) => {
+                {catsInGroup.map((sub) => {
                   const sel = categoryId === sub.id;
                   return (
                     <button

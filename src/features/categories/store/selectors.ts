@@ -25,6 +25,10 @@ export const selectUnfolderedCategories = (s: RootState, type: CategoryType) =>
 export const selectAllActiveCategories = (s: RootState, type: CategoryType) =>
   cats(s, type).filter(isActiveCategory);
 
+/** Active categories grouped into folder sections for UI rendering. */
+export const selectFolderSections = (s: RootState, type: CategoryType): FolderSection[] =>
+  buildFolderSections(folders(s, type), cats(s, type).filter(isActiveCategory));
+
 // ─── Library / constructor ───────────────────────────────────────────────────
 
 /**

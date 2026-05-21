@@ -1,9 +1,13 @@
 /**
  * Legacy parentId-based selectors.
- * Use only in migration scripts or adapter code — not in UI or domain logic.
+ *
+ * ISOLATION BOUNDARY: these selectors exist only for migration tests and adapters.
+ * Never import from this file in UI components, hooks, services, or business logic.
+ * New code must use selectCategoriesInFolder / selectAllActiveCategories from selectors.ts.
  */
 import type { RootState } from '@/store/store';
 import type { CategoryType } from '@/shared/types';
+
 const cats = (s: RootState, type: CategoryType) =>
   type === 'expense' ? s.categories.expense : s.categories.income;
 

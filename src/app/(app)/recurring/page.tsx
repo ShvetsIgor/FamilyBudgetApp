@@ -576,8 +576,8 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
                   <button
                     key={cat.id}
                     onClick={() => {
-                      if (sel) { setSelectedParentCatId(''); setCategoryId(''); }
-                      else { setSelectedParentCatId(cat.id); setCategoryId(cat.id); }
+                      if (sel) { setSelectedGroupId(''); setCategoryId(''); }
+                      else { setSelectedGroupId(cat.id); setCategoryId(cat.id); }
                     }}
                     className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
                     style={{

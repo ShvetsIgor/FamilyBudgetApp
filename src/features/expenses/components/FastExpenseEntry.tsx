@@ -261,7 +261,7 @@ export function FastExpenseEntry({
 
   const catColor = selectedCat?.color ?? '#E07A5F';
 
-  // Picker: two-level — all parents → subs of selected parent
+  // Picker: group → flat categories in that group
   const pickerGroupCat = pickerGroupId ? allCats.find((c) => c.id === pickerGroupId) : null;
   const pickerGroupCats = pickerGroupId ? getCatsInGroup(pickerGroupId) : [];
 

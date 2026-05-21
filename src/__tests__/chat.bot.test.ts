@@ -173,7 +173,7 @@ describe('respondToUserMessage', () => {
     const parsed = parseMessage('65 кофе', { learned: {} });
     const reply = await respondToUserMessage(makeUserMsg('65 кофе'), parsed, makeCtx());
     // coffee has folderId='dining', folder name='Кафе'
-    expect(reply.messages[0].card?.data.parentName).toBe('Кафе');
+    expect(reply.messages[0].card?.data.groupName).toBe('Кафе');
   });
 
   it('только число «150» → clarify card', async () => {

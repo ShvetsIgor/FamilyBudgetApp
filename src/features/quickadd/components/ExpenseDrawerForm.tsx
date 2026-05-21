@@ -229,7 +229,7 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
           })}
 
           {/* Add split CTA */}
-          {subCats.length > 0 && (
+          {catsInGroup.length > 0 && (
             <>
               <div className="h-px mx-4 border-t border-dashed" style={{ borderColor: catColor + '44' }} />
               <button
@@ -245,10 +245,10 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
           )}
 
           {/* Folder category picker */}
-          {pickerOpen && subCats.length > 0 && (
+          {pickerOpen && catsInGroup.length > 0 && (
             <div className="border-t border-border px-3 py-2.5">
               <div className="grid grid-cols-4 gap-1.5">
-                {subCats.map((s) => {
+                {catsInGroup.map((s) => {
                   const sel = !!splits.find((x) => x.categoryId === s.id);
                   return (
                     <button

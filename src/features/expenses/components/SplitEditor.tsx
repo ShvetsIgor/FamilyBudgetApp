@@ -22,14 +22,14 @@ interface Props {
 export function SplitEditor({ total, currency, parentCategoryId, splits, onChange, open, onToggle }: Props) {
   const allCategories = useAppSelector((s) => s.categories.expense);
   const { getCatsInGroup } = useCategoryGroups('expense');
-  const subcategories = getCatsInGroup(parentCategoryId);
+  const groupCats = getCatsInGroup(parentCategoryId);
   const { mainAmount, isValid } = calculateSplit(total, splits);
   const symbol = getCurrencySymbol(currency);
 
-  // No subcategories — nothing to split
-  if (subcategories.length === 0) return null;
+  // No categories in this group — nothing to split
+  if (groupCats.length === 0) return null;
 
-  function toggleSubcategory(catId: string) {
+  function toggleGroupCat(catId: string) {
     const exists = splits.find((s) => s.categoryId === catId);
     if (exists) {
       onChange(splits.filter((s) => s.categoryId !== catId));

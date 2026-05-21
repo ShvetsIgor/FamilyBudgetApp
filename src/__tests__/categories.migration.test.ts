@@ -5,8 +5,8 @@ import {
   selectCategoriesInFolder,
   selectUnfolderedCategories,
   selectAllActiveCategories,
-  selectActiveParents,
 } from '@/features/categories/store/selectors';
+import { selectActiveParents } from '@/features/categories/legacy/legacySelectors';
 import type { RootState } from '@/store/store';
 import type { Category, CategoryFolder } from '@/shared/types';
 

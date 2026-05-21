@@ -97,7 +97,7 @@ export function FastExpenseEntry({
           categoryId: sp.categoryId,
           groupCatId: groupCat?.id ?? cat.id,
           name: cat.name,
-          parentName: groupCat?.name ?? cat.name,
+          groupName: groupCat?.name ?? cat.name,
           icon: cat.icon,
           color: groupCat?.color ?? cat.color,
           amount: String(sp.amount),
@@ -155,7 +155,7 @@ export function FastExpenseEntry({
           categoryId: sub.id,
           groupCatId: subParent?.id ?? selectedCatId,
           name: sub.name,
-          parentName: subParent?.name ?? selectedCat?.name ?? '',
+          groupName: subParent?.name ?? selectedCat?.name ?? '',
           icon: sub.icon,
           color,
           amount: '0',
@@ -238,7 +238,7 @@ export function FastExpenseEntry({
                 color: selectedCat?.color ?? '#E07A5F',
                 title: initialStore ?? t.cat(selectedCat?.name ?? ''),
                 catName: null,
-                parentName: null,
+                groupName: null,
                 hint: `сплит · ${posCount} ${pluralRu(posCount)}`,
                 amount: totalNum,
                 currency: sym,
@@ -379,8 +379,8 @@ export function FastExpenseEntry({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-bold text-foreground">{t.cat(sp.name)}</div>
-                {sp.parentName && sp.groupCatId !== selectedCatId && (
-                  <div className="text-[10px] text-muted-foreground font-semibold">{t.cat(sp.parentName)}</div>
+                {sp.groupName && sp.groupCatId !== selectedCatId && (
+                  <div className="text-[10px] text-muted-foreground font-semibold">{t.cat(sp.groupName)}</div>
                 )}
               </div>
               <span className="text-sm font-black text-foreground tabular-nums">{symbol}{sp.amount}</span>

@@ -207,3 +207,4 @@ monthlyStats/{userId}/{YYYY-MM}
 - **2026-05-21** — Domain layer cleanup: isRootCategory() helper (no folderId check), folder/parentId evicted from bot/domain context; topParentIds→topCategoryIds; morning/slash/weekly group by e.categoryId only.
 - **2026-05-21** — UI runtime cleanup: useCategoryGroups hook (folder vs legacy picker abstraction); parentId removed from analytics/statistics/selectors/pickers/forms; isRootCategory used throughout; 131 tests green.
 - **2026-05-21** — Final parentId purge: ExpenseCard display path uses folderId+fallback; ExpenseForm subcategory filter folder-aware; FastSavingsEntry uses isRootCategory; removed parentId:undefined from addCategory calls.
+- **2026-05-21** — Parser dictionary split: itemDictionary.ts (620 lines) → dictionaries/food/home/transport/health/shopping/services; storeDictionary.ts → dictionaries/stores; dead KEYWORDS removed from dictionary.ts; old files kept as re-export stubs.

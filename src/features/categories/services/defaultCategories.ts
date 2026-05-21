@@ -9,7 +9,6 @@ export const DEFAULT_EXPENSE_CATEGORIES: DefaultCategory[] = TAXONOMY.flatMap((p
     name:      parent.name,
     icon:      parent.icon,
     color:     parent.color,
-    parentId:  undefined,
     isPrivate: false,
     order,
     type:      'expense' as const,
@@ -19,7 +18,6 @@ export const DEFAULT_EXPENSE_CATEGORIES: DefaultCategory[] = TAXONOMY.flatMap((p
     name:      sub.name,
     icon:      sub.icon,
     color:     parent.color,
-    parentId:  parent.id,
     isPrivate: false,
     order:     subOrder,
     type:      'expense' as const,
@@ -29,7 +27,7 @@ export const DEFAULT_EXPENSE_CATEGORIES: DefaultCategory[] = TAXONOMY.flatMap((p
 // Savings special category (no subs)
 DEFAULT_EXPENSE_CATEGORIES.push({
   id: 'savings', name: 'Savings', icon: 'piggy', color: '#81B29A',
-  parentId: undefined, isPrivate: false, order: 98, type: 'expense',
+  isPrivate: false, order: 98, type: 'expense',
 });
 
 export const DEFAULT_INCOME_CATEGORIES: DefaultCategory[] = [
@@ -38,7 +36,6 @@ export const DEFAULT_INCOME_CATEGORIES: DefaultCategory[] = [
     name:      INCOME_TAXONOMY.name,
     icon:      INCOME_TAXONOMY.icon,
     color:     INCOME_TAXONOMY.color,
-    parentId:  undefined,
     isPrivate: false,
     order:     0,
     type:      'income' as const,
@@ -48,7 +45,6 @@ export const DEFAULT_INCOME_CATEGORIES: DefaultCategory[] = [
     name:      sub.name,
     icon:      sub.icon,
     color:     INCOME_TAXONOMY.color,
-    parentId:  INCOME_TAXONOMY.id,
     isPrivate: false,
     order:     subOrder,
     type:      'income' as const,
@@ -56,9 +52,8 @@ export const DEFAULT_INCOME_CATEGORIES: DefaultCategory[] = [
 ];
 
 /**
- * Maps legacy parent-level category IDs to their primary subcategory ID.
- * Used during migration: old expenses where categoryId === parentId
- * get remapped to the first/most sensible subcategory.
+ * Maps old category IDs to their canonical flat-model replacement.
+ * Used only in resetCategoriesToDefaults to remap old expense categoryIds.
  */
 export const legacyCategoryMap: Record<string, string> = {
   food:           'groceries',

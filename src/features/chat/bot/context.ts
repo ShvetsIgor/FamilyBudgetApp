@@ -64,7 +64,7 @@ export function collectBotContext(state: RootState): BotContext | null {
   }
 
   // Top income categories
-  const incomeRoots = allIncomeCats.filter(isRootCategory);
+  const incomeRoots = allIncomeCats.filter((c) => !c.archived);
   const topIncomeCategoryIds = incomeRoots.slice(0, 6).map((c) => c.id);
 
   // Today's spent

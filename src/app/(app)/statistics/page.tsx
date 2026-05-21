@@ -70,24 +70,15 @@ export default function StatisticsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Parent-level aggregation (top-level pie)
   // Stats aggregate by categoryId only — folders are UI-only and must not affect domain/analytics layer
   const parentPieData = stats
-    ? (() => {
-        const agg = new Map<string, number>();
-        for (const [catId, amount] of Object.entries(stats.byCategory)) {
-          const resolvedId = catId; // stats aggregate by categoryId only — no folder/parent grouping
-          agg.set(resolvedId, (agg.get(resolvedId) ?? 0) + amount);
-        }
-        return Array.from(agg.entries())
-          .map(([catId, amount]) => {
-            const cat = categories.find((c) => c.id === catId);
-            return { catId, name: t.cat(cat?.name ?? 'Other'), amount, color: cat?.color ?? '#6b7280', icon: cat?.icon ?? '📦' };
-          })
-          .filter((d) => d.amount > 0)
-          .sort((a, b) => b.amount - a.amount)
-          .slice(0, 8);
-      })()
+    ? aggregateTopCategories([stats], categories, 8).map((item) => ({
+        catId: item.catId,
+        name: t.cat(item.name),
+        amount: item.total,
+        color: item.color,
+        icon: item.icon,
+      }))
     : [];
 
   const pieData = parentPieData;

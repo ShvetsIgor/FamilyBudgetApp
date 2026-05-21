@@ -33,11 +33,10 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
-  const allCats = useAppSelector((s) => s.categories.income);
+  const allCats = useAppSelector((s) => s.categories.income); // includes archived for ID resolution
+  const displayCats = useAppSelector((s) => selectAllActiveCategories(s, 'income'));
   const t = useT();
   const symbol = getCurrencySymbol(currency);
-
-  const displayCats = allCats.filter((c) => !c.archived);
 
   const [amount, setAmount] = useState(initialIncome ? String(initialIncome.amount) : '0');
   const [categoryId, setCategoryId] = useState(initialIncome?.categoryId ?? displayCats[0]?.id ?? '');

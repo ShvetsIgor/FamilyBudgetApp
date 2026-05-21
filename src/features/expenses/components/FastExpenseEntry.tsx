@@ -19,9 +19,9 @@ import { useMemo } from 'react';
 
 interface SplitRow {
   categoryId: string;
-  groupCatId: string; // display group for the split item — NOT Category.parentId
+  groupCatId: string;
   name: string;
-  parentName: string;
+  groupName: string;
   icon: string;
   color: string;
   amount: string;

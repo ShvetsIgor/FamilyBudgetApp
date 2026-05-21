@@ -571,7 +571,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
             {/* Parent row */}
             <div className="flex flex-wrap gap-1.5">
               {expenseCatGroups.map((cat) => {
-                const sel = selectedParentCatId === cat.id;
+                const sel = selectedGroupId === cat.id;
                 return (
                   <button
                     key={cat.id}
@@ -602,7 +602,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
                   return (
                     <button
                       key={sub.id}
-                      onClick={() => setCategoryId(sel ? selectedParentCatId : sub.id)}
+                      onClick={() => setCategoryId(sel ? selectedGroupId : sub.id)}
                       className="h-[36px] px-3 rounded-[10px] flex items-center gap-1.5 transition-all border-0 text-[10px] font-extrabold"
                       style={{
                         background: sel ? catColor : catColor + '18',

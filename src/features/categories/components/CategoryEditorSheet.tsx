@@ -298,8 +298,8 @@ export function CategoryEditorSheet({
             </div>
           )}
 
-          {/* Folder picker — only shown when folders are available and no parentId */}
-          {!parentId && availableFolders.length > 0 && (
+          {/* Folder picker */}
+          {availableFolders.length > 0 && (
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-[#8E7A66] uppercase tracking-wide">Папка</label>
               <div className="flex flex-wrap gap-2">

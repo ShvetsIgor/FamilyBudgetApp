@@ -113,7 +113,7 @@ export function FastExpenseEntry({
   const [splits, setSplits] = useState<SplitRow[]>(initSplits);
   const [editing, setEditing] = useState<'total' | number>('total');
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [pickerParent, setPickerParent] = useState<string | null>(null);
+  const [pickerGroupId, setPickerParent] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash' | 'other'>(
     initialExpense?.paymentMethod ?? 'card'
   );
@@ -261,8 +261,8 @@ export function FastExpenseEntry({
   const catColor = selectedCat?.color ?? '#E07A5F';
 
   // Picker: two-level — all parents → subs of selected parent
-  const pickerParentCat = pickerParent ? allCats.find((c) => c.id === pickerParent) : null;
-  const pickerSubCats = pickerParent ? getCatsInGroup(pickerParent) : [];
+  const pickerGroupIdCat = pickerGroupId ? allCats.find((c) => c.id === pickerGroupId) : null;
+  const pickerSubCats = pickerGroupId ? getCatsInGroup(pickerGroupId) : [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:bg-black/50 lg:backdrop-blur-sm">
@@ -412,7 +412,7 @@ export function FastExpenseEntry({
           >
             {/* Picker header */}
             <div className="flex items-center gap-1.5 px-1 pb-2">
-              {pickerParent && (
+              {pickerGroupId && (
                 <button
                   onClick={() => setPickerParent(null)}
                   className="flex items-center active:opacity-50 transition-opacity"
@@ -423,9 +423,9 @@ export function FastExpenseEntry({
               )}
               <div
                 className="text-[11px] font-extrabold uppercase tracking-[.08em]"
-                style={{ color: pickerParentCat?.color ?? 'hsl(var(--muted-foreground))' }}
+                style={{ color: pickerGroupIdCat?.color ?? 'hsl(var(--muted-foreground))' }}
               >
-                {pickerParent ? t.cat(pickerParentCat?.name ?? '') : 'Выберите категорию'}
+                {pickerGroupId ? t.cat(pickerGroupIdCat?.name ?? '') : 'Выберите категорию'}
               </div>
               <button
                 onClick={() => { setPickerOpen(false); setPickerParent(null); }}
@@ -435,7 +435,7 @@ export function FastExpenseEntry({
               </button>
             </div>
 
-            {pickerParent === null ? (
+            {pickerGroupId === null ? (
               /* Show all parent categories */
               <div className="grid grid-cols-4 gap-1.5">
                 {topCats.map((cat) => {
@@ -467,17 +467,17 @@ export function FastExpenseEntry({
                       onClick={() =>
                         selected
                           ? removeSplit(splits.findIndex((x) => x.categoryId === s.id))
-                          : addSplit(s, pickerParentCat ?? undefined)
+                          : addSplit(s, pickerGroupIdCat ?? undefined)
                       }
                       className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
                       style={{
-                        background: selected ? (pickerParentCat?.color ?? catColor) + '30' : (pickerParentCat?.color ?? catColor) + '14',
-                        borderColor: selected ? (pickerParentCat?.color ?? catColor) : 'transparent',
+                        background: selected ? (pickerGroupIdCat?.color ?? catColor) + '30' : (pickerGroupIdCat?.color ?? catColor) + '14',
+                        borderColor: selected ? (pickerGroupIdCat?.color ?? catColor) : 'transparent',
                       }}
                     >
-                      <StickerIcon icon={s.icon} color={pickerParentCat?.color ?? catColor} className="h-3.5 w-3.5" />
+                      <StickerIcon icon={s.icon} color={pickerGroupIdCat?.color ?? catColor} className="h-3.5 w-3.5" />
                       <span className="leading-tight text-center line-clamp-1">{t.cat(s.name)}</span>
-                      {selected && <span className="text-[8px]" style={{ color: pickerParentCat?.color ?? catColor }}>✓</span>}
+                      {selected && <span className="text-[8px]" style={{ color: pickerGroupIdCat?.color ?? catColor }}>✓</span>}
                     </button>
                   );
                 }) : (

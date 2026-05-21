@@ -50,7 +50,6 @@ const expensesSlice = createSlice({
       state.list = state.list.map((e) => ({
         ...e,
         categoryId: map[e.categoryId] ?? e.categoryId,
-        subcategoryId: e.subcategoryId ? (map[e.subcategoryId] ?? e.subcategoryId) : e.subcategoryId,
       }));
     },
   },

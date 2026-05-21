@@ -113,7 +113,7 @@ export function FastExpenseEntry({
   const [splits, setSplits] = useState<SplitRow[]>(initSplits);
   const [editing, setEditing] = useState<'total' | number>('total');
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [pickerGroupId, setPickerParent] = useState<string | null>(null);
+  const [pickerGroupId, setPickerGroupId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash' | 'other'>(
     initialExpense?.paymentMethod ?? 'card'
   );
@@ -168,7 +168,7 @@ export function FastExpenseEntry({
       return next;
     });
     setPickerOpen(false);
-    setPickerParent(null);
+    setPickerGroupId(null);
   }
 
   function removeSplit(i: number) {
@@ -183,7 +183,7 @@ export function FastExpenseEntry({
 
   function openPicker() {
     setPickerOpen(true);
-    setPickerParent(null);
+    setPickerGroupId(null);
   }
 
   async function handleSave() {
@@ -414,7 +414,7 @@ export function FastExpenseEntry({
             <div className="flex items-center gap-1.5 px-1 pb-2">
               {pickerGroupId && (
                 <button
-                  onClick={() => setPickerParent(null)}
+                  onClick={() => setPickerGroupId(null)}
                   className="flex items-center active:opacity-50 transition-opacity"
                   style={{ color: 'hsl(var(--muted-foreground))' }}
                 >
@@ -428,7 +428,7 @@ export function FastExpenseEntry({
                 {pickerGroupId ? t.cat(pickerGroupIdCat?.name ?? '') : 'Выберите категорию'}
               </div>
               <button
-                onClick={() => { setPickerOpen(false); setPickerParent(null); }}
+                onClick={() => { setPickerOpen(false); setPickerGroupId(null); }}
                 className="ml-auto text-muted-foreground hover:text-foreground"
               >
                 <X size={13} />
@@ -443,7 +443,7 @@ export function FastExpenseEntry({
                   return (
                     <button
                       key={cat.id}
-                      onClick={() => setPickerParent(cat.id)}
+                      onClick={() => setPickerGroupId(cat.id)}
                       className="flex flex-col items-center gap-0.5 px-0.5 py-2 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
                       style={{
                         background: c + '18',

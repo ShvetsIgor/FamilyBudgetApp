@@ -43,8 +43,6 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
   }
 
   const category = categories.find((c) => c.id === expense.categoryId);
-  // Legacy: old Firestore docs had a subcategoryId field — display it if present
-  const legacySubCat = categories.find((c) => c.id === expense.subcategoryId);
 
   async function handleDelete() {
     if (!user) return;

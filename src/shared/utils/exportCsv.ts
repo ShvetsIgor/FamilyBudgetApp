@@ -13,12 +13,11 @@ function row(cells: unknown[]): string {
 }
 
 export function expensesToCsv(expenses: SerializableExpense[], categoryNames: Record<string, string>): string {
-  const header = row(['Date', 'Category', 'Subcategory', 'Store', 'Amount', 'Currency', 'Payment', 'Comment', 'Tags', 'Privacy']);
+  const header = row(['Date', 'Category', 'Store', 'Amount', 'Currency', 'Payment', 'Comment', 'Tags', 'Privacy']);
   const rows = expenses.map((e) =>
     row([
       e.date.slice(0, 10),
       categoryNames[e.categoryId] ?? e.categoryId,
-      e.subcategoryId ? (categoryNames[e.subcategoryId] ?? e.subcategoryId) : '',
       e.store ?? '',
       e.amount,
       e.currency,

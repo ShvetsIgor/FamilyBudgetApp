@@ -16,6 +16,7 @@ import type { SerializableExpense } from '@/shared/types';
 import { setExpensesSearch } from '@/features/ui/store/uiSlice';
 import { useT } from '@/shared/hooks/useT';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
+import { isActiveCategory } from '@/features/categories/policy/categoryPolicy';
 
 function groupByDate<T extends { date: string }>(items: T[]): [string, T[]][] {
   const map = new Map<string, T[]>();

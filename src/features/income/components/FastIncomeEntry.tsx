@@ -36,8 +36,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
   const t = useT();
   const symbol = getCurrencySymbol(currency);
 
-  const incomeSubs = allCats.filter((c) => !isRootCategory(c));
-  const displayCats = incomeSubs.length > 0 ? incomeSubs : allCats.filter(isRootCategory);
+  const displayCats = allCats.filter((c) => !c.archived);
 
   const [amount, setAmount] = useState(initialIncome ? String(initialIncome.amount) : '0');
   const [categoryId, setCategoryId] = useState(initialIncome?.categoryId ?? displayCats[0]?.id ?? '');

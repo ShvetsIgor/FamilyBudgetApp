@@ -1,17 +1,11 @@
 'use client';
 import { useState } from 'react';
-import { TAXONOMY } from '../icons/icons';
+import { FOLDER_BLUEPRINTS, CATEGORY_BLUEPRINTS } from '../utils/categoryAliasMap';
 
-export interface WizardSub {
-  id: string;
-  name: string;
-  ru?: string;
-  icon: string;
-  enabled: boolean;
-  isCustom?: boolean;
-}
+// ─── Wizard state types ───────────────────────────────────────────────────────
 
-export interface WizardParent {
+/** Represents a folder blueprint in the wizard (will become CategoryFolder). */
+export interface WizardFolder {
   id: string;
   name: string;
   ru?: string;
@@ -19,83 +13,84 @@ export interface WizardParent {
   color: string;
   enabled: boolean;
   budget: number | null;
-  subs: WizardSub[];
   isCustom?: boolean;
 }
 
-const DEFAULT_ENABLED = new Set(['food', 'home', 'transport', 'shopping', 'health']);
-
-function initState(existingIds: Set<string>): WizardParent[] {
-  return TAXONOMY.map((p) => ({
-    id: p.id,
-    name: p.name,
-    ru: p.ru,
-    icon: p.icon,
-    color: p.color,
-    enabled: existingIds.has(p.id) || DEFAULT_ENABLED.has(p.id),
-    budget: null,
-    subs: p.subs.map((s) => ({
-      id: s.id,
-      name: s.name,
-      ru: (s as { ru?: string }).ru,
-      icon: s.icon,
-      enabled: true,
-    })),
-  }));
+/** Represents a flat category blueprint in the wizard (will become Category with folderId). */
+export interface WizardCategory {
+  id: string;
+  folderId: string;
+  name: string;
+  ru?: string;
+  icon: string;
+  enabled: boolean;
+  isCustom?: boolean;
 }
 
-export function useConstructorState(existingIds: Set<string>) {
+// ─── Initialization ───────────────────────────────────────────────────────────
+
+const DEFAULT_ENABLED = new Set(['food', 'home', 'transport', 'shopping', 'health']);
+
+function initFolders(existingIds: Set<string>): WizardFolder[] {
+  return FOLDER_BLUEPRINTS
+    .filter((f) => f.id !== 'income')
+    .map((f) => ({
+      ...f,
+      enabled: existingIds.has(f.id) || DEFAULT_ENABLED.has(f.id),
+      budget: null,
+    }));
+}
+
+function initCategories(existingIds: Set<string>): WizardCategory[] {
+  return CATEGORY_BLUEPRINTS
+    .filter((c) => c.folderId !== 'income')
+    .map((c) => ({
+      id: c.id,
+      folderId: c.folderId,
+      name: c.name,
+      ru: c.ru,
+      icon: c.icon,
+      enabled: !existingIds.has(c.id),
+    }));
+}
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
+export function useConstructorState(existingCategoryIds: Set<string>) {
   const [step, setStep] = useState(0);
-  const [state, setState] = useState<WizardParent[]>(() => initState(existingIds));
+  const [folders, setFolders] = useState<WizardFolder[]>(() => initFolders(existingCategoryIds));
+  const [categories, setCategories] = useState<WizardCategory[]>(() => initCategories(existingCategoryIds));
 
-  const toggleParent = (id: string) =>
-    setState((prev) => prev.map((p) => (p.id === id ? { ...p, enabled: !p.enabled } : p)));
+  const toggleFolder = (id: string) =>
+    setFolders((prev) => prev.map((f) => (f.id === id ? { ...f, enabled: !f.enabled } : f)));
 
-  const toggleSub = (pid: string, sid: string) =>
-    setState((prev) =>
-      prev.map((p) =>
-        p.id === pid
-          ? { ...p, subs: p.subs.map((s) => (s.id === sid ? { ...s, enabled: !s.enabled } : s)) }
-          : p,
-      ),
-    );
+  const toggleCategory = (id: string) =>
+    setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, enabled: !c.enabled } : c)));
 
-  const setBudget = (id: string, v: number | null) =>
-    setState((prev) => prev.map((p) => (p.id === id ? { ...p, budget: v } : p)));
+  const setBudget = (folderId: string, v: number | null) =>
+    setFolders((prev) => prev.map((f) => (f.id === folderId ? { ...f, budget: v } : f)));
 
-  const addCustomParent = (data: Omit<WizardParent, 'enabled' | 'budget' | 'subs'>) =>
-    setState((prev) => [
-      ...prev,
-      { ...data, enabled: true, budget: null, subs: [], isCustom: true },
-    ]);
+  const addCustomFolder = (data: Omit<WizardFolder, 'enabled' | 'budget'>) =>
+    setFolders((prev) => [...prev, { ...data, enabled: true, budget: null, isCustom: true }]);
 
-  const addCustomSub = (pid: string, sub: Omit<WizardSub, 'enabled'>) =>
-    setState((prev) =>
-      prev.map((p) =>
-        p.id === pid
-          ? { ...p, subs: [...p.subs, { ...sub, enabled: true, isCustom: true }] }
-          : p,
-      ),
-    );
+  const addCustomCategory = (folderId: string, data: Omit<WizardCategory, 'enabled' | 'folderId'>) =>
+    setCategories((prev) => [...prev, { ...data, folderId, enabled: true, isCustom: true }]);
 
-  const enabledParents = state.filter((p) => p.enabled);
+  const getCatsInFolder = (folderId: string) =>
+    categories.filter((c) => c.folderId === folderId);
+
+  const enabledFolders = folders.filter((f) => f.enabled);
+
   const canNext =
-    step === 0
-      ? enabledParents.length > 0
-      : step === 1
-        ? enabledParents.length > 0
-        : true;
+    step === 0 ? enabledFolders.length > 0 :
+    step === 1 ? enabledFolders.length > 0 :
+    true;
 
   return {
-    step,
-    setStep,
-    state,
-    toggleParent,
-    toggleSub,
-    setBudget,
-    addCustomParent,
-    addCustomSub,
-    canNext,
-    enabledParents,
+    step, setStep,
+    folders, categories,
+    toggleFolder, toggleCategory,
+    setBudget, addCustomFolder, addCustomCategory,
+    canNext, enabledFolders, getCatsInFolder,
   };
 }

@@ -250,6 +250,7 @@ export interface SerializableExpense {
   photoUrl?: string;
   privacy: Privacy;
   splits: SplitItem[];
+  items?: ExpenseItem[];
   isRecurring: boolean;
   recurringId?: string;
   goalId?: string;

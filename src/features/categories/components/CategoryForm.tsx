@@ -29,7 +29,7 @@ export function CategoryForm({ type, initial, onSave, onCancel }: Props) {
     if (!name.trim()) { setError(t('common.error')); return; }
     setLoading(true);
     try {
-      await onSave({ name: name.trim(), icon, color, isPrivate, parentId, order: initial?.order ?? 99, type });
+      await onSave({ name: name.trim(), icon, color, isPrivate, order: initial?.order ?? 99, type });
     } catch {
       setError(t('common.error'));
     } finally {

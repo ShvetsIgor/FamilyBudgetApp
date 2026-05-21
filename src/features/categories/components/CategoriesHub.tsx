@@ -65,9 +65,10 @@ export function CategoriesHub() {
     )
   );
 
+  const ungroupedCats = useAppSelector((s) => selectUnfolderedCategories(s, tab));
+
   const existingCategoryIds = new Set(allCategories.map((c) => c.id));
   const existingFolderIds = new Set(folders.map((f) => f.id));
-  const ungroupedCats = allCategories.filter((c) => !c.folderId && !c.archived);
 
   const activeCount = folders.length;
   const totalBudget = Object.values(categoriesInFolderMap).flat()

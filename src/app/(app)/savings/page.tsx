@@ -344,7 +344,7 @@ function ContributeForm({ goal, currency, onSave, onCancel, t }: {
   t: (key: string) => string;
 }) {
   const categories = useAppSelector((s) => s.categories.expense);
-  const savingsCat = categories.find((c) => c.name === 'Savings' && isRootCategory(c));
+  const savingsCat = categories.find((c) => c.name === 'Savings' && !c.archived);
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
   const [recordAsExpense, setRecordAsExpense] = useState(true);

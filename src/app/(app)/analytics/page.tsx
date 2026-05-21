@@ -364,11 +364,11 @@ export default function AnalyticsPage() {
             <div>
               <p className="text-[17px] font-extrabold text-foreground mb-2.5">{t('analytics.topCategories')}</p>
               <div className="rounded-[22px] bg-card px-4 py-4 flex items-center gap-3.5" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
-                <div className="h-[52px] w-[52px] rounded-[18px] flex items-center justify-center shrink-0" style={{ background: (top.cat?.color ?? '#E07A5F') + '22' }}>
-                  <StickerIcon icon={top.cat?.icon ?? 'box'} color={top.cat?.color ?? '#E07A5F'} className="h-7 w-7" />
+                <div className="h-[52px] w-[52px] rounded-[18px] flex items-center justify-center shrink-0" style={{ background: top.color + '22' }}>
+                  <StickerIcon icon={top.icon} color={top.color} className="h-7 w-7" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[15px] font-extrabold text-foreground">{t.cat(top.cat?.name ?? '')}</p>
+                  <p className="text-[15px] font-extrabold text-foreground">{t.cat(top.name)}</p>
                   <p className="text-xs font-semibold text-muted-foreground mt-0.5">{pct.toFixed(0)}% от трат</p>
                 </div>
                 <p className="text-[18px] font-black tabular-nums text-foreground">{formatAmount(top.total, currency)}</p>

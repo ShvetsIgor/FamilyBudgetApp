@@ -39,9 +39,9 @@ export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
   const topLine = expense.comment || expense.store || categoryLabel;
 
   const splitSum = expense.splits.reduce((s, x) => s + x.amount, 0);
-  const parentPortion = expense.amount - splitSum;
+  const mainPortion = expense.amount - splitSum;
   const effectiveParts =
-    expense.splits.filter((s) => s.amount > 0).length + (parentPortion > 0.01 ? 1 : 0);
+    expense.splits.filter((s) => s.amount > 0).length + (mainPortion > 0.01 ? 1 : 0);
   const hasSplit = effectiveParts > 1;
 
   return (
@@ -102,11 +102,11 @@ export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
       {/* Expanded split breakdown */}
       {hasSplit && expanded && (
         <div className="px-4 pb-2 flex flex-col gap-1 border-t border-border/50 bg-muted/20">
-          {parentPortion > 0.01 && category && (
+          {mainPortion > 0.01 && category && (
             <div className="flex items-center gap-2 py-1.5 pl-12">
               <span className="text-xs text-muted-foreground flex-1">{t.cat(category.name)}</span>
               <span className="text-xs font-semibold tabular-nums text-muted-foreground">
-                -{formatAmount(parentPortion, expense.currency)}
+                -{formatAmount(mainPortion, expense.currency)}
               </span>
             </div>
           )}

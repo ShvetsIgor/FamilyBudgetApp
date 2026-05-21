@@ -475,11 +475,11 @@ export default function HomePage() {
 
             if (msg.card?.kind === 'saved') {
               const d = msg.card.data as Record<string, unknown>;
-              const parentName = d.parentName as string | null | undefined;
+              const groupName = d.groupName as string | null | undefined;
               const catName = d.catName as string | null | undefined;
-              const translatedTitle = parentName && catName && catName !== parentName
-                ? `${t.cat(parentName)} · ${t.cat(catName)}`
-                : parentName ? t.cat(parentName) : catName ? t.cat(catName) : (d.title as string);
+              const translatedTitle = groupName && catName && catName !== groupName
+                ? `${t.cat(groupName)} · ${t.cat(catName)}`
+                : groupName ? t.cat(groupName) : catName ? t.cat(catName) : (d.title as string);
               const savedExpenseId = d.expenseId as string | undefined;
               const savedUserMsgId = d.userMsgId as string | undefined;
               const undoHandler = savedExpenseId && savedUserMsgId

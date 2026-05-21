@@ -101,44 +101,6 @@ export function CategoriesHub() {
     }
   };
 
-  const handleSubsChange = async (
-    toAdd: TaxSub[],
-    toRemove: string[],
-    customNames: string[],
-  ) => {
-    if (!user || !editor.category) return;
-    const editorCat = editor.category;
-    const targetFolderId = editor.folderId ?? undefined;
-    for (const sub of toAdd) {
-      const created = await addCategoryWithId(user.id, sub.id, {
-        name: sub.name,
-        icon: sub.icon,
-        color: editorCat.color,
-        type: editorCat.type,
-        folderId: targetFolderId,
-        order: 0,
-        isPrivate: false,
-      });
-      dispatch(addCategory(created));
-    }
-    for (const n of customNames) {
-      const created = await addCategoryToDb(user.id, {
-        name: n,
-        icon: editorCat.icon,
-        color: editorCat.color,
-        type: editorCat.type,
-        folderId: targetFolderId,
-        order: 0,
-        isPrivate: false,
-      });
-      dispatch(addCategory(created));
-    }
-    for (const id of toRemove) {
-      await archiveCategoryInFirestore(user.id, id, editorCat.type);
-      dispatch(archiveCategory({ id, type: editorCat.type }));
-    }
-  };
-
   const handleDelete = async () => {
     if (!editor.category || !user) return;
     if (!confirm('Удалить эту категорию?')) return;

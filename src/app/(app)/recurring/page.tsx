@@ -352,7 +352,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
   const [frequency, setFrequency] = useState<RecurringFrequency>(initial?.frequency ?? 'monthly');
   const [type, setType] = useState<RecurringType>(initial?.type ?? 'subscription');
   const [typeLabel, setTypeLabel] = useState(initial?.typeLabel ?? '');
-  const [selectedParentCatId, setSelectedParentCatId] = useState<string>(() => {
+  const [selectedGroupId, setSelectedGroupId] = useState<string>(() => {
     if (!initial?.categoryId) return '';
     const cat = allExpCats.find((c) => c.id === initial.categoryId);
     return getGroupOf(cat) || (cat?.id ?? '');

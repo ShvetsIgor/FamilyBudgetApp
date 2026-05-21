@@ -30,9 +30,9 @@ export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
 
   const category = allCategories.find((c) => c.id === expense.categoryId);
   const folders = useAppSelector((s) => s.categories.folders.expense);
-  const parentCat = category?.folderId ? folders.find((f) => f.id === category.folderId) : null;
+  const folderCat = category?.folderId ? folders.find((f) => f.id === category.folderId) : null;
   const categoryLabel = category ? t.cat(category.name) : '';
-  const parentLabel = parentCat ? t.cat(parentCat.name) : '';
+  const folderLabel = folderCat ? t.cat(folderCat.name) : '';
   const subtitleLabel = categoryLabel || parentLabel || '';
 
   // Top line: comment or store name; if neither — category name

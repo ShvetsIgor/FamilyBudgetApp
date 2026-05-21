@@ -67,8 +67,8 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
     return () => window.removeEventListener('keydown', onKey);
   });
 
-  const parent = allCats.find((c) => c.id === parentId);
-  const subCats = getCatsInGroup(parentId);
+  const selectedGroup = groups.find((g) => g.id === selectedGroupId);
+  const catsInGroup = getCatsInGroup(selectedGroupId);
   const totalNum = parseFloat(amount) || 0;
   const splitsSum = splits.reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
   const parentLeftover = Math.max(0, totalNum - splitsSum);

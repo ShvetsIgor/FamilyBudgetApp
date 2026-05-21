@@ -262,7 +262,6 @@ export function CategoriesHub() {
               <CategoryRow
                 key={cat.id}
                 category={cat}
-                subs={[]}
                 budget={budgetLimits[cat.id] ?? 0}
                 onEdit={() => openEditor(cat)}
               />
@@ -301,8 +300,7 @@ export function CategoriesHub() {
                   <CategoryRow
                     key={libCat.id}
                     category={asCat}
-                    subs={[]}
-                    fromLibrary
+                        fromLibrary
                     onEdit={() => {}}
                     onActivate={() => handleActivateFromLibrary(libCat)}
                   />

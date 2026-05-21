@@ -52,6 +52,7 @@ function toSerializable(id: string, data: Record<string, unknown>): Serializable
     photoUrl: data.photoUrl as string | undefined,
     privacy: data.privacy as Privacy,
     splits: (data.splits as SplitItem[]) ?? [],
+    items: (data.items as ExpenseItem[] | undefined) ?? undefined,
     isRecurring: (data.isRecurring as boolean) ?? false,
     recurringId: data.recurringId as string | undefined,
     goalId: data.goalId as string | undefined,

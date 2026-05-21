@@ -1,99 +1,101 @@
 'use client';
 import { useState } from 'react';
-import type { WizardParent, WizardSub } from '../../hooks/useConstructorState';
+import type { WizardFolder, WizardCategory } from '../../hooks/useConstructorState';
 import { StickerIcon } from '../CategoryIcon';
 
 interface Props {
-  parents: WizardParent[];
-  onToggleSub: (pid: string, sid: string) => void;
-  onAddCustomSub: (pid: string, sub: Omit<WizardSub, 'enabled'>) => void;
+  folders: WizardFolder[];
+  categories: WizardCategory[];
+  onToggleCategory: (id: string) => void;
+  onAddCustomCategory: (folderId: string, cat: Omit<WizardCategory, 'enabled' | 'folderId'>) => void;
   locale?: string;
 }
 
-export function StepRefine({ parents, onToggleSub, onAddCustomSub, locale = 'ru' }: Props) {
+export function StepRefine({ folders, categories, onToggleCategory, onAddCustomCategory, locale = 'ru' }: Props) {
   const [customInput, setCustomInput] = useState<Record<string, string>>({});
 
-  const handleAddCustom = (pid: string) => {
-    const val = customInput[pid]?.trim();
+  const handleAddCustom = (folderId: string) => {
+    const val = customInput[folderId]?.trim();
     if (!val) return;
-    onAddCustomSub(pid, {
+    onAddCustomCategory(folderId, {
       id: `custom_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
       name: val,
       icon: 'box',
       isCustom: true,
     });
-    setCustomInput((prev) => ({ ...prev, [pid]: '' }));
+    setCustomInput((prev) => ({ ...prev, [folderId]: '' }));
   };
 
   return (
     <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
       <div>
         <h2 className="text-lg font-bold text-[#3D2C1F] mb-1">Уточните каждую категорию</h2>
-        <p className="text-sm text-[#8E7A66]">Больше подкатегорий = лучшая статистика.</p>
+        <p className="text-sm text-[#8E7A66]">Больше категорий = лучшая статистика.</p>
       </div>
 
-      {parents.map((parent) => {
-        const displayName = locale === 'ru' && parent.ru ? parent.ru : parent.name;
-        const enabledCount = parent.subs.filter((s) => s.enabled).length;
+      {folders.map((folder) => {
+        const folderCats = categories.filter((c) => c.folderId === folder.id);
+        const enabledCount = folderCats.filter((c) => c.enabled).length;
+        const displayName = locale === 'ru' && folder.ru ? folder.ru : folder.name;
 
         return (
-          <div key={parent.id} className="space-y-3">
+          <div key={folder.id} className="space-y-3">
             {/* Section header */}
             <div className="flex items-center gap-2">
               <div
                 className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
-                style={{ backgroundColor: `${parent.color}20` }}
+                style={{ backgroundColor: `${folder.color}20` }}
               >
-                <StickerIcon icon={parent.icon} color={parent.color} className="h-5 w-5" />
+                <StickerIcon icon={folder.icon} color={folder.color} className="h-5 w-5" />
               </div>
               <span className="font-semibold text-[#3D2C1F] text-sm">{displayName}</span>
               <span
                 className="ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold text-white shrink-0"
-                style={{ backgroundColor: parent.color }}
+                style={{ backgroundColor: folder.color }}
               >
-                {enabledCount}/{parent.subs.length}
+                {enabledCount}/{folderCats.length}
               </span>
             </div>
 
-            {/* Sub chips */}
+            {/* Category chips */}
             <div className="flex flex-wrap gap-2">
-              {parent.subs.map((sub) => {
-                const subName = locale === 'ru' && sub.ru ? sub.ru : sub.name;
+              {folderCats.map((cat) => {
+                const catName = locale === 'ru' && cat.ru ? cat.ru : cat.name;
                 return (
                   <button
-                    key={sub.id}
-                    onClick={() => onToggleSub(parent.id, sub.id)}
+                    key={cat.id}
+                    onClick={() => onToggleCategory(cat.id)}
                     className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-all ${
-                      sub.enabled
+                      cat.enabled
                         ? 'text-white border-transparent'
                         : 'bg-white text-[#8E7A66] border-[#EDE0CC] hover:border-[#E07A5F]/40'
                     }`}
-                    style={sub.enabled ? { backgroundColor: parent.color, borderColor: parent.color } : {}}
+                    style={cat.enabled ? { backgroundColor: folder.color, borderColor: folder.color } : {}}
                   >
-                    {sub.enabled && <span className="text-white text-[10px]">✓</span>}
+                    {cat.enabled && <span className="text-white text-[10px]">✓</span>}
                     <StickerIcon
-                      icon={sub.icon}
-                      color={sub.enabled ? 'white' : '#8E7A66'}
+                      icon={cat.icon}
+                      color={cat.enabled ? 'white' : '#8E7A66'}
                       className="h-3.5 w-3.5"
                     />
-                    {subName}
+                    {catName}
                   </button>
                 );
               })}
 
-              {/* Custom sub input */}
+              {/* Custom category input */}
               <div className="flex items-center gap-1">
                 <input
                   type="text"
                   placeholder="+ Своя"
-                  value={customInput[parent.id] ?? ''}
-                  onChange={(e) => setCustomInput((prev) => ({ ...prev, [parent.id]: e.target.value }))}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddCustom(parent.id)}
+                  value={customInput[folder.id] ?? ''}
+                  onChange={(e) => setCustomInput((prev) => ({ ...prev, [folder.id]: e.target.value }))}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddCustom(folder.id)}
                   className="rounded-full border border-dashed border-[#EDE0CC] px-3 py-1.5 text-xs text-[#8E7A66] w-24 outline-none focus:border-[#E07A5F] focus:text-[#3D2C1F] bg-white"
                 />
-                {customInput[parent.id]?.trim() && (
+                {customInput[folder.id]?.trim() && (
                   <button
-                    onClick={() => handleAddCustom(parent.id)}
+                    onClick={() => handleAddCustom(folder.id)}
                     className="h-6 w-6 rounded-full bg-[#E07A5F] text-white text-xs flex items-center justify-center shrink-0"
                   >
                     ✓

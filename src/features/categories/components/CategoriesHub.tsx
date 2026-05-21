@@ -30,6 +30,7 @@ import {
   selectAvailableLibrary,
   selectFolders,
   selectCategoriesInFolder,
+  selectUnfolderedCategories,
 } from '../store/selectors';
 
 interface EditorState {

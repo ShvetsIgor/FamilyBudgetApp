@@ -14,8 +14,10 @@ interface Props {
   value?: string;
   onChange: (categoryId: string) => void;
   placeholder?: string;
-  parentsOnly?: boolean;
-  childrenOnly?: boolean;
+  /** Show only categories not assigned to any folder */
+  ungroupedOnly?: boolean;
+  /** Show only categories assigned to a folder */
+  groupedOnly?: boolean;
 }
 
 export function CategoryPicker({
@@ -23,8 +25,8 @@ export function CategoryPicker({
   value,
   onChange,
   placeholder = 'Select category',
-  parentsOnly = false,
-  childrenOnly = false,
+  ungroupedOnly = false,
+  groupedOnly = false,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -32,9 +34,9 @@ export function CategoryPicker({
   const folders = useAppSelector((s) => selectFolders(s, type));
   const t = useT();
 
-  const categories = parentsOnly
+  const categories = ungroupedOnly
     ? allCategories.filter((c) => !c.folderId && !c.archived)
-    : childrenOnly
+    : groupedOnly
       ? allCategories.filter((c) => !!c.folderId && !c.archived)
       : allCategories.filter((c) => !c.archived);
 

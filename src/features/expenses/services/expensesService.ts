@@ -94,7 +94,6 @@ export interface AddExpenseInput {
   amount: number;
   currency: Currency;
   categoryId: string;
-  subcategoryId?: string;
   date: Date;
   paymentMethod: PaymentMethod;
   store?: string;

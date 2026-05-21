@@ -28,7 +28,6 @@ import { ConstructorWizard } from './constructor/ConstructorWizard';
 import { StickerIcon } from './CategoryIcon';
 import { TAXONOMY, INCOME_TAXONOMY } from '../icons/icons';
 import {
-  selectActiveParents,
   selectAvailableLibrary,
   selectFolders,
   selectCategoriesInFolder,

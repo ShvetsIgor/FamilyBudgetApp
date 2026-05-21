@@ -481,7 +481,7 @@ export function FastExpenseEntry({
                     </button>
                   );
                 }) : (
-                  <p className="col-span-4 text-center text-xs text-muted-foreground py-3">Нет подкатегорий</p>
+                  <p className="col-span-4 text-center text-xs text-muted-foreground py-3">Нет категорий</p>
                 )}
               </div>
             )}

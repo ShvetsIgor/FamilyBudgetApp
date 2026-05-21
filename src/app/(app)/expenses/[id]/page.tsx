@@ -90,8 +90,7 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
       {/* Details */}
       <div className="rounded-2xl border border-border bg-card divide-y divide-border">
         <Row label={t('expense.category')} value={category ? t.cat(category.name) : '—'} />
-        {legacySubCat && <Row label={t('expense.subcategory')} value={t.cat(legacySubCat.name)} />}
-        {expense.store && <Row label={t('expense.store')} value={expense.store} />}
+{expense.store && <Row label={t('expense.store')} value={expense.store} />}
         <Row label={t('expense.payment')} value={PAYMENT_LABELS[expense.paymentMethod] ?? expense.paymentMethod} />
         <Row label={t('expense.privacy2')} value={expense.privacy === 'secret' ? `🔒 ${t('expense.secret')}` : t('expense.regular')} />
         {expense.comment && <Row label={t('expense.comment')} value={expense.comment} />}

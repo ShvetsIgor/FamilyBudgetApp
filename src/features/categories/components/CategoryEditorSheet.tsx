@@ -8,8 +8,6 @@ import { BudgetField } from './BudgetField';
 import { IconPickerGrid } from './IconPickerGrid';
 import { CC } from '../styles/tokens';
 
-interface TaxSub { id: string; name: string; ru?: string; icon: string }
-
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -22,14 +20,6 @@ interface Props {
   isWizardMode?: boolean;
   budget?: number;
   onBudgetChange?: (v: number | null) => void;
-  // category group management
-  existingSubs?: Category[];
-  taxonomySubs?: TaxSub[];
-  onSubsChange?: (toAdd: TaxSub[], toRemove: string[], customNames: string[]) => void;
-}
-
-function getTaxSubName(sub: TaxSub, lang: string) {
-  return lang === 'ru' ? (sub.ru ?? sub.name) : sub.name;
 }
 
 export function CategoryEditorSheet({
@@ -44,9 +34,6 @@ export function CategoryEditorSheet({
   isWizardMode = false,
   budget,
   onBudgetChange,
-  existingSubs,
-  taxonomySubs,
-  onSubsChange,
 }: Props) {
   const lang = useAppSelector((s) => s.ui.language) ?? 'ru';
 

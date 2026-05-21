@@ -98,6 +98,7 @@ export default function StatisticsPage() {
   }));
 
   const rawBalance = (stats?.totalIncome ?? 0) - (stats?.totalExpenses ?? 0);
+
   const balance = Math.abs(rawBalance) < 0.005 ? 0 : rawBalance;
   const showBudget = range === 'month' || range === 'last';
 

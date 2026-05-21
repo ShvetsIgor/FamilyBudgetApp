@@ -89,35 +89,7 @@ export default function StatisticsPage() {
       })()
     : [];
 
-  // Drill-down: subcategory breakdown for selected category
-  // In the flat model, drillCategory IS the category — show legacy parentId-based subs if any exist
-  const drillPieData = drillCategory && stats
-    ? (() => {
-        const parentCat = categories.find((c) => c.id === drillCategory);
-        const result: typeof parentPieData = [];
-        for (const [catId, amount] of Object.entries(stats.byCategory)) {
-          const cat = categories.find((c) => c.id === catId);
-          // Legacy fallback: show subcategories that reference this category via parentId
-          if (cat && cat.parentId === drillCategory) {
-            result.push({ catId, name: t.cat(cat.name), amount, color: parentCat?.color ?? cat.color, icon: cat.icon });
-          } else if (catId === drillCategory && amount > 0) {
-            // Direct expense on this category
-            result.push({ catId: drillCategory + '_direct', name: t.cat(parentCat?.name ?? ''), amount, color: parentCat?.color ?? '#6b7280', icon: parentCat?.icon ?? '📦' });
-          }
-        }
-        return result.filter((d) => d.amount > 0).sort((a, b) => b.amount - a.amount);
-      })()
-    : null;
-
-  const pieData = drillPieData ?? parentPieData;
-
-  // Check which categories have legacy subcategory data (parentId-based, for drill-down chevron)
-  // In the flat model this will be empty; in legacy data it tracks which cats have sub-entries
-  const parentsWithSubs = new Set(
-    (stats ? Object.keys(stats.byCategory) : [])
-      .map((catId) => { const c = categories.find((x) => x.id === catId); return c?.parentId; })
-      .filter(Boolean) as string[]
-  );
+  const pieData = parentPieData;
 
   const barData = history.map((m) => ({
     name: m.month.slice(5),

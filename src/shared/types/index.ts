@@ -222,8 +222,6 @@ export interface SerializableExpense {
   amount: number;
   currency: Currency;
   categoryId: string;
-  /** @deprecated Legacy field from old category model. Read-only — present in old Firestore docs. Never write this field on new entries. */
-  subcategoryId?: string;
   date: string; // ISO string
   paymentMethod: PaymentMethod;
   store?: string;

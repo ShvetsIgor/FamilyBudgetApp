@@ -256,18 +256,16 @@ export function CategoriesHub() {
       {activeCount > 0 && (
         <div className="flex items-center justify-between px-1">
           <span className="text-xs text-[#8E7A66]">
-            {hasFolders ? `${activeCount} папок` : `${activeCount} активных`}
+            {activeCount > 0 ? `${activeCount} папок` : ''}
             {totalBudget > 0 ? ` · ₪${totalBudget.toLocaleString()}/мес` : ''}
           </span>
           <div className="flex gap-3">
-            {hasFolders && (
-              <button
-                onClick={() => setFolderEditor({ open: true })}
-                className="text-xs font-semibold text-[#8E7A66]"
-              >
-                + Папка
-              </button>
-            )}
+            <button
+              onClick={() => setFolderEditor({ open: true })}
+              className="text-xs font-semibold text-[#8E7A66]"
+            >
+              + Папка
+            </button>
             <button
               onClick={() => setEditor({ open: true })}
               className="text-xs font-semibold text-[#E07A5F]"

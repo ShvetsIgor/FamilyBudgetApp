@@ -1,14 +1,18 @@
 import type { Category } from '@/shared/types';
-import { TAXONOMY, INCOME_TAXONOMY } from '@/features/categories/icons/icons';
+import { CATEGORY_ALIAS_MAP } from './categoryAliasMap';
 
 /**
  * Resolve a category from an alias or ID string.
  *
  * Resolution order:
- * 1. Direct ID lookup in categoriesById map (O(1))
- * 2. Taxonomy name match — handles legacy random Firestore IDs that map to
- *    a known taxonomy entry by name rather than by stable slug ID
- * 3. Sub-taxonomy name match
+ * 1. Direct ID lookup in categoriesById map (O(1)) — covers all new-architecture categories
+ * 2. Flat alias fallback — handles legacy Firestore docs where the stored categoryId
+ *    is a taxonomy slug (e.g. 'groceries') but the user's actual category has a
+ *    random Firestore-generated ID. CATEGORY_ALIAS_MAP maps slug → canonical name
+ *    without any hierarchy traversal.
+ *
+ * TAXONOMY is never imported or traversed here — all slug resolution goes through
+ * the pre-built flat CATEGORY_ALIAS_MAP.
  *
  * Returns undefined if no active category matches.
  */
@@ -21,18 +25,12 @@ export function resolveCategoryByAlias(
   const direct = categoriesById.get(alias);
   if (direct) return direct;
 
-  for (const parent of [...TAXONOMY, INCOME_TAXONOMY as typeof TAXONOMY[0]]) {
-    if (parent.id === alias) {
-      for (const [, cat] of categoriesById) {
-        if (cat.name === parent.name && !cat.archived) return cat;
-      }
-    }
-    for (const sub of parent.subs ?? []) {
-      if (sub.id === alias) {
-        for (const [, cat] of categoriesById) {
-          if (cat.name === sub.name) return cat;
-        }
-      }
+  // Legacy fallback: alias is a stable taxonomy slug, but user's category has a random ID.
+  // Match by canonical name from the flat alias map.
+  const entry = CATEGORY_ALIAS_MAP.get(alias);
+  if (entry) {
+    for (const [, cat] of categoriesById) {
+      if (cat.name === entry.name && !cat.archived) return cat;
     }
   }
 

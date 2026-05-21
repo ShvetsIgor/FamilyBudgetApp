@@ -135,7 +135,7 @@ export function CategoryEditorSheet({
   const taxIds = new Set((taxonomySubs ?? []).map((s) => s.id));
   const existingCustomSubs = (existingSubs ?? []).filter((s) => !taxIds.has(s.id));
 
-  const hasSubsSection = !parentId && (taxonomySubs && taxonomySubs.length > 0 || existingCustomSubs.length > 0);
+  const hasSubsSection = (taxonomySubs && taxonomySubs.length > 0) || existingCustomSubs.length > 0;
 
   return (
     <>

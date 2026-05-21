@@ -61,7 +61,7 @@ export function ExpenseForm({ initialExpense }: Props) {
   const { isValid: splitValid } = calculateSplit(numAmount, splits);
   const selectedParentCategory = expenseCategories.find((c) => c.id === parentCategoryId);
   const isSavingsCategory = selectedParentCategory?.name?.toLowerCase() === 'savings';
-  const subcategories = expenseCategories.filter((c) => c.folderId === parentCategoryId && !c.archived);
+  const groupCats = expenseCategories.filter((c) => c.folderId === parentCategoryId && !c.archived);
   const canSave = numAmount > 0 && categoryId && splitValid && (!isSavingsCategory || goalId !== '');
 
   function handleCategoryChange(id: string) {

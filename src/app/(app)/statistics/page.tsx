@@ -189,7 +189,7 @@ export default function StatisticsPage() {
           </div>
         );
       })}
-      {showBudget && !drillCategory && pieData.length > 0 && (
+      {showBudget && pieData.length > 0 && (
         <p className="text-xs text-muted-foreground mt-1">{t('stats.editHint')}</p>
       )}
     </div>

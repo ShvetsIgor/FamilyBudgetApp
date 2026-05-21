@@ -300,7 +300,7 @@ export function FastExpenseEntry({
         </div>
       </div>
 
-      {/* ── Parent category grid (main category for leftover) ── */}
+      {/* ── Category grid (main category for leftover) ── */}
       <div className="overflow-x-auto px-3.5 py-1.5 flex-shrink-0 [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
         <div className="grid grid-rows-2 grid-flow-col gap-1.5" style={{ gridAutoColumns: '64px' }}>
           {topCats.map((cat) => {

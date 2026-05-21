@@ -5,7 +5,7 @@ type QuickAddTab = 'expense' | 'income' | 'savings';
 interface QuickAddPrefill {
   goalId?: string;
   sourceId?: string;
-  categoryId?: string; // pre-selected category ID (renamed from parentId — was not a parent reference)
+  categoryId?: string;
   amount?: number;
 }
 

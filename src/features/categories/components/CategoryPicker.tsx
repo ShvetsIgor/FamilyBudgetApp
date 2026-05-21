@@ -7,7 +7,8 @@ import { CategoryIcon } from './CategoryIcon';
 import { useT } from '@/shared/hooks/useT';
 import { cn } from '@/shared/utils/cn';
 import type { Category, CategoryType } from '@/shared/types';
-import { selectFolders, selectCategoriesInFolder, selectUnfolderedCategories } from '../store/selectors';
+import { selectFolders, selectAllActiveCategories } from '../store/selectors';
+import { buildFolderSections } from '../utils/categoryViewModels';
 
 interface Props {
   type: CategoryType;

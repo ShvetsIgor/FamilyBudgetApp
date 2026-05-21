@@ -262,7 +262,7 @@ export function FastExpenseEntry({
 
   // Picker: two-level — all parents → subs of selected parent
   const pickerGroupCat = pickerGroupId ? allCats.find((c) => c.id === pickerGroupId) : null;
-  const pickerSubCats = pickerGroupId ? getCatsInGroup(pickerGroupId) : [];
+  const pickerGroupCats = pickerGroupId ? getCatsInGroup(pickerGroupId) : [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:bg-black/50 lg:backdrop-blur-sm">
@@ -459,7 +459,7 @@ export function FastExpenseEntry({
             ) : (
               /* Show categories in selected group */
               <div className="grid grid-cols-4 gap-1.5">
-                {pickerSubCats.length > 0 ? pickerSubCats.map((s) => {
+                {pickerGroupCats.length > 0 ? pickerGroupCats.map((s) => {
                   const selected = !!splits.find((x) => x.categoryId === s.id);
                   return (
                     <button

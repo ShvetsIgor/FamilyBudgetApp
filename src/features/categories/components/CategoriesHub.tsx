@@ -113,14 +113,14 @@ export function CategoriesHub() {
     customNames: string[],
   ) => {
     if (!user || !editor.category) return;
-    const parentCat = editor.category;
+    const editorCat = editor.category;
     const targetFolderId = editor.folderId ?? undefined;
     for (const sub of toAdd) {
       const created = await addCategoryWithId(user.id, sub.id, {
         name: sub.name,
         icon: sub.icon,
-        color: parentCat.color,
-        type: parentCat.type,
+        color: editorCat.color,
+        type: editorCat.type,
         folderId: targetFolderId,
         order: 0,
         isPrivate: false,
@@ -130,9 +130,9 @@ export function CategoriesHub() {
     for (const n of customNames) {
       const created = await addCategoryToDb(user.id, {
         name: n,
-        icon: parentCat.icon,
-        color: parentCat.color,
-        type: parentCat.type,
+        icon: editorCat.icon,
+        color: editorCat.color,
+        type: editorCat.type,
         folderId: targetFolderId,
         order: 0,
         isPrivate: false,
@@ -140,8 +140,8 @@ export function CategoriesHub() {
       dispatch(addCategory(created));
     }
     for (const id of toRemove) {
-      await archiveCategoryInFirestore(user.id, id, parentCat.type);
-      dispatch(archiveCategory({ id, type: parentCat.type }));
+      await archiveCategoryInFirestore(user.id, id, editorCat.type);
+      dispatch(archiveCategory({ id, type: editorCat.type }));
     }
   };
 

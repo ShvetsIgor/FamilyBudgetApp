@@ -24,7 +24,7 @@ interface Props {
   isWizardMode?: boolean;
   budget?: number;
   onBudgetChange?: (v: number | null) => void;
-  // subcategory management
+  // category group management
   existingSubs?: Category[];
   taxonomySubs?: TaxSub[];
   onSubsChange?: (toAdd: TaxSub[], toRemove: string[], customNames: string[]) => void;

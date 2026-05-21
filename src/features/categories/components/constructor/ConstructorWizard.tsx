@@ -1,9 +1,10 @@
 'use client';
 import { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/store';
-import { addCategory } from '@/features/categories/store/categoriesSlice';
+import { addCategory, addFolder } from '@/features/categories/store/categoriesSlice';
 import { setBudgetLimit } from '@/features/budget/store/budgetSlice';
 import { bulkApplyConstructorDiff } from '@/features/categories/services/categoriesService';
+import { bulkCreateFolders } from '@/features/categories/services/categoryFoldersService';
 import { saveBudget } from '@/features/budget/services/budgetService';
 import type { CategoryType } from '@/shared/types';
 import { useConstructorState } from '../../hooks/useConstructorState';
@@ -14,23 +15,25 @@ import { StepRefine } from './StepRefine';
 import { StepBudget } from './StepBudget';
 import { StepDone } from './StepDone';
 import { CategoryEditorSheet } from '../CategoryEditorSheet';
-import type { WizardParent } from '../../hooks/useConstructorState';
 
 interface Props {
   open: boolean;
   onClose: () => void;
   existingCategoryIds: Set<string>;
+  existingFolderIds: Set<string>;
 }
 
-export function ConstructorWizard({ open, onClose, existingCategoryIds }: Props) {
+export function ConstructorWizard({ open, onClose, existingCategoryIds, existingFolderIds }: Props) {
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency) ?? 'ILS';
   const currencySymbol = currency === 'ILS' ? '₪' : currency === 'USD' ? '$' : '₪';
 
   const {
-    step, setStep, state, toggleParent, toggleSub,
-    setBudget, addCustomParent, addCustomSub, canNext, enabledParents,
+    step, setStep, folders, categories,
+    toggleFolder, toggleCategory, setBudget,
+    addCustomFolder, addCustomCategory,
+    canNext, enabledFolders,
   } = useConstructorState(existingCategoryIds);
 
   const [saving, setSaving] = useState(false);
@@ -38,81 +41,77 @@ export function ConstructorWizard({ open, onClose, existingCategoryIds }: Props)
 
   if (!open) return null;
 
-  const handleNext = () => {
-    if (step < 3) setStep(step + 1);
-  };
-
-  const handleBack = () => {
-    if (step > 0) setStep(step - 1);
-  };
+  const handleNext = () => { if (step < 3) setStep(step + 1); };
+  const handleBack = () => { if (step > 0) setStep(step - 1); };
 
   const handleFinish = async () => {
     if (!user || saving) return;
     setSaving(true);
     try {
-      // Build list of categories to add (not already existing)
-      const toAdd: Array<{
-        id: string; name: string; ru?: string; icon: string; color?: string;
-        type: CategoryType; order: number; isPrivate: boolean;
-      }> = [];
+      const enabledFolderIds = new Set(enabledFolders.map((f) => f.id));
 
-      enabledParents.forEach((parent, pi) => {
-        if (!existingCategoryIds.has(parent.id)) {
-          toAdd.push({
-            id: parent.id,
-            name: parent.name,
-            ru: parent.ru,
-            icon: parent.icon,
-            color: parent.color,
-            type: 'expense',
-            order: pi,
+      // ── Folders to create ─────────────────────────────────────────────────
+      const foldersToAdd = enabledFolders
+        .filter((f) => !existingFolderIds.has(f.id))
+        .map((f, order) => ({
+          id: f.id,
+          name: f.name,
+          icon: f.icon,
+          color: f.color,
+          type: 'expense' as CategoryType,
+          order,
+        }));
+
+      if (foldersToAdd.length > 0) {
+        const created = await bulkCreateFolders(user.id, foldersToAdd);
+        for (const folder of created) {
+          dispatch(addFolder(folder));
+        }
+      }
+
+      // ── Categories to create (flat, with folderId) ────────────────────────
+      const catsToAdd = categories
+        .filter((c) => c.enabled && enabledFolderIds.has(c.folderId) && !existingCategoryIds.has(c.id))
+        .map((c, order) => {
+          const folder = enabledFolders.find((f) => f.id === c.folderId)!;
+          return {
+            id: c.id,
+            name: c.name,
+            ru: c.ru,
+            icon: c.icon,
+            color: folder?.color ?? '#E07A5F',
+            type: 'expense' as CategoryType,
+            order,
             isPrivate: false,
-          });
-        }
+            folderId: c.folderId,
+          };
+        });
 
-        parent.subs
-          .filter((s) => s.enabled && !existingCategoryIds.has(s.id))
-          .forEach((sub, si) => {
-            toAdd.push({
-              id: sub.id,
-              name: sub.name,
-              ru: sub.ru,
-              icon: sub.icon,
-              color: parent.color,
-              type: 'expense',
-              order: si,
-              isPrivate: false,
-            });
-          });
-      });
-
-      // Write to Firestore
-      if (toAdd.length > 0) {
-        await bulkApplyConstructorDiff(user.id, toAdd);
-      }
-
-      // Save budgets
-      for (const parent of enabledParents) {
-        if (parent.budget && parent.budget > 0) {
-          await saveBudget(user.id, parent.id, parent.budget);
-          dispatch(setBudgetLimit({ categoryId: parent.id, limit: parent.budget }));
+      if (catsToAdd.length > 0) {
+        await bulkApplyConstructorDiff(user.id, catsToAdd);
+        for (const cat of catsToAdd) {
+          dispatch(
+            addCategory({
+              id: cat.id,
+              userId: user.id,
+              name: cat.name,
+              icon: cat.icon,
+              color: cat.color,
+              type: cat.type,
+              order: cat.order,
+              isPrivate: cat.isPrivate,
+              folderId: cat.folderId,
+            }),
+          );
         }
       }
 
-      // Dispatch to Redux
-      for (const cat of toAdd) {
-        dispatch(
-          addCategory({
-            id: cat.id,
-            userId: user.id,
-            name: cat.name,
-            icon: cat.icon,
-            color: cat.color ?? '#E07A5F',
-            type: cat.type,
-            order: cat.order,
-            isPrivate: cat.isPrivate,
-          }),
-        );
+      // ── Budgets ────────────────────────────────────────────────────────────
+      for (const folder of enabledFolders) {
+        if (folder.budget && folder.budget > 0) {
+          await saveBudget(user.id, folder.id, folder.budget);
+          dispatch(setBudgetLimit({ categoryId: folder.id, limit: folder.budget }));
+        }
       }
 
       onClose();
@@ -124,7 +123,7 @@ export function ConstructorWizard({ open, onClose, existingCategoryIds }: Props)
   const nextLabel =
     step === 1 ? 'Бюджет' :
     step === 2 ? 'Готово' :
-    step === 0 ? `Далее · ${enabledParents.length}` :
+    step === 0 ? `Далее · ${enabledFolders.length}` :
     undefined;
 
   return (
@@ -134,28 +133,30 @@ export function ConstructorWizard({ open, onClose, existingCategoryIds }: Props)
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
         {step === 0 && (
           <StepPick
-            state={state}
-            onToggle={toggleParent}
+            folders={folders}
+            onToggle={toggleFolder}
             onAddCustom={() => setShowCustomSheet(true)}
           />
         )}
         {step === 1 && (
           <StepRefine
-            parents={enabledParents}
-            onToggleSub={toggleSub}
-            onAddCustomSub={addCustomSub}
+            folders={enabledFolders}
+            categories={categories}
+            onToggleCategory={toggleCategory}
+            onAddCustomCategory={addCustomCategory}
           />
         )}
         {step === 2 && (
           <StepBudget
-            parents={enabledParents}
+            folders={enabledFolders}
             onSetBudget={setBudget}
             currency={currencySymbol}
           />
         )}
         {step === 3 && (
           <StepDone
-            parents={enabledParents}
+            folders={enabledFolders}
+            categories={categories}
             onFinish={handleFinish}
             currency={currencySymbol}
           />
@@ -173,19 +174,19 @@ export function ConstructorWizard({ open, onClose, existingCategoryIds }: Props)
         />
       )}
 
-      {/* Custom category sheet */}
+      {/* Custom folder sheet */}
       <CategoryEditorSheet
         open={showCustomSheet}
         onClose={() => setShowCustomSheet(false)}
         type="expense"
         isWizardMode
         onSave={(cat) => {
-          addCustomParent({
+          addCustomFolder({
             id: `custom_${Date.now()}`,
             name: cat.name,
             icon: cat.icon,
             color: cat.color,
-          } as Omit<WizardParent, 'enabled' | 'budget' | 'subs'>);
+          });
           setShowCustomSheet(false);
         }}
       />

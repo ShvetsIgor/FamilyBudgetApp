@@ -127,42 +127,23 @@ export default function StatisticsPage() {
     </div>
   );
 
-  const drillParentCat = drillCategory ? categories.find((c) => c.id === drillCategory) : null;
-
   const categoryList = (
     <div className="flex flex-col gap-3">
-      {/* Drill-down back button */}
-      {drillCategory && drillParentCat && (
-        <button
-          onClick={() => { setDrillCategory(null); setEditingCatId(null); }}
-          className="flex items-center gap-1.5 text-sm font-bold mb-1 active:opacity-60 transition-opacity"
-          style={{ color: drillParentCat.color }}
-        >
-          <ChevronLeft size={15} strokeWidth={2.5} />
-          {t.cat(drillParentCat.name)}
-        </button>
-      )}
-
       {pieData.map((d) => {
-        const realCatId = d.catId.endsWith('_direct') ? drillCategory! : d.catId;
-        const limit = showBudget && !drillCategory ? (budgetLimits[realCatId] ?? 0) : 0;
+        const limit = showBudget ? (budgetLimits[d.catId] ?? 0) : 0;
         const pct = limit > 0 ? Math.min(100, (d.amount / limit) * 100) : 0;
         const overBudget = limit > 0 && d.amount > limit;
-        const isEditing = editingCatId === realCatId;
-        const canDrill = !drillCategory && parentsWithSubs.has(d.catId);
+        const isEditing = editingCatId === d.catId;
 
         return (
           <div key={d.catId}>
-            <div
-              className={cn('flex items-center gap-2 mb-1', canDrill && 'cursor-pointer active:opacity-70 transition-opacity')}
-              onClick={() => canDrill ? setDrillCategory(d.catId) : undefined}
-            >
+            <div className="flex items-center gap-2 mb-1">
               <CategoryIcon icon={d.icon} color={d.color} size="sm" />
               <span className="flex-1 text-sm">{d.name}</span>
               <span className="text-sm font-semibold tabular-nums">{formatAmount(d.amount, currency)}</span>
-              {!drillCategory && showBudget && (
+              {showBudget && (
                 <button
-                  onClick={(e) => { e.stopPropagation(); isEditing ? setEditingCatId(null) : openBudgetEdit(realCatId); }}
+                  onClick={() => isEditing ? setEditingCatId(null) : openBudgetEdit(d.catId)}
                   className={cn(
                     'text-xs px-2 py-0.5 rounded-full transition-colors',
                     overBudget ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground hover:text-foreground'
@@ -170,9 +151,6 @@ export default function StatisticsPage() {
                 >
                   {overBudget ? t('stats.over') : limit > 0 ? `/ ${formatAmount(limit, currency)}` : t('stats.addLimit')}
                 </button>
-              )}
-              {canDrill && (
-                <ChevronRight size={14} className="text-muted-foreground shrink-0" />
               )}
             </div>
             {limit > 0 && !isEditing && (

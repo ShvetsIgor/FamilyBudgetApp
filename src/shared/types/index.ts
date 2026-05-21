@@ -75,7 +75,7 @@ export interface Category {
   icon: string;
   color: string;
   folderId?: string | null;
-  /** @deprecated Use folderId. Kept only for legacy Firestore docs during migration. */
+  /** @deprecated Use folderId. Read-only — present in old Firestore docs. Remove only after Firestore migration script runs for all users. */
   parentId?: string;
   isPrivate: boolean;
   order: number;

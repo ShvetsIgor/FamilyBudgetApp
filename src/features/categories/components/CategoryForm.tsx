@@ -10,13 +10,12 @@ const PRESET_COLORS = ['#f97316','#3b82f6','#8b5cf6','#ec4899','#06b6d4','#eab30
 
 interface Props {
   type: CategoryType;
-  parentId?: string;
   initial?: Partial<Category>;
   onSave: (data: Omit<Category, 'id' | 'userId'>) => Promise<void>;
   onCancel: () => void;
 }
 
-export function CategoryForm({ type, parentId, initial, onSave, onCancel }: Props) {
+export function CategoryForm({ type, initial, onSave, onCancel }: Props) {
   const t = useT();
   const [name, setName] = useState(initial?.name ?? '');
   const [icon, setIcon] = useState(initial?.icon ?? '📦');

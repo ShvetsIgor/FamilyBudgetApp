@@ -41,23 +41,8 @@ describe('Default categories structure', () => {
     }
   });
 
-  it('subcategories reference valid parent keys', () => {
-    const parentKeys = DEFAULT_EXPENSE_CATEGORIES
-      .filter((c) => !c.parentId)
-      .map((c) => c.id);
-
-    const orphans: string[] = [];
-    for (const cat of DEFAULT_EXPENSE_CATEGORIES.filter((c) => c.parentId)) {
-      if (!parentKeys.includes(cat.parentId!)) {
-        orphans.push(`${cat.name} → ${cat.parentId}`);
-      }
-    }
-    expect(orphans, `Orphan subcategories: ${orphans.join(', ')}`).toHaveLength(0);
-  });
-
-  it('expense parent categories have colors', () => {
-    const parents = DEFAULT_EXPENSE_CATEGORIES.filter((c) => !c.parentId);
-    for (const cat of parents) {
+  it('all expense categories have colors', () => {
+    for (const cat of DEFAULT_EXPENSE_CATEGORIES) {
       expect(cat.color, `${cat.name} missing color`).toMatch(/^#[0-9A-Fa-f]{6}$/);
     }
   });

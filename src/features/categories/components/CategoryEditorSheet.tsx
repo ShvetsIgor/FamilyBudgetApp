@@ -208,7 +208,7 @@ export function CategoryEditorSheet({
             </div>
           )}
 
-          {/* Subcategories */}
+          {/* Group categories */}
           {hasSubsSection && (
             <div className="space-y-2">
               <label className="text-xs font-semibold text-[#8E7A66] uppercase tracking-wide">

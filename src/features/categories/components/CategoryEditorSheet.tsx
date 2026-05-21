@@ -7,7 +7,6 @@ import { ColorPaletteRow } from './ColorPaletteRow';
 import { BudgetField } from './BudgetField';
 import { IconPickerGrid } from './IconPickerGrid';
 import { CC } from '../styles/tokens';
-import { TAXONOMY, INCOME_TAXONOMY } from '../icons/icons';
 
 interface TaxSub { id: string; name: string; ru?: string; icon: string }
 

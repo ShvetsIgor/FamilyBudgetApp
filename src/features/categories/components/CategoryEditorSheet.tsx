@@ -45,12 +45,6 @@ export function CategoryEditorSheet({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
 
-  // subs state
-  const [enabledSubIds, setEnabledSubIds] = useState<Set<string>>(new Set());
-  const [customSubName, setCustomSubName] = useState('');
-  const [showAddSub, setShowAddSub] = useState(false);
-  const [customSubs, setCustomSubs] = useState<string[]>([]);
-
   useEffect(() => {
     if (open) {
       setName(initial?.name ?? '');
@@ -59,13 +53,9 @@ export function CategoryEditorSheet({
       setIsPrivate(initial?.isPrivate ?? false);
       setBudgetVal(budget ?? null);
       setConfirmDelete(false);
-      setEnabledSubIds(new Set(existingSubs?.map((s) => s.id) ?? []));
-      setCustomSubs([]);
-      setCustomSubName('');
-      setShowAddSub(false);
       setSelectedFolderId(initial?.folderId ?? folderIdProp ?? null);
     }
-  }, [open, initial, budget, existingSubs, folderIdProp]);
+  }, [open, initial, budget, folderIdProp]);
 
   if (!open) return null;
 

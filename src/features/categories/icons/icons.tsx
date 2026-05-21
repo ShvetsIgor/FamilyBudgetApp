@@ -588,8 +588,8 @@ I.box = ({ c, id }) => <svg viewBox="0 0 32 32"><Defs id={id} c={c} />
 </svg>;
 
 /* ════════════════════════════════════════════
- * TAXONOMY  (19 parent categories)
- * parentId / subId are stable slugs used by parser, stats, and Firestore
+ * TAXONOMY  (default category blueprints)
+ * Each entry seeds one folder + its default categories. IDs are stable slugs.
  * ════════════════════════════════════════════ */
 export const TAXONOMY = [
   { id: 'food',          name: 'Food & Drinks',      ru: 'Еда и напитки',      color: '#E07A5F', icon: 'cart',      subs: [

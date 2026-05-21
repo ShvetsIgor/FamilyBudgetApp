@@ -294,35 +294,29 @@ export function CategoriesHub() {
               </button>
             )}
           </div>
-        ) : hasFolders ? (
-          // ── New model: folder-based view ──────────────────────────────────
-          folders.map((folder) => (
-            <FolderSection
-              key={folder.id}
-              folder={folder}
-              categories={categoriesInFolderMap[folder.id] ?? []}
-              budgetLimits={budgetLimits}
-              onEditFolder={() => setFolderEditor({ open: true, folder })}
-              onEditCategory={openEditor}
-              onAddCategory={() => openNewCategoryInFolder(folder.id)}
-            />
-          ))
         ) : (
-          // ── Legacy model: parentId-based view ─────────────────────────────
-          // Used when no folders exist. parentId filter is correct for this migration-adapter path.
-          activeParents.map((cat) => {
-            const subs = allCategories.filter((c) => c.parentId === cat.id);
-            const budget = budgetLimits[cat.id] ?? 0;
-            return (
+          <>
+            {folders.map((folder) => (
+              <FolderSection
+                key={folder.id}
+                folder={folder}
+                categories={categoriesInFolderMap[folder.id] ?? []}
+                budgetLimits={budgetLimits}
+                onEditFolder={() => setFolderEditor({ open: true, folder })}
+                onEditCategory={openEditor}
+                onAddCategory={() => openNewCategoryInFolder(folder.id)}
+              />
+            ))}
+            {ungroupedCats.map((cat) => (
               <CategoryRow
                 key={cat.id}
                 category={cat}
-                subs={subs}
-                budget={budget}
+                subs={[]}
+                budget={budgetLimits[cat.id] ?? 0}
                 onEdit={() => openEditor(cat)}
               />
-            );
-          })
+            ))}
+          </>
         )}
       </div>
 

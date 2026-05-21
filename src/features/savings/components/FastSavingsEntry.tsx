@@ -80,7 +80,7 @@ export function FastSavingsEntry() {
       dispatch(updateGoalItem(updated));
 
       // Record as expense in Savings category
-      let catId = expenseCategories.find((c) => c.name === 'Savings' && isRootCategory(c))?.id ?? '';
+      let catId = expenseCategories.find((c) => c.name === 'Savings' && !c.archived)?.id ?? '';
       if (!catId) {
         const created = await addCategory(user.id, {
           name: 'Savings', icon: '🐷', color: '#10b981', type: 'expense',

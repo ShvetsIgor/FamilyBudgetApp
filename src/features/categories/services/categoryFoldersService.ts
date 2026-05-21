@@ -40,8 +40,7 @@ export async function deleteFolder(userId: string, folderId: string, type: Categ
 }
 
 /**
- * Bulk-creates folders from TAXONOMY parent entries.
- * Used during migration to populate folders from existing parentId structure.
+ * Bulk-creates folders from TAXONOMY blueprint entries.
  */
 export async function bulkCreateFolders(
   userId: string,

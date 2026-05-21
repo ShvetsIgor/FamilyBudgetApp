@@ -6,17 +6,14 @@ import { getTaxonomyName } from '../utils/categoryAliasMap';
 
 interface Props {
   category: Category;
-  subs: Category[];
   budget?: number;
   onEdit: () => void;
   fromLibrary?: boolean;
   onActivate?: () => void;
 }
 
-export function CategoryRow({ category, subs, budget, onEdit, fromLibrary, onActivate }: Props) {
+export function CategoryRow({ category, budget, onEdit, fromLibrary, onActivate }: Props) {
   const lang = useAppSelector((s) => s.ui.language) ?? 'ru';
-  const firstThree = subs.slice(0, 3);
-  const remaining = subs.length - 3;
 
   const displayName = getTaxonomyName(category.id, lang) ?? category.name;
 

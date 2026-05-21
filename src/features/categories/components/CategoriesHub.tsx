@@ -152,13 +152,6 @@ export function CategoriesHub() {
   const handleDelete = async () => {
     if (!editor.category || !user) return;
     if (!confirm('Удалить эту категорию?')) return;
-    // Archive (soft-delete) — never hard-delete categories that may have expenses
-    // Legacy model: subs are identified by parentId. In folder model, use folderId instead.
-    const subs = allCategories.filter((c) => c.parentId === editor.category!.id);
-    for (const sub of subs) {
-      await archiveCategoryInFirestore(user.id, sub.id, sub.type);
-      dispatch(archiveCategory({ id: sub.id, type: sub.type }));
-    }
     await archiveCategoryInFirestore(user.id, editor.category.id, editor.category.type);
     dispatch(archiveCategory({ id: editor.category.id, type: editor.category.type }));
     setEditor({ open: false });

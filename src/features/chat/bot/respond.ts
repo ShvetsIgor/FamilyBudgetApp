@@ -114,7 +114,7 @@ export async function confirmFutureExpense(
             color: cat?.color ?? folderCat?.color ?? '#E07A5F',
             title: catPath,
             catName: cat?.name ?? null,
-            parentName: folderCat?.name ?? null,
+            groupName: folderCat?.name ?? null,
             hint: dateHint,
             amount: data.amount,
             currency: sym,

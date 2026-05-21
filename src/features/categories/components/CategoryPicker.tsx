@@ -32,12 +32,10 @@ export function CategoryPicker({
   const folders = useAppSelector((s) => selectFolders(s, type));
   const t = useT();
 
-  const hasFolders = folders.length > 0;
-
   const categories = parentsOnly
-    ? allCategories.filter((c) => !c.parentId && !c.folderId)
+    ? allCategories.filter((c) => !c.folderId && !c.archived)
     : childrenOnly
-      ? allCategories.filter((c) => !!c.parentId || !!c.folderId)
+      ? allCategories.filter((c) => !!c.folderId && !c.archived)
       : allCategories.filter((c) => !c.archived);
 
   const selected = allCategories.find((c) => c.id === value);

@@ -67,6 +67,7 @@ export function CategoriesHub() {
   );
 
   const existingCategoryIds = new Set(allCategories.map((c) => c.id));
+  const existingFolderIds = new Set(folders.map((f) => f.id));
   const ungroupedCats = allCategories.filter((c) => !c.folderId && !c.archived);
 
   const activeCount = folders.length;

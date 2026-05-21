@@ -177,20 +177,20 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
 
         {/* ── Split list ── */}
         <div className="bg-card rounded-[14px] overflow-hidden" style={{ boxShadow: '0 1px 4px rgba(61,44,31,.06)' }}>
-          {/* Parent row */}
+          {/* Selected group row */}
           <div className="flex items-center gap-3 px-4 py-3">
             <div className="h-8 w-8 rounded-[9px] flex items-center justify-center flex-shrink-0" style={{ background: catColor + '22' }}>
-              <StickerIcon icon={parent?.icon ?? 'box'} color={catColor} className="h-4 w-4" />
+              <StickerIcon icon={selectedGroup?.icon ?? 'box'} color={catColor} className="h-4 w-4" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-extrabold text-foreground">
-                {parent ? t.cat(parent.name) : ''}
+                {selectedGroup ? t.cat(selectedGroup.name) : ''}
                 {splits.length > 0 && <span className="text-xs font-semibold text-muted-foreground ml-1">· общее</span>}
               </div>
               {splits.length > 0 && <div className="text-[10px] text-muted-foreground">остаток после уточнений</div>}
             </div>
             <span className="text-base font-black tabular-nums" style={{ color: catColor }}>
-              {symbol}{splits.length > 0 ? parentLeftover.toFixed(2).replace(/\.00$/, '') : (amount || '0')}
+              {symbol}{splits.length > 0 ? remainder.toFixed(2).replace(/\.00$/, '') : (amount || '0')}
             </span>
           </div>
 

@@ -42,7 +42,6 @@ function toSerializable(id: string, data: Record<string, unknown>): Serializable
     amount: data.amount as number,
     currency: data.currency as Currency,
     categoryId: data.categoryId as string,
-    subcategoryId: data.subcategoryId as string | undefined,
     date: toISO(data.date),
     paymentMethod: data.paymentMethod as PaymentMethod,
     store: data.store as string | undefined,

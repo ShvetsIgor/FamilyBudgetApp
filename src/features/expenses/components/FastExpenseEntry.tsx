@@ -131,8 +131,8 @@ export function FastExpenseEntry({
 
   const totalNum = parseFloat(total) || 0;
   const splitsSum = splits.reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
-  const parentLeftover = Math.max(0, totalNum - splitsSum);
-  const posCount = splits.filter((s) => parseFloat(s.amount) > 0).length + (parentLeftover > 0 ? 1 : 0);
+  const remainder = Math.max(0, totalNum - splitsSum);
+  const posCount = splits.filter((s) => parseFloat(s.amount) > 0).length + (remainder > 0 ? 1 : 0);
 
   function tap(key: NumKey) {
     if (editing === 'total') {
@@ -352,7 +352,7 @@ export function FastExpenseEntry({
             )}
           </div>
           <span className="text-lg font-black text-foreground tabular-nums">
-            {symbol}{splits.length > 0 ? parentLeftover : total}
+            {symbol}{splits.length > 0 ? remainder : total}
           </span>
         </div>
 

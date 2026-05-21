@@ -110,18 +110,23 @@ export function CategorySheet({ onSelect, onClose, categories: categoriesOverrid
             </div>
           ) : (
             <div className="flex flex-col gap-4 pt-2">
-              {grouped.map(({ header, color, chips }, idx) => (
-                <div key={idx}>
-                  {header && (
+              {sections.map(({ folderId, folderName, folderColor, cats }, idx) => (
+                <div key={folderId ?? `ungrouped-${idx}`}>
+                  {folderId && (
+                    <p className="mb-1.5 text-[10px] font-[800] uppercase tracking-[.08em]" style={{ color: folderColor ?? C.sub }}>
+                      {folderName}
+                    </p>
+                  )}
+                  {!folderId && sections.length > 1 && (
                     <p className="mb-1.5 text-[10px] font-[800] uppercase tracking-[.08em]" style={{ color: C.sub }}>
-                      {header}
+                      Другие
                     </p>
                   )}
                   <div className="flex flex-wrap gap-1.5">
-                    {chips.map((chip) => (
+                    {cats.map((cat) => (
                       <button
-                        key={chip.id}
-                        onClick={() => onSelect(chip)}
+                        key={cat.id}
+                        onClick={() => onSelect({ id: cat.id, name: cat.name, icon: cat.icon, color: cat.color })}
                         className="inline-flex items-center gap-1.5 text-[12.5px] font-[700] active:scale-95 transition-transform"
                         style={{
                           padding: '7px 12px 7px 7px',
@@ -131,8 +136,8 @@ export function CategorySheet({ onSelect, onClose, categories: categoriesOverrid
                           color: C.fg,
                         }}
                       >
-                        <StickerIcon icon={chip.icon} color={chip.color} className="h-5 w-5" />
-                        {t.cat(chip.name)}
+                        <StickerIcon icon={cat.icon} color={cat.color} className="h-5 w-5" />
+                        {t.cat(cat.name)}
                       </button>
                     ))}
                   </div>

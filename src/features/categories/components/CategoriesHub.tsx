@@ -407,6 +407,7 @@ export function CategoriesHub() {
         open={showWizard}
         onClose={() => setShowWizard(false)}
         existingCategoryIds={existingCategoryIds}
+        existingFolderIds={existingFolderIds}
       />
     </div>
   );

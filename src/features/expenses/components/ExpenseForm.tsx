@@ -169,9 +169,9 @@ export function ExpenseForm({ initialExpense }: Props) {
           placeholder={t('categories.selectCategory')}
           parentsOnly
         />
-        {subcategories.length > 0 && (
+        {groupCats.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-1">
-            {subcategories.map((sub) => (
+            {groupCats.map((sub) => (
               <button
                 key={sub.id}
                 type="button"

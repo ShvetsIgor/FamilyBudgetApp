@@ -108,7 +108,7 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
         userId: user.id, currency, date: new Date(dateStr),
         paymentMethod, tags: [], privacy: 'regular',
         comment: comment.trim() || undefined,
-        amount: totalNum, categoryId: parentId, splits: splitItems,
+        amount: totalNum, categoryId: selectedGroupId, splits: splitItems,
       });
       dispatch(prependExpense(exp));
       dispatch(closeQuickAdd());

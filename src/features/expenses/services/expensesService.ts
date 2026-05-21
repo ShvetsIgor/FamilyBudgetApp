@@ -17,7 +17,7 @@ import {
   type DocumentSnapshot,
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
-import type { Expense, SerializableExpense, SplitItem, Currency, Privacy, PaymentMethod } from '@/shared/types';
+import type { Expense, SerializableExpense, SplitItem, Currency, Privacy, PaymentMethod, ExpenseItem } from '@/shared/types';
 import { format } from 'date-fns';
 
 const PAGE_SIZE = 20;

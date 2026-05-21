@@ -6,7 +6,6 @@ import {
   selectUnfolderedCategories,
   selectAllActiveCategories,
 } from '@/features/categories/store/selectors';
-import { selectActiveParents } from '@/features/categories/legacy/legacySelectors';
 import type { RootState } from '@/store/store';
 import type { Category, CategoryFolder } from '@/shared/types';
 
@@ -48,7 +47,7 @@ describe('legacyCategoryMap', () => {
     }
   });
 
-  it('covers at least 10 legacy parent IDs', () => {
+  it('covers at least 10 legacy IDs', () => {
     expect(Object.keys(legacyCategoryMap).length).toBeGreaterThanOrEqual(10);
   });
 });
@@ -136,11 +135,10 @@ describe('selectCategoriesInFolder', () => {
 // ── selectUnfolderedCategories ────────────────────────────────────────────────
 
 describe('selectUnfolderedCategories', () => {
-  it('returns categories without folderId and without parentId', () => {
+  it('returns active categories without folderId', () => {
     const c1 = makeCategory('c1');
     const c2 = makeCategory('c2', { folderId: 'food' });
-    const c3 = makeCategory('c3', { parentId: 'parent1' });
-    const state = makePartialState([c1, c2, c3]);
+    const state = makePartialState([c1, c2]);
     const result = selectUnfolderedCategories(state, 'expense');
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('c1');
@@ -165,28 +163,5 @@ describe('selectAllActiveCategories', () => {
     const result = selectAllActiveCategories(state, 'expense');
     expect(result).toHaveLength(2);
     expect(result.map((c) => c.id)).toEqual(expect.arrayContaining(['c1', 'c3']));
-  });
-});
-
-// ── selectActiveParents (legacy) ──────────────────────────────────────────────
-
-describe('selectActiveParents (legacy selector)', () => {
-  it('returns categories without parentId and not archived', () => {
-    const parent = makeCategory('p1');
-    const child  = makeCategory('c1', { parentId: 'p1' });
-    const archived = makeCategory('p2', { archived: true });
-    const state = makePartialState([parent, child, archived]);
-    const result = selectActiveParents(state, 'expense');
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe('p1');
-  });
-
-  it('categories with folderId are NOT returned by selectActiveParents', () => {
-    const c1 = makeCategory('c1', { folderId: 'f1' });
-    const c2 = makeCategory('c2');
-    const state = makePartialState([c1, c2]);
-    const result = selectActiveParents(state, 'expense');
-    // c1 has folderId but no parentId → still returned (not filtered by folderId in this selector)
-    expect(result.map((c) => c.id)).toContain('c2');
   });
 });

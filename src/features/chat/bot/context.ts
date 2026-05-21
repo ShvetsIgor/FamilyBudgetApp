@@ -47,8 +47,8 @@ export function collectBotContext(state: RootState): BotContext | null {
     freq[e.categoryId] = (freq[e.categoryId] ?? 0) + 1;
   });
 
-  // Top categories: root-level only (no legacy parentId), sorted by usage
-  const rootCats = allCats.filter(isRootCategory);
+  // Top categories sorted by usage
+  const rootCats = allCats.filter((c) => !c.archived);
   const topCategoryIds = rootCats
     .sort((a, b) => (freq[b.id] ?? 0) - (freq[a.id] ?? 0))
     .slice(0, 5)

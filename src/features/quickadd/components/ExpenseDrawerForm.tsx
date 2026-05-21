@@ -37,10 +37,10 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
   const { groups: expCatGroups, getCatsInGroup } = useCategoryGroups('expense');
   const symbol = getCurrencySymbol(currency);
 
-  const parentCats = expCatGroups.filter((g) => g.name !== 'Savings');
+  const groups = expCatGroups.filter((g) => g.name !== 'Savings');
 
   const [amount, setAmount] = useState('');
-  const [parentId, setParentId] = useState(parentCats[0]?.id ?? '');
+  const [selectedGroupId, setSelectedGroupId] = useState(groups[0]?.id ?? '');
   const [splits, setSplits] = useState<SplitRow[]>([]);
   const [activeField, setActiveField] = useState<'total' | number>('total');
   const [pickerOpen, setPickerOpen] = useState(false);

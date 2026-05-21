@@ -244,7 +244,7 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
             </>
           )}
 
-          {/* Subcategory picker */}
+          {/* Folder category picker */}
           {pickerOpen && subCats.length > 0 && (
             <div className="border-t border-border px-3 py-2.5">
               <div className="grid grid-cols-4 gap-1.5">

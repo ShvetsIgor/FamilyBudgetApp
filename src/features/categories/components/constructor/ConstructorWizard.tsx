@@ -53,7 +53,7 @@ export function ConstructorWizard({ open, onClose, existingCategoryIds }: Props)
       // Build list of categories to add (not already existing)
       const toAdd: Array<{
         id: string; name: string; ru?: string; icon: string; color?: string;
-        parentId?: string; type: CategoryType; order: number; isPrivate: boolean;
+        type: CategoryType; order: number; isPrivate: boolean;
       }> = [];
 
       enabledParents.forEach((parent, pi) => {

@@ -2,7 +2,7 @@
 import { useAppSelector } from '@/store/store';
 import type { Category } from '@/shared/types';
 import { StickerIcon } from './CategoryIcon';
-import { TAXONOMY, INCOME_TAXONOMY } from '../icons/icons';
+import { getTaxonomyName } from '../utils/categoryAliasMap';
 
 interface Props {
   category: Category;
@@ -11,18 +11,6 @@ interface Props {
   onEdit: () => void;
   fromLibrary?: boolean;
   onActivate?: () => void;
-}
-
-function getTaxName(id: string, lang: string): string | null {
-  const parent = TAXONOMY.find((p) => p.id === id) ?? (INCOME_TAXONOMY.id === id ? INCOME_TAXONOMY : null);
-  if (parent) return lang === 'ru' ? parent.ru : parent.name;
-  for (const p of TAXONOMY) {
-    const sub = p.subs.find((s) => s.id === id);
-    if (sub) return lang === 'ru' ? (sub.ru ?? sub.name) : sub.name;
-  }
-  const incomeSub = INCOME_TAXONOMY.subs.find((s) => s.id === id);
-  if (incomeSub) return lang === 'ru' ? (incomeSub.ru ?? incomeSub.name) : incomeSub.name;
-  return null;
 }
 
 export function CategoryRow({ category, subs, budget, onEdit, fromLibrary, onActivate }: Props) {

@@ -118,7 +118,7 @@ export function CategoryEditorSheet({
     if (onBudgetChange && budgetVal !== null) {
       onBudgetChange(budgetVal);
     }
-    // subcategory diff
+    // category group diff
     if (onSubsChange && (taxonomySubs || customSubs.length > 0)) {
       const existingIds = new Set(existingSubs?.map((s) => s.id) ?? []);
       const toAdd = (taxonomySubs ?? []).filter(

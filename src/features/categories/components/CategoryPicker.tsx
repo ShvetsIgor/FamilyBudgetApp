@@ -31,17 +31,18 @@ export function CategoryPicker({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const allCategories = useAppSelector((s) => s.categories[type]);
+  const activeCats = useAppSelector((s) => selectAllActiveCategories(s, type));
+  const allCats = useAppSelector((s) => s.categories[type]); // includes archived for selected-value lookup
   const folders = useAppSelector((s) => selectFolders(s, type));
   const t = useT();
 
   const categories = ungroupedOnly
-    ? allCategories.filter((c) => !c.folderId && !c.archived)
+    ? activeCats.filter((c) => !c.folderId)
     : groupedOnly
-      ? allCategories.filter((c) => !!c.folderId && !c.archived)
-      : allCategories.filter((c) => !c.archived);
+      ? activeCats.filter((c) => !!c.folderId)
+      : activeCats;
 
-  const selected = allCategories.find((c) => c.id === value);
+  const selected = allCats.find((c) => c.id === value);
 
   const filtered = search
     ? categories.filter((c) =>

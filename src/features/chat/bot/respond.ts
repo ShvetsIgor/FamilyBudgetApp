@@ -456,7 +456,7 @@ export async function respondToUserMessage(
             color: cat?.color ?? folderCat2?.color ?? '#E07A5F',
             title: catPath,
             catName: cat?.name ?? null,
-            parentName: folderCat2?.name ?? null,
+            groupName: folderCat2?.name ?? null,
             hint: dateHint,
             amount: parsed.amount,
             currency: sym,

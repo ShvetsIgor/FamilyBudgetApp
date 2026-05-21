@@ -364,19 +364,17 @@ export function CategoriesHub() {
 
       {/* Create manually */}
       <div className="flex gap-2">
-        {hasFolders && (
-          <button
-            onClick={() => setFolderEditor({ open: true })}
-            className="flex-1 rounded-2xl border-2 border-dashed border-[#EDE0CC] py-3 text-sm font-semibold text-[#8E7A66] hover:border-[#8E7A66]/40 transition-colors"
-          >
-            + Папка
-          </button>
-        )}
+        <button
+          onClick={() => setFolderEditor({ open: true })}
+          className="flex-1 rounded-2xl border-2 border-dashed border-[#EDE0CC] py-3 text-sm font-semibold text-[#8E7A66] hover:border-[#8E7A66]/40 transition-colors"
+        >
+          + Папка
+        </button>
         <button
           onClick={() => setEditor({ open: true })}
           className="flex-1 rounded-2xl border-2 border-dashed border-[#EDE0CC] py-3 text-sm font-semibold text-[#8E7A66] hover:border-[#E07A5F]/40 hover:text-[#E07A5F] transition-colors"
         >
-          + Создать категорию
+          + Категорию
         </button>
       </div>
 

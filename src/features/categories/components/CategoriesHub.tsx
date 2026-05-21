@@ -57,7 +57,6 @@ export function CategoriesHub() {
   const [folderEditor, setFolderEditor] = useState<FolderEditorState>({ open: false });
 
   const folders = useAppSelector((s) => selectFolders(s, tab));
-  const activeParents = useAppSelector((s) => selectActiveParents(s, tab));
   const libraryItems = useAppSelector((s) => selectAvailableLibrary(s, tab));
   const allCategories = useAppSelector((s) =>
     tab === 'expense' ? s.categories.expense : s.categories.income,

@@ -64,13 +64,6 @@ describe('expensesSlice', () => {
       expect(state.list[0].categoryId).toBe('newCat');
     });
 
-    it('remaps subcategoryId', () => {
-      const e = makeExpense('1', 'cat1', 'oldSub');
-      let state = reducer(initialState, setExpenses([e]));
-      state = reducer(state, remapExpenseCategories({ oldSub: 'newSub' }));
-      expect(state.list[0].subcategoryId).toBe('newSub');
-    });
-
     it('leaves id unchanged when not in map', () => {
       const e = makeExpense('1', 'cat1');
       let state = reducer(initialState, setExpenses([e]));

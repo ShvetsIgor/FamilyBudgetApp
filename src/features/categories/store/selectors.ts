@@ -13,9 +13,9 @@ export const selectFolders = (s: RootState, type: CategoryType) =>
 export const selectCategoriesInFolder = (s: RootState, folderId: string, type: CategoryType) =>
   cats(s, type).filter((c) => c.folderId === folderId && !c.archived);
 
-/** All active (non-archived) categories that don't belong to any folder */
+/** All active (non-archived) categories that don't belong to any folder or legacy parent */
 export const selectUnfolderedCategories = (s: RootState, type: CategoryType) =>
-  cats(s, type).filter((c) => !c.folderId && !c.archived);
+  cats(s, type).filter((c) => !c.folderId && !c.parentId && !c.archived);
 
 /** All active categories (non-archived), regardless of folder */
 export const selectAllActiveCategories = (s: RootState, type: CategoryType) =>

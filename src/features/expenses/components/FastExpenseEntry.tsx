@@ -457,7 +457,7 @@ export function FastExpenseEntry({
                 })}
               </div>
             ) : (
-              /* Show subcategories of selected parent */
+              /* Show categories in selected group */
               <div className="grid grid-cols-4 gap-1.5">
                 {pickerSubCats.length > 0 ? pickerSubCats.map((s) => {
                   const selected = !!splits.find((x) => x.categoryId === s.id);

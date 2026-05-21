@@ -1,6 +1,7 @@
 import type { RootState } from '@/store/store';
 import type { CategoryType } from '@/shared/types';
 import { TAXONOMY, INCOME_TAXONOMY } from '../icons/icons';
+import { isActiveCategory } from '../policy/categoryPolicy';
 
 const cats = (s: RootState, type: CategoryType) =>
   type === 'expense' ? s.categories.expense : s.categories.income;

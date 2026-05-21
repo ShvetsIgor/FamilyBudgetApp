@@ -6,38 +6,88 @@ interface AliasEntry { name: string; ru?: string }
 
 export interface TaxSub { id: string; name: string; ru?: string; icon: string }
 
-// ─── Build flat maps (once at module load) ────────────────────────────────────
+/** Top-level TAXONOMY entry — becomes a CategoryFolder in the app. */
+export interface FolderBlueprint {
+  id: string;
+  name: string;
+  ru?: string;
+  icon: string;
+  color: string;
+}
 
-function buildMaps() {
+/** Sub-level TAXONOMY entry — becomes a flat Category with folderId. */
+export interface CategoryBlueprint {
+  id: string;
+  folderId: string;
+  name: string;
+  ru?: string;
+  icon: string;
+  /** Color inherited from the parent FolderBlueprint. */
+  color: string;
+}
+
+// ─── Build flat structures (once at module load) ──────────────────────────────
+// TAXONOMY is ONLY accessed here. All consumers get flat arrays / Maps.
+
+function buildAll() {
   const aliasMap = new Map<string, AliasEntry>();
   const subsMap = new Map<string, TaxSub[]>();
+  const folderBlueprints: FolderBlueprint[] = [];
+  const categoryBlueprints: CategoryBlueprint[] = [];
 
   for (const entry of [...TAXONOMY, INCOME_TAXONOMY as (typeof TAXONOMY)[0]]) {
     aliasMap.set(entry.id, { name: entry.name, ru: entry.ru });
+    folderBlueprints.push({ id: entry.id, name: entry.name, ru: entry.ru, icon: entry.icon, color: entry.color });
+
     const subs = (entry.subs ?? []) as TaxSub[];
     subsMap.set(entry.id, subs);
     for (const sub of subs) {
       aliasMap.set(sub.id, { name: sub.name, ru: sub.ru });
+      categoryBlueprints.push({
+        id: sub.id,
+        folderId: entry.id,
+        name: sub.name,
+        ru: sub.ru,
+        icon: sub.icon,
+        color: entry.color,
+      });
     }
   }
 
-  return { aliasMap, subsMap };
+  return { aliasMap, subsMap, folderBlueprints, categoryBlueprints };
 }
 
-const { aliasMap: CATEGORY_ALIAS_MAP_INTERNAL, subsMap: CATEGORY_SUBS_MAP } = buildMaps();
+const { aliasMap, subsMap, folderBlueprints, categoryBlueprints } = buildAll();
+
+// ─── Flat lookup maps ─────────────────────────────────────────────────────────
 
 /**
  * Flat map: taxonomy stable slug → { name, ru }.
- * Built once at module load. Used for legacy Firestore ID resolution and display name lookups.
- * TAXONOMY is never traversed outside this module.
+ * Used for legacy Firestore ID resolution and display name lookups.
  */
-export const CATEGORY_ALIAS_MAP: Map<string, AliasEntry> = CATEGORY_ALIAS_MAP_INTERNAL;
+export const CATEGORY_ALIAS_MAP: Map<string, AliasEntry> = aliasMap;
 
-// ─── Public helpers ───────────────────────────────────────────────────────────
+// ─── Blueprint arrays ─────────────────────────────────────────────────────────
+
+/**
+ * All taxonomy folder blueprints (one per TAXONOMY top-level entry).
+ * Consumed by: constructor wizard, default category seeding.
+ * INCOME_TAXONOMY is last — filter by `f.id !== 'income'` for expense-only flows.
+ */
+export const FOLDER_BLUEPRINTS: readonly FolderBlueprint[] = folderBlueprints;
+
+/**
+ * All taxonomy category blueprints — flat, each with folderId and inherited color.
+ * Consumed by: constructor wizard, default category seeding.
+ * Filter by `c.folderId !== 'income'` for expense-only flows.
+ */
+export const CATEGORY_BLUEPRINTS: readonly CategoryBlueprint[] = categoryBlueprints;
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /**
  * Returns the taxonomy display name for a stable slug in the given language.
- * Returns null if the slug is unknown (e.g. custom user category — use category.name instead).
+ * Returns null for unknown slugs (e.g. custom user categories — use category.name).
  */
 export function getTaxonomyName(id: string, lang: string): string | null {
   const entry = CATEGORY_ALIAS_MAP.get(id);
@@ -46,10 +96,9 @@ export function getTaxonomyName(id: string, lang: string): string | null {
 }
 
 /**
- * Returns the default subcategory list for a taxonomy folder slug.
- * Used in the category editor wizard (constructor/onboarding).
- * Returns undefined if the slug is not a top-level taxonomy folder.
+ * Returns the default sub-category list for a taxonomy folder slug.
+ * Used in CategoryEditorSheet wizard (constructor/onboarding UI).
  */
 export function getTaxonomySubs(folderId: string): TaxSub[] | undefined {
-  return CATEGORY_SUBS_MAP.get(folderId);
+  return subsMap.get(folderId);
 }

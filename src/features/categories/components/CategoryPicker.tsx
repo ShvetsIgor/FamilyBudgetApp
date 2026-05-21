@@ -53,18 +53,16 @@ export function CategoryPicker({
     setSearch('');
   }
 
-  // Build grouped list when folders are available
   const renderList = () => {
     const list = filtered ?? categories;
 
-    if (!hasFolders || search) {
-      // Flat list (search mode or no folders)
+    if (search) {
       return list.map((cat) => (
         <CategoryRowItem key={cat.id} cat={cat} displayName={t.cat(cat.name)} selected={value} onSelect={select} />
       ));
     }
 
-    // Group by folder
+    // Group by folder; ungrouped categories shown at the end without a header
     const groups: Array<{ folderId: string | null; folderName: string; cats: Category[] }> = [];
 
     for (const folder of folders) {
@@ -74,26 +72,9 @@ export function CategoryPicker({
       }
     }
 
-    // Unfoldered / legacy parentId-less categories (no folder assigned)
-    const unfoldered = list.filter((c) => !c.folderId && !c.parentId);
-    if (unfoldered.length > 0) {
-      groups.push({ folderId: null, folderName: '', cats: unfoldered });
-    }
-
-    // ── Legacy fallback: parentId-based grouping (pre-folder data) ──────────
-    // Only active when no folders exist. Once migrated to folder model, this path is dead.
-    const legacyParents = list.filter((c) => !c.parentId && !c.folderId && !hasFolders);
-    const legacyChildren = list.filter((c) => !!c.parentId); // @legacy: parentId sub-categories
-
-    if (!hasFolders && legacyParents.length > 0) {
-      return [
-        ...legacyParents.map((cat) => (
-          <CategoryRowItem key={cat.id} cat={cat} displayName={t.cat(cat.name)} selected={value} onSelect={select} indent={false} />
-        )),
-        ...legacyChildren.map((cat) => (
-          <CategoryRowItem key={cat.id} cat={cat} displayName={t.cat(cat.name)} selected={value} onSelect={select} indent />
-        )),
-      ];
+    const ungrouped = list.filter((c) => !c.folderId);
+    if (ungrouped.length > 0) {
+      groups.push({ folderId: null, folderName: '', cats: ungrouped });
     }
 
     return groups.flatMap(({ folderId, folderName, cats }) => [

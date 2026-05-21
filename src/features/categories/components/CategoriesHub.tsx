@@ -191,15 +191,14 @@ export function CategoriesHub() {
 
   const handleActivateFromLibrary = async (libraryParent: ReturnType<typeof selectAvailableLibrary>[number]) => {
     if (!user) return;
-    const created = await addCategoryToDb(user.id, {
+    const folder = await addFolderToDb(user.id, {
       name: libraryParent.name,
       icon: libraryParent.icon,
       color: libraryParent.color,
       type: tab,
-      order: activeParents.length,
-      isPrivate: false,
+      order: folders.length,
     });
-    dispatch(addCategory(created));
+    dispatch(addFolder(folder));
     const taxEntry = TAXONOMY.find((p) => p.id === libraryParent.id);
     if (taxEntry) {
       for (const sub of taxEntry.subs) {
@@ -208,7 +207,7 @@ export function CategoriesHub() {
           icon: sub.icon,
           color: libraryParent.color,
           type: tab,
-          parentId: created.id,
+          folderId: folder.id,
           order: 0,
           isPrivate: false,
         });

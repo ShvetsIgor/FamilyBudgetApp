@@ -34,9 +34,9 @@ export function useCategoryGroups(type: CategoryType) {
     return cat?.folderId ?? '';
   }
 
-  /** Categories not assigned to any folder */
+  /** Active categories not assigned to any folder */
   const ungroupedCats = useMemo(
-    () => allCats.filter((c) => !c.folderId && !c.archived),
+    () => allCats.filter((c) => !c.folderId && isActiveCategory(c)),
     [allCats],
   );
 

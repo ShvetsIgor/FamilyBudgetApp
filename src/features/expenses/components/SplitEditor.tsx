@@ -73,8 +73,8 @@ export function SplitEditor({ total, currency, parentCategoryId, splits, onChang
             </span>
           </div>
 
-          {/* Subcategory rows */}
-          {subcategories.map((sub) => {
+          {/* Category rows */}
+          {groupCats.map((sub) => {
             const split = splits.find((s) => s.categoryId === sub.id);
             const active = !!split;
 

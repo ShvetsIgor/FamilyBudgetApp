@@ -337,7 +337,6 @@ export function CategoriesHub() {
         type={tab}
         folderId={editor.folderId}
         availableFolders={folders}
-        taxonomySubs={editor.taxonomySubs}
         budget={editor.category ? (budgetLimits[editor.category.id] ?? 0) || undefined : undefined}
         onBudgetChange={async (v) => {
           if (!editor.category || !user) return;
@@ -346,7 +345,6 @@ export function CategoriesHub() {
           dispatch(setBudgetLimit({ categoryId: editor.category.id, limit }));
         }}
         onSave={handleSave}
-        onSubsChange={handleSubsChange}
         onDelete={editor.category ? handleDelete : undefined}
       />
 

@@ -145,17 +145,17 @@ export function FastExpenseEntry({
     }
   }
 
-  function addSplit(sub: Category, subParent: Category | undefined) {
+  function addSplit(sub: Category) {
     if (splits.find((s) => s.categoryId === sub.id)) return;
-    const color = subParent?.color ?? sub.color;
+    const color = pickerGroupCat?.color ?? sub.color;
     setSplits((prev) => {
       const next = [
         ...prev,
         {
           categoryId: sub.id,
-          groupCatId: subParent?.id ?? selectedCatId,
+          groupCatId: pickerGroupId ?? selectedCatId,
           name: sub.name,
-          groupName: subParent?.name ?? selectedCat?.name ?? '',
+          groupName: pickerGroupCat?.name ?? selectedCat?.name ?? '',
           icon: sub.icon,
           color,
           amount: '0',

@@ -9,11 +9,35 @@ export interface BotCard {
   data: unknown;
 }
 
+export type ParseConfidence = 'high' | 'medium' | 'low' | 'failed';
+
+/**
+ * A single candidate item extracted from input text.
+ * Populated by parser keyword matching, OCR line items, or AI extraction.
+ * TODO(OCR): receipt scanner populates this from line-item text
+ * TODO(AI): model returns richer items with quantity, unit price, sub-category
+ */
+export interface ParseResultItem {
+  title: string;
+  amount?: number;
+  categoryId?: string;
+  confidence: number; // 0–1 score
+  source: 'parser' | 'ocr' | 'ai';
+}
+
 export interface ParseResult {
   amount: number;
   categoryId: string | null;
   matchedKeyword?: string;
-  confidence: 'high' | 'medium' | 'low' | 'failed';
+  confidence: ParseConfidence;
+  /** true when the parser is confident enough for auto-save but wants user to confirm */
+  needsConfirmation?: boolean;
+  /**
+   * Candidate items extracted from input.
+   * Empty for regular single-amount messages; populated by OCR/AI multi-item flow.
+   * TODO(OCR/AI): populate via extractCandidateItems stage override
+   */
+  items?: ParseResultItem[];
   /** true when input started with "+", meaning this is an income entry */
   isIncome?: boolean;
   /** ISO date string YYYY-MM-DD if the user specified a date in the message */

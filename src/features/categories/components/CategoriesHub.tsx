@@ -78,13 +78,11 @@ export function CategoriesHub() {
   // ── Category editor ────────────────────────────────────────────────────────
 
   const openEditor = (cat: Category) => {
-    const taxEntry = TAXONOMY.find((p) => p.id === cat.id)
-      ?? (INCOME_TAXONOMY.id === cat.id ? INCOME_TAXONOMY : null);
     setEditor({
       open: true,
       category: cat,
       folderId: cat.folderId ?? undefined,
-      taxonomySubs: taxEntry ? (taxEntry.subs as TaxSub[]) : undefined,
+      taxonomySubs: getTaxonomySubs(cat.id),
     });
   };
 

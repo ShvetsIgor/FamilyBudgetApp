@@ -147,7 +147,8 @@ export function FastExpenseEntry({
 
   function addSplit(sub: Category) {
     if (splits.find((s) => s.categoryId === sub.id)) return;
-    const color = pickerGroupCat?.color ?? sub.color;
+    const groupCat = pickerGroupId ? allCats.find((c) => c.id === pickerGroupId) : null;
+    const color = groupCat?.color ?? sub.color;
     setSplits((prev) => {
       const next = [
         ...prev,
@@ -155,7 +156,7 @@ export function FastExpenseEntry({
           categoryId: sub.id,
           groupCatId: pickerGroupId ?? selectedCatId,
           name: sub.name,
-          groupName: pickerGroupCat?.name ?? selectedCat?.name ?? '',
+          groupName: groupCat?.name ?? selectedCat?.name ?? '',
           icon: sub.icon,
           color,
           amount: '0',

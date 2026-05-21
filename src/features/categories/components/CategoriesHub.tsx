@@ -25,6 +25,7 @@ import { CategoryEditorSheet } from './CategoryEditorSheet';
 import { FolderEditorSheet } from './FolderEditorSheet';
 import { ConstructorWizard } from './constructor/ConstructorWizard';
 import { StickerIcon } from './CategoryIcon';
+import { getTaxonomySubs } from '../utils/categoryAliasMap';
 import {
   selectAvailableLibrary,
   selectFolders,

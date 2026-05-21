@@ -90,8 +90,8 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
     setActiveField('total');
   }
 
-  function changeParent(id: string) {
-    setParentId(id);
+  function changeGroup(id: string) {
+    setSelectedGroupId(id);
     setSplits([]);
     setActiveField('total');
     setPickerOpen(false);

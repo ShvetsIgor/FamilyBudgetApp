@@ -39,7 +39,6 @@ export default function StatisticsPage() {
   const [editingCatId, setEditingCatId] = useState<string | null>(null);
   const [limitInput, setLimitInput] = useState('');
   const [savingBudget, setSavingBudget] = useState(false);
-  const [drillCategory, setDrillCategory] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!user) return;

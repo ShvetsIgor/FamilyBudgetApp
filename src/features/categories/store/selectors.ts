@@ -14,9 +14,9 @@ export const selectFolders = (s: RootState, type: CategoryType) =>
 export const selectCategoriesInFolder = (s: RootState, folderId: string, type: CategoryType) =>
   cats(s, type).filter((c) => c.folderId === folderId && isActiveCategory(c));
 
-/** Active categories not assigned to any folder (excludes legacy parentId-based children) */
+/** Active categories not assigned to any folder */
 export const selectUnfolderedCategories = (s: RootState, type: CategoryType) =>
-  cats(s, type).filter((c) => !c.folderId && !c.parentId && isActiveCategory(c));
+  cats(s, type).filter((c) => !c.folderId && isActiveCategory(c));
 
 /** All active categories regardless of folder assignment */
 export const selectAllActiveCategories = (s: RootState, type: CategoryType) =>

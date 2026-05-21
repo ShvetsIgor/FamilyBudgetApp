@@ -216,7 +216,7 @@ export function CategoriesHub() {
     }
   };
 
-  const isEmpty = hasFolders ? folders.length === 0 : activeParents.length === 0;
+  const isEmpty = folders.length === 0 && ungroupedCats.length === 0;
 
   return (
     <div className="px-4 pt-4 pb-24 space-y-4 max-w-lg mx-auto">

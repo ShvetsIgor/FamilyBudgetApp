@@ -137,7 +137,7 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
               return (
                 <button
                   key={cat.id}
-                  onClick={() => changeParent(cat.id)}
+                  onClick={() => changeGroup(cat.id)}
                   className="h-[68px] rounded-[12px] flex flex-col items-center justify-center gap-1 transition-all border-0"
                   style={{
                     background: sel ? c : 'hsl(var(--card))',

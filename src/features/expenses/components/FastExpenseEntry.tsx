@@ -468,7 +468,7 @@ export function FastExpenseEntry({
                       onClick={() =>
                         selected
                           ? removeSplit(splits.findIndex((x) => x.categoryId === s.id))
-                          : addSplit(s, pickerGroupCat ?? undefined)
+                          : addSplit(s)
                       }
                       className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
                       style={{

@@ -261,7 +261,7 @@ export function FastExpenseEntry({
   const catColor = selectedCat?.color ?? '#E07A5F';
 
   // Picker: two-level — all parents → subs of selected parent
-  const pickerGroupIdCat = pickerGroupId ? allCats.find((c) => c.id === pickerGroupId) : null;
+  const pickerGroupCat = pickerGroupId ? allCats.find((c) => c.id === pickerGroupId) : null;
   const pickerSubCats = pickerGroupId ? getCatsInGroup(pickerGroupId) : [];
 
   return (
@@ -423,9 +423,9 @@ export function FastExpenseEntry({
               )}
               <div
                 className="text-[11px] font-extrabold uppercase tracking-[.08em]"
-                style={{ color: pickerGroupIdCat?.color ?? 'hsl(var(--muted-foreground))' }}
+                style={{ color: pickerGroupCat?.color ?? 'hsl(var(--muted-foreground))' }}
               >
-                {pickerGroupId ? t.cat(pickerGroupIdCat?.name ?? '') : 'Выберите категорию'}
+                {pickerGroupId ? t.cat(pickerGroupCat?.name ?? '') : 'Выберите категорию'}
               </div>
               <button
                 onClick={() => { setPickerOpen(false); setPickerGroupId(null); }}
@@ -467,17 +467,17 @@ export function FastExpenseEntry({
                       onClick={() =>
                         selected
                           ? removeSplit(splits.findIndex((x) => x.categoryId === s.id))
-                          : addSplit(s, pickerGroupIdCat ?? undefined)
+                          : addSplit(s, pickerGroupCat ?? undefined)
                       }
                       className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
                       style={{
-                        background: selected ? (pickerGroupIdCat?.color ?? catColor) + '30' : (pickerGroupIdCat?.color ?? catColor) + '14',
-                        borderColor: selected ? (pickerGroupIdCat?.color ?? catColor) : 'transparent',
+                        background: selected ? (pickerGroupCat?.color ?? catColor) + '30' : (pickerGroupCat?.color ?? catColor) + '14',
+                        borderColor: selected ? (pickerGroupCat?.color ?? catColor) : 'transparent',
                       }}
                     >
-                      <StickerIcon icon={s.icon} color={pickerGroupIdCat?.color ?? catColor} className="h-3.5 w-3.5" />
+                      <StickerIcon icon={s.icon} color={pickerGroupCat?.color ?? catColor} className="h-3.5 w-3.5" />
                       <span className="leading-tight text-center line-clamp-1">{t.cat(s.name)}</span>
-                      {selected && <span className="text-[8px]" style={{ color: pickerGroupIdCat?.color ?? catColor }}>✓</span>}
+                      {selected && <span className="text-[8px]" style={{ color: pickerGroupCat?.color ?? catColor }}>✓</span>}
                     </button>
                   );
                 }) : (

@@ -56,7 +56,7 @@ import type { MorningCardData } from '@/features/chat/components/BotCard/Morning
 import type { WeeklyCardData } from '@/features/chat/components/BotCard/WeeklyCard';
 import type { EnvelopesCardData } from '@/features/chat/components/BotCard/EnvelopesCard';
 import type { Currency } from '@/shared/types';
-import { isRootCategory } from '@/shared/utils/categoryHelpers';
+
 import type { SerializableChatMessage } from '@/shared/types/message';
 
 function msgTime(iso: string): string {

@@ -79,7 +79,6 @@ export function ConstructorWizard({ open, onClose, existingCategoryIds }: Props)
               ru: sub.ru,
               icon: sub.icon,
               color: parent.color,
-              parentId: parent.id,
               type: 'expense',
               order: si,
               isPrivate: false,

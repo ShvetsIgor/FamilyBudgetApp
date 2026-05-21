@@ -175,7 +175,7 @@ export default function StatisticsPage() {
                   className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
                 <button
-                  onClick={() => handleSaveBudget(realCatId)}
+                  onClick={() => handleSaveBudget(d.catId)}
                   disabled={savingBudget}
                   className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-50"
                 >

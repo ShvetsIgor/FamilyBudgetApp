@@ -59,23 +59,6 @@ export function CategoryEditorSheet({
 
   if (!open) return null;
 
-  const toggleSub = (id: string) =>
-    setEnabledSubIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-
-  const addCustomSub = () => {
-    const trimmed = customSubName.trim();
-    if (trimmed) {
-      setCustomSubs((prev) => [...prev, trimmed]);
-      setCustomSubName('');
-      setShowAddSub(false);
-    }
-  };
-
   const handleSave = () => {
     if (!name.trim()) return;
     onSave({
@@ -91,27 +74,8 @@ export function CategoryEditorSheet({
     if (onBudgetChange && budgetVal !== null) {
       onBudgetChange(budgetVal);
     }
-    // category group diff
-    if (onSubsChange && (taxonomySubs || customSubs.length > 0)) {
-      const existingIds = new Set(existingSubs?.map((s) => s.id) ?? []);
-      const toAdd = (taxonomySubs ?? []).filter(
-        (s) => enabledSubIds.has(s.id) && !existingIds.has(s.id),
-      );
-      const toRemove = (existingSubs ?? [])
-        .filter((s) => !enabledSubIds.has(s.id))
-        .map((s) => s.id);
-      if (toAdd.length > 0 || toRemove.length > 0 || customSubs.length > 0) {
-        onSubsChange(toAdd, toRemove, customSubs);
-      }
-    }
     onClose();
   };
-
-  // merged list: taxonomy subs (known) + existing custom subs (not in taxonomy)
-  const taxIds = new Set((taxonomySubs ?? []).map((s) => s.id));
-  const existingCustomSubs = (existingSubs ?? []).filter((s) => !taxIds.has(s.id));
-
-  const hasSubsSection = (taxonomySubs && taxonomySubs.length > 0) || existingCustomSubs.length > 0;
 
   return (
     <>

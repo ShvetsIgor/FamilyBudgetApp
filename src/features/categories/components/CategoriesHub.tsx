@@ -81,7 +81,6 @@ export function CategoriesHub() {
       open: true,
       category: cat,
       folderId: cat.folderId ?? undefined,
-      taxonomySubs: getTaxonomySubs(cat.id),
     });
   };
 

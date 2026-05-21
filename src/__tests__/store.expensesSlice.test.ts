@@ -8,13 +8,12 @@ import reducer, {
 } from '@/features/expenses/store/expensesSlice';
 import type { SerializableExpense } from '@/shared/types';
 
-const makeExpense = (id: string, categoryId: string, subcategoryId?: string): SerializableExpense => ({
+const makeExpense = (id: string, categoryId: string): SerializableExpense => ({
   id,
   userId: 'u1',
   amount: 100,
   currency: 'ILS',
   categoryId,
-  subcategoryId,
   date: '2026-05-01T10:00:00.000Z',
   paymentMethod: 'card',
   tags: [],

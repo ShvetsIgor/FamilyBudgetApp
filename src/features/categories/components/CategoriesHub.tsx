@@ -191,9 +191,9 @@ export function CategoriesHub() {
       order: folders.length,
     });
     dispatch(addFolder(folder));
-    const taxEntry = TAXONOMY.find((p) => p.id === libraryParent.id);
-    if (taxEntry) {
-      for (const sub of taxEntry.subs) {
+    const taxSubs = getTaxonomySubs(libraryParent.id);
+    if (taxSubs) {
+      for (const sub of taxSubs) {
         const s = await addCategoryWithId(user.id, sub.id, {
           name: sub.name,
           icon: sub.icon,

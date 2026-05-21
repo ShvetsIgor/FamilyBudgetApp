@@ -72,16 +72,12 @@ export function CategoriesHub() {
     )
   );
 
-  const hasFolders = folders.length > 0;
   const existingCategoryIds = new Set(allCategories.map((c) => c.id));
+  const ungroupedCats = allCategories.filter((c) => !c.folderId && !c.archived);
 
-  // For summary bar — count active items depending on model
-  const activeCount = hasFolders
-    ? folders.length
-    : activeParents.length;
-  const totalBudget = hasFolders
-    ? Object.values(categoriesInFolderMap).flat().reduce((s, c) => s + (budgetLimits[c.id] ?? 0), 0)
-    : activeParents.reduce((s, p) => s + (budgetLimits[p.id] ?? 0), 0);
+  const activeCount = folders.length;
+  const totalBudget = Object.values(categoriesInFolderMap).flat()
+    .reduce((s, c) => s + (budgetLimits[c.id] ?? 0), 0);
 
   if (!user) return null;
 

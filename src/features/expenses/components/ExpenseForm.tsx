@@ -65,7 +65,7 @@ export function ExpenseForm({ initialExpense }: Props) {
   const canSave = numAmount > 0 && categoryId && splitValid && (!isSavingsCategory || goalId !== '');
 
   function handleCategoryChange(id: string) {
-    setParentCategoryId(id);
+    setSelectedCategoryId(id);
     setCategoryId(id);
     setGoalId('');
     setSplits([]);

@@ -18,7 +18,7 @@ export function CategoryRow({ category, subs, budget, onEdit, fromLibrary, onAct
   const firstThree = subs.slice(0, 3);
   const remaining = subs.length - 3;
 
-  const displayName = getTaxName(category.id, lang) ?? category.name;
+  const displayName = getTaxonomyName(category.id, lang) ?? category.name;
 
   return (
     <div
@@ -52,7 +52,7 @@ export function CategoryRow({ category, subs, budget, onEdit, fromLibrary, onAct
               className="text-[10px] rounded-md px-1.5 py-0.5 font-medium"
               style={{ backgroundColor: `${category.color}15`, color: category.color }}
             >
-              {getTaxName(sub.id, lang) ?? sub.name}
+              {getTaxonomyName(sub.id, lang) ?? sub.name}
             </span>
           ))}
           {remaining > 0 && (

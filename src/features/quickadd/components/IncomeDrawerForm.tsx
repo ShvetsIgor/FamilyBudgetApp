@@ -92,7 +92,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
             <span className="text-[11px] font-bold" style={{ color: catColor }}>{selectedCat ? t.cat(selectedCat.name) : ''}</span>
           </div>
           <div className="grid gap-1.5" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-            {parentCats.slice(0, 8).map((cat, i) => {
+            {groups.slice(0, 8).map((cat, i) => {
               const sel = cat.id === categoryId;
               const c = cat.color ?? '#10b981';
               return (

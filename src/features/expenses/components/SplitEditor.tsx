@@ -12,17 +12,17 @@ import type { SplitItem, Currency } from '@/shared/types';
 interface Props {
   total: number;
   currency: Currency;
-  parentCategoryId: string;
+  groupCategoryId: string;
   splits: SplitItem[];
   onChange: (splits: SplitItem[]) => void;
   open: boolean;
   onToggle: () => void;
 }
 
-export function SplitEditor({ total, currency, parentCategoryId, splits, onChange, open, onToggle }: Props) {
+export function SplitEditor({ total, currency, groupCategoryId, splits, onChange, open, onToggle }: Props) {
   const allCategories = useAppSelector((s) => s.categories.expense);
   const { getCatsInGroup } = useCategoryGroups('expense');
-  const groupCats = getCatsInGroup(parentCategoryId);
+  const groupCats = getCatsInGroup(groupCategoryId);
   const { mainAmount, isValid } = calculateSplit(total, splits);
   const symbol = getCurrencySymbol(currency);
 

@@ -195,8 +195,8 @@ export function CategoryEditorSheet({
             <ColorPaletteRow value={color} onChange={setColor} />
           </div>
 
-          {/* Budget (only for parent expense categories) */}
-          {!parentId && type === 'expense' && (
+          {/* Budget */}
+          {type === 'expense' && (
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-[#8E7A66] uppercase tracking-wide">
                 Бюджет в месяц <span className="normal-case font-normal">(необязательно)</span>

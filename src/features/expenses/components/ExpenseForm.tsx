@@ -232,7 +232,7 @@ export function ExpenseForm({ initialExpense }: Props) {
         <SplitEditor
           total={numAmount}
           currency={currency}
-          parentCategoryId={categoryId}
+          groupCategoryId={categoryId}
           splits={splits}
           onChange={setSplits}
           open={splitOpen}

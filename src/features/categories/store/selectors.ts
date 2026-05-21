@@ -12,15 +12,15 @@ export const selectFolders = (s: RootState, type: CategoryType) =>
   type === 'expense' ? s.categories.folders.expense : s.categories.folders.income;
 
 export const selectCategoriesInFolder = (s: RootState, folderId: string, type: CategoryType) =>
-  cats(s, type).filter((c) => c.folderId === folderId && !c.archived);
+  cats(s, type).filter((c) => c.folderId === folderId && isActiveCategory(c));
 
-/** All active (non-archived) categories that don't belong to any folder or legacy parent */
+/** Active categories not assigned to any folder (excludes legacy parentId-based children) */
 export const selectUnfolderedCategories = (s: RootState, type: CategoryType) =>
-  cats(s, type).filter((c) => !c.folderId && !c.parentId && !c.archived);
+  cats(s, type).filter((c) => !c.folderId && !c.parentId && isActiveCategory(c));
 
-/** All active categories (non-archived), regardless of folder */
+/** All active categories regardless of folder assignment */
 export const selectAllActiveCategories = (s: RootState, type: CategoryType) =>
-  cats(s, type).filter((c) => !c.archived);
+  cats(s, type).filter(isActiveCategory);
 
 // ─── Library / constructor ───────────────────────────────────────────────────
 

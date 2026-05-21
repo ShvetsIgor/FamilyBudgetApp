@@ -34,7 +34,7 @@ export function ExpenseForm({ initialExpense }: Props) {
   const isEdit = !!initialExpense;
 
   const [amount, setAmount] = useState(initialExpense?.amount.toString() ?? '');
-  const [parentCategoryId, setParentCategoryId] = useState(initialExpense?.categoryId ?? '');
+  const [selectedCategoryId, setSelectedCategoryId] = useState(initialExpense?.categoryId ?? '');
   const [categoryId, setCategoryId] = useState(initialExpense?.categoryId ?? '');
   const [goalId, setGoalId] = useState(initialExpense?.goalId ?? '');
   const [splits, setSplits] = useState<SplitItem[]>(initialExpense?.splits ?? []);

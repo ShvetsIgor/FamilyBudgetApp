@@ -108,7 +108,6 @@ export function ConstructorWizard({ open, onClose, existingCategoryIds }: Props)
             name: cat.name,
             icon: cat.icon,
             color: cat.color ?? '#E07A5F',
-            parentId: cat.parentId,
             type: cat.type,
             order: cat.order,
             isPrivate: cat.isPrivate,

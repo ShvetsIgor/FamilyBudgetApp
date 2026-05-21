@@ -104,6 +104,7 @@ export interface AddExpenseInput {
   comment?: string;
   privacy: Privacy;
   splits: SplitItem[];
+  items?: ExpenseItem[];
   goalId?: string;
 }
 

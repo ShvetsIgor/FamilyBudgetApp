@@ -6,32 +6,10 @@ import { addMessage, updateMessage } from '@/features/chat/services/messagesServ
 import type { SerializableChatMessage, ParseResult } from '@/shared/types/message';
 import type { Category } from '@/shared/types';
 import type { BotContext } from './context';
-
+import { resolveCategoryByAlias } from '@/features/categories/utils/resolveCategory';
 import { savedPhrase, clarifyPhrase, clarifyStorePhrase, UNKNOWN_PHRASE } from './templates';
-import { TAXONOMY, INCOME_TAXONOMY } from '@/features/categories/icons/icons';
 
-// Lookup category by taxonomy alias — handles both stable IDs and legacy random IDs
-function resolveCategory(alias: string | null, categoriesById: Map<string, Category>): Category | undefined {
-  if (!alias) return undefined;
-  const direct = categoriesById.get(alias);
-  if (direct) return direct;
-  // Find taxonomy name for this alias
-  for (const parent of [...TAXONOMY, INCOME_TAXONOMY as typeof TAXONOMY[0]]) {
-    if (parent.id === alias) {
-      for (const [, cat] of categoriesById) {
-        if (cat.name === parent.name && !cat.archived) return cat;
-      }
-    }
-    for (const sub of parent.subs ?? []) {
-      if (sub.id === alias) {
-        for (const [, cat] of categoriesById) {
-          if (cat.name === sub.name) return cat;
-        }
-      }
-    }
-  }
-  return undefined;
-}
+const resolveCategory = resolveCategoryByAlias;
 
 function nowTimestamp(): string {
   return new Date().toISOString();

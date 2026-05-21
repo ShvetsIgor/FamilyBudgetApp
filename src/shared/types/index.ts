@@ -88,6 +88,22 @@ export interface SplitItem {
   amount: number;
 }
 
+/**
+ * A single semantic line item within an expense.
+ * Supports future receipt OCR and AI-assisted multi-item purchases.
+ * Existing single-category expenses set categoryId at the Expense level and leave items undefined.
+ */
+export interface ExpenseItem {
+  id: string;
+  title: string;
+  amount: number;
+  quantity?: number;
+  categoryId?: string;
+  /** Confidence score 0–1. Populated by parser/OCR/AI; undefined for manual entries. */
+  confidence?: number;
+  source?: 'manual' | 'parser' | 'ocr' | 'ai';
+}
+
 export interface Expense {
   id: string;
   userId: string;
@@ -104,6 +120,8 @@ export interface Expense {
   photoUrl?: string;
   privacy: Privacy;
   splits: SplitItem[];
+  /** Itemized line items. Populated by OCR/AI multi-item flow; undefined for regular expenses. */
+  items?: ExpenseItem[];
   isRecurring: boolean;
   recurringId?: string;
   createdAt: Timestamp;

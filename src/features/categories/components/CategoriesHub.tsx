@@ -118,15 +118,14 @@ export function CategoriesHub() {
   ) => {
     if (!user || !editor.category) return;
     const parentCat = editor.category;
-    // TODO: Legacy migration path — new sub-categories still use parentId for backwards compat.
-    // When fully migrated to folder model, replace parentId with folderId here.
+    const targetFolderId = editor.folderId ?? undefined;
     for (const sub of toAdd) {
       const created = await addCategoryWithId(user.id, sub.id, {
         name: sub.name,
         icon: sub.icon,
         color: parentCat.color,
         type: parentCat.type,
-        parentId: parentCat.id, // @legacy: parentId used during migration period
+        folderId: targetFolderId,
         order: 0,
         isPrivate: false,
       });
@@ -138,13 +137,12 @@ export function CategoriesHub() {
         icon: parentCat.icon,
         color: parentCat.color,
         type: parentCat.type,
-        parentId: parentCat.id, // @legacy: parentId used during migration period
+        folderId: targetFolderId,
         order: 0,
         isPrivate: false,
       });
       dispatch(addCategory(created));
     }
-    // Archive (soft-delete) instead of hard-delete — categories may have historical expenses
     for (const id of toRemove) {
       await archiveCategoryInFirestore(user.id, id, parentCat.type);
       dispatch(archiveCategory({ id, type: parentCat.type }));

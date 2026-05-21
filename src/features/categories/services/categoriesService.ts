@@ -130,7 +130,7 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
 
 export async function bulkApplyConstructorDiff(
   userId: string,
-  toAdd: Array<{ id: string; name: string; ru?: string; icon: string; color?: string; type: CategoryType; order: number; isPrivate: boolean }>,
+  toAdd: Array<{ id: string; name: string; ru?: string; icon: string; color?: string; type: CategoryType; order: number; isPrivate: boolean; folderId?: string }>,
 ): Promise<void> {
   const db = getDb();
   const batch = writeBatch(db);

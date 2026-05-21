@@ -1,7 +1,7 @@
 import type { RootState } from '@/store/store';
 import type { Category, CategoryFolder, StoreProfile } from '@/shared/types';
 import type { Currency } from '@/shared/types';
-import { isRootCategory } from '@/shared/utils/categoryHelpers';
+
 
 export interface BotContext {
   userId: string;

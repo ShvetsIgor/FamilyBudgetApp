@@ -11,9 +11,8 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
-import type { Category, CategoryFolder, CategoryType } from '@/shared/types';
+import type { Category, CategoryType } from '@/shared/types';
 import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES, legacyCategoryMap } from './defaultCategories';
-import { bulkCreateFolders } from './categoryFoldersService';
 
 function colRef(userId: string, type: CategoryType) {
   return collection(getDb(), 'categories', userId, type);
@@ -26,7 +25,6 @@ export async function fetchCategories(userId: string, type: CategoryType): Promi
 }
 
 export async function addCategory(userId: string, data: Omit<Category, 'id' | 'userId'>): Promise<Category> {
-  // Strip undefined fields — Firestore rejects them
   const clean = Object.fromEntries(
     Object.entries({ ...data, userId }).filter(([, v]) => v !== undefined)
   );
@@ -34,7 +32,6 @@ export async function addCategory(userId: string, data: Omit<Category, 'id' | 'u
   return { id: ref.id, userId, ...data };
 }
 
-// Add category with a stable known ID (e.g. TAXONOMY slug) instead of auto-generated
 export async function addCategoryWithId(userId: string, id: string, data: Omit<Category, 'id' | 'userId'>): Promise<Category> {
   const clean = Object.fromEntries(
     Object.entries({ ...data, userId }).filter(([, v]) => v !== undefined)
@@ -53,26 +50,23 @@ export async function deleteCategory(userId: string, categoryId: string, type: C
   await deleteDoc(doc(getDb(), 'categories', userId, type, categoryId));
 }
 
-/** Soft-deletes: marks archived=true. Use instead of deleteCategory when the category may have expenses. */
+/** Soft-deletes: marks archived=true. Use when the category may have expenses. */
 export async function archiveCategoryInFirestore(userId: string, categoryId: string, type: CategoryType): Promise<void> {
   await updateDoc(doc(getDb(), 'categories', userId, type, categoryId), { archived: true });
 }
 
 // Resets categories to TAXONOMY defaults using stable taxonomy IDs.
 // Returns oldId→newId map for expenses that need re-linking.
-export async function resetCategoriesToDefaults(
-  userId: string
-): Promise<Record<string, string>> {
+export async function resetCategoriesToDefaults(userId: string): Promise<Record<string, string>> {
   const db = getDb();
 
-  // Build old name→id maps so we can return a migration map for expenses
-  type OldCat = { name: string; parentId?: string };
-  const oldCats: Record<string, OldCat> = {};
+  // Capture old names before deleting
+  const oldNames: Record<string, string> = {};
   for (const type of ['expense', 'income'] as CategoryType[]) {
     const snap = await getDocs(colRef(userId, type));
     snap.docs.forEach((d) => {
-      const data = d.data() as { name?: string; parentId?: string };
-      if (data.name) oldCats[d.id] = { name: data.name, parentId: data.parentId };
+      const data = d.data() as { name?: string };
+      if (data.name) oldNames[d.id] = data.name;
     });
   }
 
@@ -96,20 +90,18 @@ export async function resetCategoriesToDefaults(
   }
   await batch.commit();
 
-  // Build oldId→newTaxonomyId map for expenses migration
+  // Build oldId→newId map: match by name, then apply legacyCategoryMap for unmapped old IDs
   const oldIdToNewId: Record<string, string> = {};
-  for (const [oldId, { name, parentId }] of Object.entries(oldCats)) {
-    // Find matching taxonomy entry by name
-    for (const cat of [...DEFAULT_EXPENSE_CATEGORIES, ...DEFAULT_INCOME_CATEGORIES]) {
-      if (cat.name === name && String(cat.parentId ?? '') === String(parentId ?? '')) {
-        if (oldId !== cat.id) oldIdToNewId[oldId] = cat.id;
-        break;
-      }
-    }
+  for (const [oldId, name] of Object.entries(oldNames)) {
+    const match = [...DEFAULT_EXPENSE_CATEGORIES, ...DEFAULT_INCOME_CATEGORIES].find((c) => c.name === name);
+    if (match && oldId !== match.id) oldIdToNewId[oldId] = match.id;
+  }
+  // Apply legacy map for any IDs not matched by name
+  for (const [legacyId, newId] of Object.entries(legacyCategoryMap)) {
+    if (!oldIdToNewId[legacyId]) oldIdToNewId[legacyId] = newId;
   }
   return oldIdToNewId;
 }
-
 
 export async function seedDefaultCategories(userId: string): Promise<void> {
   const [existingExpense, existingIncome] = await Promise.all([
@@ -117,12 +109,9 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
     fetchCategories(userId, 'income'),
   ]);
 
-  const needsExpense = existingExpense.length === 0;
-  const needsIncome = existingIncome.filter((c) => c.parentId).length === 0;
+  if (existingExpense.length > 0 && existingIncome.length > 0) return;
 
-  if (!needsExpense && !needsIncome) return;
-
-  if (needsExpense) {
+  if (existingExpense.length === 0) {
     for (const cat of DEFAULT_EXPENSE_CATEGORIES) {
       const { id, ...rest } = cat;
       const clean = Object.fromEntries(Object.entries({ ...rest, userId }).filter(([, v]) => v !== undefined));
@@ -130,7 +119,7 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
     }
   }
 
-  if (needsIncome) {
+  if (existingIncome.length === 0) {
     for (const cat of DEFAULT_INCOME_CATEGORIES) {
       const { id, ...rest } = cat;
       const clean = Object.fromEntries(Object.entries({ ...rest, userId }).filter(([, v]) => v !== undefined));
@@ -139,64 +128,9 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
   }
 }
 
-/**
- * Migrates categories from old parentId hierarchy to new folderId model.
- * - Creates CategoryFolder docs for each unique parentId
- * - Updates each child category: sets folderId = parentId, clears parentId
- * - Returns a map of oldParentId → folderId for reference
- */
-export async function migrateCategoryHierarchyToFolders(
-  userId: string,
-): Promise<{ folderMap: Record<string, string>; legacyExpenseMap: Record<string, string> }> {
-  const db = getDb();
-
-  const allCats: Category[] = [];
-  for (const type of ['expense', 'income'] as CategoryType[]) {
-    const snap = await getDocs(colRef(userId, type));
-    snap.docs.forEach((d) => allCats.push({ id: d.id, ...d.data() } as Category));
-  }
-
-  // Find all parent categories (those with no parentId and with children)
-  const parentIds = new Set(allCats.filter((c) => c.parentId).map((c) => c.parentId!));
-  const parents = allCats.filter((c) => parentIds.has(c.id) || (!c.parentId && allCats.some((s) => s.parentId === c.id)));
-
-  // Create folder for each parent
-  const folderDefs: Array<Omit<CategoryFolder, 'userId'>> = parents.map((p) => ({
-    id: p.id,
-    name: p.name,
-    icon: p.icon,
-    color: p.color,
-    type: p.type,
-    order: p.order,
-  }));
-
-  const folderMap: Record<string, string> = {};
-  if (folderDefs.length > 0) {
-    const created = await bulkCreateFolders(userId, folderDefs);
-    for (const f of created) folderMap[f.id] = f.id;
-  }
-
-  // Update child categories: set folderId, remove parentId
-  const batch = writeBatch(db);
-  for (const cat of allCats) {
-    if (cat.parentId && folderMap[cat.parentId]) {
-      batch.update(doc(db, 'categories', userId, cat.type, cat.id), {
-        folderId: cat.parentId,
-        parentId: null,
-      });
-    }
-  }
-  await batch.commit();
-
-  // Build legacy expense map: old parent categoryId → primary subcategory ID
-  const legacyExpenseMap: Record<string, string> = { ...legacyCategoryMap };
-
-  return { folderMap, legacyExpenseMap };
-}
-
 export async function bulkApplyConstructorDiff(
   userId: string,
-  toAdd: Array<{ id: string; name: string; ru?: string; icon: string; color?: string; parentId?: string; type: CategoryType; order: number; isPrivate: boolean }>,
+  toAdd: Array<{ id: string; name: string; ru?: string; icon: string; color?: string; type: CategoryType; order: number; isPrivate: boolean }>,
 ): Promise<void> {
   const db = getDb();
   const batch = writeBatch(db);

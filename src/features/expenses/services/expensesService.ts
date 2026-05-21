@@ -107,13 +107,12 @@ export interface AddExpenseInput {
 }
 
 export async function addExpense(input: AddExpenseInput): Promise<SerializableExpense> {
-  const { userId, date, subcategoryId, store, storeId, storeGroup, comment, ...rest } = input;
+  const { userId, date, store, storeId, storeGroup, comment, ...rest } = input;
 
   const data = Object.fromEntries(
     Object.entries({
       ...rest,
       userId,
-      subcategoryId,
       store,
       storeId,
       storeGroup,

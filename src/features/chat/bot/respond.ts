@@ -223,7 +223,7 @@ export async function respondToUserMessage(
               color: incomeCat?.color ?? '#10b981',
               title: catName,
               catName: null,
-              parentName: null,
+              groupName: null,
               hint: dateHint,
               amount: parsed.amount,
               currency: sym,

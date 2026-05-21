@@ -27,7 +27,7 @@ export function useCategoryGroups(type: CategoryType) {
   );
 
   function getCatsInGroup(folderId: string): Category[] {
-    return allCats.filter((c) => c.folderId === folderId && !c.archived);
+    return allCats.filter((c) => c.folderId === folderId && isActiveCategory(c));
   }
 
   function getGroupOf(cat: Category | undefined): string {

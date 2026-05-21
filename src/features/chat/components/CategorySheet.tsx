@@ -32,7 +32,7 @@ export function CategorySheet({ onSelect, onClose, categories: categoriesOverrid
   const allCats = categoriesOverride ?? expenseCats;
   const folders = categoriesOverride ? [] : expenseFolders;
 
-  const activeCats = useMemo(() => allCats.filter((c) => !c.archived), [allCats]);
+  const activeCats = useMemo(() => allCats.filter(isActiveCategory), [allCats]);
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
@@ -42,26 +42,7 @@ export function CategorySheet({ onSelect, onClose, categories: categoriesOverrid
     );
   }, [query, activeCats, t]);
 
-  // Group by folder; ungrouped categories shown at the end
-  const grouped = useMemo(() => {
-    const result: Array<{ header: string | null; color?: string; chips: Chip[] }> = [];
-    for (const folder of folders) {
-      const cats = activeCats.filter((c) => c.folderId === folder.id);
-      if (cats.length === 0) continue;
-      const chips: Chip[] = [
-        ...cats.map((c) => ({ id: c.id, name: c.name, icon: c.icon, color: c.color })),
-      ];
-      result.push({ header: folder.name, color: folder.color, chips });
-    }
-    const ungrouped = activeCats.filter((c) => !c.folderId);
-    if (ungrouped.length > 0) {
-      result.push({
-        header: folders.length > 0 ? 'Другие' : null,
-        chips: ungrouped.map((c) => ({ id: c.id, name: c.name, icon: c.icon, color: c.color })),
-      });
-    }
-    return result;
-  }, [activeCats, folders]);
+  const sections = useMemo(() => buildFolderSections(folders, activeCats), [folders, activeCats]);
 
   return (
     <div

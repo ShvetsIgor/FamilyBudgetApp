@@ -54,7 +54,7 @@ export function ClarifyCard({
 
   const currentChips: ClarifyChip[] = selectedParent && categories
     ? categories
-        .filter((c) => c.folderId === selectedParent.id || c.parentId === selectedParent.id)
+        .filter((c) => c.folderId === selectedParent.id)
         .map((c) => ({ id: c.id, name: c.name, icon: c.icon, color: c.color }))
     : chips;
 

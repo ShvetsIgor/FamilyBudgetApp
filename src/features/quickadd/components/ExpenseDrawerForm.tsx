@@ -128,11 +128,11 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
         <div>
           <div className="flex items-center justify-between mb-1.5 px-0.5">
             <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">Категория</span>
-            <span className="text-[11px] font-bold" style={{ color: catColor }}>{parent ? t.cat(parent.name) : ''}</span>
+            <span className="text-[11px] font-bold" style={{ color: catColor }}>{selectedGroup ? t.cat(selectedGroup.name) : ''}</span>
           </div>
           <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-            {parentCats.slice(0, 12).map((cat) => {
-              const sel = cat.id === parentId;
+            {groups.slice(0, 12).map((cat) => {
+              const sel = cat.id === selectedGroupId;
               const c = cat.color ?? '#E07A5F';
               return (
                 <button

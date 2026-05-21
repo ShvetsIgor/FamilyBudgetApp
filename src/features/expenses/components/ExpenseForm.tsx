@@ -164,10 +164,10 @@ export function ExpenseForm({ initialExpense }: Props) {
         <label className="text-sm font-medium">{t('expense.category')}</label>
         <CategoryPicker
           type="expense"
-          value={parentCategoryId || undefined}
+          value={selectedCategoryId || undefined}
           onChange={handleCategoryChange}
           placeholder={t('categories.selectCategory')}
-          parentsOnly
+          ungroupedOnly
         />
         {groupCats.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-1">

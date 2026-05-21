@@ -50,7 +50,7 @@ export function SplitEditor({ total, currency, parentCategoryId, splits, onChang
         className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted transition-colors"
       >
         <span className="flex items-center gap-2">
-          <span>Split by subcategory</span>
+          <span>Split by category</span>
           {splits.length > 0 && (
             <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary font-semibold">
               {splits.length} selected

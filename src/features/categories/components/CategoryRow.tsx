@@ -41,26 +41,12 @@ export function CategoryRow({ category, budget, onEdit, fromLibrary, onActivate 
           )}
         </div>
 
-        {/* Subs + budget */}
-        <div className="flex items-center gap-2 mt-1 flex-wrap">
-          {firstThree.map((sub) => (
-            <span
-              key={sub.id}
-              className="text-[10px] rounded-md px-1.5 py-0.5 font-medium"
-              style={{ backgroundColor: `${category.color}15`, color: category.color }}
-            >
-              {getTaxonomyName(sub.id, lang) ?? sub.name}
-            </span>
-          ))}
-          {remaining > 0 && (
-            <span className="text-[10px] text-[#B6A48E]">+{remaining}</span>
-          )}
-          {budget && budget > 0 ? (
-            <span className="text-[10px] text-[#8E7A66] ml-auto shrink-0">
-              ₪{budget.toLocaleString()}/мес
-            </span>
-          ) : null}
-        </div>
+        {/* Budget */}
+        {budget && budget > 0 ? (
+          <p className="text-[10px] text-[#8E7A66] mt-1">
+            ₪{budget.toLocaleString()}/мес
+          </p>
+        ) : null}
       </div>
 
       {/* Action */}

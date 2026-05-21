@@ -175,7 +175,7 @@ export function ExpenseForm({ initialExpense }: Props) {
               <button
                 key={sub.id}
                 type="button"
-                onClick={() => setCategoryId(categoryId === sub.id ? parentCategoryId : sub.id)}
+                onClick={() => setCategoryId(categoryId === sub.id ? selectedCategoryId : sub.id)}
                 className={cn(
                   'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors',
                   categoryId === sub.id

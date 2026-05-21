@@ -39,9 +39,7 @@ interface TaxSub { id: string; name: string; ru?: string; icon: string }
 interface EditorState {
   open: boolean;
   category?: Category;
-  parentId?: string;
   folderId?: string;
-  existingSubs?: Category[];
   taxonomySubs?: TaxSub[];
 }
 

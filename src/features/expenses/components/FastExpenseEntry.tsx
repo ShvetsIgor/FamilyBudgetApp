@@ -176,7 +176,7 @@ export function FastExpenseEntry({
     setEditing('total');
   }
 
-  function changeParent(id: string) {
+  function changeCategory(id: string) {
     setSelectedCatId(id);
     setEditing('total');
   }
@@ -309,7 +309,7 @@ export function FastExpenseEntry({
             return (
               <button
                 key={cat.id}
-                onClick={() => changeParent(cat.id)}
+                onClick={() => changeCategory(cat.id)}
                 className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
                 style={{
                   background: sel ? catColor : 'hsl(var(--card))',

@@ -85,7 +85,7 @@ export function SplitEditor({ total, currency, parentCategoryId, splits, onChang
               )}>
                 <button
                   type="button"
-                  onClick={() => toggleSubcategory(sub.id)}
+                  onClick={() => toggleGroupCat(sub.id)}
                   className="flex items-center gap-2 flex-1 min-w-0 text-left"
                 >
                   <CategoryIcon icon={sub.icon} color={sub.color} size="sm" />

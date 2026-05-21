@@ -33,7 +33,7 @@ export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
   const folderCat = category?.folderId ? folders.find((f) => f.id === category.folderId) : null;
   const categoryLabel = category ? t.cat(category.name) : '';
   const folderLabel = folderCat ? t.cat(folderCat.name) : '';
-  const subtitleLabel = categoryLabel || parentLabel || '';
+  const subtitleLabel = categoryLabel || folderLabel || '';
 
   // Top line: comment or store name; if neither — category name
   const topLine = expense.comment || expense.store || categoryLabel;

@@ -16,11 +16,12 @@ interface Props {
   availableFolders?: import('@/shared/types').CategoryFolder[];  // root folders for parent selection
 }
 
-export function FolderEditorSheet({ open, onClose, initial, type, onSave, onDelete }: Props) {
+export function FolderEditorSheet({ open, onClose, initial, type, onSave, onDelete, availableFolders }: Props) {
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('box');
   const [color, setColor] = useState<string>(CC.primary);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [parentFolderId, setParentFolderId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (open) {
@@ -28,6 +29,7 @@ export function FolderEditorSheet({ open, onClose, initial, type, onSave, onDele
       setIcon(initial?.icon ?? 'box');
       setColor(initial?.color ?? CC.primary);
       setConfirmDelete(false);
+      setParentFolderId(initial?.parentFolderId);
     }
   }, [open, initial]);
 

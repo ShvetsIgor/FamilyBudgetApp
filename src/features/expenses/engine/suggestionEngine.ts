@@ -206,6 +206,7 @@ export function shortExplainSuggestion(s: ScoredSuggestion): string {
     case 'merchant_history': return `${primary.count}×`;
     case 'recent_usage': return primary.daysSince === 0 ? 'сегодня' : `${primary.daysSince}д`;
     case 'name_match': return 'название';
+    case 'split_history': return `сплит ${primary.comboCount}×`;
     default: return '';
   }
 }

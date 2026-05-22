@@ -587,10 +587,11 @@ I.box = ({ c, id }) => <svg viewBox="0 0 32 32"><Defs id={id} c={c} />
   <path d="M5 10 L16 5 L27 10 L16 15 Z" fill={`url(#${id})`} />
 </svg>;
 
-// TAXONOMY and INCOME_TAXONOMY have been moved to:
-// src/features/categories/preset/categoryPresets.ts
-// This file is now a pure icon library.
-const _TAXONOMY_MOVED = null; export const TAXONOMY = [
+/* ════════════════════════════════════════════
+ * TAXONOMY  (default category blueprints)
+ * Each entry seeds one folder + its default categories. IDs are stable slugs.
+ * ════════════════════════════════════════════ */
+export const TAXONOMY = [
   { id: 'food',          name: 'Food & Drinks',      ru: 'Еда и напитки',      color: '#E07A5F', icon: 'cart',      subs: [
     { id: 'groceries',    name: 'Groceries',          ru: 'Продукты',           icon: 'cart' },
     { id: 'bakery',       name: 'Bakery',             ru: 'Хлеб и выпечка',     icon: 'cart' },

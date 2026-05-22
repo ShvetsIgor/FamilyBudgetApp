@@ -8,7 +8,7 @@ import { useT } from '@/shared/hooks/useT';
 import { C } from '@/features/chat/styles/tokens';
 import type { Category } from '@/shared/types';
 import { isActiveCategory } from '@/features/categories/policy/categoryPolicy';
-import { buildFolderSections } from '@/features/categories/utils/categoryViewModels';
+import { buildFolderSections } from '@/features/categories/utils/folderSections';
 
 interface Chip {
   id: string;

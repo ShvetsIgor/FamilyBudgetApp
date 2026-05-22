@@ -62,7 +62,7 @@ export async function archiveCategoryInFirestore(userId: string, categoryId: str
   await updateDoc(doc(getDb(), 'categories', userId, type, categoryId), { archived: true });
 }
 
-// Resets categories to TAXONOMY defaults using stable taxonomy IDs.
+// Resets categories and folders to preset defaults using stable IDs.
 // Returns oldId→newId map for expenses that need re-linking.
 export async function resetCategoriesToDefaults(userId: string): Promise<Record<string, string>> {
   const db = getDb();
@@ -77,13 +77,19 @@ export async function resetCategoriesToDefaults(userId: string): Promise<Record<
     });
   }
 
-  // Delete all existing categories
+  // Delete all existing categories and folders
   for (const type of ['expense', 'income'] as CategoryType[]) {
-    const snap = await getDocs(colRef(userId, type));
-    await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
+    const [catSnap, folderSnap] = await Promise.all([
+      getDocs(colRef(userId, type)),
+      getDocs(collection(db, 'categoryFolders', userId, type)),
+    ]);
+    await Promise.all([
+      ...catSnap.docs.map((d) => deleteDoc(d.ref)),
+      ...folderSnap.docs.map((d) => deleteDoc(d.ref)),
+    ]);
   }
 
-  // Recreate with stable taxonomy IDs
+  // Recreate categories with stable preset IDs
   const batch = writeBatch(db);
   for (const cat of DEFAULT_EXPENSE_CATEGORIES) {
     const { id, ...rest } = cat;
@@ -96,6 +102,12 @@ export async function resetCategoriesToDefaults(userId: string): Promise<Record<
     batch.set(doc(colRef(userId, 'income'), id), clean);
   }
   await batch.commit();
+
+  // Recreate folders
+  await Promise.all([
+    bulkCreateFolders(userId, DEFAULT_EXPENSE_FOLDER_SEEDS),
+    bulkCreateFolders(userId, DEFAULT_INCOME_FOLDER_SEEDS),
+  ]);
 
   // Build oldId→newId map: match by name, then apply legacyCategoryMap for unmapped old IDs
   const oldIdToNewId: Record<string, string> = {};

@@ -57,6 +57,7 @@ export function CategoriesHub() {
   const [showLibrary, setShowLibrary] = useState(false);
   const [editor, setEditor] = useState<EditorState>({ open: false });
   const [folderEditor, setFolderEditor] = useState<FolderEditorState>({ open: false });
+  const [searchQuery, setSearchQuery] = useState('');
 
   const folders = useAppSelector((s) => selectFolders(s, tab));
   const rootFolders = useAppSelector((s) => selectRootFolders(s, tab));

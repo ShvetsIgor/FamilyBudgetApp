@@ -44,6 +44,8 @@ export function CategoryEditorSheet({
   const [budgetVal, setBudgetVal] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
 
   useEffect(() => {
     if (open) {

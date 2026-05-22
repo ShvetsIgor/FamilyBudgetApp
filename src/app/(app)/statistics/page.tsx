@@ -7,7 +7,7 @@ import { fetchMonthStats, fetchLastNMonths, type MonthStats } from '@/features/s
 import { saveBudget } from '@/features/budget/services/budgetService';
 import { setBudgetLimit } from '@/features/budget/store/budgetSlice';
 import { formatAmount, blockInvalidAmountKeys } from '@/shared/utils/currency';
-import { aggregateTopCategories } from '@/features/categories/utils/categoryViewModels';
+import { aggregateTopCategories } from '@/features/categories/utils/statsAggregation';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';

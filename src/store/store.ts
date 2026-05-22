@@ -10,6 +10,8 @@ import savingsReducer from '@/features/savings/store/savingsSlice';
 import familyReducer from '@/features/family/store/familySlice';
 import budgetReducer from '@/features/budget/store/budgetSlice';
 import quickAddReducer from '@/features/quickadd/store/quickAddSlice';
+import draftReducer from '@/features/expenses/store/draftSlice';
+import suggestionMemoryReducer from '@/features/expenses/store/suggestionMemorySlice';
 import chatReducer from '@/features/chat/store/chatSlice';
 import storeProfilesReducer from '@/features/chat/store/storeProfilesSlice';
 import notificationsReducer from '@/features/notifications/store/notificationsSlice';

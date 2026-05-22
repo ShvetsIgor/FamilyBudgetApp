@@ -153,20 +153,17 @@ export function CategoriesHub() {
       order: folders.length,
     });
     dispatch(addFolder(folder));
-    const taxSubs = getTaxonomySubs(libraryParent.id);
-    if (taxSubs) {
-      for (const sub of taxSubs) {
-        const s = await addCategoryWithId(user.id, sub.id, {
-          name: sub.name,
-          icon: sub.icon,
-          color: libraryParent.color,
-          type: tab,
-          folderId: folder.id,
-          order: 0,
-          isPrivate: false,
-        });
-        dispatch(addCategory(s));
-      }
+    for (const sub of getTaxonomySubs(libraryParent.id)) {
+      const s = await addCategoryWithId(user.id, sub.id, {
+        name: sub.name,
+        icon: sub.icon,
+        color: libraryParent.color,
+        type: tab,
+        folderId: folder.id,
+        order: 0,
+        isPrivate: false,
+      });
+      dispatch(addCategory(s));
     }
   };
 

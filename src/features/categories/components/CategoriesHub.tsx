@@ -217,8 +217,34 @@ export function CategoriesHub() {
         </button>
       )}
 
+      {/* Search */}
+      {!isEmpty && (
+        <div className="relative">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#B6A48E]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Поиск по названию или тегам…"
+            className="w-full rounded-xl bg-[#F4ECDE] pl-9 pr-9 py-2.5 text-sm text-[#3D2C1F] placeholder:text-[#B6A48E] outline-none focus:ring-2 focus:ring-[#E07A5F]/30"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#B6A48E] hover:text-[#8E7A66]"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path d="M18 6 6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Summary */}
-      {activeCount > 0 && (
+      {activeCount > 0 && !searchQuery && (
         <div className="flex items-center justify-between px-1">
           <span className="text-xs text-[#8E7A66]">
             {activeCount > 0 ? `${activeCount} папок` : ''}

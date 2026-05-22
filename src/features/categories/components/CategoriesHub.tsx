@@ -255,16 +255,30 @@ export function CategoriesHub() {
           </div>
         ) : (
           <>
-            {folders.map((folder) => (
-              <FolderSection
-                key={folder.id}
-                folder={folder}
-                categories={categoriesInFolderMap[folder.id] ?? []}
-                budgetLimits={budgetLimits}
-                onEditFolder={() => setFolderEditor({ open: true, folder })}
-                onEditCategory={openEditor}
-                onAddCategory={() => openNewCategoryInFolder(folder.id)}
-              />
+            {rootFolders.map((folder) => (
+              <div key={folder.id}>
+                <FolderSection
+                  folder={folder}
+                  categories={categoriesInFolderMap[folder.id] ?? []}
+                  budgetLimits={budgetLimits}
+                  onEditFolder={() => setFolderEditor({ open: true, folder })}
+                  onEditCategory={openEditor}
+                  onAddCategory={() => openNewCategoryInFolder(folder.id)}
+                />
+                {/* Child folders */}
+                {childFoldersMap[folder.id]?.map((child) => (
+                  <div key={child.id} className="ml-4">
+                    <FolderSection
+                      folder={child}
+                      categories={categoriesInFolderMap[child.id] ?? []}
+                      budgetLimits={budgetLimits}
+                      onEditFolder={() => setFolderEditor({ open: true, folder: child })}
+                      onEditCategory={(cat) => setEditor({ open: true, category: cat, folderId: child.id })}
+                      onAddCategory={() => setEditor({ open: false, category: undefined, folderId: child.id })}
+                    />
+                  </div>
+                ))}
+              </div>
             ))}
             {ungroupedCats.map((cat) => (
               <CategoryRow

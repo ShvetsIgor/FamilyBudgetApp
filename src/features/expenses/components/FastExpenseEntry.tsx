@@ -238,6 +238,11 @@ export function FastExpenseEntry({
       } else {
         const exp = await addExpense(base);
         dispatch(prependExpense(exp));
+        dispatch(recordExpense({
+          merchant: initialStore,
+          categoryId: selectedCatId,
+          date: dateStr,
+        }));
 
         if (fromChat) {
           // Add bot "split saved" message to chat

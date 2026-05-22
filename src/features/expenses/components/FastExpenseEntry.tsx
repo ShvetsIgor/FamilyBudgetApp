@@ -17,7 +17,7 @@ import type { Category, SerializableExpense, SplitItem } from '@/shared/types';
 import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
 import { useMemo } from 'react';
 import { recordExpense } from '@/features/expenses/store/suggestionMemorySlice';
-import { rankSuggestions } from '@/features/expenses/utils/suggestionRanking';
+import { computeSuggestions } from '@/features/expenses/engine/suggestionEngine';
 
 interface SplitRow {
   categoryId: string;

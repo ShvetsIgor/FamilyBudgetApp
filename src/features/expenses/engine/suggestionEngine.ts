@@ -58,6 +58,7 @@ function scoreItem(
   memory: SuggestionMemoryState,
   now: number,
 ): { score: number; reasons: SuggestionReason[] } {
+  const { signals } = SCORING_POLICY;
   let score = 0;
   const reasons: SuggestionReason[] = [];
 
@@ -66,18 +67,17 @@ function scoreItem(
     const usages = memory.merchants[merchantKey] ?? [];
     const usage = usages.find((u) => u.categoryId === item.id);
     if (usage) {
-      const contribution = 50 * Math.min(1, usage.count / 5);
-      score += contribution;
+      score += signals.merchantHistory.weight * Math.min(1, usage.count / signals.merchantHistory.saturationAt);
       reasons.push({ kind: 'merchant_history', count: usage.count });
     }
   }
 
-  // Signal 2: Recent usage with 30-day linear decay
+  // Signal 2: Recent usage with linear decay
   const recent = memory.recents.find((u) => u.categoryId === item.id);
   if (recent) {
     const days = (now - new Date(recent.lastUsed).getTime()) / 86_400_000;
-    const decay = Math.max(0, 1 - days / 30);
-    const contribution = 20 * decay * Math.min(1, recent.count / 10);
+    const decay = Math.max(0, 1 - days / signals.recentUsage.decayDays);
+    const contribution = signals.recentUsage.weight * decay * Math.min(1, recent.count / signals.recentUsage.saturationAt);
     if (contribution > 0) {
       score += contribution;
       reasons.push({ kind: 'recent_usage', daysSince: Math.floor(days) });
@@ -89,8 +89,21 @@ function scoreItem(
     const name = item.name.toLowerCase();
     const key = merchantKey.toLowerCase();
     if (name.includes(key) || key.includes(name)) {
-      score += 10;
+      score += signals.nameMatch.weight;
       reasons.push({ kind: 'name_match' });
+    }
+  }
+
+  // Signal 4: Split history — category appears in known split combos for this merchant
+  if (merchantKey && 'splitCombos' in memory) {
+    const combos = (memory as SuggestionMemoryState & { splitCombos?: import('../store/suggestionMemorySlice').SplitComboEntry[] }).splitCombos ?? [];
+    const comboMatches = combos.filter(
+      (c) => c.merchantKey === merchantKey && c.categoryIds.includes(item.id),
+    );
+    if (comboMatches.length > 0) {
+      const totalCount = comboMatches.reduce((s, c) => s + c.count, 0);
+      score += signals.splitHistory.weight * Math.min(1, totalCount / signals.splitHistory.saturationAt);
+      reasons.push({ kind: 'split_history', comboCount: totalCount });
     }
   }
 

@@ -80,6 +80,7 @@ export interface Category {
   order: number;
   type: CategoryType;
   archived?: boolean;
+  tags?: string[];  // contextual search hints; not semantic categories
 }
 
 // ─── Expense ─────────────────────────────────────────────────────────────────

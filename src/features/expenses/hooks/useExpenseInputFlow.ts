@@ -42,6 +42,7 @@ import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups
 import {
   getRecentMerchants,
   getRecentCategories,
+  getRecentSplitCombos,
   hasUsageContext,
   type RecentMerchant,
   type RecentCategoryEntry,

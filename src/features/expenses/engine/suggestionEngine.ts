@@ -179,12 +179,16 @@ export function hasConfidentSuggestion(
 
 /**
  * Whether suggestions are ambiguous — multiple strong candidates.
- * Used to trigger clarification stage.
+ * Uses SCORING_POLICY.thresholds for comparison.
  */
 export function isSuggestionAmbiguous(suggestions: ScoredSuggestion[]): boolean {
   const top = suggestions[0]?.score ?? 0;
   const second = suggestions[1]?.score ?? 0;
-  return top > 0 && top < 30 && second > top * 0.5;
+  return (
+    top > 0 &&
+    top < SCORING_POLICY.thresholds.confidentScore &&
+    second > top * SCORING_POLICY.thresholds.ambiguousRatio
+  );
 }
 
 /**

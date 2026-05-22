@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { FOLDER_BLUEPRINTS, CATEGORY_BLUEPRINTS } from '../utils/categoryAliasMap';
+import { FOLDER_BLUEPRINTS, CATEGORY_BLUEPRINTS } from '../preset/categoryPresets';
 
 // ─── Wizard state types ───────────────────────────────────────────────────────
 

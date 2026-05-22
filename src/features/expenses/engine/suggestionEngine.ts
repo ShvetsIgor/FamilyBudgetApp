@@ -161,6 +161,8 @@ export function explainSuggestion(s: ScoredSuggestion): string {
         : `Недавно (${primaryReason.daysSince} дн.)`;
     case 'name_match':
       return 'Совпадение названия';
+    case 'split_history':
+      return `В сплитах (${primaryReason.comboCount}×)`;
     default:
       return 'По умолчанию';
   }

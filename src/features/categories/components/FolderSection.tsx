@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { Category, CategoryFolder } from '@/shared/types';
 import { StickerIcon } from './CategoryIcon';
-import { getPresetDisplayName } from '../utils/categoryAliasMap';
+import { getPresetDisplayName } from '../config/categoryConfig';
 import { useAppSelector } from '@/store/store';
 
 interface Props {

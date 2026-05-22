@@ -1,7 +1,7 @@
 import type { RootState } from '@/store/store';
 import type { CategoryType } from '@/shared/types';
 import { isActiveCategory } from '../policy/categoryPolicy';
-import { buildFolderSections, type FolderSection } from '../utils/categoryViewModels';
+import { buildFolderSections, type FolderSection } from '../utils/folderSections';
 
 const cats = (s: RootState, type: CategoryType) =>
   type === 'expense' ? s.categories.expense : s.categories.income;

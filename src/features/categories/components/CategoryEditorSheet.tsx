@@ -186,6 +186,59 @@ export function CategoryEditorSheet({
             </div>
           )}
 
+          {/* Tags */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-[#8E7A66] uppercase tracking-wide">
+              Теги <span className="normal-case font-normal text-[#B6A48E]">(для поиска)</span>
+            </label>
+            <div className="flex flex-wrap gap-1.5 mb-1.5">
+              {tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium bg-[#F4ECDE] text-[#3D2C1F]"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => setTags((prev) => prev.filter((t) => t !== tag))}
+                    className="text-[#8E7A66] hover:text-[#E07A5F] leading-none"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if ((e.key === 'Enter' || e.key === ',') && tagInput.trim()) {
+                    e.preventDefault();
+                    const t = tagInput.trim().toLowerCase();
+                    if (!tags.includes(t)) setTags((prev) => [...prev, t]);
+                    setTagInput('');
+                  }
+                }}
+                placeholder="Добавить тег, Enter"
+                className="flex-1 rounded-xl border border-[#EDE0CC] bg-white px-3 py-2 text-sm text-[#3D2C1F] outline-none focus:border-[#E07A5F] placeholder:text-[#B6A48E]"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const t = tagInput.trim().toLowerCase();
+                  if (t && !tags.includes(t)) setTags((prev) => [...prev, t]);
+                  setTagInput('');
+                }}
+                className="rounded-xl px-3 py-2 text-xs font-semibold text-white"
+                style={{ backgroundColor: '#E07A5F' }}
+              >
+                +
+              </button>
+            </div>
+          </div>
+
           {/* Privacy */}
           <label className="flex items-center justify-between cursor-pointer">
             <div>

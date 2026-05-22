@@ -9,14 +9,17 @@
  *   - Every suggestion carries explicit reasons — nothing is "magic."
  *   - Input items are generic {id, name} — no folder/category distinction.
  *   - The engine has zero UI dependencies.
+ *   - All scoring weights come from SCORING_POLICY — no inline magic numbers.
  *
- * Scoring signals (explicit, additive):
- *   50 pts — merchant history match  (saturates at 5 uses)
- *   20 pts — recent usage            (30-day decay, saturates at 10 uses)
- *   10 pts — name substring match    (merchant token ↔ category name)
+ * Scoring signals (defined in scoringPolicy.ts):
+ *   merchantHistory — saturates at 5 uses (50 pts)
+ *   recentUsage     — 30-day decay, saturates at 10 uses (20 pts)
+ *   nameMatch       — merchant substring match (10 pts)
+ *   splitHistory    — category appears in split combos for this merchant (15 pts)
  */
 
 import type { SuggestionMemoryState } from '../store/suggestionMemorySlice';
+import { SCORING_POLICY } from './scoringPolicy';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

@@ -1,5 +1,15 @@
 'use client';
 /**
+ * LAYER: input session coordinator hook — INTERNAL.
+ *
+ * @internal
+ * New components should use useExpenseInputFlow instead.
+ * This hook is kept for:
+ *   1. inferStage and SPLIT_AMOUNT_THRESHOLD exports (consumed by tests + useExpenseInputFlow)
+ *   2. Backward compatibility with any existing callers
+ *
+ * useExpenseInputFlow is the public orchestration API.
+ *
  * LAYER: input session coordinator hook.
  *
  * Owns the transition logic between input stages.

@@ -24,7 +24,8 @@ export type InputStage =
   | 'clarification' // amount detected, suggestions ambiguous
   | 'editing'       // user in full numpad entry (no memory signal)
   | 'split'         // large amount or explicit split request
-  | 'confirm';      // clear winner, ready for one-tap save
+  | 'confirm'       // clear winner, ready for one-tap save
+  | 'saved';        // save completed — shown briefly for feedback, then session cleared
 
 export interface ExpenseInputSession {
   rawInput: string;

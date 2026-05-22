@@ -386,8 +386,8 @@ export function CategoriesHub() {
         </div>
       )}
 
-      {/* Create manually */}
-      <div className="flex gap-2">
+      {/* Create manually — hidden during search */}
+      {!searchQuery && <div className="flex gap-2">
         <button
           onClick={() => setFolderEditor({ open: true })}
           className="flex-1 rounded-2xl border-2 border-dashed border-[#EDE0CC] py-3 text-sm font-semibold text-[#8E7A66] hover:border-[#8E7A66]/40 transition-colors"

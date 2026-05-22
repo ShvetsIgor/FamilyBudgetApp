@@ -86,8 +86,8 @@ export function FastExpenseEntry({
     if (!initialExpense) {
       // Use suggestion memory to pick best category if merchant context is available
       if (initialStore && topCats.length > 0) {
-        const ranked = rankSuggestions(topCats, initialStore, memory, 1);
-        const topId = ranked[0];
+        const ranked = computeSuggestions({ merchant: initialStore, items: topCats, memory, topN: 1 });
+        const topId = ranked[0]?.categoryId;
         if (topId && memory.merchants[initialStore.toLowerCase().trim()]?.length) {
           return topId;
         }

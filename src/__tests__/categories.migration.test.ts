@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { legacyCategoryMap } from '@/features/categories/services/defaultCategories';
+import { legacyCategoryMap } from '@/features/categories/compat/legacyCategoryMap';
 import {
   selectFolders,
   selectCategoriesInFolder,

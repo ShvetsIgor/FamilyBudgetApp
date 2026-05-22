@@ -325,6 +325,36 @@ export function FastExpenseEntry({
         </div>
       </div>
 
+      {/* ── Suggestion chips (shown when merchant memory has signal) ── */}
+      {suggestedCatIds.length > 0 && initialStore && !isEdit && (
+        <div className="flex gap-2 px-3.5 pb-1 flex-shrink-0 overflow-x-auto [scrollbar-width:none]">
+          {suggestedCatIds.map((id) => {
+            const cat = topCats.find((c) => c.id === id);
+            if (!cat) return null;
+            const sel = id === selectedCatId;
+            const c = cat.color ?? '#E07A5F';
+            return (
+              <button
+                key={id}
+                onClick={() => changeCategory(id)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap flex-shrink-0 transition-all"
+                style={{
+                  background: sel ? c : c + '18',
+                  color: sel ? '#fff' : c,
+                  border: `1.5px solid ${sel ? c : c + '44'}`,
+                }}
+              >
+                <StickerIcon icon={cat.icon ?? 'box'} color={sel ? '#fff' : c} className="h-3 w-3" />
+                {t.cat(cat.name)}
+              </button>
+            );
+          })}
+          <span className="text-[10px] font-semibold text-muted-foreground self-center flex-shrink-0">
+            · из истории
+          </span>
+        </div>
+      )}
+
       {/* ── Category grid (main category for leftover) ── */}
       <div className="overflow-x-auto px-3.5 py-1.5 flex-shrink-0 [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
         <div className="grid grid-rows-2 grid-flow-col gap-1.5" style={{ gridAutoColumns: '64px' }}>

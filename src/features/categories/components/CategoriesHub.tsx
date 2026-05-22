@@ -31,6 +31,8 @@ import {
   selectFolders,
   selectCategoriesInFolder,
   selectUnfolderedCategories,
+  selectRootFolders,
+  selectChildFolders,
 } from '../store/selectors';
 
 interface EditorState {

@@ -59,3 +59,36 @@ export function boostCategoriesByQuery(query: string, cats: Category[]): Categor
   }
   return [...matched, ...rest];
 }
+
+/**
+ * Filters categories by query, checking name, tags, and optional alias map.
+ * Returns only matching categories, sorted by relevance (name match first).
+ *
+ * Used in the Category Constructor search UI.
+ */
+export function filterCategoriesByQuery(
+  query: string,
+  cats: Category[],
+  aliasMap?: ReadonlyMap<string, { name: string; ru?: string }>,
+): Category[] {
+  const q = normalizeTag(query);
+  if (!q) return cats;
+
+  const nameMatches: Category[] = [];
+  const tagMatches: Category[] = [];
+
+  for (const cat of cats) {
+    const catName = normalizeTag(cat.name);
+    const alias = aliasMap?.get(cat.id);
+    const aliasName = alias ? normalizeTag(alias.name) : '';
+    const aliasRu = alias?.ru ? normalizeTag(alias.ru) : '';
+
+    if (catName.includes(q) || aliasName.includes(q) || aliasRu.includes(q)) {
+      nameMatches.push(cat);
+    } else if (queryMatchesTags(q, cat.tags ?? [])) {
+      tagMatches.push(cat);
+    }
+  }
+
+  return [...nameMatches, ...tagMatches];
+}

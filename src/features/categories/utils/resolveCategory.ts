@@ -7,11 +7,11 @@ import { CATEGORY_ALIAS_MAP } from '../config/categoryLabels';
  * Resolution order:
  * 1. Direct ID lookup in categoriesById map (O(1)) — covers all new-architecture categories
  * 2. Flat alias fallback — handles legacy Firestore docs where the stored categoryId
- *    is a taxonomy slug (e.g. 'groceries') but the user's actual category has a
+ *    is a preset slug (e.g. 'groceries') but the user's actual category has a
  *    random Firestore-generated ID. CATEGORY_ALIAS_MAP maps slug → canonical name
  *    without any hierarchy traversal.
  *
- * TAXONOMY is never imported or traversed here — all slug resolution goes through
+ * Preset data is never imported or traversed here — all slug resolution goes through
  * the pre-built flat CATEGORY_ALIAS_MAP.
  *
  * Returns undefined if no active category matches.

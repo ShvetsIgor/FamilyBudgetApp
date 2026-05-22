@@ -1,3 +1,10 @@
+/**
+ * Pure UI derivation: groups active categories into folder sections.
+ *
+ * Used by both selectors (selectFolderSections) and UI components that need
+ * folder-grouped views from local state (CategoryPicker, CategorySheet).
+ * Has no Redux dependency — accepts plain arrays, returns plain view models.
+ */
 import type { Category, CategoryFolder } from '@/shared/types';
 
 export interface FolderSection {

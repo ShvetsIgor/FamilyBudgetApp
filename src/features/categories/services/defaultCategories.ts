@@ -1,6 +1,5 @@
 import type { Category } from '@/shared/types';
 import { FOLDER_BLUEPRINTS, CATEGORY_BLUEPRINTS } from '../preset/categoryPresets';
-export { legacyCategoryMap } from '../compat/legacyCategoryMap';
 
 export type DefaultCategory = Omit<Category, 'userId'>;
 

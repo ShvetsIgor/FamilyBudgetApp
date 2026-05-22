@@ -78,6 +78,8 @@ export function CategoriesHub() {
   );
 
   const ungroupedCats = useAppSelector((s) => selectUnfolderedCategories(s, tab));
+  const allActiveCats = useAppSelector((s) => selectAllActiveCategories(s, tab));
+  const searchResults = filterCategoriesByQuery(searchQuery, allActiveCats, CATEGORY_ALIAS_MAP);
 
   const existingCategoryIds = new Set(allCategories.map((c) => c.id));
   const existingFolderIds = new Set(folders.map((f) => f.id));

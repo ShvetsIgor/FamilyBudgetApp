@@ -1,15 +1,21 @@
+/**
+ * Runtime display labels for categories and folders.
+ *
+ * Responsibility: alias/display name resolution only.
+ * - Maps preset stable IDs → localized display names (en/ru).
+ * - Used by UI components and legacy category resolution.
+ *
+ * NOT responsible for: library/onboarding config, seeding, blueprint data.
+ */
 import {
   FOLDER_BLUEPRINTS,
   CATEGORY_BLUEPRINTS,
-  type FolderBlueprint,
 } from '../preset/categoryPresets';
-
-export type { FolderBlueprint };
 
 /**
  * Flat map: preset stable slug → { name, ru }.
- * Used for display name resolution of preset IDs stored in Firestore.
  * Built once from explicit flat blueprints — no nested traversal.
+ * Covers both folder IDs and category IDs.
  */
 export const CATEGORY_ALIAS_MAP: ReadonlyMap<string, { name: string; ru?: string }> = new Map([
   ...FOLDER_BLUEPRINTS.map((f) => [f.id, { name: f.name, ru: f.ru }] as const),
@@ -25,9 +31,3 @@ export function getPresetDisplayName(id: string, lang: string): string | null {
   if (!entry) return null;
   return lang === 'ru' && entry.ru ? entry.ru : entry.name;
 }
-
-/**
- * All preset folder definitions available in the "add from library" flow.
- * Selectors filter this list against store state to show unactivated folders.
- */
-export const LIBRARY_FOLDERS: readonly FolderBlueprint[] = FOLDER_BLUEPRINTS;

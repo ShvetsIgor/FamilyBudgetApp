@@ -1,6 +1,6 @@
 import type { RootState } from '@/store/store';
 import type { CategoryType } from '@/shared/types';
-import { FOLDER_BLUEPRINTS } from '../utils/categoryAliasMap';
+import { FOLDER_BLUEPRINTS } from '../preset/categoryPresets';
 import { isActiveCategory } from '../policy/categoryPolicy';
 import { buildFolderSections, type FolderSection } from '../utils/categoryViewModels';
 

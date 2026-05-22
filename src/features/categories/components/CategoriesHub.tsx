@@ -31,9 +31,12 @@ import {
   selectFolders,
   selectCategoriesInFolder,
   selectUnfolderedCategories,
+  selectAllActiveCategories,
   selectRootFolders,
   selectChildFolders,
 } from '../store/selectors';
+import { filterCategoriesByQuery } from '../utils/tagUtils';
+import { CATEGORY_ALIAS_MAP } from '../config/categoryLabels';
 
 interface EditorState {
   open: boolean;

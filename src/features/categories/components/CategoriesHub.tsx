@@ -26,8 +26,8 @@ import { FolderEditorSheet } from './FolderEditorSheet';
 import { ConstructorWizard } from './constructor/ConstructorWizard';
 import { StickerIcon } from './CategoryIcon';
 import { getPresetCategoriesForFolder } from '../preset/categoryPresets';
+import { selectAvailableLibrary } from '../store/librarySelectors';
 import {
-  selectAvailableLibrary,
   selectFolders,
   selectCategoriesInFolder,
   selectUnfolderedCategories,

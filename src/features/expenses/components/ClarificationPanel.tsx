@@ -18,6 +18,7 @@ import { useAppSelector } from '@/store/store';
 import { useT } from '@/shared/hooks/useT';
 import type { InputStage } from '@/features/expenses/store/inputSessionSlice';
 import { SPLIT_AMOUNT_THRESHOLD } from '@/features/expenses/hooks/useInputSession';
+import type { SplitComboEntry } from '@/features/expenses/store/suggestionMemorySlice';
 
 interface Props {
   stage: InputStage;
@@ -26,6 +27,8 @@ interface Props {
   suggestions: ScoredSuggestion[];
   onSelectCategory: (categoryId: string) => void;
   onSplit: () => void;
+  splitCombos?: SplitComboEntry[];
+  onUseSplitCombo?: (combo: SplitComboEntry) => void;
 }
 
 export function ClarificationPanel({

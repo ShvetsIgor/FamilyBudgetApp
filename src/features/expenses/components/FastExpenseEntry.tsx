@@ -142,6 +142,12 @@ export function FastExpenseEntry({
 
   const selectedCat = allCats.find((c) => c.id === selectedCatId);
 
+  /** Top 3 category suggestions based on merchant context + usage history. */
+  const suggestedCatIds = useMemo(() => {
+    if (isEdit || topCats.length === 0) return [];
+    return rankSuggestions(topCats, initialStore, memory, 3);
+  }, [isEdit, topCats, initialStore, memory]);
+
   const totalNum = parseFloat(total) || 0;
   const splitsSum = splits.reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
   const remainder = Math.max(0, totalNum - splitsSum);

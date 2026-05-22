@@ -73,6 +73,7 @@ export function FastExpenseEntry({
   const currency = useAppSelector((s) => s.ui.currency);
   const allCats = useAppSelector((s) => s.categories.expense);
   const memory = useAppSelector((s) => s.suggestionMemory);
+  const draft = useAppSelector((s) => s.draft.draft);
   const { groups: catGroups, getCatsInGroup, getGroupOf } = useCategoryGroups('expense');
   const t = useT();
   const symbol = getCurrencySymbol(currency);

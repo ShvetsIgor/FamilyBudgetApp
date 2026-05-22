@@ -1,7 +1,10 @@
 import {
   FOLDER_BLUEPRINTS,
   CATEGORY_BLUEPRINTS,
+  type FolderBlueprint,
 } from '../preset/categoryPresets';
+
+export type { FolderBlueprint };
 
 /**
  * Flat map: preset stable slug → { name, ru }.
@@ -22,3 +25,9 @@ export function getPresetDisplayName(id: string, lang: string): string | null {
   if (!entry) return null;
   return lang === 'ru' && entry.ru ? entry.ru : entry.name;
 }
+
+/**
+ * All preset folder definitions available in the "add from library" flow.
+ * Selectors filter this list against store state to show unactivated folders.
+ */
+export const LIBRARY_FOLDERS: readonly FolderBlueprint[] = FOLDER_BLUEPRINTS;

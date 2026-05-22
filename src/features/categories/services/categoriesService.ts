@@ -12,7 +12,8 @@ import {
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import type { Category, CategoryType } from '@/shared/types';
-import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES, legacyCategoryMap } from './defaultCategories';
+import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES } from './defaultCategories';
+import { legacyCategoryMap } from '../compat/legacyCategoryMap';
 
 function colRef(userId: string, type: CategoryType) {
   return collection(getDb(), 'categories', userId, type);

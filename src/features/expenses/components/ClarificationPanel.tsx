@@ -38,6 +38,8 @@ export function ClarificationPanel({
   suggestions,
   onSelectCategory,
   onSplit,
+  splitCombos = [],
+  onUseSplitCombo,
 }: Props) {
   const { groups: folders } = useCategoryGroups('expense');
   const currency = useAppSelector((s) => s.ui.currency);

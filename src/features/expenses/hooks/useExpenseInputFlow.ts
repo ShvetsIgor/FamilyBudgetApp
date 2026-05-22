@@ -210,6 +210,29 @@ export function useExpenseInputFlow(): ExpenseInputFlow {
     [dispatch, router, session, suggestions],
   );
 
+  const openSplitEditorWithCombo = useCallback(
+    (combo: SplitComboEntry) => {
+      const amount = session?.detectedAmount ?? 0;
+      const share = amount > 0 ? Math.round((amount / combo.categoryIds.length) * 100) / 100 : 0;
+      const today = new Date().toISOString().slice(0, 10);
+      dispatch(setDraft({
+        amount,
+        merchant: session?.detectedMerchant,
+        categoryId: combo.categoryIds[0],
+        categorySuggestions: combo.categoryIds,
+        splits: combo.categoryIds.map((id) => ({ categoryId: id, amount: share })),
+        date: today,
+        paymentMethod: 'card',
+      }));
+      const params = new URLSearchParams();
+      if (amount) params.set('amount', String(amount));
+      if (session?.detectedMerchant) params.set('storeName', session.detectedMerchant);
+      router.push(`/expenses/new?${params.toString()}`);
+      dispatch(clearSession());
+    },
+    [dispatch, router, session],
+  );
+
   const requestSplit = useCallback(() => {
     dispatch(advanceStage('split'));
   }, [dispatch]);

@@ -69,6 +69,7 @@ describe('computeSuggestions', () => {
     const memory: SuggestionMemoryState = {
       merchants: { store: [{ categoryId: 'transport', count: 5, lastUsed: new Date().toISOString() }] },
       recents: [],
+      splitCombos: [],
     };
     const result = computeSuggestions({ merchant: 'store', items, memory });
     expect(result[0].categoryId).toBe('transport');

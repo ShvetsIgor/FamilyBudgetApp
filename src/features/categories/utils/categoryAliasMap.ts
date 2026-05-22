@@ -1,4 +1,4 @@
-import { TAXONOMY, INCOME_TAXONOMY } from '../icons/icons';
+import { TAXONOMY, INCOME_TAXONOMY } from '../preset/categoryPresets';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

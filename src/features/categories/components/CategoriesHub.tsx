@@ -285,7 +285,28 @@ export function CategoriesHub() {
               </button>
             )}
           </div>
+        ) : searchQuery ? (
+          // ── Search results ───────────────────────────────────────────────
+          searchResults.length > 0 ? (
+            <>
+              <p className="text-xs text-[#8E7A66] px-1">{searchResults.length} результатов</p>
+              {searchResults.map((cat) => (
+                <CategoryRow
+                  key={cat.id}
+                  category={cat}
+                  budget={budgetLimits[cat.id] ?? 0}
+                  onEdit={() => openEditor(cat)}
+                />
+              ))}
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center rounded-2xl bg-[#F4ECDE] py-8 text-center gap-2">
+              <p className="text-sm font-semibold text-[#3D2C1F]">Ничего не найдено</p>
+              <p className="text-xs text-[#8E7A66]">Попробуйте другой запрос</p>
+            </div>
+          )
         ) : (
+          // ── Folder tree ──────────────────────────────────────────────────
           <>
             {rootFolders.map((folder) => (
               <div key={folder.id}>

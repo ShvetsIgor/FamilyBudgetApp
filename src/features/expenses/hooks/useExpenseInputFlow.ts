@@ -64,6 +64,8 @@ export interface ExpenseInputFlow {
   recentMerchants: RecentMerchant[];
   /** Recent categories for cold-start defaults. */
   recentCategories: RecentCategoryEntry[];
+  /** Recent split combos for current merchant — for one-tap split reuse. */
+  recentSplitCombos: SplitComboEntry[];
   /** False on first use — can be used to show onboarding hints. */
   hasContext: boolean;
 
@@ -77,7 +79,7 @@ export interface ExpenseInputFlow {
   /**
    * Save an expense with the given category, using the current session's
    * amount and merchant.
-   * Records to memory. Clears session on success.
+   * Transitions to 'saved' stage for UX feedback, then auto-clears session.
    */
   saveWithCategory(categoryId: string): Promise<void>;
 
@@ -88,10 +90,16 @@ export interface ExpenseInputFlow {
    */
   openSplitEditor(categoryId?: string): void;
 
+  /**
+   * Writes a split combo preset to the draft and opens the split editor.
+   * Distributes amount evenly across combo categories as starting point.
+   */
+  openSplitEditorWithCombo(combo: SplitComboEntry): void;
+
   /** Explicitly transition to split stage. */
   requestSplit(): void;
 
-  /** Clear the session (discard without saving). */
+  /** Clear the session and draft (discard without saving). */
   clear(): void;
 }
 

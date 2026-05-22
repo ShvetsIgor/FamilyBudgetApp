@@ -362,6 +362,7 @@ export function CategoriesHub() {
         type={tab}
         onSave={handleFolderSave}
         onDelete={folderEditor.folder ? handleFolderDelete : undefined}
+        availableFolders={rootFolders.filter((f) => f.id !== folderEditor.folder?.id)}
       />
 
       {/* Constructor Wizard */}

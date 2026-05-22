@@ -131,6 +131,7 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
   if (existingExpense.length > 0 && existingIncome.length > 0) return;
 
   if (existingExpense.length === 0) {
+    await bulkCreateFolders(userId, DEFAULT_EXPENSE_FOLDER_SEEDS);
     for (const cat of DEFAULT_EXPENSE_CATEGORIES) {
       const { id, ...rest } = cat;
       const clean = Object.fromEntries(Object.entries({ ...rest, userId }).filter(([, v]) => v !== undefined));
@@ -139,6 +140,7 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
   }
 
   if (existingIncome.length === 0) {
+    await bulkCreateFolders(userId, DEFAULT_INCOME_FOLDER_SEEDS);
     for (const cat of DEFAULT_INCOME_CATEGORIES) {
       const { id, ...rest } = cat;
       const clean = Object.fromEntries(Object.entries({ ...rest, userId }).filter(([, v]) => v !== undefined));

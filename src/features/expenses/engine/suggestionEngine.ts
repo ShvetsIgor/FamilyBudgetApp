@@ -28,6 +28,7 @@ export type SuggestionReason =
   | { kind: 'merchant_history'; count: number }
   | { kind: 'recent_usage'; daysSince: number }
   | { kind: 'name_match' }
+  | { kind: 'split_history'; comboCount: number }
   | { kind: 'fallback' };
 
 /** Ranked suggestion with full scoring transparency. */

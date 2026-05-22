@@ -28,6 +28,8 @@ export const store = configureStore({
     family: familyReducer,
     budget: budgetReducer,
     quickAdd: quickAddReducer,
+    draft: draftReducer,
+    suggestionMemory: suggestionMemoryReducer,
     chat: chatReducer,
     storeProfiles: storeProfilesReducer,
     notifications: notificationsReducer,

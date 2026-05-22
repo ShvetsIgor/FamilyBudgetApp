@@ -166,3 +166,20 @@ export function isSuggestionAmbiguous(suggestions: ScoredSuggestion[]): boolean 
   const second = suggestions[1]?.score ?? 0;
   return top > 0 && top < 30 && second > top * 0.5;
 }
+
+/**
+ * Compact reason label for inline chip display (1–3 words max).
+ * Returns empty string for fallback suggestions — callers hide empty labels.
+ *
+ * Examples: "5×", "2д", "название", ""
+ */
+export function shortExplainSuggestion(s: ScoredSuggestion): string {
+  const primary = s.reasons.find((r) => r.kind !== 'fallback');
+  if (!primary) return '';
+  switch (primary.kind) {
+    case 'merchant_history': return `${primary.count}×`;
+    case 'recent_usage': return primary.daysSince === 0 ? 'сегодня' : `${primary.daysSince}д`;
+    case 'name_match': return 'название';
+    default: return '';
+  }
+}

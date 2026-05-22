@@ -25,7 +25,7 @@ export function resolveCategoryByAlias(
   const direct = categoriesById.get(alias);
   if (direct) return direct;
 
-  // Legacy fallback: alias is a stable taxonomy slug, but user's category has a random ID.
+  // Legacy fallback: alias is a stable preset slug, but user's category has a random ID.
   // Match by canonical name from the flat alias map.
   const entry = CATEGORY_ALIAS_MAP.get(alias);
   if (entry) {

@@ -126,6 +126,10 @@ export function useExpenseInputFlow(): ExpenseInputFlow {
 
   const recentMerchants = useMemo(() => getRecentMerchants(memory, 5), [memory]);
   const recentCategories = useMemo(() => getRecentCategories(memory, 5), [memory]);
+  const recentSplitCombos = useMemo(
+    () => getRecentSplitCombos(session?.detectedMerchant, memory, 3),
+    [session?.detectedMerchant, memory],
+  );
   const hasContext = useMemo(() => hasUsageContext(memory), [memory]);
 
   const processInput = useCallback(

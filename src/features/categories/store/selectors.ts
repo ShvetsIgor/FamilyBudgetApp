@@ -1,3 +1,15 @@
+/**
+ * LAYER: selectors — single source of UI-oriented state derivation.
+ *
+ * Architecture invariants enforced here:
+ *   - Categories: semantic expense classification targets only.
+ *   - Folders:    UI grouping only; never drive analytics or domain logic.
+ *   - isActiveCategory: the canonical policy gate for all active-category reads.
+ *   - buildFolderSections: the single derivation path for folder-grouped UI state.
+ *
+ * All components must read category/folder state through these selectors,
+ * not by accessing Redux slices directly.
+ */
 import type { RootState } from '@/store/store';
 import type { CategoryType } from '@/shared/types';
 import { isActiveCategory } from '../policy/categoryPolicy';

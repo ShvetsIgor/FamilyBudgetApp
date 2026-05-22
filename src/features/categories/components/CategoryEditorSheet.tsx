@@ -74,6 +74,7 @@ export function CategoryEditorSheet({
       folderId: selectedFolderId ?? undefined,
       type,
       order: initial?.order ?? 0,
+      tags,
     });
     if (onBudgetChange && budgetVal !== null) {
       onBudgetChange(budgetVal);

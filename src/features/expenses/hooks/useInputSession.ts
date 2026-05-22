@@ -31,8 +31,10 @@ import { setSession, advanceStage, clearSession, type InputStage } from '../stor
 import { computeSuggestions, hasConfidentSuggestion, isSuggestionAmbiguous, type ScoredSuggestion } from '../engine/suggestionEngine';
 import { parseQuickAdd } from '../utils/quickAddParser';
 import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
+import { SPLIT_AMOUNT_THRESHOLD as POLICY_SPLIT_THRESHOLD } from '../engine/scoringPolicy';
 
-export const SPLIT_AMOUNT_THRESHOLD = 500;
+/** @deprecated Import from scoringPolicy.ts. Kept here for test backward compatibility. */
+export const SPLIT_AMOUNT_THRESHOLD = POLICY_SPLIT_THRESHOLD;
 
 /**
  * Pure stage inference — exported for tests.

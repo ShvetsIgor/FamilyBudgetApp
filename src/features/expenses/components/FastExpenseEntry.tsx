@@ -145,7 +145,9 @@ export function FastExpenseEntry({
   /** Top 3 category suggestions based on merchant context + usage history. */
   const suggestedCatIds = useMemo(() => {
     if (isEdit || topCats.length === 0) return [];
-    return rankSuggestions(topCats, initialStore, memory, 3);
+    return computeSuggestions({ merchant: initialStore, items: topCats, memory, topN: 3 }).map(
+      (s) => s.categoryId,
+    );
   }, [isEdit, topCats, initialStore, memory]);
 
   const totalNum = parseFloat(total) || 0;

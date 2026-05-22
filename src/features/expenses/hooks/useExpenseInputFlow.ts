@@ -34,6 +34,7 @@ import { computeSuggestions, type ScoredSuggestion } from '../engine/suggestionE
 import { parseQuickAdd } from '../utils/quickAddParser';
 import { inferStage } from './useInputSession';
 import { recordExpense } from '../store/suggestionMemorySlice';
+import type { SplitComboEntry } from '../store/suggestionMemorySlice';
 import { setDraft, clearDraft } from '../store/draftSlice';
 import { addExpense } from '../services/expensesService';
 import { prependExpense } from '../store/expensesSlice';

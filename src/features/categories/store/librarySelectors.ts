@@ -1,6 +1,6 @@
 import type { RootState } from '@/store/store';
 import type { CategoryType } from '@/shared/types';
-import { LIBRARY_FOLDERS } from '../config/libraryConfig';
+import { LIBRARY_FOLDERS } from '../config/categoryLabels';
 
 /**
  * Returns folder blueprints not yet activated by the user.

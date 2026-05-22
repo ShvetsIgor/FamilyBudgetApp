@@ -1,16 +1,22 @@
 /**
- * Category preset data — initial onboarding blueprints only.
- * Strictly static. No runtime derivation, no nested structures.
+ * LAYER: preset — onboarding / seed data only.
  *
- * Allowed uses:
- *   - Constructor wizard (initial category selection)
- *   - Default category seeding on first login
- *   - categoryAliasMap.ts (alias/display name lookup)
+ * Provides blueprint definitions for initial category setup.
+ * This is NOT runtime semantic authority — blueprints describe onboarding intent,
+ * not live category state.
+ *
+ * Allowed consumers:
+ *   - config/categoryLabels.ts  (builds alias map from blueprint IDs)
+ *   - config/libraryConfig.ts   (exposes LIBRARY_FOLDERS for the add-from-library flow)
+ *   - services/defaultCategories.ts  (expands blueprints into Firestore seed entries)
+ *   - hooks/useConstructorState.ts   (constructor wizard state)
+ *   - components/CategoriesHub.tsx   (library activation)
  *
  * Must NOT be used for:
  *   - Runtime icon resolution
  *   - Selector derivation
- *   - Category hierarchy at runtime
+ *   - Category hierarchy traversal at runtime
+ *   - Any code path that runs on every render or user action
  */
 
 /** A preset folder that becomes a CategoryFolder in the app. */

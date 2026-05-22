@@ -1,8 +1,23 @@
 /**
  * Pure UI derivation: groups active categories into folder sections.
  *
- * Used by both selectors (selectFolderSections) and UI components that need
- * folder-grouped views from local state (CategoryPicker, CategorySheet).
+ * ── Derivation paths ──────────────────────────────────────────────────────
+ * selectFolderSections (store/selectors.ts) is the CANONICAL path for
+ * components that read full Redux active-category state.
+ *
+ * Direct usage of buildFolderSections() is valid in exactly two cases:
+ *
+ *   1. CategoryPicker — applies a search filter before grouping, so it
+ *      passes a filtered subset rather than all active categories.
+ *      selectFolderSections cannot accommodate a dynamic search list.
+ *
+ *   2. CategorySheet (chat feature) — supports a categoriesOverride prop
+ *      that substitutes non-Redux data. When overriding, selector paths
+ *      do not apply.
+ *
+ * No other component should call buildFolderSections() directly.
+ * ──────────────────────────────────────────────────────────────────────────
+ *
  * Has no Redux dependency — accepts plain arrays, returns plain view models.
  */
 import type { Category, CategoryFolder } from '@/shared/types';

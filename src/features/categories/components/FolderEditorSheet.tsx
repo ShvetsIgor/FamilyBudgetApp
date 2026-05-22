@@ -89,6 +89,44 @@ export function FolderEditorSheet({ open, onClose, initial, type, onSave, onDele
             />
           </div>
 
+          {/* Parent folder (optional) */}
+          {availableFolders && availableFolders.length > 0 && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-[#8E7A66] uppercase tracking-wide">
+                Родительская папка <span className="normal-case font-normal text-[#B6A48E]">(необязательно)</span>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setParentFolderId(undefined)}
+                  className="rounded-full px-3 py-1.5 text-xs font-semibold transition-all"
+                  style={
+                    parentFolderId === undefined
+                      ? { backgroundColor: '#3D2C1F', color: '#fff' }
+                      : { backgroundColor: '#F4ECDE', color: '#8E7A66' }
+                  }
+                >
+                  Без родителя
+                </button>
+                {availableFolders.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setParentFolderId(f.id)}
+                    className="rounded-full px-3 py-1.5 text-xs font-semibold transition-all"
+                    style={
+                      parentFolderId === f.id
+                        ? { backgroundColor: f.color ?? '#E07A5F', color: '#fff' }
+                        : { backgroundColor: '#F4ECDE', color: '#8E7A66' }
+                    }
+                  >
+                    {f.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Icon */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-[#8E7A66] uppercase tracking-wide">Иконка</label>

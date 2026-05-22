@@ -228,3 +228,8 @@ export const CATEGORY_BLUEPRINTS: readonly CategoryBlueprint[] = [
   { id: 'investments',       folderId: 'income',        name: 'Investments',        ru: 'Инвестиции',         icon: 'chart_up',    color: '#81B29A' },
   { id: 'in_other',          folderId: 'income',        name: 'Other',              ru: 'Прочее',             icon: 'box',         color: '#81B29A' },
 ];
+
+/** Returns preset category blueprints belonging to a given folder slug. */
+export function getPresetCategoriesForFolder(folderId: string): readonly CategoryBlueprint[] {
+  return CATEGORY_BLUEPRINTS.filter((c) => c.folderId === folderId);
+}

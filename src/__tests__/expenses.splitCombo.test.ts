@@ -1,0 +1,199 @@
+import { describe, it, expect } from 'vitest';
+import { configureStore } from '@reduxjs/toolkit';
+import suggestionMemoryReducer, {
+  recordExpense,
+  recordSplitExpense,
+} from '@/features/expenses/store/suggestionMemorySlice';
+import type { SuggestionMemoryState } from '@/features/expenses/store/suggestionMemorySlice';
+import {
+  getRecentSplitCombos,
+  hasRelevantSplitCombos,
+} from '@/features/expenses/engine/recentContextEngine';
+import { computeSuggestions } from '@/features/expenses/engine/suggestionEngine';
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function makeStore(initial?: Partial<SuggestionMemoryState>) {
+  return configureStore({
+    reducer: { suggestionMemory: suggestionMemoryReducer },
+    preloadedState: initial
+      ? {
+          suggestionMemory: {
+            merchants: initial.merchants ?? {},
+            recents: initial.recents ?? [],
+            splitCombos: initial.splitCombos ?? [],
+          },
+        }
+      : undefined,
+  });
+}
+
+const today = new Date().toISOString().slice(0, 10);
+const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+
+const emptyMemory: SuggestionMemoryState = { merchants: {}, recents: [], splitCombos: [] };
+
+// ── recordSplitExpense ────────────────────────────────────────────────────────
+
+describe('recordSplitExpense', () => {
+  it('adds a new split combo', () => {
+    const store = makeStore();
+    store.dispatch(recordSplitExpense({ merchant: 'Dabbah', categoryIds: ['food', 'household'], date: today }));
+    const state = store.getState().suggestionMemory;
+    expect(state.splitCombos).toHaveLength(1);
+    expect(state.splitCombos[0].categoryIds).toEqual(['food', 'household'].sort());
+    expect(state.splitCombos[0].merchantKey).toBe('dabbah');
+    expect(state.splitCombos[0].count).toBe(1);
+  });
+
+  it('increments count on repeated combo', () => {
+    const store = makeStore();
+    store.dispatch(recordSplitExpense({ merchant: 'Dabbah', categoryIds: ['food', 'household'], date: today }));
+    store.dispatch(recordSplitExpense({ merchant: 'Dabbah', categoryIds: ['household', 'food'], date: today }));
+    const state = store.getState().suggestionMemory;
+    expect(state.splitCombos).toHaveLength(1);
+    expect(state.splitCombos[0].count).toBe(2);
+  });
+
+  it('stores combo with no merchant as empty merchantKey', () => {
+    const store = makeStore();
+    store.dispatch(recordSplitExpense({ categoryIds: ['cat1', 'cat2'], date: today }));
+    const state = store.getState().suggestionMemory;
+    expect(state.splitCombos[0].merchantKey).toBe('');
+  });
+
+  it('ignores single-category splits (not a real split)', () => {
+    const store = makeStore();
+    store.dispatch(recordSplitExpense({ merchant: 'Shop', categoryIds: ['food'], date: today }));
+    const state = store.getState().suggestionMemory;
+    expect(state.splitCombos).toHaveLength(0);
+  });
+
+  it('normalizes category order — same combo regardless of input order', () => {
+    const store = makeStore();
+    store.dispatch(recordSplitExpense({ categoryIds: ['zzz', 'aaa'], date: today }));
+    store.dispatch(recordSplitExpense({ categoryIds: ['aaa', 'zzz'], date: today }));
+    const state = store.getState().suggestionMemory;
+    expect(state.splitCombos).toHaveLength(1);
+    expect(state.splitCombos[0].categoryIds).toEqual(['aaa', 'zzz']);
+  });
+
+  it('treats different merchants as different combos', () => {
+    const store = makeStore();
+    store.dispatch(recordSplitExpense({ merchant: 'StoreA', categoryIds: ['food', 'health'], date: today }));
+    store.dispatch(recordSplitExpense({ merchant: 'StoreB', categoryIds: ['food', 'health'], date: today }));
+    const state = store.getState().suggestionMemory;
+    expect(state.splitCombos).toHaveLength(2);
+  });
+
+  it('updates lastUsed on re-use', () => {
+    const store = makeStore();
+    store.dispatch(recordSplitExpense({ categoryIds: ['a', 'b'], date: yesterday }));
+    store.dispatch(recordSplitExpense({ categoryIds: ['a', 'b'], date: today }));
+    const state = store.getState().suggestionMemory;
+    expect(state.splitCombos[0].lastUsed).toBe(today);
+  });
+});
+
+// ── getRecentSplitCombos ──────────────────────────────────────────────────────
+
+describe('getRecentSplitCombos', () => {
+  const memWithCombos: SuggestionMemoryState = {
+    merchants: {},
+    recents: [],
+    splitCombos: [
+      { key: 'dabbah|food,household', merchantKey: 'dabbah', categoryIds: ['food', 'household'], count: 3, lastUsed: today },
+      { key: 'dabbah|health,food', merchantKey: 'dabbah', categoryIds: ['food', 'health'], count: 1, lastUsed: yesterday },
+      { key: '|food,transport', merchantKey: '', categoryIds: ['food', 'transport'], count: 5, lastUsed: today },
+      { key: 'other|food,household', merchantKey: 'other', categoryIds: ['food', 'household'], count: 2, lastUsed: today },
+    ],
+  };
+
+  it('returns merchant-specific combos first', () => {
+    const result = getRecentSplitCombos('Dabbah', memWithCombos, 5);
+    const keys = result.map((c) => c.merchantKey);
+    const dabbahIdx = keys.indexOf('dabbah');
+    const globalIdx = keys.indexOf('');
+    expect(dabbahIdx).toBeLessThan(globalIdx);
+  });
+
+  it('returns global combos when no merchant specified', () => {
+    const result = getRecentSplitCombos(undefined, memWithCombos, 5);
+    expect(result.every((c) => c.merchantKey === '')).toBe(true);
+  });
+
+  it('respects the limit', () => {
+    const result = getRecentSplitCombos('Dabbah', memWithCombos, 2);
+    expect(result).toHaveLength(2);
+  });
+
+  it('returns empty array for empty memory', () => {
+    expect(getRecentSplitCombos('Dabbah', emptyMemory, 3)).toEqual([]);
+  });
+
+  it('deduplicates by categoryIds signature across merchants', () => {
+    const result = getRecentSplitCombos('Dabbah', memWithCombos, 10);
+    const sigs = result.map((c) => c.categoryIds.join(','));
+    const unique = new Set(sigs);
+    expect(sigs.length).toBe(unique.size);
+  });
+});
+
+describe('hasRelevantSplitCombos', () => {
+  it('returns true when there are matching combos', () => {
+    const mem: SuggestionMemoryState = {
+      merchants: {},
+      recents: [],
+      splitCombos: [
+        { key: 'shop|a,b', merchantKey: 'shop', categoryIds: ['a', 'b'], count: 1, lastUsed: today },
+      ],
+    };
+    expect(hasRelevantSplitCombos('Shop', mem)).toBe(true);
+  });
+
+  it('returns false when no matching combos', () => {
+    expect(hasRelevantSplitCombos('unknown', emptyMemory)).toBe(false);
+  });
+});
+
+// ── split_history signal in computeSuggestions ────────────────────────────────
+
+describe('computeSuggestions split_history signal', () => {
+  const items = [
+    { id: 'food', name: 'Food' },
+    { id: 'health', name: 'Health' },
+    { id: 'transport', name: 'Transport' },
+  ];
+
+  it('boosts a category that appears in split combos for this merchant', () => {
+    const mem: SuggestionMemoryState = {
+      merchants: {},
+      recents: [],
+      splitCombos: [
+        { key: 'shop|food,health', merchantKey: 'shop', categoryIds: ['food', 'health'], count: 3, lastUsed: today },
+      ],
+    };
+    const scored = computeSuggestions({ merchant: 'shop', items, memory: mem });
+    const foodScore = scored.find((s) => s.categoryId === 'food')?.score ?? 0;
+    const transportScore = scored.find((s) => s.categoryId === 'transport')?.score ?? 0;
+    expect(foodScore).toBeGreaterThan(transportScore);
+  });
+
+  it('includes split_history reason when combo is present', () => {
+    const mem: SuggestionMemoryState = {
+      merchants: {},
+      recents: [],
+      splitCombos: [
+        { key: 'shop|food,health', merchantKey: 'shop', categoryIds: ['food', 'health'], count: 2, lastUsed: today },
+      ],
+    };
+    const scored = computeSuggestions({ merchant: 'shop', items, memory: mem });
+    const food = scored.find((s) => s.categoryId === 'food');
+    expect(food?.reasons.some((r) => r.kind === 'split_history')).toBe(true);
+  });
+
+  it('does not add split_history reason when no combos match', () => {
+    const scored = computeSuggestions({ merchant: 'shop', items, memory: emptyMemory });
+    expect(scored.every((s) => s.reasons.every((r) => r.kind !== 'split_history'))).toBe(true);
+  });
+});

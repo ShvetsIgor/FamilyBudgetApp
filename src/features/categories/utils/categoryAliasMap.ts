@@ -1,2 +1,2 @@
-// Re-exports for backward compatibility. Import from config/categoryConfig directly.
-export { CATEGORY_ALIAS_MAP, getPresetDisplayName } from '../config/categoryConfig';
+// Re-exports for backward compatibility. Import from config/categoryLabels directly.
+export { CATEGORY_ALIAS_MAP, getPresetDisplayName } from '../config/categoryLabels';

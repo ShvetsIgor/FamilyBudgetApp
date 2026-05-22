@@ -13,6 +13,7 @@ interface Props {
   type: CategoryType;
   onSave: (folder: Omit<CategoryFolder, 'id' | 'userId'> & { id?: string }) => void;
   onDelete?: () => void;
+  availableFolders?: import('@/shared/types').CategoryFolder[];  // root folders for parent selection
 }
 
 export function FolderEditorSheet({ open, onClose, initial, type, onSave, onDelete }: Props) {

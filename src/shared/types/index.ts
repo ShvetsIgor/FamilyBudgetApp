@@ -66,6 +66,7 @@ export interface CategoryFolder {
   color?: string;
   type: CategoryType;
   order: number;
+  parentFolderId?: string;  // UI-only nesting; no semantic inheritance
 }
 
 export interface Category {

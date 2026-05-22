@@ -2,7 +2,7 @@
 import { useAppSelector } from '@/store/store';
 import type { Category } from '@/shared/types';
 import { StickerIcon } from './CategoryIcon';
-import { getPresetDisplayName } from '../config/categoryConfig';
+import { getPresetDisplayName } from '../config/categoryLabels';
 
 interface Props {
   category: Category;

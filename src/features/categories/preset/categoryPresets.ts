@@ -225,6 +225,6 @@ export const CATEGORY_BLUEPRINTS: readonly CategoryBlueprint[] = [
   { id: 'bonus',             folderId: 'income',        name: 'Bonus',              ru: 'Бонус',              icon: 'star',        color: '#81B29A' },
   { id: 'in_gifts',          folderId: 'income',        name: 'Gifts',              ru: 'Подарки',            icon: 'gift',        color: '#81B29A' },
   { id: 'refunds',           folderId: 'income',        name: 'Refunds',            ru: 'Возвраты',           icon: 'refund',      color: '#81B29A' },
-  { id: 'in_investments',    folderId: 'income',        name: 'Investments',        ru: 'Инвестиции',         icon: 'chart_up',    color: '#81B29A' },
+  { id: 'investments',       folderId: 'income',        name: 'Investments',        ru: 'Инвестиции',         icon: 'chart_up',    color: '#81B29A' },
   { id: 'in_other',          folderId: 'income',        name: 'Other',              ru: 'Прочее',             icon: 'box',         color: '#81B29A' },
 ];

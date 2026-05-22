@@ -1,5 +1,5 @@
 import type { Category } from '@/shared/types';
-import { CATEGORY_ALIAS_MAP } from '../config/categoryConfig';
+import { CATEGORY_ALIAS_MAP } from '../config/categoryLabels';
 
 /**
  * Resolve a category from an alias or ID string.

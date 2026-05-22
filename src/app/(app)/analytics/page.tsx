@@ -7,7 +7,7 @@ import { useAppSelector } from '@/store/store';
 import { fetchLastNMonths, type MonthStats } from '@/features/stats/services/statsService';
 import { fetchMonthExpenses } from '@/features/expenses/services/expensesService';
 import { formatAmount } from '@/shared/utils/currency';
-import { aggregateTopCategories } from '@/features/categories/utils/categoryViewModels';
+import { aggregateTopCategories } from '@/features/categories/utils/statsAggregation';
 import { useT } from '@/shared/hooks/useT';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import {

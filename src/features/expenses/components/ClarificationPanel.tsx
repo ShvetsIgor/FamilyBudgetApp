@@ -117,6 +117,56 @@ export function ClarificationPanel({
         })}
       </div>
 
+      {/* Split combo cards — one-tap reuse of previous split patterns */}
+      {splitCombos.length > 0 && onUseSplitCombo && (
+        <div className="px-3 pb-2 space-y-1.5">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-1 pt-1">
+            Повторить сплит
+          </p>
+          {splitCombos.map((combo) => {
+            const cats = combo.categoryIds
+              .map((id) => folders.find((f) => f.id === id))
+              .filter(Boolean) as typeof folders;
+            if (cats.length < 2) return null;
+            const primaryColor = cats[0]?.color ?? '#E07A5F';
+            return (
+              <button
+                key={combo.key}
+                onClick={() => onUseSplitCombo(combo)}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all hover:opacity-80 active:scale-[0.98]"
+                style={{ background: primaryColor + '10', border: `1px solid ${primaryColor}30` }}
+              >
+                {/* Category icon cluster */}
+                <div className="flex -space-x-1 flex-shrink-0">
+                  {cats.slice(0, 3).map((cat, i) => (
+                    <div
+                      key={cat.id}
+                      className="h-7 w-7 rounded-[8px] flex items-center justify-center border-2 border-background"
+                      style={{ background: (cat.color ?? '#E07A5F') + '28', zIndex: 3 - i }}
+                    >
+                      <StickerIcon icon={cat.icon ?? 'box'} color={cat.color ?? '#E07A5F'} className="h-3.5 w-3.5" />
+                    </div>
+                  ))}
+                </div>
+                {/* Names */}
+                <div className="flex-1 text-left min-w-0">
+                  <p className="text-xs font-bold text-foreground truncate">
+                    {cats.map((c) => t.cat(c.name)).join(' · ')}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground font-semibold">
+                    {combo.count}× · поровну
+                  </p>
+                </div>
+                {/* Divider indicator */}
+                <svg className="h-3.5 w-3.5 flex-shrink-0" style={{ color: primaryColor }} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <path d="M6 3v18M18 3v18M3 9h18M3 15h18" />
+                </svg>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Split CTA */}
       <div className="px-3 pb-3">
         <button

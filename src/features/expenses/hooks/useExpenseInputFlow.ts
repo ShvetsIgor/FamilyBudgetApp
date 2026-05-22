@@ -180,7 +180,8 @@ export function useExpenseInputFlow(): ExpenseInputFlow {
           categoryId,
           date: today,
         }));
-        dispatch(clearSession());
+        dispatch(markSaved());
+        setTimeout(() => dispatch(clearSession()), 1200);
       } finally {
         setSaving(false);
       }

@@ -142,6 +142,47 @@ public/
 - **Savings as expenses** — savings contributions create an expense record in the Savings category
 - **Auto-seed categories** — Savings category auto-created if missing on first contribution
 
+## Categories Architecture (frozen 2026-05-23)
+
+### Layer map
+
+| Layer | File(s) | Owns |
+|-------|---------|------|
+| **preset** | `preset/categoryPresets.ts` | Blueprint data for onboarding only. Never runtime authority. |
+| **runtime config** | `config/categoryLabels.ts` | Preset-derived alias map + `getPresetDisplayName`. Built once at module load. |
+| **runtime config** | `config/libraryConfig.ts` | Library folder list for "add from library" flow. Consumed only by `librarySelectors.ts`. |
+| **selectors** | `store/selectors.ts` | Canonical source for active-category state derivation. All components should use these. |
+| **selectors** | `store/librarySelectors.ts` | `selectAvailableLibrary` — unactivated preset folders. |
+| **view-model hook** | `hooks/useCategoryGroups.ts` | `CategoryGroup` type + `getCatsInGroup` dynamic accessor for form components. |
+| **UI derivation util** | `utils/folderSections.ts` | `buildFolderSections` pure function. Direct use only in CategoryPicker (search-filtered) and CategorySheet (categoriesOverride). All other components use `selectFolderSections`. |
+| **stats util** | `utils/statsAggregation.ts` | `aggregateTopCategories` for analytics pages. |
+| **policy** | `policy/categoryPolicy.ts` | `isActiveCategory` — single gate for archive visibility. |
+| **compat** | `compat/legacyCategoryMap.ts` | Legacy ID → new ID migration. Isolated, used only in reset flow. |
+| **services** | `services/defaultCategories.ts` | Seed data: `DEFAULT_EXPENSE_CATEGORIES`, `DEFAULT_INCOME_CATEGORIES`, `DEFAULT_EXPENSE_FOLDER_SEEDS`, `DEFAULT_INCOME_FOLDER_SEEDS`. |
+
+### Architecture invariants
+
+- **Categories** — semantic expense classification targets only. `categoryId` is the only domain link in expenses.
+- **Folders** — UI grouping only. Non-semantic. Never drive analytics or domain logic.
+- **Presets** — onboarding/setup data only. Never read at runtime for domain behavior.
+- **Selectors** — canonical derivation layer. Components read state through selectors, not slices directly.
+- **Compat** — isolated legacy behavior. `legacyCategoryMap` used only in the reset flow.
+- **`isActiveCategory`** — the single policy gate. All active-category filtering must go through it.
+
+### Derivation paths
+
+```
+Redux store
+  └─ selectors.ts → selectFolderSections (canonical)
+       └─ folderSections.ts:buildFolderSections
+            ↑ also used directly by:
+              CategoryPicker (search-filtered list — selector cannot accommodate)
+              CategorySheet  (categoriesOverride mode — non-Redux data)
+
+useCategoryGroups hook → CategoryGroup view-model + getCatsInGroup(folderId)
+  (form components that need dynamic per-folder lookup without extra subscriptions)
+```
+
 ## Firestore Collections
 ```
 users/{userId}

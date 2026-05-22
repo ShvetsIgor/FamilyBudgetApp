@@ -2,7 +2,7 @@
 import { useAppSelector } from '@/store/store';
 import type { Category } from '@/shared/types';
 import { StickerIcon } from './CategoryIcon';
-import { getTaxonomyName } from '../utils/categoryAliasMap';
+import { getPresetDisplayName } from '../utils/categoryAliasMap';
 
 interface Props {
   category: Category;
@@ -15,7 +15,7 @@ interface Props {
 export function CategoryRow({ category, budget, onEdit, fromLibrary, onActivate }: Props) {
   const lang = useAppSelector((s) => s.ui.language) ?? 'ru';
 
-  const displayName = getTaxonomyName(category.id, lang) ?? category.name;
+  const displayName = getPresetDisplayName(category.id, lang) ?? category.name;
 
   return (
     <div

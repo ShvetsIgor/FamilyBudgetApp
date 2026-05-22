@@ -9,7 +9,7 @@ import {
 import { inferStage, SPLIT_AMOUNT_THRESHOLD } from '@/features/expenses/hooks/useInputSession';
 import type { SuggestionMemoryState } from '@/features/expenses/store/suggestionMemorySlice';
 
-const emptyMemory: SuggestionMemoryState = { merchants: {}, recents: [] };
+const emptyMemory: SuggestionMemoryState = { merchants: {}, recents: [], splitCombos: [] };
 
 const items = [
   { id: 'food', name: 'Еда' },
@@ -51,6 +51,7 @@ describe('computeSuggestions', () => {
     const memory: SuggestionMemoryState = {
       merchants: {},
       recents: [{ categoryId: 'health', count: 5, lastUsed: new Date().toISOString() }],
+      splitCombos: [],
     };
     const result = computeSuggestions({ merchant: undefined, items, memory });
     const healthResult = result.find((s) => s.categoryId === 'health');
@@ -59,7 +60,7 @@ describe('computeSuggestions', () => {
 
   it('gives name_match reason when merchant name matches category name', () => {
     const healthItems = [{ id: 'health', name: 'Health' }];
-    const memory: SuggestionMemoryState = { merchants: {}, recents: [] };
+    const memory: SuggestionMemoryState = { merchants: {}, recents: [], splitCombos: [] };
     const result = computeSuggestions({ merchant: 'health', items: healthItems, memory });
     expect(result[0].reasons.some((r) => r.kind === 'name_match')).toBe(true);
   });

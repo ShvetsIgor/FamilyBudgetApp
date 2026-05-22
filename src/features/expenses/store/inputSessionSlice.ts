@@ -5,10 +5,11 @@
  * It lives only as long as the user is in an active input flow.
  *
  * Lifecycle:
- *   start (user begins typing) →
+ *   idle → typing (processInput called) →
  *   parsing / clarification / editing / split →
  *   confirm (user taps save) →
- *   clear (session destroyed, expense persisted separately)
+ *   saved  (save completed — briefly shown for UX feedback) →
+ *   clear  (session destroyed after saved timeout)
  *
  * Sessions are never written to Firestore.
  * Clearing a session does not cancel an in-flight save — they're independent.

@@ -252,6 +252,14 @@ export function FastExpenseEntry({
           categoryId: selectedCatId,
           date: dateStr,
         }));
+        if (splitItems.length > 0) {
+          dispatch(recordSplitExpense({
+            merchant: initialStore,
+            categoryIds: [selectedCatId, ...splitItems.map((s) => s.categoryId)],
+            date: dateStr,
+          }));
+        }
+        dispatch(clearDraft());
 
         if (fromChat) {
           // Add bot "split saved" message to chat

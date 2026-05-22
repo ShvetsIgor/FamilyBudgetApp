@@ -14,7 +14,7 @@
  * NOT consumed by: analytics, statistics, parser semantics.
  */
 
-import type { SuggestionMemoryState } from '../store/suggestionMemorySlice';
+import type { SuggestionMemoryState, SplitComboEntry } from '../store/suggestionMemorySlice';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

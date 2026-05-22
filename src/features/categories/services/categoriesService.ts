@@ -12,7 +12,13 @@ import {
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import type { Category, CategoryType } from '@/shared/types';
-import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES } from './defaultCategories';
+import {
+  DEFAULT_EXPENSE_CATEGORIES,
+  DEFAULT_INCOME_CATEGORIES,
+  DEFAULT_EXPENSE_FOLDER_SEEDS,
+  DEFAULT_INCOME_FOLDER_SEEDS,
+} from './defaultCategories';
+import { bulkCreateFolders } from './categoryFoldersService';
 import { legacyCategoryMap } from '../compat/legacyCategoryMap';
 
 function colRef(userId: string, type: CategoryType) {

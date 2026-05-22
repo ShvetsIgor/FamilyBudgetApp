@@ -400,7 +400,7 @@ export function CategoriesHub() {
         >
           + Категорию
         </button>
-      </div>
+      </div>}
 
       {/* Category Editor Sheet */}
       <CategoryEditorSheet

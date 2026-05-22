@@ -41,7 +41,7 @@ export const selectAvailableLibrary = (s: RootState, type: CategoryType) => {
   const activeFolderIds = new Set(folders(s, type).map((f) => f.id));
   const activeCategoryIds = new Set(cats(s, type).map((c) => c.id));
 
-  return FOLDER_BLUEPRINTS.filter(
+  return LIBRARY_FOLDERS.filter(
     (f) =>
       (type === 'expense' ? f.id !== 'income' : f.id === 'income') &&
       !activeFolderIds.has(f.id) &&

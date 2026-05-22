@@ -42,3 +42,11 @@ export const selectFolderSections = (s: RootState, type: CategoryType): FolderSe
 
 export const selectBudgetFor = (s: RootState, categoryId: string): number =>
   s.budget.limits[categoryId] ?? 0;
+
+/** Top-level folders only (no parent). */
+export const selectRootFolders = (s: RootState, type: CategoryType) =>
+  folders(s, type).filter((f) => !f.parentFolderId);
+
+/** Direct child folders of the given parent. */
+export const selectChildFolders = (s: RootState, parentFolderId: string, type: CategoryType) =>
+  folders(s, type).filter((f) => f.parentFolderId === parentFolderId);

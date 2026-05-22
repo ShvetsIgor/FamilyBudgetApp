@@ -89,7 +89,7 @@ export const CATEGORY_BLUEPRINTS: readonly CategoryBlueprint[] = categoryBluepri
  * Returns the taxonomy display name for a stable slug in the given language.
  * Returns null for unknown slugs (e.g. custom user categories — use category.name).
  */
-export function getTaxonomyName(id: string, lang: string): string | null {
+export function getPresetDisplayName(id: string, lang: string): string | null {
   const entry = CATEGORY_ALIAS_MAP.get(id);
   if (!entry) return null;
   return lang === 'ru' && entry.ru ? entry.ru : entry.name;

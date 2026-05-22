@@ -44,6 +44,7 @@ export function FolderEditorSheet({ open, onClose, initial, type, onSave, onDele
       color,
       type,
       order: initial?.order ?? 0,
+      parentFolderId,
     });
     onClose();
   };

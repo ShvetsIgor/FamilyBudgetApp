@@ -101,9 +101,14 @@ export function FastExpenseEntry({
   }
 
   function initSplits(): SplitRow[] {
-    if (!initialExpense?.splits?.length) return [];
-    return initialExpense.splits
-      .map((sp: SplitItem) => {
+    const source = initialExpense?.splits?.length
+      ? initialExpense.splits.map((sp: SplitItem) => ({ categoryId: sp.categoryId, amount: sp.amount }))
+      : !initialExpense && draft?.splits?.length
+        ? draft.splits
+        : [];
+
+    return source
+      .map((sp) => {
         const cat = allCats.find((c) => c.id === sp.categoryId);
         const groupId = getGroupOf(cat);
         const groupCat = groupId ? allCats.find((c) => c.id === groupId) : undefined;

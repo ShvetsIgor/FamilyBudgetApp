@@ -124,3 +124,52 @@ export function getTopCategories(
 export function hasUsageContext(memory: SuggestionMemoryState): boolean {
   return memory.recents.length > 0 || Object.keys(memory.merchants).length > 0;
 }
+
+// ── Split combo context ───────────────────────────────────────────────────────
+
+/**
+ * Returns recent split combos relevant to the given merchant.
+ *
+ * Priority:
+ *   1. Merchant-specific combos (exact key match) — most relevant
+ *   2. Global combos (no merchant) — fallback
+ *
+ * Deduplicates by categoryIds signature so the same combo at different
+ * merchants doesn't flood the results.
+ */
+export function getRecentSplitCombos(
+  merchant: string | undefined,
+  memory: SuggestionMemoryState,
+  limit = 3,
+): SplitComboEntry[] {
+  const merchantKey = merchant?.toLowerCase().trim() ?? '';
+  const combos = memory.splitCombos ?? [];
+
+  const merchantCombos = combos.filter((c) => merchantKey && c.merchantKey === merchantKey);
+  const globalCombos = combos.filter((c) => c.merchantKey === '');
+
+  // Merchant combos first, then global, both sorted by recency
+  const combined = [
+    ...merchantCombos.sort((a, b) => new Date(b.lastUsed).getTime() - new Date(a.lastUsed).getTime()),
+    ...globalCombos.sort((a, b) => new Date(b.lastUsed).getTime() - new Date(a.lastUsed).getTime()),
+  ];
+
+  // Deduplicate by the categoryIds signature (sorted IDs joined)
+  const seen = new Set<string>();
+  return combined
+    .filter((c) => {
+      const sig = c.categoryIds.join(',');
+      if (seen.has(sig)) return false;
+      seen.add(sig);
+      return true;
+    })
+    .slice(0, limit);
+}
+
+/** Whether there are any split combos relevant to the given merchant. */
+export function hasRelevantSplitCombos(
+  merchant: string | undefined,
+  memory: SuggestionMemoryState,
+): boolean {
+  return getRecentSplitCombos(merchant, memory, 1).length > 0;
+}

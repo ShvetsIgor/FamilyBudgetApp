@@ -168,9 +168,12 @@ export function explainSuggestion(s: ScoredSuggestion): string {
 
 /**
  * Whether the top suggestion has a confident signal (score ≥ threshold).
- * Used to skip clarification and go straight to confirm stage.
+ * Uses SCORING_POLICY.thresholds.confidentScore by default.
  */
-export function hasConfidentSuggestion(suggestions: ScoredSuggestion[], threshold = 30): boolean {
+export function hasConfidentSuggestion(
+  suggestions: ScoredSuggestion[],
+  threshold = SCORING_POLICY.thresholds.confidentScore,
+): boolean {
   return (suggestions[0]?.score ?? 0) >= threshold;
 }
 

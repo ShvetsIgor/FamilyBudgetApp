@@ -56,6 +56,7 @@ export function CategoriesHub() {
   const [folderEditor, setFolderEditor] = useState<FolderEditorState>({ open: false });
 
   const folders = useAppSelector((s) => selectFolders(s, tab));
+  const rootFolders = useAppSelector((s) => selectRootFolders(s, tab));
   const libraryItems = useAppSelector((s) => selectAvailableLibrary(s, tab));
   const allCategories = useAppSelector((s) =>
     tab === 'expense' ? s.categories.expense : s.categories.income,
@@ -64,6 +65,11 @@ export function CategoriesHub() {
   const categoriesInFolderMap = useAppSelector((s) =>
     Object.fromEntries(
       folders.map((f) => [f.id, selectCategoriesInFolder(s, f.id, tab)])
+    )
+  );
+  const childFoldersMap = useAppSelector((s) =>
+    Object.fromEntries(
+      rootFolders.map((f) => [f.id, selectChildFolders(s, f.id, tab)])
     )
   );
 

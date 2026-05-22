@@ -153,7 +153,7 @@ export function CategoriesHub() {
       order: folders.length,
     });
     dispatch(addFolder(folder));
-    for (const sub of getTaxonomySubs(libraryParent.id)) {
+    for (const sub of getPresetCategoriesForFolder(libraryParent.id)) {
       const s = await addCategoryWithId(user.id, sub.id, {
         name: sub.name,
         icon: sub.icon,

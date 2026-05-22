@@ -31,6 +31,7 @@ export const store = configureStore({
     quickAdd: quickAddReducer,
     draft: draftReducer,
     suggestionMemory: suggestionMemoryReducer,
+    inputSession: inputSessionReducer,
     chat: chatReducer,
     storeProfiles: storeProfilesReducer,
     notifications: notificationsReducer,

@@ -55,11 +55,18 @@ const inputSessionSlice = createSlice({
       }
     },
 
+    /** Transition to 'saved' — use for post-save UX feedback. Auto-clear via useExpenseInputFlow. */
+    markSaved(state) {
+      if (state.session) {
+        state.session.stage = 'saved';
+      }
+    },
+
     clearSession(state) {
       state.session = null;
     },
   },
 });
 
-export const { setSession, advanceStage, clearSession } = inputSessionSlice.actions;
+export const { setSession, advanceStage, markSaved, clearSession } = inputSessionSlice.actions;
 export default inputSessionSlice.reducer;

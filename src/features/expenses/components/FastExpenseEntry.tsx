@@ -83,7 +83,17 @@ export function FastExpenseEntry({
   );
 
   function initSelectedCatId() {
-    if (!initialExpense) return topCats[0]?.id ?? '';
+    if (!initialExpense) {
+      // Use suggestion memory to pick best category if merchant context is available
+      if (initialStore && topCats.length > 0) {
+        const ranked = rankSuggestions(topCats, initialStore, memory, 1);
+        const topId = ranked[0];
+        if (topId && memory.merchants[initialStore.toLowerCase().trim()]?.length) {
+          return topId;
+        }
+      }
+      return topCats[0]?.id ?? '';
+    }
     const cat = allCats.find((c) => c.id === initialExpense.categoryId);
     return getGroupOf(cat) || (cat?.id ?? topCats[0]?.id ?? '');
   }

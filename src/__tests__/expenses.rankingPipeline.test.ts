@@ -12,6 +12,7 @@ import {
   shortExplainSuggestion,
   isHabitSuggestion,
   hasConfidentSuggestion,
+  getConfidenceLevel,
   type ScoredSuggestion,
 } from '@/features/expenses/engine/suggestionEngine';
 import { SCORING_POLICY } from '@/features/expenses/engine/scoringPolicy';

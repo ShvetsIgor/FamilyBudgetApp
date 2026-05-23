@@ -348,7 +348,7 @@ describe('parseInput — memory-aware merchant detection', () => {
   it('works without memory (no crash)', () => {
     const ctx = parseInput('Dabbah молоко 350');
     expect(ctx.amount).toBe(350);
-    expect(ctx.merchant).toBe('dabbah молוко');
+    expect(ctx.merchant).toBe('dabbah молоко');
   });
 });
 

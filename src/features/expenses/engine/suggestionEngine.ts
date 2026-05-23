@@ -151,7 +151,7 @@ function collectSignals(item: RankableItem, ctx: RankingContext): SignalSet {
     }
   }
 
-  return { merchantHistory, habit, recentUsage, nameMatch, splitHistory };
+  return { merchantHistory, habit, tagHistory, recentUsage, nameMatch, splitHistory };
 }
 
 // ── Stage 3: Calculate score ──────────────────────────────────────────────────

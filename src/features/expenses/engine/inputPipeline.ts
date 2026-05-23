@@ -291,6 +291,7 @@ export function parseInput(raw: string, memory?: SuggestionMemoryState): ParserC
   const tags = merchantKey ? [merchantKey] : [];
   const confidenceSignals = buildConfidenceSignals(amount, merchantKey, itemCandidates, memory);
   const splitHints = buildSplitHints(amount, itemCandidates);
+  const { fragments, clarificationHints } = extractFragments(classified, memory);
 
   return {
     raw,
@@ -302,6 +303,8 @@ export function parseInput(raw: string, memory?: SuggestionMemoryState): ParserC
     itemCandidates,
     confidenceSignals,
     splitHints,
+    fragments,
+    clarificationHints,
   };
 }
 
@@ -316,5 +319,7 @@ function emptyContext(raw: string): ParserContext {
     itemCandidates: [],
     confidenceSignals: [],
     splitHints: [],
+    fragments: [],
+    clarificationHints: [],
   };
 }

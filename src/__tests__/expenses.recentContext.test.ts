@@ -10,7 +10,7 @@ import { shortExplainSuggestion } from '@/features/expenses/engine/suggestionEng
 import type { SuggestionMemoryState } from '@/features/expenses/store/suggestionMemorySlice';
 import type { ScoredSuggestion } from '@/features/expenses/engine/suggestionEngine';
 
-const emptyMemory: SuggestionMemoryState = { merchants: {}, recents: [] };
+const emptyMemory: SuggestionMemoryState = { merchants: {}, recents: [], splitCombos: [] };
 
 const now = new Date().toISOString();
 const yesterday = new Date(Date.now() - 86_400_000).toISOString();
@@ -34,6 +34,7 @@ const richMemory: SuggestionMemoryState = {
     { categoryId: 'health', count: 5, lastUsed: yesterday },
     { categoryId: 'transport', count: 3, lastUsed: oldDate },
   ],
+  splitCombos: [],
 };
 
 // ── getRecentMerchants ────────────────────────────────────────────────────────

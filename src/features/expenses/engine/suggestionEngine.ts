@@ -85,14 +85,15 @@ function collectSignals(item: RankableItem, ctx: RankingContext): SignalSet {
   const { signals } = SCORING_POLICY;
   const { merchantKey, memory, now } = ctx;
 
-  // Signal: Merchant history
+  // Signal: Merchant history (with freshness decay)
   let merchantHistory: SignalSet['merchantHistory'] = null;
   let habit: SignalSet['habit'] = null;
   if (merchantKey) {
     const usages = memory.merchants[merchantKey] ?? [];
     const usage = usages.find((u) => u.categoryId === item.id);
     if (usage) {
-      merchantHistory = { count: usage.count };
+      const ageDays = (ctx.now - new Date(usage.lastUsed).getTime()) / 86_400_000;
+      merchantHistory = { count: usage.count, ageDays };
       if (usage.count >= signals.habit.frequencyThreshold) {
         habit = { count: usage.count };
       }

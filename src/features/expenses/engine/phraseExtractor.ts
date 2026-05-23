@@ -54,7 +54,7 @@ import type { SemanticPhrase } from './semanticPhrase';
  * Covers both noise-classified tokens (for, с) and text-classified tokens
  * (without, без, для) so both code paths can reference a single set.
  */
-const MODIFIER_PREFIXES = new Set([
+export const MODIFIER_PREFIXES = new Set([
   // English (some are noise tokens, some are text tokens)
   'for', 'without', 'with', 'no', 'non', 'via',
   // Russian (с is noise; без, для are text)

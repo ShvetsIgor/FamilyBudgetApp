@@ -155,7 +155,7 @@ function detectMerchant(
       // First token is a known merchant — rest are item candidates
       const restTokens = tokens.filter((t) => t !== textTokens[0]);
       return {
-        merchant: textTokens[0].raw,
+        merchant: textTokens[0].raw,   // original casing for display
         merchantKey: firstKey,
         rest: restTokens,
       };
@@ -163,6 +163,7 @@ function detectMerchant(
   }
 
   // Fallback: all text tokens form the merchant (backward-compatible)
+  // Display: join original-case raws; Key: normalize the joined result
   const merchantRaw = textTokens.map((t) => t.raw).join(' ');
   const merchantKey = toMerchantKey(merchantRaw);
   return {

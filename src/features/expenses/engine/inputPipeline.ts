@@ -337,5 +337,7 @@ function emptyContext(raw: string): ParserContext {
     splitHints: [],
     fragments: [],
     clarificationHints: [],
+    relationships: [],
+    purchaseGroups: [],
   };
 }

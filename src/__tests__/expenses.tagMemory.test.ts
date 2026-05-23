@@ -221,7 +221,7 @@ describe('tagHistory signal — ranking', () => {
 describe('merchantHistory vs tagHistory ranking priority', () => {
   it('merchantHistory outscores tagHistory for same category', () => {
     const memory: SuggestionMemoryState = {
-      merchants: { shop: [{ categoryId: 'groceries', count: 3, lastUsed: today }] },
+      merchants: { shop: [{ categoryId: 'groceries', count: 2, lastUsed: today }] },
       recents: [],
       splitCombos: [],
       tagAssociations: [

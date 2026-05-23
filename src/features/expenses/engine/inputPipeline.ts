@@ -34,6 +34,8 @@ import type { SemanticPhrase } from './semanticPhrase';
 import type { PurchaseGroup } from './purchaseGroup';
 import { buildRelationships, buildPurchaseGroups } from './purchaseGrouper';
 import { extractPhrases } from './phraseExtractor';
+import type { SemanticScope, ScopeHint } from './semanticScope';
+import { buildSemanticScopes } from './scopeResolver';
 
 // ── ParserContext model ───────────────────────────────────────────────────────
 

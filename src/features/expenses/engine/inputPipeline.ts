@@ -311,7 +311,9 @@ export function parseInput(raw: string, memory?: SuggestionMemoryState): ParserC
   const tags = merchantKey ? [merchantKey] : [];
   const confidenceSignals = buildConfidenceSignals(amount, merchantKey, itemCandidates, memory);
   const splitHints = buildSplitHints(amount, itemCandidates);
-  const { fragments, clarificationHints } = extractFragments(classified, memory);
+  // Phrase stage (runs before fragment construction — phrases are the intermediate layer)
+  const phrases = extractPhrases(classified, memory);
+  const { fragments, clarificationHints } = extractFragmentsFromPhrases(phrases);
   const relationships = buildRelationships(fragments);
   const purchaseGroups = buildPurchaseGroups(fragments, clarificationHints);
 
@@ -325,6 +327,7 @@ export function parseInput(raw: string, memory?: SuggestionMemoryState): ParserC
     itemCandidates,
     confidenceSignals,
     splitHints,
+    phrases,
     fragments,
     clarificationHints,
     relationships,

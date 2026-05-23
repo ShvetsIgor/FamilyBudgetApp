@@ -16,6 +16,14 @@
  *   recentUsage     — 30-day decay, saturates at 10 uses (20 pts)
  *   nameMatch       — merchant substring match (10 pts)
  *   splitHistory    — category appears in split combos for this merchant (15 pts)
+ *   habit           — confirmed frequent category at this merchant (10 pts flat)
+ *
+ * Pipeline stages:
+ *   Stage 1: build RankingContext (in computeSuggestions)
+ *   Stage 2: collectSignals     — gather raw signal data per item
+ *   Stage 3: calculateScore     — sum weighted signal contributions
+ *   Stage 4: buildReasons       — produce ordered explanation list
+ *   Stage 5: rankCandidates     — sort, tie-break, slice topN
  */
 
 import type { SuggestionMemoryState } from '../store/suggestionMemorySlice';
@@ -26,6 +34,7 @@ import { SCORING_POLICY } from './scoringPolicy';
 /** A single explainable reason why a category ranked where it did. */
 export type SuggestionReason =
   | { kind: 'merchant_history'; count: number }
+  | { kind: 'habit'; count: number }          // frequent pattern at this merchant
   | { kind: 'recent_usage'; daysSince: number }
   | { kind: 'name_match' }
   | { kind: 'split_history'; comboCount: number }
@@ -50,61 +59,135 @@ export interface EngineInput {
   topN?: number;
 }
 
-// ── Core scoring ──────────────────────────────────────────────────────────────
+/**
+ * All raw signals collected for a single candidate item.
+ * Exported for inspectability — callers can examine signals directly.
+ */
+export interface SignalSet {
+  merchantHistory: { count: number } | null;
+  habit: { count: number } | null;
+  recentUsage: { daysSince: number; decayedContribution: number } | null;
+  nameMatch: boolean;
+  splitHistory: { comboCount: number } | null;
+}
 
-function scoreItem(
-  item: RankableItem,
-  merchantKey: string | undefined,
-  memory: SuggestionMemoryState,
-  now: number,
-): { score: number; reasons: SuggestionReason[] } {
+/** Internal context shared across all pipeline stages for a single computeSuggestions call. */
+interface RankingContext {
+  merchantKey: string | undefined;
+  memory: SuggestionMemoryState;
+  now: number;
+}
+
+// ── Stage 2: Collect signals ──────────────────────────────────────────────────
+
+function collectSignals(item: RankableItem, ctx: RankingContext): SignalSet {
   const { signals } = SCORING_POLICY;
-  let score = 0;
-  const reasons: SuggestionReason[] = [];
+  const { merchantKey, memory, now } = ctx;
 
-  // Signal 1: Merchant history
+  // Signal: Merchant history
+  let merchantHistory: SignalSet['merchantHistory'] = null;
+  let habit: SignalSet['habit'] = null;
   if (merchantKey) {
     const usages = memory.merchants[merchantKey] ?? [];
     const usage = usages.find((u) => u.categoryId === item.id);
     if (usage) {
-      score += signals.merchantHistory.weight * Math.min(1, usage.count / signals.merchantHistory.saturationAt);
-      reasons.push({ kind: 'merchant_history', count: usage.count });
+      merchantHistory = { count: usage.count };
+      if (usage.count >= signals.habit.frequencyThreshold) {
+        habit = { count: usage.count };
+      }
     }
   }
 
-  // Signal 2: Recent usage with linear decay
+  // Signal: Recent usage with linear decay
+  let recentUsage: SignalSet['recentUsage'] = null;
   const recent = memory.recents.find((u) => u.categoryId === item.id);
   if (recent) {
     const days = (now - new Date(recent.lastUsed).getTime()) / 86_400_000;
     const decay = Math.max(0, 1 - days / signals.recentUsage.decayDays);
-    const contribution = signals.recentUsage.weight * decay * Math.min(1, recent.count / signals.recentUsage.saturationAt);
-    if (contribution > 0) {
-      score += contribution;
-      reasons.push({ kind: 'recent_usage', daysSince: Math.floor(days) });
+    const decayedContribution =
+      signals.recentUsage.weight * decay * Math.min(1, recent.count / signals.recentUsage.saturationAt);
+    if (decayedContribution > 0) {
+      recentUsage = { daysSince: Math.floor(days), decayedContribution };
     }
   }
 
-  // Signal 3: Name substring match
+  // Signal: Name substring match
+  let nameMatch = false;
   if (merchantKey && item.name) {
     const name = item.name.toLowerCase();
     const key = merchantKey.toLowerCase();
-    if (name.includes(key) || key.includes(name)) {
-      score += signals.nameMatch.weight;
-      reasons.push({ kind: 'name_match' });
-    }
+    nameMatch = name.includes(key) || key.includes(name);
   }
 
-  // Signal 4: Split history — category appears in known split combos for this merchant
-  if (merchantKey && 'splitCombos' in memory) {
-    const combos = (memory as SuggestionMemoryState & { splitCombos?: import('../store/suggestionMemorySlice').SplitComboEntry[] }).splitCombos ?? [];
+  // Signal: Split history — category appears in known split combos for this merchant
+  let splitHistory: SignalSet['splitHistory'] = null;
+  if (merchantKey) {
+    const combos = memory.splitCombos ?? [];
     const comboMatches = combos.filter(
       (c) => c.merchantKey === merchantKey && c.categoryIds.includes(item.id),
     );
     if (comboMatches.length > 0) {
       const totalCount = comboMatches.reduce((s, c) => s + c.count, 0);
-      score += signals.splitHistory.weight * Math.min(1, totalCount / signals.splitHistory.saturationAt);
-      reasons.push({ kind: 'split_history', comboCount: totalCount });
+      splitHistory = { comboCount: totalCount };
     }
+  }
+
+  return { merchantHistory, habit, recentUsage, nameMatch, splitHistory };
+}
+
+// ── Stage 3: Calculate score ──────────────────────────────────────────────────
+
+function calculateScore(signals: SignalSet): number {
+  const { signals: policy } = SCORING_POLICY;
+  let score = 0;
+
+  if (signals.merchantHistory) {
+    score += policy.merchantHistory.weight *
+      Math.min(1, signals.merchantHistory.count / policy.merchantHistory.saturationAt);
+  }
+
+  if (signals.habit) {
+    score += policy.habit.weight;
+  }
+
+  if (signals.recentUsage) {
+    score += signals.recentUsage.decayedContribution;
+  }
+
+  if (signals.nameMatch) {
+    score += policy.nameMatch.weight;
+  }
+
+  if (signals.splitHistory) {
+    score += policy.splitHistory.weight *
+      Math.min(1, signals.splitHistory.comboCount / policy.splitHistory.saturationAt);
+  }
+
+  return score;
+}
+
+// ── Stage 4: Build reasons ────────────────────────────────────────────────────
+
+function buildReasons(signals: SignalSet): SuggestionReason[] {
+  const reasons: SuggestionReason[] = [];
+
+  // habit takes display precedence over merchant_history
+  if (signals.habit) {
+    reasons.push({ kind: 'habit', count: signals.habit.count });
+  } else if (signals.merchantHistory) {
+    reasons.push({ kind: 'merchant_history', count: signals.merchantHistory.count });
+  }
+
+  if (signals.recentUsage) {
+    reasons.push({ kind: 'recent_usage', daysSince: signals.recentUsage.daysSince });
+  }
+
+  if (signals.nameMatch) {
+    reasons.push({ kind: 'name_match' });
+  }
+
+  if (signals.splitHistory) {
+    reasons.push({ kind: 'split_history', comboCount: signals.splitHistory.comboCount });
   }
 
   // Mark items with no signal so callers can distinguish cold vs. ranked
@@ -112,7 +195,14 @@ function scoreItem(
     reasons.push({ kind: 'fallback' });
   }
 
-  return { score, reasons };
+  return reasons;
+}
+
+// ── Stage 5: Rank candidates ──────────────────────────────────────────────────
+
+function rankCandidates(scored: ScoredSuggestion[], topN?: number): ScoredSuggestion[] {
+  scored.sort((a, b) => b.score - a.score || a.categoryId.localeCompare(b.categoryId));
+  return topN != null ? scored.slice(0, topN) : scored;
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────────
@@ -125,17 +215,20 @@ function scoreItem(
  */
 export function computeSuggestions(input: EngineInput): ScoredSuggestion[] {
   const { merchant, items, memory, topN } = input;
-  const merchantKey = merchant?.toLowerCase().trim() || undefined;
-  const now = Date.now();
+  const ctx: RankingContext = {
+    merchantKey: merchant?.toLowerCase().trim() || undefined,
+    memory,
+    now: Date.now(),
+  };
 
-  const scored: ScoredSuggestion[] = items.map((item) => {
-    const { score, reasons } = scoreItem(item, merchantKey, memory, now);
+  const scored = items.map((item): ScoredSuggestion => {
+    const signals = collectSignals(item, ctx);      // Stage 2
+    const score = calculateScore(signals);           // Stage 3
+    const reasons = buildReasons(signals);           // Stage 4
     return { categoryId: item.id, score, reasons };
   });
 
-  scored.sort((a, b) => b.score - a.score || a.categoryId.localeCompare(b.categoryId));
-
-  return topN != null ? scored.slice(0, topN) : scored;
+  return rankCandidates(scored, topN);               // Stage 5
 }
 
 /**
@@ -143,6 +236,7 @@ export function computeSuggestions(input: EngineInput): ScoredSuggestion[] {
  * Used for debug UI and clarification panels.
  *
  * Examples:
+ *   "Часто здесь (4×)"
  *   "История покупок (5×)"
  *   "Недавно (2 дн.)"
  *   "Совпадение названия"
@@ -153,6 +247,8 @@ export function explainSuggestion(s: ScoredSuggestion): string {
   if (!primaryReason) return 'По умолчанию';
 
   switch (primaryReason.kind) {
+    case 'habit':
+      return `Часто здесь (${primaryReason.count}×)`;
     case 'merchant_history':
       return `История покупок (${primaryReason.count}×)`;
     case 'recent_usage':
@@ -197,16 +293,22 @@ export function isSuggestionAmbiguous(suggestions: ScoredSuggestion[]): boolean 
  * Compact reason label for inline chip display (1–3 words max).
  * Returns empty string for fallback suggestions — callers hide empty labels.
  *
- * Examples: "5×", "2д", "название", ""
+ * Examples: "привычка", "5×", "2д", "название", ""
  */
 export function shortExplainSuggestion(s: ScoredSuggestion): string {
   const primary = s.reasons.find((r) => r.kind !== 'fallback');
   if (!primary) return '';
   switch (primary.kind) {
+    case 'habit': return 'привычка';
     case 'merchant_history': return `${primary.count}×`;
     case 'recent_usage': return primary.daysSince === 0 ? 'сегодня' : `${primary.daysSince}д`;
     case 'name_match': return 'название';
     case 'split_history': return `сплит ${primary.comboCount}×`;
     default: return '';
   }
+}
+
+/** Whether a suggestion was boosted by the habit signal. */
+export function isHabitSuggestion(s: ScoredSuggestion): boolean {
+  return s.reasons.some((r) => r.kind === 'habit');
 }

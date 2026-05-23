@@ -51,6 +51,7 @@ export function QuickAddBar({ className }: { className?: string }) {
   const amount = session?.detectedAmount;
   const merchant = session?.detectedMerchant;
   const hasAmount = (amount ?? 0) > 0;
+  const detectedIntent = session?.detectedIntent ?? null;
 
   // Auto-clear input when save completes
   useEffect(() => {

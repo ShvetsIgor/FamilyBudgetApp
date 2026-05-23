@@ -84,6 +84,15 @@ export interface ExpenseInputFlow {
   habitSuggestion: ScoredSuggestion | null;
 
   /**
+   * UX confidence level for the confirm stage.
+   * 'high'   → fast-path single button (habit or dominant winner)
+   * 'medium' → two-chip choice UI
+   * 'low'    → full clarification panel
+   * Always 'low' for non-confirm stages.
+   */
+  confidenceLevel: ConfidenceLevel;
+
+  /**
    * Process a free-text input string.
    * Parses merchant + amount, computes suggestions, infers stage.
    * Clears session when input is empty.

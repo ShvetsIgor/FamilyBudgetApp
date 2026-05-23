@@ -9,6 +9,7 @@
  *
  * Design rationale:
  *   - merchant_history: strongest signal (50pts) — user explicitly paid here before
+ *   - tag_history:      contextual signal (25pts) — category appeared in a split at this merchant
  *   - recent_usage:     moderate signal (20pts) — used this category recently
  *   - name_match:       weak signal (10pts) — merchant name ↔ category name
  *   - split_history:    moderate signal (15pts) — this category appears in known split combos
@@ -16,9 +17,18 @@
  *   - saturationAt:     score saturates at N uses — prevents old data from dominating forever
  *   - decayDays:        score decays linearly to 0 over N days — keeps context fresh
  *
+ * Ranking priority (all signals additive):
+ *   1. merchantHistory (strongest: direct single-pay history)
+ *   2. tagHistory      (contextual: split co-occurrence history)
+ *   3. recentUsage     (global recency)
+ *   4. splitHistory    (combo membership)
+ *   5. nameMatch       (text similarity)
+ *   6. habit           (flat boost on top of merchantHistory)
+ *
  * Freshness decay:
  *   - merchantHistory.decayDays: 90 days — stale merchant patterns gradually fade
  *     (score × (1 - ageDays/90), so a 45-day-old pattern contributes 50% of max)
+ *   - tagHistory.decayDays: 90 days — same decay as merchantHistory
  *   - Habit signal is NOT decayed — confirmed habits remain valid even after gaps
  *
  * Stage threshold rationale:

@@ -342,7 +342,7 @@ describe('parseInput — memory-aware merchant detection', () => {
   it('treats all text as merchant when only one text token', () => {
     const memory = makeMemory('dabbah');
     const ctx = parseInput('Dabbah 350', memory);
-    expect(ctx.merchant).toBe('dabbah');
+    expect(ctx.merchant).toBe('Dabbah');
     expect(ctx.itemCandidates).toHaveLength(0);
   });
 

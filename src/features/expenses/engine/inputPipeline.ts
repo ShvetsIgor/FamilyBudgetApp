@@ -346,6 +346,7 @@ function emptyContext(raw: string): ParserContext {
     itemCandidates: [],
     confidenceSignals: [],
     splitHints: [],
+    phrases: [],
     fragments: [],
     clarificationHints: [],
     relationships: [],

@@ -211,8 +211,8 @@ describe('parseInput — basic extraction', () => {
   it('extracts amount and merchant from simple input', () => {
     const ctx = parseInput('Dabbah 350');
     expect(ctx.amount).toBe(350);
-    expect(ctx.merchant).toBe('dabbah'); // normalized from lowercase stage
-    expect(ctx.merchantKey).toBe('dabbah');
+    expect(ctx.merchant).toBe('Dabbah');  // original casing preserved
+    expect(ctx.merchantKey).toBe('dabbah'); // key is normalized
   });
 
   it('handles amount only', () => {

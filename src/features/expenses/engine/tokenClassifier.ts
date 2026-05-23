@@ -53,29 +53,34 @@ const NOISE_TOKENS = new Set([
 // ── Classification ────────────────────────────────────────────────────────────
 
 /**
- * Classify a single normalized token.
+ * Classify a single token (may have original casing).
+ *
+ * Classification uses the lowercased form for consistent matching.
+ * `raw` preserves the original casing for display.
+ * `normalized` is lowercased + punctuation-stripped (used for key lookups).
  *
  * Order of checks:
- *   1. Amount (numeric after currency strip)
+ *   1. Amount (numeric after currency strip, checked on lowercase)
  *   2. Empty after punctuation strip → noise
  *   3. Known stop word → noise
  *   4. Single non-letter character → noise
  *   5. Everything else → text
  */
 export function classifyToken(rawToken: string): ClassifiedToken {
-  const normalized = stripTokenPunctuation(rawToken);
+  const lower = rawToken.toLowerCase();
+  const normalized = stripTokenPunctuation(lower);
 
-  if (isAmountString(rawToken)) {
+  if (isAmountString(lower)) {
     return {
       raw: rawToken,
       normalized,
       kind: 'amount',
-      numericValue: parseAmountToken(rawToken),
+      numericValue: parseAmountToken(lower),
     };
   }
 
   if (!normalized) {
-    return { raw: rawToken, normalized: rawToken, kind: 'noise' };
+    return { raw: rawToken, normalized: lower, kind: 'noise' };
   }
 
   if (NOISE_TOKENS.has(normalized)) {

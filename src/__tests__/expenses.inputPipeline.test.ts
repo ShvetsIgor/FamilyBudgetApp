@@ -498,18 +498,19 @@ describe('parseInput — determinism', () => {
 // ── parseQuickAdd backward compatibility ─────────────────────────────────────
 
 describe('parseQuickAdd — backward compatibility', () => {
-  it('returns amount and merchant like the old parser', () => {
-    expect(parseQuickAdd('Dabbah 350')).toEqual({ amount: 350, merchant: 'dabbah' });
+  it('returns amount and merchant (original casing)', () => {
+    expect(parseQuickAdd('Dabbah 350')).toEqual({ amount: 350, merchant: 'Dabbah' });
   });
 
   it('handles amount only', () => {
     expect(parseQuickAdd('350')).toEqual({ amount: 350 });
   });
 
-  it('handles merchant only', () => {
+  it('handles merchant only (no amount key when undefined)', () => {
     const result = parseQuickAdd('Groceries');
-    expect(result.merchant).toBe('groceries');
+    expect(result.merchant).toBe('Groceries');
     expect(result.amount).toBeUndefined();
+    expect(Object.keys(result)).not.toContain('amount');
   });
 
   it('handles empty string', () => {
@@ -519,7 +520,7 @@ describe('parseQuickAdd — backward compatibility', () => {
   it('handles amount in middle (Bus 7 morning)', () => {
     const result = parseQuickAdd('Bus 7 morning');
     expect(result.amount).toBe(7);
-    expect(result.merchant).toContain('bus');
+    expect(result.merchant).toContain('Bus');
     expect(result.merchant).toContain('morning');
   });
 
@@ -531,6 +532,6 @@ describe('parseQuickAdd — backward compatibility', () => {
   it('handles currency prefix', () => {
     const result = parseQuickAdd('Coffee ₪85');
     expect(result.amount).toBe(85);
-    expect(result.merchant).toBe('coffee');
+    expect(result.merchant).toBe('Coffee');
   });
 });

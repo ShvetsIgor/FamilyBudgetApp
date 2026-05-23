@@ -31,6 +31,7 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { ScoredSuggestion } from '../engine/suggestionEngine';
+import type { DetectedIntent } from '../engine/intentDetector';
 
 export type InputStage =
   | 'idle'

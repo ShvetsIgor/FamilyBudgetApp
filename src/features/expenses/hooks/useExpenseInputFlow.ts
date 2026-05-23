@@ -281,6 +281,19 @@ export function useExpenseInputFlow(): ExpenseInputFlow {
     dispatch(advanceStage('split'));
   }, [dispatch]);
 
+  const redirectToIntent = useCallback(() => {
+    const intent = session?.detectedIntent;
+    if (!intent) return;
+    const route = INTENT_ROUTE[intent.intent];
+    if (!route) return;
+    const params = new URLSearchParams();
+    if (session?.detectedAmount) params.set('amount', String(session.detectedAmount));
+    if (session?.detectedMerchant) params.set('description', session.detectedMerchant);
+    const qs = params.toString();
+    router.push(qs ? `${route}?${qs}` : route);
+    dispatch(clearSession());
+  }, [dispatch, router, session]);
+
   const clear = useCallback(() => {
     dispatch(clearSession());
     dispatch(clearDraft());

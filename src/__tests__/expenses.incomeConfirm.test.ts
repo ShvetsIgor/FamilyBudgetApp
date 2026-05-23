@@ -22,7 +22,7 @@ const incomeItems = [
 const emptyMemory: SuggestionMemoryState = {
   merchants: {},
   recents: [],
-  splitCombos: [],
+  splitCombos: [], tagAssociations: [],
 };
 
 // Simulates what useIncomeConfirm computes: rankings for a given session context
@@ -70,7 +70,7 @@ describe('income ranking — recent_usage signal (shared memory)', () => {
     const memoryWithRecent: SuggestionMemoryState = {
       merchants: {},
       recents: [{ categoryId: 'freelance', count: 3, lastUsed: today }],
-      splitCombos: [],
+      splitCombos: [], tagAssociations: [],
     };
     const result = rankIncomeCategories('', memoryWithRecent);
     const freelance = result.find((s) => s.categoryId === 'freelance')!;
@@ -85,7 +85,7 @@ describe('income ranking — recent_usage signal (shared memory)', () => {
         { categoryId: 'bonus', count: 5, lastUsed: today },
         { categoryId: 'salary', count: 1, lastUsed: today },
       ],
-      splitCombos: [],
+      splitCombos: [], tagAssociations: [],
     };
     const result = rankIncomeCategories('', mem);
     expect(result[0].categoryId).toBe('bonus'); // higher count → higher score
@@ -96,7 +96,7 @@ describe('income ranking — recent_usage signal (shared memory)', () => {
     const mem: SuggestionMemoryState = {
       merchants: {},
       recents: [{ categoryId: 'salary', count: 10, lastUsed: staleDate }],
-      splitCombos: [],
+      splitCombos: [], tagAssociations: [],
     };
     const result = rankIncomeCategories('', mem);
     const salary = result.find((s) => s.categoryId === 'salary')!;
@@ -134,7 +134,7 @@ describe('income ranking determinism', () => {
     const mem: SuggestionMemoryState = {
       merchants: {},
       recents: [{ categoryId: 'salary', count: 5, lastUsed: today }],
-      splitCombos: [],
+      splitCombos: [], tagAssociations: [],
     };
     const a = rankIncomeCategories('зарплата', mem);
     const b = rankIncomeCategories('зарплата', mem);

@@ -143,6 +143,7 @@ export function QuickAddBar({ className }: { className?: string }) {
             const c = cat.color ?? '#E07A5F';
             const isSaving = saving && s.categoryId === chipSuggestions[0]?.categoryId;
             const shortReason = shortExplainSuggestion(s);
+            const isHabit = s.reasons.some((r) => r.kind === 'habit');
 
             return (
               <button
@@ -157,7 +158,10 @@ export function QuickAddBar({ className }: { className?: string }) {
                   'flex flex-col items-start px-3 py-1.5 rounded-xl text-xs font-bold transition-all border',
                   hasAmount ? 'active:scale-95 hover:opacity-80' : 'opacity-60',
                 )}
-                style={{ background: c + '18', borderColor: c + '44' }}
+                style={{
+                  background: isHabit ? c + '28' : c + '18',
+                  borderColor: isHabit ? c + '88' : c + '44',
+                }}
               >
                 <div className="flex items-center gap-1.5" style={{ color: c }}>
                   <StickerIcon icon={cat.icon ?? 'box'} color={c} className="h-3.5 w-3.5" />

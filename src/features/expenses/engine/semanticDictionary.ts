@@ -139,6 +139,29 @@ export function lookupStoreBigram(n1: string, n2: string): StoreEntry | null {
 }
 
 /**
+ * Look up a three-token sequence against the store trigram index.
+ * Inputs must already be normalized (lowercase).
+ * Currently the index is empty (no existing store aliases have 3 tokens),
+ * but the lookup is ready for future store data with 3-word names.
+ */
+export function lookupStoreTrigram(n1: string, n2: string, n3: string): StoreEntry | null {
+  const trigram = `${resolveAlias(n1)} ${resolveAlias(n2)} ${resolveAlias(n3)}`;
+  return STORE_TRIGRAM[trigram] ?? STORE_TRIGRAM[`${n1} ${n2} ${n3}`] ?? null;
+}
+
+/**
+ * Look up a two-token phrase against the payment phrase table.
+ * Returns categoryIds + confidence, or null if not a known payment phrase.
+ * Inputs must already be normalized (lowercase).
+ */
+export function lookupPaymentPhrase(
+  n1: string,
+  n2: string,
+): { categoryIds: string[]; confidence: number } | null {
+  return PAYMENT_PHRASE_TABLE[`${n1} ${n2}`] ?? null;
+}
+
+/**
  * Look up a single item token against the ITEMS dictionary.
  * Returns categoryIds + confidence, or null if not found.
  */

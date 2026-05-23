@@ -28,10 +28,12 @@ import type { SuggestionMemoryState } from '../store/suggestionMemorySlice';
 import { normalizeText, toMerchantKey, resolveAlias } from './inputNormalizer';
 import { tokenizeAndClassify, type ClassifiedToken } from './tokenClassifier';
 import { SCORING_POLICY } from './scoringPolicy';
-import { extractFragments } from './fragmentExtractor';
+import { extractFragmentsFromPhrases } from './fragmentExtractor';
 import type { SemanticFragment, ClarificationHint, FragmentRelationship } from './semanticFragment';
+import type { SemanticPhrase } from './semanticPhrase';
 import type { PurchaseGroup } from './purchaseGroup';
 import { buildRelationships, buildPurchaseGroups } from './purchaseGrouper';
+import { extractPhrases } from './phraseExtractor';
 
 // ── ParserContext model ───────────────────────────────────────────────────────
 

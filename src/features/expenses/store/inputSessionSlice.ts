@@ -50,6 +50,12 @@ export interface ExpenseInputSession {
   stage: InputStage;
   /** Records which stage preceded a branch transition (split/confirm from clarification). */
   previousStage?: InputStage;
+  /**
+   * Non-expense intent detected from the raw input (e.g. income, transfer, recurring).
+   * Null means the input is treated as an expense (the default).
+   * Advisory only — does not affect stage machine or ranking.
+   */
+  detectedIntent?: DetectedIntent | null;
 }
 
 interface InputSessionState {

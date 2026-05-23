@@ -370,5 +370,7 @@ function emptyContext(raw: string): ParserContext {
     clarificationHints: [],
     relationships: [],
     purchaseGroups: [],
+    scopes: [],
+    scopeHints: [],
   };
 }

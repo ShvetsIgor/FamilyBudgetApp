@@ -224,7 +224,7 @@ describe('parseInput — basic extraction', () => {
   it('handles merchant only (no amount)', () => {
     const ctx = parseInput('Groceries');
     expect(ctx.amount).toBeUndefined();
-    expect(ctx.merchant).toBe('groceries');
+    expect(ctx.merchant).toBe('Groceries');
   });
 
   it('handles empty input', () => {

@@ -300,8 +300,9 @@ describe('parseInput — alias resolution (transliteration variants)', () => {
   });
 
   it('resolves Cyrillic store name variant', () => {
-    const ctx = parseInput('виктори 200');
+    const ctx = parseInput('Виктори 200');
     expect(ctx.merchantKey).toBe('victory');
+    expect(ctx.merchant).toBe('Виктори'); // display unchanged
   });
 });
 

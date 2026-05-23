@@ -121,10 +121,8 @@ function buildPhraseEntries(): PhraseEntry[] {
     });
   }
 
-  // Item bigrams
+  // Item bigrams — includes backward-compat duplicates of payment phrases; conflict detector reports overlaps
   for (const [key, value] of Object.entries(ITEM_BIGRAM_TABLE)) {
-    // Skip entries that are already in PAYMENT_PHRASE_TABLE (backward-compat duplicates)
-    if (key in PAYMENT_PHRASE_TABLE) continue;
     const tokens = key.split(' ');
     entries.push({
       id: nextId('pi'),

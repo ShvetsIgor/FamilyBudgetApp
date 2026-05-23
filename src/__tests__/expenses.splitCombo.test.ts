@@ -14,17 +14,16 @@ import { computeSuggestions } from '@/features/expenses/engine/suggestionEngine'
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function makeStore(initial?: Partial<SuggestionMemoryState>) {
+  // Always pass preloadedState to bypass the localStorage initializer
   return configureStore({
     reducer: { suggestionMemory: suggestionMemoryReducer },
-    preloadedState: initial
-      ? {
-          suggestionMemory: {
-            merchants: initial.merchants ?? {},
-            recents: initial.recents ?? [],
-            splitCombos: initial.splitCombos ?? [],
-          },
-        }
-      : undefined,
+    preloadedState: {
+      suggestionMemory: {
+        merchants: initial?.merchants ?? {},
+        recents: initial?.recents ?? [],
+        splitCombos: initial?.splitCombos ?? [],
+      },
+    },
   });
 }
 

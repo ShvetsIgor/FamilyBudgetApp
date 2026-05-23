@@ -1,13 +1,17 @@
 'use client';
 /**
- * Quick-add bar — confidence-driven expense input.
+ * UNIFIED INPUT BAR — single conversational entry point for all financial intents.
  *
- * UX paths based on confidence level:
+ * UX paths:
  *
- *   HIGH confidence (habit / dominant winner)
- *     → FastConfirmCard: one big button + secondary [Разбить] [alt categories]
+ *   INCOME INTENT detected (зарплата 15000, salary 5000, etc.)
+ *     → QuickConfirmCard with top income category + [badge: "доход"]
+ *     → Secondary: alt income categories, "Записать как расход →" override
  *
- *   MEDIUM confidence (confident but competitor exists)
+ *   HIGH confidence expense (habit / dominant winner)
+ *     → QuickConfirmCard: one big button + secondary [Разбить] [alt categories]
+ *
+ *   MEDIUM confidence expense (confident but competitor exists)
  *     → Two chips + [Другое] link
  *
  *   LOW / clarification
@@ -16,10 +20,16 @@
  *   EDITING (no memory signal)
  *     → Category chips (tap to save)
  *
+ *   TRANSFER / RECURRING intent
+ *     → Small advisory badge (no quick-confirm for these yet)
+ *
  *   SAVED
  *     → Brief "✓ Сохранено" feedback, input auto-cleared
  *
- * This component renders only — all logic lives in useExpenseInputFlow.
+ * Architecture:
+ *   - Rendering only — all logic in useExpenseInputFlow + useIncomeConfirm
+ *   - Both flows share the same parsing + ranking pipeline
+ *   - Income saves to shared suggestion memory for ranking continuity
  */
 
 import { useState, useEffect } from 'react';
@@ -29,8 +39,10 @@ import { getCurrencySymbol } from '@/shared/utils/currency';
 import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
 import { useT } from '@/shared/hooks/useT';
 import { useExpenseInputFlow } from '@/features/expenses/hooks/useExpenseInputFlow';
-import { explainSuggestion, shortExplainSuggestion } from '@/features/expenses/engine/suggestionEngine';
-import { INTENT_LABELS, INTENT_ROUTE } from '@/features/expenses/engine/intentDetector';
+import { useIncomeConfirm } from '@/features/expenses/hooks/useIncomeConfirm';
+import { shortExplainSuggestion, explainSuggestion } from '@/features/expenses/engine/suggestionEngine';
+import { INTENT_LABELS } from '@/features/expenses/engine/intentDetector';
+import { QuickConfirmCard, type AltAction } from './QuickConfirmCard';
 import { ClarificationPanel } from './ClarificationPanel';
 import { cn } from '@/shared/utils/cn';
 
@@ -39,13 +51,17 @@ const PLACEHOLDER_EXAMPLES = ['Dabbah 350', 'Кофе 18', 'Бензин 250'];
 export function QuickAddBar({ className }: { className?: string }) {
   const currency = useAppSelector((s) => s.ui.currency);
   const { groups: folders } = useCategoryGroups('expense');
+  const { groups: incomeFolders } = useCategoryGroups('income');
   const user = useAppSelector((s) => s.auth.user);
   const t = useT();
   const symbol = getCurrencySymbol(currency);
 
   const [input, setInput] = useState('');
+  // User can override income intent to proceed with expense flow instead
+  const [forceExpense, setForceExpense] = useState(false);
 
   const flow = useExpenseInputFlow();
+  const incomeConfirm = useIncomeConfirm(flow.session);
   const { session, suggestions, stage, saving, confidenceLevel } = flow;
 
   const amount = session?.detectedAmount;
@@ -53,10 +69,13 @@ export function QuickAddBar({ className }: { className?: string }) {
   const hasAmount = (amount ?? 0) > 0;
   const detectedIntent = session?.detectedIntent ?? null;
 
-  // Auto-clear input when save completes
+  // Auto-clear input when either expense or income save completes
   useEffect(() => {
-    if (stage === 'saved') setInput('');
-  }, [stage]);
+    if (stage === 'saved' || incomeConfirm.saved) {
+      setInput('');
+      setForceExpense(false);
+    }
+  }, [stage, incomeConfirm.saved]);
 
   const placeholder = PLACEHOLDER_EXAMPLES[
     Math.floor(Date.now() / 60000) % PLACEHOLDER_EXAMPLES.length
@@ -65,24 +84,51 @@ export function QuickAddBar({ className }: { className?: string }) {
   function handleChange(value: string) {
     setInput(value);
     flow.processInput(value);
+    if (forceExpense && value !== input) setForceExpense(false);
   }
 
   function handleClear() {
     setInput('');
+    setForceExpense(false);
     flow.clear();
   }
 
   if (!user) return null;
 
-  // ── Stage flags ───────────────────────────────────────────────────────────
+  // ── Routing flags ─────────────────────────────────────────────────────────
 
-  const isConfirmHigh   = stage === 'confirm' && confidenceLevel === 'high';
-  const isConfirmMedium = stage === 'confirm' && confidenceLevel === 'medium';
-  const showChips       = stage === 'editing' || stage === 'parsing' ||
-                          (stage === 'idle' && suggestions.some((s) => s.score > 0));
-  const showClarification = stage === 'clarification' || stage === 'split';
+  // Income confirm activates when income intent detected + amount + income categories exist
+  const topIncomeSuggestion = incomeConfirm.suggestions[0];
+  const topIncomeCat = topIncomeSuggestion ? incomeFolders.find((f) => f.id === topIncomeSuggestion.categoryId) : null;
+  const showIncomeConfirm =
+    detectedIntent?.intent === 'income' &&
+    hasAmount &&
+    !incomeConfirm.saved &&
+    !forceExpense &&
+    topIncomeSuggestion != null &&
+    topIncomeCat != null;
 
-  // Top suggestion lookup for fast-path
+  // Advisory badge for transfer/recurring (no quick-save yet)
+  const showIntentBadge =
+    detectedIntent &&
+    detectedIntent.intent !== 'income' &&
+    stage !== 'idle' &&
+    stage !== 'saved' &&
+    !incomeConfirm.saved;
+
+  // Expense flow: shown when NOT in income confirm
+  const showExpenseFlow = !showIncomeConfirm && !incomeConfirm.saved;
+
+  // Expense stage flags (only matter when showExpenseFlow is true)
+  const isConfirmHigh   = showExpenseFlow && stage === 'confirm' && confidenceLevel === 'high';
+  const isConfirmMedium = showExpenseFlow && stage === 'confirm' && confidenceLevel === 'medium';
+  const showChips       = showExpenseFlow && (
+    stage === 'editing' || stage === 'parsing' ||
+    (stage === 'idle' && suggestions.some((s) => s.score > 0))
+  );
+  const showClarification = showExpenseFlow && (stage === 'clarification' || stage === 'split');
+
+  // Top expense suggestion for fast-path
   const topSuggestion = suggestions[0];
   const topCat = topSuggestion ? folders.find((f) => f.id === topSuggestion.categoryId) : null;
 
@@ -97,8 +143,12 @@ export function QuickAddBar({ className }: { className?: string }) {
             value={input}
             onChange={(e) => handleChange(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && hasAmount && topSuggestion) {
-                flow.saveWithCategory(topSuggestion.categoryId);
+              if (e.key === 'Enter') {
+                if (showIncomeConfirm && topIncomeSuggestion) {
+                  incomeConfirm.saveAsIncome(topIncomeSuggestion.categoryId);
+                } else if (hasAmount && topSuggestion) {
+                  flow.saveWithCategory(topSuggestion.categoryId);
+                }
               }
             }}
             placeholder={placeholder}
@@ -126,110 +176,103 @@ export function QuickAddBar({ className }: { className?: string }) {
         </button>
       </div>
 
-      {/* ── Intent detection badge ── */}
-      {detectedIntent && stage !== 'idle' && stage !== 'saved' && (() => {
-        const label = INTENT_LABELS[detectedIntent.intent];
-        const route = INTENT_ROUTE[detectedIntent.intent];
-        const isIncome = detectedIntent.intent === 'income';
-        const isRecurring = detectedIntent.intent === 'recurring';
+      {/* ── INCOME INTENT: quick-confirm card ── */}
+      {showIncomeConfirm && topIncomeSuggestion && topIncomeCat && (() => {
+        const altIncomeActions: AltAction[] = incomeConfirm.suggestions
+          .slice(1, 3)
+          .filter((s) => s.score > 0)
+          .flatMap((s) => {
+            const cat = incomeFolders.find((f) => f.id === s.categoryId);
+            if (!cat) return [];
+            return [{ label: t.cat(cat.name), onClick: () => incomeConfirm.saveAsIncome(s.categoryId) }];
+          });
 
         return (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200/60 dark:border-sky-800/40">
-            <span className="text-sm">
-              {isIncome ? '💰' : isRecurring ? '🔄' : '↔️'}
-            </span>
-            <span className="text-xs font-bold text-sky-700 dark:text-sky-300 flex-1">{label}</span>
-            {route && (
-              <button
-                onClick={() => flow.redirectToIntent()}
-                className="text-[11px] font-black text-sky-600 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-200 transition-colors"
-              >
-                Перейти →
-              </button>
-            )}
+          <div className="space-y-1.5">
+            <QuickConfirmCard
+              icon={topIncomeCat.icon ?? 'box'}
+              color={topIncomeCat.color ?? '#4CAF50'}
+              name={t.cat(topIncomeCat.name)}
+              reason={shortExplainSuggestion(topIncomeSuggestion)}
+              amount={amount!}
+              symbol={symbol}
+              saving={incomeConfirm.saving}
+              badge="доход"
+              onConfirm={() => incomeConfirm.saveAsIncome(topIncomeSuggestion.categoryId)}
+              altActions={altIncomeActions}
+              onCancel={handleClear}
+            />
+            {/* Override: proceed as expense instead */}
+            <button
+              onClick={() => setForceExpense(true)}
+              className="text-[11px] font-semibold text-muted-foreground hover:text-foreground px-1 transition-colors"
+            >
+              Записать как расход →
+            </button>
           </div>
         );
       })()}
 
-      {/* ── HIGH confidence: fast-path confirm ── */}
+      {/* ── Advisory badge for transfer / recurring intents ── */}
+      {showIntentBadge && (() => {
+        const label = INTENT_LABELS[detectedIntent!.intent];
+        const isRecurring = detectedIntent!.intent === 'recurring';
+        return (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200/60 dark:border-sky-800/40">
+            <span className="text-sm">{isRecurring ? '🔄' : '↔️'}</span>
+            <span className="text-xs font-bold text-sky-700 dark:text-sky-300 flex-1">{label}</span>
+          </div>
+        );
+      })()}
+
+      {/* ── HIGH confidence expense: fast-path confirm (QuickConfirmCard) ── */}
       {isConfirmHigh && topSuggestion && topCat && (() => {
         const c = topCat.color ?? '#E07A5F';
-        const altSuggestions = suggestions.slice(1, 3).filter((s) => s.score > 0);
+        const altExpenseActions: AltAction[] = suggestions
+          .slice(1, 3)
+          .filter((s) => s.score > 0)
+          .flatMap((s) => {
+            const cat = folders.find((f) => f.id === s.categoryId);
+            if (!cat) return [];
+            return [{ label: t.cat(cat.name), onClick: () => flow.saveWithCategory(s.categoryId) }];
+          });
+
+        // Split combo reuse hint
+        const splitHint = flow.recentSplitCombos.length > 0 ? (() => {
+          const combo = flow.recentSplitCombos[0];
+          const comboCats = combo.categoryIds
+            .map((id) => folders.find((f) => f.id === id))
+            .filter(Boolean);
+          if (comboCats.length < 2) return null;
+          return (
+            <button
+              onClick={() => flow.openSplitEditorWithCombo(combo)}
+              className="flex items-center gap-1.5 px-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <svg className="h-3 w-3 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path d="M6 3v18M18 3v18M3 9h18M3 15h18" />
+              </svg>
+              Как в прошлый раз ({combo.categoryIds.length} позиции)
+            </button>
+          );
+        })() : null;
 
         return (
-          <div className="space-y-1.5">
-            {/* Primary confirm button */}
-            <button
-              onClick={() => flow.saveWithCategory(topSuggestion.categoryId)}
-              disabled={saving}
-              className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-white font-black active:scale-[0.98] transition-all disabled:opacity-50"
-              style={{ background: c, boxShadow: `0 8px 20px ${c}55` }}
-            >
-              <div className="flex items-center gap-3">
-                <StickerIcon icon={topCat.icon ?? 'box'} color="#fff" className="h-5 w-5 flex-shrink-0" />
-                <div className="text-left">
-                  <div className="text-sm leading-tight">{t.cat(topCat.name)}</div>
-                  <div className="text-[10px] opacity-70 font-semibold leading-tight mt-0.5">
-                    {explainSuggestion(topSuggestion)}
-                  </div>
-                </div>
-              </div>
-              <div className="text-right flex-shrink-0">
-                <div className="text-lg leading-tight tabular-nums">{symbol}{amount}</div>
-                {saving && <div className="text-[10px] opacity-70 mt-0.5">…</div>}
-              </div>
-            </button>
-
-            {/* Secondary actions row */}
-            <div className="flex items-center gap-3 px-1 flex-wrap">
-              <button
-                onClick={() => flow.openSplitEditor(topSuggestion.categoryId)}
-                className="text-[11px] font-bold text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Разбить
-              </button>
-              {altSuggestions.map((s) => {
-                const cat = folders.find((f) => f.id === s.categoryId);
-                if (!cat) return null;
-                return (
-                  <button
-                    key={s.categoryId}
-                    onClick={() => flow.saveWithCategory(s.categoryId)}
-                    disabled={saving}
-                    className="text-[11px] font-bold text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {t.cat(cat.name)}
-                  </button>
-                );
-              })}
-              <button
-                onClick={handleClear}
-                className="ml-auto text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Отмена
-              </button>
-            </div>
-
-            {/* Split-combo reuse hint */}
-            {flow.recentSplitCombos.length > 0 && (() => {
-              const combo = flow.recentSplitCombos[0];
-              const comboCats = combo.categoryIds
-                .map((id) => folders.find((f) => f.id === id))
-                .filter(Boolean);
-              if (comboCats.length < 2) return null;
-              return (
-                <button
-                  onClick={() => flow.openSplitEditorWithCombo(combo)}
-                  className="flex items-center gap-1.5 px-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <svg className="h-3 w-3 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path d="M6 3v18M18 3v18M3 9h18M3 15h18" />
-                  </svg>
-                  Как в прошлый раз ({combo.categoryIds.length} позиции)
-                </button>
-              );
-            })()}
-          </div>
+          <QuickConfirmCard
+            icon={topCat.icon ?? 'box'}
+            color={c}
+            name={t.cat(topCat.name)}
+            reason={explainSuggestion(topSuggestion)}
+            amount={amount!}
+            symbol={symbol}
+            saving={saving}
+            onConfirm={() => flow.saveWithCategory(topSuggestion.categoryId)}
+            altActions={altExpenseActions}
+            splitLabel="Разбить"
+            onSplit={() => flow.openSplitEditor(topSuggestion.categoryId)}
+            extraHint={splitHint}
+            onCancel={handleClear}
+          />
         );
       })()}
 
@@ -262,10 +305,7 @@ export function QuickAddBar({ className }: { className?: string }) {
                   {!isSaving && <span className="font-black opacity-70">{symbol}{amount}</span>}
                 </div>
                 {shortReason && (
-                  <span
-                    className="text-[9px] font-semibold mt-0.5 opacity-60 leading-none"
-                    style={{ color: c }}
-                  >
+                  <span className="text-[9px] font-semibold mt-0.5 opacity-60 leading-none" style={{ color: c }}>
                     {shortReason}
                   </span>
                 )}
@@ -306,15 +346,10 @@ export function QuickAddBar({ className }: { className?: string }) {
                 <div className="flex items-center gap-1.5" style={{ color: c }}>
                   <StickerIcon icon={cat.icon ?? 'box'} color={c} className="h-3.5 w-3.5" />
                   <span>{t.cat(cat.name)}</span>
-                  {hasAmount && (
-                    <span className="font-black opacity-70">{symbol}{amount}</span>
-                  )}
+                  {hasAmount && <span className="font-black opacity-70">{symbol}{amount}</span>}
                 </div>
                 {shortReason && (
-                  <span
-                    className="text-[9px] font-semibold mt-0.5 opacity-60 leading-none"
-                    style={{ color: c }}
-                  >
+                  <span className="text-[9px] font-semibold mt-0.5 opacity-60 leading-none" style={{ color: c }}>
                     {shortReason}
                   </span>
                 )}
@@ -340,19 +375,27 @@ export function QuickAddBar({ className }: { className?: string }) {
         />
       )}
 
-      {/* ── Saved feedback ── */}
+      {/* ── Saved feedback (expense) ── */}
       {stage === 'saved' && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-green-50 dark:bg-green-950/40">
           <svg className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
             <path d="M5 13l4 4L19 7" />
           </svg>
           <span className="text-sm font-bold text-green-700 dark:text-green-400">Сохранено</span>
-          {merchant && (
-            <span className="text-[11px] text-muted-foreground">· {merchant}</span>
-          )}
-          {amount && (
-            <span className="text-[11px] font-semibold text-muted-foreground ml-auto">{symbol}{amount}</span>
-          )}
+          {merchant && <span className="text-[11px] text-muted-foreground">· {merchant}</span>}
+          {amount && <span className="text-[11px] font-semibold text-muted-foreground ml-auto">{symbol}{amount}</span>}
+        </div>
+      )}
+
+      {/* ── Saved feedback (income) ── */}
+      {incomeConfirm.saved && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-green-50 dark:bg-green-950/40">
+          <svg className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+            <path d="M5 13l4 4L19 7" />
+          </svg>
+          <span className="text-sm font-bold text-green-700 dark:text-green-400">Сохранено</span>
+          <span className="text-[11px] text-muted-foreground">· доход</span>
+          {amount && <span className="text-[11px] font-semibold text-muted-foreground ml-auto">{symbol}{amount}</span>}
         </div>
       )}
 

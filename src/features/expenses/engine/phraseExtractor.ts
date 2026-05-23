@@ -65,7 +65,7 @@ export const MODIFIER_PREFIXES = new Set([
  * Standalone adjectives that classify as modifier_phrase without a following token.
  * These are common food/product quality descriptors with unambiguous modifier meaning.
  */
-const STANDALONE_MODIFIERS = new Set([
+export const STANDALONE_MODIFIERS = new Set([
   // English quality / size / diet adjectives
   'organic', 'fresh', 'frozen', 'whole', 'half', 'diet', 'lite', 'light',
   'large', 'small', 'big', 'mini', 'extra', 'regular', 'jumbo',

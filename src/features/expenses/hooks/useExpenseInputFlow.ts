@@ -125,6 +125,13 @@ export interface ExpenseInputFlow {
 
   /** Clear the session and draft (discard without saving). */
   clear(): void;
+
+  /**
+   * Navigate to the appropriate entry page for the detected non-expense intent.
+   * No-op when detectedIntent is null or has no route (transfer).
+   * Clears the session after routing.
+   */
+  redirectToIntent(): void;
 }
 
 // ── Hook ──────────────────────────────────────────────────────────────────────

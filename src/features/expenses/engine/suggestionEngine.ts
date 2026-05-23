@@ -197,11 +197,18 @@ function calculateScore(signals: SignalSet): number {
 function buildReasons(signals: SignalSet): SuggestionReason[] {
   const reasons: SuggestionReason[] = [];
 
-  // habit takes display precedence over merchant_history
+  // Display priority: habit > merchant_history > tag_history (mutually exclusive primary)
   if (signals.habit) {
     reasons.push({ kind: 'habit', count: signals.habit.count });
   } else if (signals.merchantHistory) {
     reasons.push({ kind: 'merchant_history', count: signals.merchantHistory.count });
+  } else if (signals.tagHistory) {
+    reasons.push({ kind: 'tag_history', tag: signals.tagHistory.matchedTag, count: signals.tagHistory.usageCount });
+  }
+
+  // Tag history also shown as secondary reason when merchant_history is primary
+  if (signals.tagHistory && !signals.habit && !signals.merchantHistory) {
+    // already added as primary above — skip
   }
 
   if (signals.recentUsage) {

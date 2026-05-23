@@ -141,6 +141,11 @@ export function useExpenseInputFlow(): ExpenseInputFlow {
   );
   const hasContext = useMemo(() => hasUsageContext(memory), [memory]);
 
+  const habitSuggestion = useMemo(
+    () => suggestions.find(isHabitSuggestion) ?? null,
+    [suggestions],
+  );
+
   const processInput = useCallback(
     (rawInput: string) => {
       if (!rawInput.trim()) {

@@ -93,6 +93,17 @@ export interface ParserContext {
   confidenceSignals: ConfidenceSignal[];
   /** Hints that split flow may be appropriate for this input. */
   splitHints: SplitHint[];
+  /**
+   * Typed semantic fragments extracted by the fragment extractor.
+   * Each fragment carries type, raw/normalized value, confidence, and candidateCategories.
+   * Empty array when input is empty or fragment extraction is unavailable.
+   */
+  fragments: SemanticFragment[];
+  /**
+   * Ambiguity signals prepared for the UX clarification layer.
+   * Empty array when input is unambiguous or fragment extraction is unavailable.
+   */
+  clarificationHints: ClarificationHint[];
 }
 
 // ── Stage 4: Extract amount ───────────────────────────────────────────────────

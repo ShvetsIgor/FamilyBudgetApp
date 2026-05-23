@@ -77,3 +77,46 @@ export interface ClarificationHint {
   /** Human-readable explanation for debug/display. */
   message?: string;
 }
+
+// ── FragmentRelationship ──────────────────────────────────────────────────────
+
+/**
+ * The set of semantic edges that can exist between two fragments.
+ *
+ *   modifies         — a modifier fragment qualifies a specific item fragment
+ *                      (e.g., "iced" modifies "coffee")
+ *   belongs_to_group — reserved for future multi-group receipt parsing;
+ *                      currently every fragment implicitly belongs to g0
+ *   shares_merchant  — item/tag/modifier fragment is co-present with a merchant
+ *                      fragment in the same input
+ *   shares_amount    — any non-amount fragment shares the single monetary amount
+ *                      with all other non-amount fragments
+ *   related_item     — two item fragments appear in the same input and may belong
+ *                      to a candidate split
+ */
+export type RelationshipType =
+  | 'modifies'
+  | 'belongs_to_group'
+  | 'shares_merchant'
+  | 'shares_amount'
+  | 'related_item';
+
+/**
+ * A directed edge between two SemanticFragment nodes.
+ *
+ * Direction convention:
+ *   fromFragmentId → toFragmentId
+ *   e.g., modifier "f2" modifies item "f1": { from: 'f2', to: 'f1', type: 'modifies' }
+ *
+ * Confidence values are deterministic — assigned by rule, not by ML:
+ *   shares_amount   1.00 — every non-amount fragment definitionally shares the amount
+ *   shares_merchant 0.90 — item is co-present with a known merchant
+ *   modifies        0.80 — modifier attached to nearest item by fragment index
+ *   related_item    0.70 — two item fragments in the same input
+ */
+export interface FragmentRelationship {
+  fromFragmentId: string;
+  toFragmentId: string;
+  type: RelationshipType;
+  confidence: number;
+}

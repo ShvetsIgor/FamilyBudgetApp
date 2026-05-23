@@ -30,6 +30,7 @@ import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups
 import { useT } from '@/shared/hooks/useT';
 import { useExpenseInputFlow } from '@/features/expenses/hooks/useExpenseInputFlow';
 import { explainSuggestion, shortExplainSuggestion } from '@/features/expenses/engine/suggestionEngine';
+import { INTENT_LABELS, INTENT_ROUTE } from '@/features/expenses/engine/intentDetector';
 import { ClarificationPanel } from './ClarificationPanel';
 import { cn } from '@/shared/utils/cn';
 

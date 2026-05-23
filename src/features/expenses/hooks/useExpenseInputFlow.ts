@@ -30,7 +30,7 @@ import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setSession, advanceStage, markSaved, clearSession } from '../store/inputSessionSlice';
 import type { InputStage, ExpenseInputSession } from '../store/inputSessionSlice';
-import { computeSuggestions, type ScoredSuggestion } from '../engine/suggestionEngine';
+import { computeSuggestions, isHabitSuggestion, type ScoredSuggestion } from '../engine/suggestionEngine';
 import { parseQuickAdd } from '../utils/quickAddParser';
 import { inferStage } from './useInputSession';
 import { recordExpense } from '../store/suggestionMemorySlice';

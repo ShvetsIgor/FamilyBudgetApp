@@ -126,6 +126,31 @@ export function QuickAddBar({ className }: { className?: string }) {
         </button>
       </div>
 
+      {/* ── Intent detection badge ── */}
+      {detectedIntent && stage !== 'idle' && stage !== 'saved' && (() => {
+        const label = INTENT_LABELS[detectedIntent.intent];
+        const route = INTENT_ROUTE[detectedIntent.intent];
+        const isIncome = detectedIntent.intent === 'income';
+        const isRecurring = detectedIntent.intent === 'recurring';
+
+        return (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200/60 dark:border-sky-800/40">
+            <span className="text-sm">
+              {isIncome ? '💰' : isRecurring ? '🔄' : '↔️'}
+            </span>
+            <span className="text-xs font-bold text-sky-700 dark:text-sky-300 flex-1">{label}</span>
+            {route && (
+              <button
+                onClick={() => flow.redirectToIntent()}
+                className="text-[11px] font-black text-sky-600 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-200 transition-colors"
+              >
+                Перейти →
+              </button>
+            )}
+          </div>
+        );
+      })()}
+
       {/* ── HIGH confidence: fast-path confirm ── */}
       {isConfirmHigh && topSuggestion && topCat && (() => {
         const c = topCat.color ?? '#E07A5F';

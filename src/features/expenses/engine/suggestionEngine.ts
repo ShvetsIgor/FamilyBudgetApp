@@ -68,6 +68,11 @@ export interface SignalSet {
   /** count: uses at this merchant. ageDays: days since last visit (for freshness decay). */
   merchantHistory: { count: number; ageDays: number } | null;
   habit: { count: number } | null;
+  /**
+   * tagHistory: category appeared in a split at this merchant/tag.
+   * Fills the gap that merchantHistory misses for non-primary split categories.
+   */
+  tagHistory: { matchedTag: string; usageCount: number; ageDays: number } | null;
   recentUsage: { daysSince: number; decayedContribution: number } | null;
   nameMatch: boolean;
   splitHistory: { comboCount: number } | null;

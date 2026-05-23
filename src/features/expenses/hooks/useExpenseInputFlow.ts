@@ -187,12 +187,14 @@ export function useExpenseInputFlow(): ExpenseInputFlow {
         memory,
       });
       const nextStage = inferStage(parsed.amount, scored);
+      const intent = detectIntent(rawInput);
       dispatch(setSession({
         rawInput,
         detectedMerchant: parsed.merchant,
         detectedAmount: parsed.amount,
         suggestions: scored,
         stage: nextStage,
+        detectedIntent: intent,
       }));
     },
     [dispatch, folders, memory],

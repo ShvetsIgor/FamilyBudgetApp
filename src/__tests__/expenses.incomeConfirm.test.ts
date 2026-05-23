@@ -129,7 +129,11 @@ describe('income intent → hint extraction', () => {
 // ── Determinism ───────────────────────────────────────────────────────────────
 
 describe('income ranking determinism', () => {
+  afterEach(() => { vi.useRealTimers(); });
+
   it('same inputs always produce identical output', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-23T12:00:00.000Z'));
     const today = new Date().toISOString().slice(0, 10);
     const mem: SuggestionMemoryState = {
       merchants: {},

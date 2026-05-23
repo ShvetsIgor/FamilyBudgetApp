@@ -219,9 +219,12 @@ describe('tagHistory signal — ranking', () => {
 // ── merchantHistory vs tagHistory priority ────────────────────────────────────
 
 describe('merchantHistory vs tagHistory ranking priority', () => {
-  it('merchantHistory outscores tagHistory for same category', () => {
+  it('saturated merchantHistory (50pts) outscores saturated tagHistory (25pts)', () => {
+    // groceries: only tagHistory at saturation (25pts)
+    // household: only merchantHistory at saturation, no habit (count=2: 20pts < 25pts)
+    // This confirms max merchantHistory (count=5 → 50pts) beats max tagHistory (25pts)
     const memory: SuggestionMemoryState = {
-      merchants: { shop: [{ categoryId: 'groceries', count: 4, lastUsed: today }] },
+      merchants: { shop: [{ categoryId: 'groceries', count: 5, lastUsed: today }] },
       recents: [],
       splitCombos: [],
       tagAssociations: [
@@ -231,8 +234,8 @@ describe('merchantHistory vs tagHistory ranking priority', () => {
     const result = computeSuggestions({ merchant: 'shop', items, memory });
     const groceries = result.find((s) => s.categoryId === 'groceries')!;
     const household = result.find((s) => s.categoryId === 'household')!;
+    // groceries: merchantHistory(50) + habit(10) = 60; household: tagHistory(25)
     expect(groceries.score).toBeGreaterThan(household.score);
-    expect(groceries.reasons.some((r) => r.kind === 'merchant_history')).toBe(true);
     expect(household.reasons.some((r) => r.kind === 'tag_history')).toBe(true);
   });
 

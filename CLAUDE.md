@@ -142,6 +142,63 @@ public/
 - **Savings as expenses** — savings contributions create an expense record in the Savings category
 - **Auto-seed categories** — Savings category auto-created if missing on first contribution
 
+## Conversational Input Architecture (stabilized 2026-05-23)
+
+### Ranking pipeline layer map
+
+| Layer | File(s) | Owns |
+|-------|---------|------|
+| **policy** | `engine/scoringPolicy.ts` | All signal weights + thresholds. Single tuning point. |
+| **pipeline** | `engine/suggestionEngine.ts` | 5-stage deterministic pipeline: context → signals → score → reasons → rank |
+| **context** | `engine/recentContextEngine.ts` | Pure context queries (merchants, categories, split combos) |
+| **session** | `store/inputSessionSlice.ts` | Transient stage machine with branch tracking (`previousStage`) |
+| **memory** | `store/suggestionMemorySlice.ts` | localStorage-persisted usage memory (merchants + recents + splitCombos) |
+| **orchestrator** | `hooks/useExpenseInputFlow.ts` | Single coordination point — components must not bypass this |
+| **UI** | `components/QuickAddBar.tsx`, `ClarificationPanel.tsx` | Render + dispatch intents only |
+
+### Pipeline stages (suggestionEngine.ts)
+
+```
+Stage 1: build RankingContext  (merchantKey, memory, now)
+Stage 2: collectSignals        → SignalSet per item
+Stage 3: calculateScore        → number (policy-driven, pure)
+Stage 4: buildReasons          → SuggestionReason[] (explainable)
+Stage 5: rankCandidates        → sort by score, tie-break by id, slice topN
+```
+
+### Scoring signals
+
+| Signal | Weight | Fires when |
+|--------|--------|-----------|
+| `merchant_history` | 50 (saturates at 5 uses) | Category used at this merchant before |
+| `habit` | +10 flat | merchant_history count ≥ 3 (frequencyThreshold) |
+| `recent_usage` | 20 (30-day decay) | Category used recently globally |
+| `name_match` | 10 flat | Merchant token ↔ category name substring match |
+| `split_history` | 15 (saturates at 3 combos) | Category appears in known split combos for merchant |
+
+### Stage transitions (inputSessionSlice.ts)
+
+```
+idle
+  ↓ processInput()
+parsing → clarification ─→ split      (requestSplit or large amount)
+                        └→ confirm    (saveWithCategory from clarification)
+       → confirm                      (confident suggestion, direct path)
+       → editing                      (no memory signal)
+confirm → saved → null (auto-clear 1200ms)
+```
+
+`previousStage` is recorded on every `advanceStage` and `markSaved` call.
+
+### Architecture invariants
+
+- **suggestionEngine has zero UI dependencies** — pure functions, no imports from components/hooks
+- **All ranking weights live in scoringPolicy.ts** — no magic numbers in engine
+- **Components only render + dispatch intents** — no ranking logic in QuickAddBar or ClarificationPanel
+- **useExpenseInputFlow is the single orchestration boundary** — components import only this hook
+- **Habit signals are ranking helpers only** — never alter analytics, category IDs, or expense data
+- **Session cleanup is always via clearSession()** — no stale branch state can accumulate
+
 ## Categories Architecture (frozen 2026-05-23)
 
 ### Layer map

@@ -249,10 +249,12 @@ export function useExpenseInputFlow(): ExpenseInputFlow {
     saving,
     recentMerchants,
     recentCategories,
+    recentSplitCombos,
     hasContext,
     processInput,
     saveWithCategory,
     openSplitEditor,
+    openSplitEditorWithCombo,
     requestSplit,
     clear,
   };

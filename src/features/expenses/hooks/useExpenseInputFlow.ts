@@ -2,27 +2,27 @@
 /**
  * LAYER: expense input flow orchestrator.
  *
- * Single hook that coordinates all concerns of the expense input flow:
- *   parsing → ranking → stage inference → draft → save → memory recording
- *
- * Responsibilities:
- *   - Input text parsing (quickAddParser)
- *   - Suggestion computation (suggestionEngine)
- *   - Stage inference and transitions (inputSessionSlice)
- *   - Draft preparation (draftSlice)
- *   - Expense persistence + Redux update (expensesService + expensesSlice)
- *   - Memory recording after save (suggestionMemorySlice)
- *   - Recent context queries (recentContextEngine)
- *
- * Components that use this hook should:
- *   - Render based on { session, suggestions, stage, saving, recentMerchants }
- *   - Call { processInput, saveWithCategory, openSplitEditor, requestSplit, clear }
- *   - NOT import slices, engines, or parsers directly
- *
- * Architecture invariant: orchestration logic lives HERE, not in components.
- *
- * Internal layer (useInputSession) is NOT exported from this file.
- * New components should import useExpenseInputFlow, not useInputSession.
+ * ┌─────────────────────────────────────────────────────────────────────┐
+ * │  ORCHESTRATION BOUNDARY                                             │
+ * │                                                                     │
+ * │  This hook is the single coordination point for all input flow      │
+ * │  concerns. Logic that crosses more than one sub-system lives here.  │
+ * │                                                                     │
+ * │  Sub-systems it coordinates:                                        │
+ * │    quickAddParser     — text → amount/merchant                      │
+ * │    suggestionEngine   — ranking pipeline (deterministic)            │
+ * │    inputSessionSlice  — stage machine + session state               │
+ * │    draftSlice         — transient draft for split editor            │
+ * │    expensesService    — Firestore persistence                       │
+ * │    expensesSlice      — optimistic Redux update                     │
+ * │    suggestionMemory   — post-save memory recording                  │
+ * │    recentContextEngine — context queries (pure read)                │
+ * │                                                                     │
+ * │  Components that use this hook MUST:                                │
+ * │    - Render based on { session, suggestions, stage, saving }        │
+ * │    - Call { processInput, saveWithCategory, openSplitEditor, clear }│
+ * │    - NOT import slices, engines, or parsers directly                │
+ * └─────────────────────────────────────────────────────────────────────┘
  */
 
 import { useState, useMemo, useCallback } from 'react';

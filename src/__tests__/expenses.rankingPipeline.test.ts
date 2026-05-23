@@ -129,7 +129,11 @@ describe('explainSuggestion — habit', () => {
 // ── Pipeline determinism ──────────────────────────────────────────────────────
 
 describe('ranking pipeline determinism', () => {
+  afterEach(() => { vi.useRealTimers(); });
+
   it('same inputs always produce identical output (habit path)', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-23T12:00:00.000Z'));
     const mem = makeMemoryWithUsage('dabbah', 'food', 5);
     const a = computeSuggestions({ merchant: 'Dabbah', items, memory: mem });
     const b = computeSuggestions({ merchant: 'Dabbah', items, memory: mem });

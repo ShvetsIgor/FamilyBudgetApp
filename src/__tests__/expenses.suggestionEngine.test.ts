@@ -9,7 +9,7 @@ import {
 import { inferStage, SPLIT_AMOUNT_THRESHOLD } from '@/features/expenses/hooks/useInputSession';
 import type { SuggestionMemoryState } from '@/features/expenses/store/suggestionMemorySlice';
 
-const emptyMemory: SuggestionMemoryState = { merchants: {}, recents: [], splitCombos: [] };
+const emptyMemory: SuggestionMemoryState = { merchants: {}, recents: [], splitCombos: [], tagAssociations: [] };
 
 const items = [
   { id: 'food', name: 'Еда' },
@@ -41,7 +41,7 @@ describe('computeSuggestions', () => {
     const memory: SuggestionMemoryState = {
       merchants: { dabbah: [{ categoryId: 'food', count: 2, lastUsed: new Date().toISOString() }] },
       recents: [],
-      splitCombos: [],
+      splitCombos: [], tagAssociations: [],
     };
     const result = computeSuggestions({ merchant: 'Dabbah', items, memory, topN: 4 });
     const foodResult = result.find((s) => s.categoryId === 'food');
@@ -52,7 +52,7 @@ describe('computeSuggestions', () => {
     const memory: SuggestionMemoryState = {
       merchants: { dabbah: [{ categoryId: 'food', count: 3, lastUsed: new Date().toISOString() }] },
       recents: [],
-      splitCombos: [],
+      splitCombos: [], tagAssociations: [],
     };
     const result = computeSuggestions({ merchant: 'Dabbah', items, memory, topN: 4 });
     const foodResult = result.find((s) => s.categoryId === 'food');
@@ -65,7 +65,7 @@ describe('computeSuggestions', () => {
     const memory: SuggestionMemoryState = {
       merchants: {},
       recents: [{ categoryId: 'health', count: 5, lastUsed: new Date().toISOString() }],
-      splitCombos: [],
+      splitCombos: [], tagAssociations: [],
     };
     const result = computeSuggestions({ merchant: undefined, items, memory });
     const healthResult = result.find((s) => s.categoryId === 'health');
@@ -74,7 +74,7 @@ describe('computeSuggestions', () => {
 
   it('gives name_match reason when merchant name matches category name', () => {
     const healthItems = [{ id: 'health', name: 'Health' }];
-    const memory: SuggestionMemoryState = { merchants: {}, recents: [], splitCombos: [] };
+    const memory: SuggestionMemoryState = { merchants: {}, recents: [], splitCombos: [], tagAssociations: [] };
     const result = computeSuggestions({ merchant: 'health', items: healthItems, memory });
     expect(result[0].reasons.some((r) => r.kind === 'name_match')).toBe(true);
   });
@@ -83,7 +83,7 @@ describe('computeSuggestions', () => {
     const memory: SuggestionMemoryState = {
       merchants: { store: [{ categoryId: 'transport', count: 5, lastUsed: new Date().toISOString() }] },
       recents: [],
-      splitCombos: [],
+      splitCombos: [], tagAssociations: [],
     };
     const result = computeSuggestions({ merchant: 'store', items, memory });
     expect(result[0].categoryId).toBe('transport');
@@ -105,7 +105,7 @@ describe('computeSuggestions', () => {
     const memory: SuggestionMemoryState = {
       merchants: {},
       recents: [{ categoryId: 'food', count: 10, lastUsed: oldDate }],
-      splitCombos: [],
+      splitCombos: [], tagAssociations: [],
     };
     const result = computeSuggestions({ merchant: undefined, items, memory, topN: 4 });
     const foodResult = result.find((s) => s.categoryId === 'food');

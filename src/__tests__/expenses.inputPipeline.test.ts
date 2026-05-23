@@ -459,7 +459,7 @@ describe('parseInput — mixed-language inputs', () => {
   it('handles Cyrillic merchant + Latin amount', () => {
     const ctx = parseInput('Аптека 85');
     expect(ctx.amount).toBe(85);
-    expect(ctx.merchant).toBe('аптека');
+    expect(ctx.merchant).toBe('Аптека'); // original casing
   });
 
   it('handles mixed Cyrillic + Latin tokens', () => {

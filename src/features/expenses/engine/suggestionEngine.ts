@@ -206,11 +206,6 @@ function buildReasons(signals: SignalSet): SuggestionReason[] {
     reasons.push({ kind: 'tag_history', tag: signals.tagHistory.matchedTag, count: signals.tagHistory.usageCount });
   }
 
-  // Tag history also shown as secondary reason when merchant_history is primary
-  if (signals.tagHistory && !signals.habit && !signals.merchantHistory) {
-    // already added as primary above — skip
-  }
-
   if (signals.recentUsage) {
     reasons.push({ kind: 'recent_usage', daysSince: signals.recentUsage.daysSince });
   }

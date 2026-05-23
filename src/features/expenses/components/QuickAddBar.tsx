@@ -187,6 +187,8 @@ export function QuickAddBar({ className }: { className?: string }) {
             hasAmount ? flow.saveWithCategory(id) : flow.openSplitEditor(id)
           }
           onSplit={() => flow.openSplitEditor()}
+          splitCombos={flow.recentSplitCombos}
+          onUseSplitCombo={flow.openSplitEditorWithCombo}
         />
       )}
 

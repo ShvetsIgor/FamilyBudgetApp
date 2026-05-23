@@ -131,6 +131,7 @@ export function useExpenseInputFlow(): ExpenseInputFlow {
   );
 
   const stage: InputStage = session?.stage ?? 'idle';
+  const previousStage: InputStage | undefined = session?.previousStage;
 
   const recentMerchants = useMemo(() => getRecentMerchants(memory, 5), [memory]);
   const recentCategories = useMemo(() => getRecentCategories(memory, 5), [memory]);

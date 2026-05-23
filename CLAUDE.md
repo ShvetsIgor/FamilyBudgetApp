@@ -144,19 +144,38 @@ public/
 
 ## Conversational Input Architecture (stabilized 2026-05-23)
 
-### Ranking pipeline layer map
+### Input pipeline layer map
 
 | Layer | File(s) | Owns |
 |-------|---------|------|
+| **normalizer** | `engine/inputNormalizer.ts` | Text normalization (NFC, lowercase, alias map, amount utilities). Single source for all text transforms. |
+| **classifier** | `engine/tokenClassifier.ts` | Token-level classification: `amount \| text \| noise`. Preserves original casing in `token.raw`. |
+| **parser** | `engine/inputPipeline.ts` | 7-stage pipeline → `ParserContext` (amount, merchant, merchantKey, tags, itemCandidates, confidenceSignals, splitHints). |
+| **compat shim** | `utils/quickAddParser.ts` | `parseQuickAdd()` wraps `parseInput()` — backward-compatible `{ amount, merchant }` interface. |
+| **intent** | `engine/intentDetector.ts` | Keyword prefix classification for non-expense intents (income/transfer/recurring). |
 | **policy** | `engine/scoringPolicy.ts` | All signal weights + thresholds. Single tuning point. |
-| **pipeline** | `engine/suggestionEngine.ts` | 5-stage deterministic pipeline: context → signals → score → reasons → rank |
+| **ranking** | `engine/suggestionEngine.ts` | 5-stage deterministic pipeline: context → signals → score → reasons → rank |
 | **context** | `engine/recentContextEngine.ts` | Pure context queries (merchants, categories, split combos) |
 | **session** | `store/inputSessionSlice.ts` | Transient stage machine with branch tracking (`previousStage`) |
-| **memory** | `store/suggestionMemorySlice.ts` | localStorage-persisted usage memory (merchants + recents + splitCombos) |
+| **memory** | `store/suggestionMemorySlice.ts` | localStorage-persisted usage memory (merchants + recents + splitCombos + tagAssociations) |
 | **orchestrator** | `hooks/useExpenseInputFlow.ts` | Single coordination point — components must not bypass this |
 | **UI** | `components/QuickAddBar.tsx`, `ClarificationPanel.tsx` | Render + dispatch intents only |
 
-### Pipeline stages (suggestionEngine.ts)
+### Input pipeline stages (inputPipeline.ts)
+
+```
+Raw text
+  Stage 1: normalizeInput    — NFC + lowercase + collapse whitespace
+  Stage 2: tokenizeInput     — split into raw tokens (original casing preserved)
+  Stage 3: classifyTokens    — assign kind: amount | text | noise
+  Stage 4: extractAmount     — last amount token; separate from rest
+  Stage 5: detectMerchant    — memory-aware: known first token = merchant, rest = items
+  Stage 6: extractItems      — remaining text tokens = itemCandidates
+  Stage 7: buildContext      — assemble ParserContext + confidenceSignals + splitHints
+→ ParserContext { raw, normalizedInput, amount, merchant, merchantKey, tags, itemCandidates, confidenceSignals, splitHints }
+```
+
+### Ranking pipeline stages (suggestionEngine.ts)
 
 ```
 Stage 1: build RankingContext  (merchantKey, memory, now)
@@ -170,7 +189,8 @@ Stage 5: rankCandidates        → sort by score, tie-break by id, slice topN
 
 | Signal | Weight | Fires when |
 |--------|--------|-----------|
-| `merchant_history` | 50 (saturates at 5 uses) | Category used at this merchant before |
+| `merchant_history` | 50 (saturates at 5 uses, decay 90d) | Category used at this merchant before |
+| `tag_history` | 25 (saturates at 3, decay 90d) | Category in tagAssociations for this merchant tag |
 | `habit` | +10 flat | merchant_history count ≥ 3 (frequencyThreshold) |
 | `recent_usage` | 20 (30-day decay) | Category used recently globally |
 | `name_match` | 10 flat | Merchant token ↔ category name substring match |

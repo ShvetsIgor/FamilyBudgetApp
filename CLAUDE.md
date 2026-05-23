@@ -212,12 +212,16 @@ confirm → saved → null (auto-clear 1200ms)
 
 ### Architecture invariants
 
+- **inputNormalizer is the single text normalization source** — no inline `.toLowerCase()` / `.trim()` in engine or pipeline code
+- **Token casing: `raw` = display, `normalized` = key** — original case preserved through pipeline; normalization only for lookups
+- **Alias map is explicit and deterministic** — no fuzzy matching; every variant must be listed in `MERCHANT_ALIAS_MAP`
 - **suggestionEngine has zero UI dependencies** — pure functions, no imports from components/hooks
 - **All ranking weights live in scoringPolicy.ts** — no magic numbers in engine
 - **Components only render + dispatch intents** — no ranking logic in QuickAddBar or ClarificationPanel
 - **useExpenseInputFlow is the single orchestration boundary** — components import only this hook
 - **Habit signals are ranking helpers only** — never alter analytics, category IDs, or expense data
 - **Session cleanup is always via clearSession()** — no stale branch state can accumulate
+- **tagHistory fills the non-primary split category gap** — merchantHistory records only the primary; tagAssociations cover all split categories
 
 ## Categories Architecture (frozen 2026-05-23)
 

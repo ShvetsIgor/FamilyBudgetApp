@@ -90,14 +90,19 @@ export function classifyToken(rawToken: string): ClassifiedToken {
 }
 
 /**
- * Tokenize a normalized input string and classify each token.
+ * Tokenize a raw input string and classify each token.
  *
- * Splits on whitespace (input must already be collapsed).
- * Filters empty strings before classification.
+ * Takes the original (un-lowercased) input so ClassifiedToken.raw
+ * preserves the original casing for display purposes. Classification
+ * and key derivation use the normalized form.
+ *
+ * Collapses whitespace before splitting.
  */
-export function tokenizeAndClassify(normalized: string): ClassifiedToken[] {
-  if (!normalized) return [];
-  return normalized
+export function tokenizeAndClassify(rawInput: string): ClassifiedToken[] {
+  if (!rawInput.trim()) return [];
+  return rawInput
+    .trim()
+    .replace(/\s+/g, ' ')
     .split(' ')
     .filter(Boolean)
     .map(classifyToken);

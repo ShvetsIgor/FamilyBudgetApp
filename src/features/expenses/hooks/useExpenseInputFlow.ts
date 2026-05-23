@@ -287,6 +287,7 @@ export function useExpenseInputFlow(): ExpenseInputFlow {
     recentSplitCombos,
     hasContext,
     habitSuggestion,
+    confidenceLevel,
     processInput,
     saveWithCategory,
     openSplitEditor,

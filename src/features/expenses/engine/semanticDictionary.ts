@@ -54,7 +54,7 @@ for (const store of STORES) {
 // so that "credit card" → payment_phrase (not item_phrase).
 // These phrases are also retained in ITEM_BIGRAM_TABLE for backward-compat lookups.
 
-const PAYMENT_PHRASE_TABLE: Record<string, { categoryIds: string[]; confidence: number }> = {
+export const PAYMENT_PHRASE_TABLE: Record<string, { categoryIds: string[]; confidence: number }> = {
   'credit card':       { categoryIds: ['fin_other'], confidence: 0.90 },
   'gift card':         { categoryIds: ['g_other'],   confidence: 0.85 },
   'bank transfer':     { categoryIds: ['fin_other'], confidence: 0.90 },

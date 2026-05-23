@@ -16,6 +16,11 @@
  *   - saturationAt:     score saturates at N uses — prevents old data from dominating forever
  *   - decayDays:        score decays linearly to 0 over N days — keeps context fresh
  *
+ * Freshness decay:
+ *   - merchantHistory.decayDays: 90 days — stale merchant patterns gradually fade
+ *     (score × (1 - ageDays/90), so a 45-day-old pattern contributes 50% of max)
+ *   - Habit signal is NOT decayed — confirmed habits remain valid even after gaps
+ *
  * Stage threshold rationale:
  *   - confidentScore:        ≥30 pts → one signal is clearly dominant → skip clarification
  *   - ambiguousRatio:        second/first > 0.5 → too similar → ask user

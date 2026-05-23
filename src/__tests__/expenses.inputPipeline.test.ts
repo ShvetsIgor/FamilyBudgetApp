@@ -328,7 +328,7 @@ describe('parseInput — memory-aware merchant detection', () => {
     const memory = makeMemory('dabbah');
     const ctx = parseInput('Dabbah молоко 350', memory);
     expect(ctx.amount).toBe(350);
-    expect(ctx.merchant).toBe('dabbah');
+    expect(ctx.merchant).toBe('Dabbah');  // original casing
     expect(ctx.merchantKey).toBe('dabbah');
     expect(ctx.itemCandidates).toContain('молоко');
   });

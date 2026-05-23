@@ -64,7 +64,8 @@ export interface EngineInput {
  * Exported for inspectability — callers can examine signals directly.
  */
 export interface SignalSet {
-  merchantHistory: { count: number } | null;
+  /** count: uses at this merchant. ageDays: days since last visit (for freshness decay). */
+  merchantHistory: { count: number; ageDays: number } | null;
   habit: { count: number } | null;
   recentUsage: { daysSince: number; decayedContribution: number } | null;
   nameMatch: boolean;

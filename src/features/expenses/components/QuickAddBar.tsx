@@ -121,11 +121,16 @@ export function QuickAddBar({ className }: { className?: string }) {
               </span>
             </>
           )}
-          {stage === 'confirm' && (
+          {/* Proactive habit hint — shown when confirm is driven by habit signal */}
+          {stage === 'confirm' && habitSuggestion ? (
+            <span className="ml-auto text-[10px] font-bold" style={{ color: '#E07A5F' }}>
+              Как обычно ↓
+            </span>
+          ) : stage === 'confirm' ? (
             <span className="ml-auto text-[10px] font-bold text-green-600 dark:text-green-400">
               Нажмите ↓
             </span>
-          )}
+          ) : null}
         </div>
       )}
 

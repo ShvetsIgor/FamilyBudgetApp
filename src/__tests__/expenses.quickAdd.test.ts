@@ -81,6 +81,7 @@ describe('rankSuggestions', () => {
       recents: [
         { categoryId: 'health', count: 3, lastUsed: new Date().toISOString() },
       ],
+      splitCombos: [], tagAssociations: [],
     };
     const result = rankSuggestions(items, undefined, memory, 3);
     expect(result[0]).toBe('health');

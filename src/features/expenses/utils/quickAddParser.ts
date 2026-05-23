@@ -1,13 +1,25 @@
+/**
+ * Backward-compatible wrapper around the unified input pipeline.
+ *
+ * Callers that only need { amount, merchant } continue to work unchanged.
+ * For richer context (tags, itemCandidates, confidenceSignals, splitHints),
+ * use parseInput() from engine/inputPipeline.ts directly.
+ */
+import { parseInput } from '../engine/inputPipeline';
+import type { SuggestionMemoryState } from '../store/suggestionMemorySlice';
+
 export interface QuickAddParsed {
   amount?: number;
   merchant?: string;
 }
 
+export { parseInput };
+
 /**
- * Parses a free-text quick-add string into merchant + amount.
+ * Parse a free-text quick-add string into merchant + amount.
  *
- * Strategy: find the last numeric token — that's the amount.
- * All other tokens (before and after) form the merchant string.
+ * Delegates to the full input pipeline; extracts only the fields
+ * this interface exposes for backward compatibility.
  *
  * Examples:
  *   "Dabbah 350"      → { merchant: "Dabbah", amount: 350 }
@@ -16,32 +28,10 @@ export interface QuickAddParsed {
  *   "Bus 7 morning"   → { merchant: "Bus morning", amount: 7 }
  *   "Groceries"       → { merchant: "Groceries" }
  */
-export function parseQuickAdd(input: string): QuickAddParsed {
-  const raw = input.trim();
-  if (!raw) return {};
-
-  const tokens = raw.split(/\s+/);
-
-  let amountIdx = -1;
-  for (let i = tokens.length - 1; i >= 0; i--) {
-    if (/^\d+([.,]\d+)?$/.test(tokens[i])) {
-      amountIdx = i;
-      break;
-    }
-  }
-
-  if (amountIdx === -1) {
-    return { merchant: raw };
-  }
-
-  const amount = parseFloat(tokens[amountIdx].replace(',', '.'));
-  const merchantTokens = [
-    ...tokens.slice(0, amountIdx),
-    ...tokens.slice(amountIdx + 1),
-  ].filter(Boolean);
-
-  return {
-    amount: isNaN(amount) ? undefined : amount,
-    merchant: merchantTokens.length > 0 ? merchantTokens.join(' ') : undefined,
-  };
+export function parseQuickAdd(
+  input: string,
+  memory?: SuggestionMemoryState,
+): QuickAddParsed {
+  const ctx = parseInput(input, memory);
+  return { amount: ctx.amount, merchant: ctx.merchant };
 }

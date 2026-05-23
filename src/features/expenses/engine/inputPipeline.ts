@@ -254,14 +254,14 @@ function buildSplitHints(
  *     (intent detection handled separately by intentDetector.ts)
  */
 export function parseInput(raw: string, memory?: SuggestionMemoryState): ParserContext {
-  // Stage 1: normalize
+  // Stage 1: normalize (for context metadata only — does NOT affect display)
   const normalizedInput = normalizeText(raw);
-  if (!normalizedInput) {
+  if (!raw.trim()) {
     return emptyContext(raw);
   }
 
-  // Stage 2+3: tokenize + classify
-  const classified = tokenizeAndClassify(normalizedInput);
+  // Stage 2+3: tokenize from RAW input (preserves original casing in token.raw)
+  const classified = tokenizeAndClassify(raw);
 
   // Stage 4: extract amount
   const { amount, rest: afterAmount } = extractAmount(classified);

@@ -76,7 +76,7 @@ describe('habit signal', () => {
     expect(food.reasons.some((r) => r.kind === 'merchant_history')).toBe(false);
   });
 
-  it('habit adds flat weight on top of merchantHistory contribution', () => {
+  it('habit adds score on top of merchantHistory contribution', () => {
     const atThreshold = makeMemoryWithUsage('shop', 'food', frequencyThreshold);
     const belowThreshold = makeMemoryWithUsage('shop', 'food', frequencyThreshold - 1);
 
@@ -86,8 +86,9 @@ describe('habit signal', () => {
     const scoreWith = withHabit.find((s) => s.categoryId === 'food')!.score;
     const scoreWithout = withoutHabit.find((s) => s.categoryId === 'food')!.score;
 
+    // Difference includes merchantHistory slope + flat habit weight
     expect(scoreWith).toBeGreaterThan(scoreWithout);
-    expect(scoreWith - scoreWithout).toBeCloseTo(SCORING_POLICY.signals.habit.weight, 1);
+    expect(scoreWith - scoreWithout).toBeGreaterThanOrEqual(SCORING_POLICY.signals.habit.weight);
   });
 
   it('habit at threshold makes suggestion confident (score >= confidentScore)', () => {

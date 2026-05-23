@@ -38,6 +38,7 @@ import {
   type ConfidenceLevel,
 } from '../engine/suggestionEngine';
 import { parseQuickAdd } from '../utils/quickAddParser';
+import { detectIntent, INTENT_ROUTE, type DetectedIntent } from '../engine/intentDetector';
 import { inferStage } from './useInputSession';
 import { recordExpense } from '../store/suggestionMemorySlice';
 import type { SplitComboEntry } from '../store/suggestionMemorySlice';

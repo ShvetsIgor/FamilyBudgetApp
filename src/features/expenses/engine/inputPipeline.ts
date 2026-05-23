@@ -105,6 +105,17 @@ export interface ParserContext {
    * Empty array when input is unambiguous or fragment extraction is unavailable.
    */
   clarificationHints: ClarificationHint[];
+  /**
+   * Directed semantic edges between fragments produced by the purchase grouper.
+   * Empty array when input is empty or no fragments were extracted.
+   */
+  relationships: FragmentRelationship[];
+  /**
+   * Grouped fragment collections — one group per detected purchase event.
+   * Currently always zero groups (empty input) or one group ('g0').
+   * The array shape supports future multi-purchase / OCR receipt expansion.
+   */
+  purchaseGroups: PurchaseGroup[];
 }
 
 // ── Stage 4: Extract amount ───────────────────────────────────────────────────

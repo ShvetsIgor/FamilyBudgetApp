@@ -161,6 +161,11 @@ export function useExpenseInputFlow(): ExpenseInputFlow {
     [suggestions],
   );
 
+  const confidenceLevel: ConfidenceLevel = useMemo(
+    () => (stage === 'confirm' ? getConfidenceLevel(suggestions) : 'low'),
+    [stage, suggestions],
+  );
+
   const processInput = useCallback(
     (rawInput: string) => {
       if (!rawInput.trim()) {

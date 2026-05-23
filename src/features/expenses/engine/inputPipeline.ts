@@ -108,6 +108,12 @@ export interface ParserContext {
    */
   clarificationHints: ClarificationHint[];
   /**
+   * Semantic phrases extracted from the token sequence before fragment construction.
+   * Intermediate representation: tokens → phrases → fragments.
+   * Empty array when input is empty.
+   */
+  phrases: SemanticPhrase[];
+  /**
    * Directed semantic edges between fragments produced by the purchase grouper.
    * Empty array when input is empty or no fragments were extracted.
    */

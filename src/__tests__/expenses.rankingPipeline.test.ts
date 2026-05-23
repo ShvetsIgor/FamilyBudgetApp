@@ -168,6 +168,51 @@ describe('ranking pipeline determinism', () => {
   });
 });
 
+// ── getConfidenceLevel ────────────────────────────────────────────────────────
+
+describe('getConfidenceLevel', () => {
+  it('returns low for empty suggestions', () => {
+    expect(getConfidenceLevel([])).toBe('low');
+  });
+
+  it('returns low when top score is below confidentScore threshold', () => {
+    const suggestions: ScoredSuggestion[] = [
+      { categoryId: 'food', score: 5, reasons: [{ kind: 'fallback' }] },
+    ];
+    expect(getConfidenceLevel(suggestions)).toBe('low');
+  });
+
+  it('returns high when top suggestion has habit signal', () => {
+    const mem = makeMemoryWithUsage('shop', 'food', frequencyThreshold);
+    const result = computeSuggestions({ merchant: 'shop', items, memory: mem });
+    expect(getConfidenceLevel(result)).toBe('high');
+  });
+
+  it('returns high when second score is less than 30% of top score (dominant winner)', () => {
+    const suggestions: ScoredSuggestion[] = [
+      { categoryId: 'food', score: 60, reasons: [{ kind: 'merchant_history', count: 5 }] },
+      { categoryId: 'transport', score: 5, reasons: [{ kind: 'fallback' }] },
+    ];
+    expect(getConfidenceLevel(suggestions)).toBe('high');
+  });
+
+  it('returns medium when confident but real competitor exists (second >= 30% of top)', () => {
+    const suggestions: ScoredSuggestion[] = [
+      { categoryId: 'food', score: 50, reasons: [{ kind: 'merchant_history', count: 5 }] },
+      { categoryId: 'transport', score: 25, reasons: [{ kind: 'recent_usage', daysSince: 1 }] },
+    ];
+    expect(getConfidenceLevel(suggestions)).toBe('medium');
+  });
+
+  it('returns high even when second is present but has zero score', () => {
+    const suggestions: ScoredSuggestion[] = [
+      { categoryId: 'food', score: 60, reasons: [{ kind: 'merchant_history', count: 5 }] },
+      { categoryId: 'transport', score: 0, reasons: [{ kind: 'fallback' }] },
+    ];
+    expect(getConfidenceLevel(suggestions)).toBe('high');
+  });
+});
+
 // ── Session stage branching (Phase 3) ────────────────────────────────────────
 
 describe('inputSessionSlice — branch tracking', () => {

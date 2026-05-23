@@ -31,6 +31,7 @@ export type { StoreEntry };
 
 const STORE_SINGLE: Record<string, StoreEntry> = {};
 const STORE_BIGRAM: Record<string, StoreEntry> = {};
+const STORE_TRIGRAM: Record<string, StoreEntry> = {};
 
 for (const store of STORES) {
   for (const alias of store.aliases) {
@@ -40,8 +41,10 @@ for (const store of STORES) {
       STORE_SINGLE[lower] = store;
     } else if (parts.length === 2) {
       STORE_BIGRAM[lower] = store;
+    } else if (parts.length === 3) {
+      STORE_TRIGRAM[lower] = store;
     }
-    // 3-token aliases: not indexed (no current entries require it)
+    // 4+ token aliases: not indexed (no current entries require it)
   }
 }
 

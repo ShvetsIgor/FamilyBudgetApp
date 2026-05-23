@@ -285,6 +285,8 @@ export function explainSuggestion(s: ScoredSuggestion): string {
         : `Недавно (${primaryReason.daysSince} дн.)`;
     case 'name_match':
       return 'Совпадение названия';
+    case 'tag_history':
+      return `Контекст "${primaryReason.tag}" (${primaryReason.count}×)`;
     case 'split_history':
       return `В сплитах (${primaryReason.comboCount}×)`;
     default:

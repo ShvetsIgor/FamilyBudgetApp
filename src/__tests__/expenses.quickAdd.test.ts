@@ -92,10 +92,12 @@ describe('rankSuggestions', () => {
     const memoryOld: SuggestionMemoryState = {
       merchants: {},
       recents: [{ categoryId: 'health', count: 10, lastUsed: oldDate }],
+      splitCombos: [], tagAssociations: [],
     };
     const memoryFresh: SuggestionMemoryState = {
       merchants: {},
       recents: [{ categoryId: 'food', count: 1, lastUsed: new Date().toISOString() }],
+      splitCombos: [], tagAssociations: [],
     };
     const resultOld = rankSuggestions(items, undefined, memoryOld, 1);
     const resultFresh = rankSuggestions(items, undefined, memoryFresh, 1);

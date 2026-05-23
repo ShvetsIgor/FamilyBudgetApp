@@ -137,6 +137,7 @@ describe('hasUsageContext', () => {
     const memory: SuggestionMemoryState = {
       merchants: {},
       recents: [{ categoryId: 'food', count: 1, lastUsed: now }],
+      splitCombos: [],
     };
     expect(hasUsageContext(memory)).toBe(true);
   });
@@ -145,6 +146,7 @@ describe('hasUsageContext', () => {
     const memory: SuggestionMemoryState = {
       merchants: { store: [{ categoryId: 'food', count: 1, lastUsed: now }] },
       recents: [],
+      splitCombos: [],
     };
     expect(hasUsageContext(memory)).toBe(true);
   });

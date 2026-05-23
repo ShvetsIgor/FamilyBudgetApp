@@ -5,7 +5,7 @@
  * Save logic (addIncome + Redux dispatch) is not tested here
  * since it requires Firebase and Redux environment.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { computeSuggestions } from '@/features/expenses/engine/suggestionEngine';
 import type { SuggestionMemoryState } from '@/features/expenses/store/suggestionMemorySlice';
 import type { DetectedIntent } from '@/features/expenses/engine/intentDetector';

@@ -35,6 +35,8 @@ export const SCORING_POLICY = {
       weight: 50,
       /** Score saturates after this many uses (linear until saturation). */
       saturationAt: 5,
+      /** Score decays linearly to 0 after this many days since last visit. */
+      decayDays: 90,
     },
     recentUsage: {
       /** Max contribution at saturation on day 0. */

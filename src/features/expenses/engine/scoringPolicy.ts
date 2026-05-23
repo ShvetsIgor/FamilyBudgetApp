@@ -48,6 +48,18 @@ export const SCORING_POLICY = {
       /** Score decays linearly to 0 after this many days since last visit. */
       decayDays: 90,
     },
+    tagHistory: {
+      /**
+       * Max contribution when a category has been individually associated with
+       * the current tag token via split flows.
+       * Fills the gap left by merchantHistory (which only records the primary category).
+       */
+      weight: 25,
+      /** Score saturates after this many tag-associated splits. */
+      saturationAt: 3,
+      /** Score decays linearly to 0 after this many days since last tag use. */
+      decayDays: 90,
+    },
     recentUsage: {
       /** Max contribution at saturation on day 0. */
       weight: 20,

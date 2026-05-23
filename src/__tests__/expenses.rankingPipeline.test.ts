@@ -168,6 +168,66 @@ describe('ranking pipeline determinism', () => {
   });
 });
 
+// ── Merchant history freshness decay ─────────────────────────────────────────
+
+describe('merchant history freshness decay', () => {
+  function makeMemoryWithAge(merchantKey: string, categoryId: string, count: number, ageDays: number): SuggestionMemoryState {
+    const date = new Date(Date.now() - ageDays * 86_400_000).toISOString().slice(0, 10);
+    return {
+      merchants: { [merchantKey]: [{ categoryId, count, lastUsed: date }] },
+      recents: [],
+      splitCombos: [],
+    };
+  }
+
+  it('recent entry (0 days old) gets full merchant history score', () => {
+    const fresh = makeMemoryWithAge('shop', 'food', 5, 0);
+    const stale = makeMemoryWithAge('shop', 'food', 5, 89); // 89/90 decay
+    const freshResult = computeSuggestions({ merchant: 'shop', items, memory: fresh });
+    const staleResult = computeSuggestions({ merchant: 'shop', items, memory: stale });
+    const freshScore = freshResult.find((s) => s.categoryId === 'food')!.score;
+    const staleScore = staleResult.find((s) => s.categoryId === 'food')!.score;
+    expect(freshScore).toBeGreaterThan(staleScore);
+  });
+
+  it('entry older than decayDays (90 days) contributes 0 from merchant history', () => {
+    const { decayDays } = SCORING_POLICY.signals.merchantHistory;
+    const expired = makeMemoryWithAge('shop', 'food', 5, decayDays + 1);
+    const result = computeSuggestions({ merchant: 'shop', items, memory: expired });
+    const food = result.find((s) => s.categoryId === 'food')!;
+    // merchant_history is fully decayed; habit may still fire if count >= threshold
+    // but base merchant_history contribution is 0
+    const noMerchantScore = SCORING_POLICY.signals.habit.weight; // only habit if count >= threshold
+    expect(food.score).toBeLessThanOrEqual(noMerchantScore);
+  });
+
+  it('habit signal is NOT decayed (confirmed habits remain valid after gaps)', () => {
+    const { decayDays } = SCORING_POLICY.signals.merchantHistory;
+    const { frequencyThreshold } = SCORING_POLICY.signals.habit;
+    // Old entry with enough count to qualify as habit
+    const oldHabit = makeMemoryWithAge('shop', 'food', frequencyThreshold, decayDays + 1);
+    const result = computeSuggestions({ merchant: 'shop', items, memory: oldHabit });
+    const food = result.find((s) => s.categoryId === 'food')!;
+    // Habit reason should still fire even though merchant history is fully decayed
+    expect(food.reasons.some((r) => r.kind === 'habit')).toBe(true);
+  });
+
+  it('45-day-old entry contributes ~50% of max merchant history score', () => {
+    const { weight, saturationAt, decayDays } = SCORING_POLICY.signals.merchantHistory;
+    const halfLife = makeMemoryWithAge('shop', 'food', saturationAt, decayDays / 2);
+    const fresh = makeMemoryWithAge('shop', 'food', saturationAt, 0);
+    const halfScore = computeSuggestions({ merchant: 'shop', items, memory: halfLife })
+      .find((s) => s.categoryId === 'food')!.score;
+    const freshScore = computeSuggestions({ merchant: 'shop', items, memory: fresh })
+      .find((s) => s.categoryId === 'food')!.score;
+    // Allow some tolerance for test timing
+    expect(halfScore).toBeGreaterThan(freshScore * 0.4);
+    expect(halfScore).toBeLessThan(freshScore * 0.7);
+    // fresh score should equal weight (count saturated, age 0)
+    expect(freshScore).toBeCloseTo(weight, 0);
+  });
+});
+
 // ── getConfidenceLevel ────────────────────────────────────────────────────────
 
 describe('getConfidenceLevel', () => {

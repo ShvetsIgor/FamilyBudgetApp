@@ -317,5 +317,6 @@ export function useExpenseInputFlow(): ExpenseInputFlow {
     openSplitEditorWithCombo,
     requestSplit,
     clear,
+    redirectToIntent,
   };
 }

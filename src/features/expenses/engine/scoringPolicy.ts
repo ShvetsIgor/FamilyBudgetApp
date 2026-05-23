@@ -12,13 +12,15 @@
  *   - recent_usage:     moderate signal (20pts) — used this category recently
  *   - name_match:       weak signal (10pts) — merchant name ↔ category name
  *   - split_history:    moderate signal (15pts) — this category appears in known split combos
+ *   - habit:            flat boost (10pts) — category is a confirmed habit at this merchant
  *   - saturationAt:     score saturates at N uses — prevents old data from dominating forever
  *   - decayDays:        score decays linearly to 0 over N days — keeps context fresh
  *
  * Stage threshold rationale:
- *   - confidentScore:   ≥30 pts → one signal is clearly dominant → skip clarification
- *   - ambiguousRatio:   second/first > 0.5 → too similar → ask user
- *   - splitAmountHint:  ≥500 → might need splitting → hint user
+ *   - confidentScore:        ≥30 pts → one signal is clearly dominant → skip clarification
+ *   - ambiguousRatio:        second/first > 0.5 → too similar → ask user
+ *   - splitAmountHint:       ≥500 → might need splitting → hint user
+ *   - habitDisplayThreshold: ≥3 uses at merchant → shown as "habit" label (display only)
  */
 
 export const SCORING_POLICY = {
@@ -47,6 +49,12 @@ export const SCORING_POLICY = {
       /** Score saturates after this many combo appearances. */
       saturationAt: 3,
     },
+    habit: {
+      /** Flat score boost when category is a confirmed habit at this merchant. */
+      weight: 10,
+      /** Minimum uses at this merchant to qualify as a habit. */
+      frequencyThreshold: 3,
+    },
   },
   thresholds: {
     /** Top suggestion score must reach this to skip clarification → 'confirm'. */
@@ -55,6 +63,8 @@ export const SCORING_POLICY = {
     ambiguousRatio: 0.5,
     /** Expense amounts at or above this suggest splitting → 'split' stage. */
     splitAmountHint: 500,
+    /** Top suggestion habit score boost for display purposes — no behavior change. */
+    habitDisplayThreshold: 3,
   },
 } as const;
 

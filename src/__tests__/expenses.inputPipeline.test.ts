@@ -252,13 +252,13 @@ describe('parseInput — noisy input handling', () => {
   it('collapses extra whitespace', () => {
     const ctx = parseInput('Dabbah   350');
     expect(ctx.amount).toBe(350);
-    expect(ctx.merchant).toBe('dabbah');
+    expect(ctx.merchant).toBe('Dabbah');
   });
 
   it('handles leading/trailing whitespace', () => {
     const ctx = parseInput('  Coffee  150  ');
     expect(ctx.amount).toBe(150);
-    expect(ctx.merchant).toBe('coffee');
+    expect(ctx.merchant).toBe('Coffee');
   });
 
   it('filters noise tokens from merchant', () => {

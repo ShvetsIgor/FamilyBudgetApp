@@ -126,6 +126,20 @@ export interface ParserContext {
    * The array shape supports future multi-purchase / OCR receipt expansion.
    */
   purchaseGroups: PurchaseGroup[];
+  /**
+   * Semantic scopes produced by the scope resolver.
+   * Each scope anchors a root phrase (item/payment/merchant) and owns
+   * the modifier and tag phrases that belong to it.
+   * Empty array when input is empty.
+   */
+  scopes: SemanticScope[];
+  /**
+   * Ambiguity signals about modifier ownership from the scope resolver.
+   * Includes orphan_modifier (no scope to attach to) and
+   * ambiguous_modifier_target (equidistant from 2+ scopes).
+   * Empty array when input is unambiguous.
+   */
+  scopeHints: ScopeHint[];
 }
 
 // ── Stage 4: Extract amount ───────────────────────────────────────────────────

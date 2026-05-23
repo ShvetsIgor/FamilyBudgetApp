@@ -10,7 +10,7 @@ import { shortExplainSuggestion } from '@/features/expenses/engine/suggestionEng
 import type { SuggestionMemoryState } from '@/features/expenses/store/suggestionMemorySlice';
 import type { ScoredSuggestion } from '@/features/expenses/engine/suggestionEngine';
 
-const emptyMemory: SuggestionMemoryState = { merchants: {}, recents: [], splitCombos: [] };
+const emptyMemory: SuggestionMemoryState = { merchants: {}, recents: [], splitCombos: [], tagAssociations: [] };
 
 const now = new Date().toISOString();
 const yesterday = new Date(Date.now() - 86_400_000).toISOString();
@@ -34,7 +34,7 @@ const richMemory: SuggestionMemoryState = {
     { categoryId: 'health', count: 5, lastUsed: yesterday },
     { categoryId: 'transport', count: 3, lastUsed: oldDate },
   ],
-  splitCombos: [],
+  splitCombos: [], tagAssociations: [],
 };
 
 // ── getRecentMerchants ────────────────────────────────────────────────────────
@@ -137,7 +137,7 @@ describe('hasUsageContext', () => {
     const memory: SuggestionMemoryState = {
       merchants: {},
       recents: [{ categoryId: 'food', count: 1, lastUsed: now }],
-      splitCombos: [],
+      splitCombos: [], tagAssociations: [],
     };
     expect(hasUsageContext(memory)).toBe(true);
   });
@@ -146,7 +146,7 @@ describe('hasUsageContext', () => {
     const memory: SuggestionMemoryState = {
       merchants: { store: [{ categoryId: 'food', count: 1, lastUsed: now }] },
       recents: [],
-      splitCombos: [],
+      splitCombos: [], tagAssociations: [],
     };
     expect(hasUsageContext(memory)).toBe(true);
   });

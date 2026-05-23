@@ -91,6 +91,7 @@ describe('computeSuggestions', () => {
     const memory: SuggestionMemoryState = {
       merchants: {},
       recents: [{ categoryId: 'food', count: 10, lastUsed: oldDate }],
+      splitCombos: [],
     };
     const result = computeSuggestions({ merchant: undefined, items, memory, topN: 4 });
     const foodResult = result.find((s) => s.categoryId === 'food');

@@ -5,7 +5,7 @@
  *   - pipeline determinism under all signal combinations
  *   - session stage branching (previousStage tracking)
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   computeSuggestions,
   explainSuggestion,

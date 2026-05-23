@@ -378,8 +378,8 @@ describe('parseInput integration — scopes field', () => {
     expect(itemScope!.modifierPhraseIds.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('"Walmart milk bread 300" → merchant_scope + item scopes', () => {
-    const ctx = parseInput('Walmart milk bread 300');
+  it('"rami levi milk bread 300" → merchant_scope + item scopes', () => {
+    const ctx = parseInput('rami levi milk bread 300');
     expect(ctx.scopes.length).toBeGreaterThanOrEqual(1);
     const merchantScope = ctx.scopes.find((s) => s.type === 'merchant_scope');
     expect(merchantScope).toBeDefined();

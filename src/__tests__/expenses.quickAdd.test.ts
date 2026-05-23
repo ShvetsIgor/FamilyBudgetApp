@@ -42,7 +42,7 @@ describe('parseQuickAdd', () => {
 
 // ── rankSuggestions ───────────────────────────────────────────────────────────
 
-const emptyMemory: SuggestionMemoryState = { merchants: {}, recents: [] };
+const emptyMemory: SuggestionMemoryState = { merchants: {}, recents: [], splitCombos: [], tagAssociations: [] };
 
 const items = [
   { id: 'food', name: 'Еда' },

@@ -529,24 +529,19 @@ describe('extractPhrases — mixed multi-phrase inputs', () => {
 
 describe('extractPhrases → fragments integration', () => {
   it('modifier phrase → modifier fragment in extractFragments', () => {
-    // phraseExtractor produces modifier_phrase, fragmentExtractor maps → modifier fragment
-    const { extractFragments } = require('@/features/expenses/engine/fragmentExtractor');
     const tokens = tokenizeAndClassify('without sugar 100');
     const { fragments } = extractFragments(tokens);
-    const modFrag = fragments.find((f: { type: string }) => f.type === 'modifier');
+    const modFrag = fragments.find((f) => f.type === 'modifier');
     expect(modFrag).toBeDefined();
-    expect(modFrag.rawValue).toBe('without sugar');
+    expect(modFrag!.rawValue).toBe('without sugar');
   });
 
   it('payment phrase → item fragment with payment metadata', () => {
-    const { extractFragments } = require('@/features/expenses/engine/fragmentExtractor');
     const tokens = tokenizeAndClassify('credit card 500');
     const { fragments } = extractFragments(tokens);
-    const itemFrag = fragments.find((f: { type: string; metadata?: Record<string, unknown> }) =>
-      f.type === 'item' && f.metadata?.payment === true,
-    );
+    const itemFrag = fragments.find((f) => f.type === 'item' && f.metadata?.payment === true);
     expect(itemFrag).toBeDefined();
-    expect(itemFrag.rawValue).toBe('credit card');
+    expect(itemFrag!.rawValue).toBe('credit card');
   });
 });
 

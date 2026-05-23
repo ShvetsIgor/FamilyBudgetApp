@@ -170,6 +170,12 @@ function calculateScore(signals: SignalSet): number {
     score += policy.habit.weight;
   }
 
+  if (signals.tagHistory) {
+    const freshness = Math.max(0, 1 - signals.tagHistory.ageDays / policy.tagHistory.decayDays);
+    score += policy.tagHistory.weight * freshness *
+      Math.min(1, signals.tagHistory.usageCount / policy.tagHistory.saturationAt);
+  }
+
   if (signals.recentUsage) {
     score += signals.recentUsage.decayedContribution;
   }

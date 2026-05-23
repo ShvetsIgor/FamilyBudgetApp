@@ -312,3 +312,38 @@ export function shortExplainSuggestion(s: ScoredSuggestion): string {
 export function isHabitSuggestion(s: ScoredSuggestion): boolean {
   return s.reasons.some((r) => r.kind === 'habit');
 }
+
+// ── Confidence layer ──────────────────────────────────────────────────────────
+
+/**
+ * UX confidence level for the confirm stage.
+ *
+ *   high   → single-button fast-path (habit or clearly dominant suggestion)
+ *   medium → two-chip choice (confident but competitor exists)
+ *   low    → full clarification UI (not confident)
+ *
+ * Only relevant when stage === 'confirm'.
+ * All other stages are implicitly 'low'.
+ */
+export type ConfidenceLevel = 'high' | 'medium' | 'low';
+
+/**
+ * Compute UX confidence level from ranked suggestions.
+ *
+ * high:   top suggestion has habit signal OR second place has < 30% of top score
+ * medium: confident (≥ confidentScore) but a real competitor exists
+ * low:    not confident
+ */
+export function getConfidenceLevel(suggestions: ScoredSuggestion[]): ConfidenceLevel {
+  const top = suggestions[0];
+  if (!top || !hasConfidentSuggestion(suggestions)) return 'low';
+
+  // Habit signal → always high (user is on autopilot)
+  if (isHabitSuggestion(top)) return 'high';
+
+  // Dominant winner with no real competition → high
+  const secondScore = suggestions[1]?.score ?? 0;
+  if (secondScore < top.score * 0.3) return 'high';
+
+  return 'medium';
+}

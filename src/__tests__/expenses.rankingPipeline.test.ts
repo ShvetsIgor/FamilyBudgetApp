@@ -212,19 +212,18 @@ describe('merchant history freshness decay', () => {
     expect(food.reasons.some((r) => r.kind === 'habit')).toBe(true);
   });
 
-  it('45-day-old entry contributes ~50% of max merchant history score', () => {
-    const { weight, saturationAt, decayDays } = SCORING_POLICY.signals.merchantHistory;
-    const halfLife = makeMemoryWithAge('shop', 'food', saturationAt, decayDays / 2);
-    const fresh = makeMemoryWithAge('shop', 'food', saturationAt, 0);
+  it('45-day-old entry contributes ~50% of a fresh entry (same count)', () => {
+    const { decayDays } = SCORING_POLICY.signals.merchantHistory;
+    // Use count=1 (below habit threshold) so only merchantHistory fires — clean comparison
+    const halfLife = makeMemoryWithAge('shop', 'food', 1, decayDays / 2);
+    const fresh = makeMemoryWithAge('shop', 'food', 1, 0);
     const halfScore = computeSuggestions({ merchant: 'shop', items, memory: halfLife })
       .find((s) => s.categoryId === 'food')!.score;
     const freshScore = computeSuggestions({ merchant: 'shop', items, memory: fresh })
       .find((s) => s.categoryId === 'food')!.score;
-    // Allow some tolerance for test timing
+    // At decayDays/2, freshness = 0.5 → half score
     expect(halfScore).toBeGreaterThan(freshScore * 0.4);
-    expect(halfScore).toBeLessThan(freshScore * 0.7);
-    // fresh score should equal weight (count saturated, age 0)
-    expect(freshScore).toBeCloseTo(weight, 0);
+    expect(halfScore).toBeLessThan(freshScore * 0.65);
   });
 });
 

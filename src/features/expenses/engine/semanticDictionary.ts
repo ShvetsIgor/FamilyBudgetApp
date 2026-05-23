@@ -69,7 +69,7 @@ export const PAYMENT_PHRASE_TABLE: Record<string, { categoryIds: string[]; confi
 // Curated multi-token item phrases with confidence scores.
 // Keys: two normalized tokens joined with a space (already lowercase).
 
-const ITEM_BIGRAM_TABLE: Record<string, { categoryIds: string[]; confidence: number }> = {
+export const ITEM_BIGRAM_TABLE: Record<string, { categoryIds: string[]; confidence: number }> = {
   // Food / drinks
   'ice cream':         { categoryIds: ['snacks'],       confidence: 0.90 },
   'ice coffee':        { categoryIds: ['coffee'],       confidence: 0.90 },

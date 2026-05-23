@@ -241,10 +241,10 @@ describe('parseInput — basic extraction', () => {
   });
 
   it('extracts amount from middle of input', () => {
-    // "Bus 7 morning" → amount=7, merchant="bus morning"
+    // "Bus 7 morning" → amount=7, merchant="Bus morning"
     const ctx = parseInput('Bus 7 morning');
     expect(ctx.amount).toBe(7);
-    expect(ctx.merchant).toBe('bus morning');
+    expect(ctx.merchant).toBe('Bus morning');
   });
 });
 

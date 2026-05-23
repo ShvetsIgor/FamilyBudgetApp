@@ -285,7 +285,7 @@ describe('parseInput — alias resolution (transliteration variants)', () => {
   it('resolves dabah → dabbah merchantKey', () => {
     const ctx = parseInput('dabah 350');
     expect(ctx.merchantKey).toBe('dabbah');
-    expect(ctx.merchant).toBe('dabah'); // display form unchanged
+    expect(ctx.merchant).toBe('dabah'); // original casing (already lowercase in input)
   });
 
   it('resolves dabach → dabbah merchantKey', () => {

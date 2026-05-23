@@ -144,7 +144,8 @@ function calculateScore(signals: SignalSet): number {
   let score = 0;
 
   if (signals.merchantHistory) {
-    score += policy.merchantHistory.weight *
+    const freshness = Math.max(0, 1 - signals.merchantHistory.ageDays / policy.merchantHistory.decayDays);
+    score += policy.merchantHistory.weight * freshness *
       Math.min(1, signals.merchantHistory.count / policy.merchantHistory.saturationAt);
   }
 

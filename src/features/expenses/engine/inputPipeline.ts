@@ -28,6 +28,9 @@ import type { SuggestionMemoryState } from '../store/suggestionMemorySlice';
 import { normalizeText, toMerchantKey, resolveAlias } from './inputNormalizer';
 import { tokenizeAndClassify, type ClassifiedToken } from './tokenClassifier';
 import { SCORING_POLICY } from './scoringPolicy';
+import { extractFragments } from './fragmentExtractor';
+import type { SemanticFragment } from './semanticFragment';
+import type { ClarificationHint } from './semanticFragment';
 
 // ── ParserContext model ───────────────────────────────────────────────────────
 

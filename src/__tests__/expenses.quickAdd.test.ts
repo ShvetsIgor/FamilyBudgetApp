@@ -69,6 +69,7 @@ describe('rankSuggestions', () => {
         dabbah: [{ categoryId: 'food', count: 5, lastUsed: new Date().toISOString() }],
       },
       recents: [],
+      splitCombos: [], tagAssociations: [],
     };
     const result = rankSuggestions(items, 'Dabbah', memory, 3);
     expect(result[0]).toBe('food');

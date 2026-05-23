@@ -272,7 +272,7 @@ describe('parseInput — noisy input handling', () => {
   it('handles currency-prefixed amounts', () => {
     const ctx = parseInput('Coffee ₪85');
     expect(ctx.amount).toBe(85);
-    expect(ctx.merchant).toBe('coffee');
+    expect(ctx.merchant).toBe('Coffee');
   });
 
   it('handles decimal comma', () => {

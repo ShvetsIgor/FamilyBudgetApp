@@ -295,7 +295,7 @@ describe('parseInput — alias resolution (transliteration variants)', () => {
 
   it('does not alter merchant display name (only key)', () => {
     const ctx = parseInput('Dabah 350');
-    expect(ctx.merchant).toBe('dabah');    // normalized display
+    expect(ctx.merchant).toBe('Dabah');     // original casing preserved
     expect(ctx.merchantKey).toBe('dabbah'); // alias-resolved key
   });
 

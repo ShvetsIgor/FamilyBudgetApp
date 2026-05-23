@@ -57,6 +57,8 @@ export interface ExpenseInputFlow {
   suggestions: ScoredSuggestion[];
   /** Current UX stage. */
   stage: InputStage;
+  /** Stage that preceded the most recent branch transition (split/confirm from clarification). */
+  previousStage: InputStage | undefined;
   /** True while a save is in flight — disables save buttons. */
   saving: boolean;
 
@@ -68,6 +70,12 @@ export interface ExpenseInputFlow {
   recentSplitCombos: SplitComboEntry[];
   /** False on first use — can be used to show onboarding hints. */
   hasContext: boolean;
+
+  /**
+   * Top suggestion that fired the habit signal — null if no habit pattern detected.
+   * Used for proactive "как обычно" UX in confirm/clarification stages.
+   */
+  habitSuggestion: ScoredSuggestion | null;
 
   /**
    * Process a free-text input string.

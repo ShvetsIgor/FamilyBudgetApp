@@ -37,14 +37,28 @@ describe('computeSuggestions', () => {
     expect(result.every((s) => s.reasons[0].kind === 'fallback')).toBe(true);
   });
 
-  it('gives merchant_history reason when merchant matches', () => {
+  it('gives merchant_history reason when merchant matches (below habit threshold)', () => {
     const memory: SuggestionMemoryState = {
-      merchants: { dabbah: [{ categoryId: 'food', count: 3, lastUsed: new Date().toISOString() }] },
+      merchants: { dabbah: [{ categoryId: 'food', count: 2, lastUsed: new Date().toISOString() }] },
       recents: [],
+      splitCombos: [],
     };
     const result = computeSuggestions({ merchant: 'Dabbah', items, memory, topN: 4 });
     const foodResult = result.find((s) => s.categoryId === 'food');
     expect(foodResult?.reasons.some((r) => r.kind === 'merchant_history')).toBe(true);
+  });
+
+  it('gives habit reason when merchant usage meets frequency threshold', () => {
+    const memory: SuggestionMemoryState = {
+      merchants: { dabbah: [{ categoryId: 'food', count: 3, lastUsed: new Date().toISOString() }] },
+      recents: [],
+      splitCombos: [],
+    };
+    const result = computeSuggestions({ merchant: 'Dabbah', items, memory, topN: 4 });
+    const foodResult = result.find((s) => s.categoryId === 'food');
+    expect(foodResult?.reasons.some((r) => r.kind === 'habit')).toBe(true);
+    // habit takes display precedence — merchant_history not pushed when habit fires
+    expect(foodResult?.reasons.some((r) => r.kind === 'merchant_history')).toBe(false);
   });
 
   it('gives recent_usage reason for recently used category', () => {

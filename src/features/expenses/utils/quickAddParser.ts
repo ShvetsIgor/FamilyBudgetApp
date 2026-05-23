@@ -33,5 +33,8 @@ export function parseQuickAdd(
   memory?: SuggestionMemoryState,
 ): QuickAddParsed {
   const ctx = parseInput(input, memory);
-  return { amount: ctx.amount, merchant: ctx.merchant };
+  const result: QuickAddParsed = {};
+  if (ctx.amount !== undefined) result.amount = ctx.amount;
+  if (ctx.merchant !== undefined) result.merchant = ctx.merchant;
+  return result;
 }

@@ -106,6 +106,17 @@ function collectSignals(item: RankableItem, ctx: RankingContext): SignalSet {
     }
   }
 
+  // Signal: Tag history — split co-occurrence for this merchant/tag token
+  let tagHistory: SignalSet['tagHistory'] = null;
+  if (merchantKey) {
+    const assocs = memory.tagAssociations ?? [];
+    const match = assocs.find((a) => a.tag === merchantKey && a.categoryId === item.id);
+    if (match) {
+      const ageDays = (ctx.now - new Date(match.lastUsedAt).getTime()) / 86_400_000;
+      tagHistory = { matchedTag: match.tag, usageCount: match.usageCount, ageDays };
+    }
+  }
+
   // Signal: Recent usage with linear decay
   let recentUsage: SignalSet['recentUsage'] = null;
   const recent = memory.recents.find((u) => u.categoryId === item.id);

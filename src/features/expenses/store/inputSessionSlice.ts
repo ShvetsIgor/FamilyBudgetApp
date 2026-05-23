@@ -4,12 +4,26 @@
  * An ExpenseInputSession is NOT a persisted expense.
  * It lives only as long as the user is in an active input flow.
  *
- * Lifecycle:
- *   idle → typing (processInput called) →
- *   parsing / clarification / editing / split →
- *   confirm (user taps save) →
- *   saved  (save completed — briefly shown for UX feedback) →
- *   clear  (session destroyed after saved timeout)
+ * Stage lifecycle with branching:
+ *
+ *   idle
+ *     ↓ (processInput called)
+ *   parsing          — input received, amount not yet detected
+ *     ↓ (amount detected)
+ *   clarification    — amount detected, suggestions ambiguous
+ *   ├─→ split        — user requests split (requestSplit) OR large amount, no confident winner
+ *   └─→ confirm      — user picks a category from clarification → saveWithCategory
+ *   editing          — no memory signal, user picks manually from full grid
+ *   confirm          — clear winner → one-tap save
+ *     ↓ (saveWithCategory)
+ *   saved            — save completed — shown briefly for UX feedback
+ *     ↓ (auto-clear after 1200ms)
+ *   null (idle)
+ *
+ * Branching invariants:
+ *   - split can be entered from clarification or directly when large amount + no confident winner
+ *   - previousStage records which stage preceded a branch (for UX context)
+ *   - clearSession always resets to null — no stale branch state can accumulate
  *
  * Sessions are never written to Firestore.
  * Clearing a session does not cancel an in-flight save — they're independent.
@@ -33,6 +47,8 @@ export interface ExpenseInputSession {
   detectedAmount?: number;
   suggestions: ScoredSuggestion[];
   stage: InputStage;
+  /** Records which stage preceded a branch transition (split/confirm from clarification). */
+  previousStage?: InputStage;
 }
 
 interface InputSessionState {
@@ -51,6 +67,7 @@ const inputSessionSlice = createSlice({
 
     advanceStage(state, action: PayloadAction<InputStage>) {
       if (state.session) {
+        state.session.previousStage = state.session.stage;
         state.session.stage = action.payload;
       }
     },
@@ -58,6 +75,7 @@ const inputSessionSlice = createSlice({
     /** Transition to 'saved' — use for post-save UX feedback. Auto-clear via useExpenseInputFlow. */
     markSaved(state) {
       if (state.session) {
+        state.session.previousStage = state.session.stage;
         state.session.stage = 'saved';
       }
     },

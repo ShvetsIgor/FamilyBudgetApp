@@ -253,11 +253,18 @@ export function FastExpenseEntry({
           date: dateStr,
         }));
         if (splitItems.length > 0) {
+          const allSplitCatIds = [selectedCatId, ...splitItems.map((s) => s.categoryId)];
           dispatch(recordSplitExpense({
             merchant: initialStore,
-            categoryIds: [selectedCatId, ...splitItems.map((s) => s.categoryId)],
+            categoryIds: allSplitCatIds,
             date: dateStr,
           }));
+          const tags = initialStore ? extractTags(initialStore) : [];
+          if (tags.length > 0) {
+            for (const catId of allSplitCatIds) {
+              dispatch(recordTagAssociation({ tags, categoryId: catId, date: dateStr, source: 'split' }));
+            }
+          }
         }
         dispatch(clearDraft());
 

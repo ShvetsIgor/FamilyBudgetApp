@@ -1,13 +1,18 @@
 'use client';
 /**
- * Clarification panel — shown when expense input is ambiguous.
+ * LAYER: clarification panel — proactive UX for ambiguous input stages.
  *
- * Stages it handles:
+ * Handles stages:
  *   'clarification' — multiple plausible categories, user must pick
  *   'split'         — large amount, suggest splitting across categories
  *
- * Each suggestion shows its score reason so the user can understand
- * why a category was proposed.
+ * Proactive UX elements:
+ *   - Habit badge ("Часто здесь") on suggestions with habit signal
+ *   - Split combo cards for one-tap reuse of previous split patterns
+ *   - Split CTA with contextual label
+ *
+ * Architecture invariant: this component only renders — all logic lives in
+ * useExpenseInputFlow. Props are dispatched intents, not orchestration.
  */
 
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
@@ -50,6 +55,10 @@ export function ClarificationPanel({
 
   if (stage !== 'clarification' && stage !== 'split') return null;
 
+  const hasHabitSuggestion = visibleSuggestions.some((s) =>
+    s.reasons.some((r) => r.kind === 'habit'),
+  );
+
   return (
     <div className="rounded-2xl bg-card border border-border overflow-hidden">
       {/* Header */}
@@ -59,7 +68,9 @@ export function ClarificationPanel({
             <p className="text-sm font-bold text-foreground">
               {stage === 'split'
                 ? 'Крупная покупка — разбить?'
-                : 'Куда записать?'}
+                : hasHabitSuggestion
+                  ? 'Как обычно?'
+                  : 'Куда записать?'}
             </p>
             <p className="text-[11px] text-muted-foreground mt-0.5">
               {merchant && amount
@@ -85,13 +96,17 @@ export function ClarificationPanel({
           const c = cat.color ?? '#E07A5F';
           const reason = explainSuggestion(s);
           const isFallback = s.score === 0;
+          const isHabit = s.reasons.some((r) => r.kind === 'habit');
 
           return (
             <button
               key={s.categoryId}
               onClick={() => onSelectCategory(s.categoryId)}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all hover:opacity-80 active:scale-[0.98]"
-              style={{ background: c + '12' }}
+              style={{
+                background: isHabit ? c + '1e' : c + '12',
+                border: isHabit ? `1px solid ${c}44` : '1px solid transparent',
+              }}
             >
               <div
                 className="h-8 w-8 rounded-[10px] flex items-center justify-center flex-shrink-0"
@@ -100,7 +115,17 @@ export function ClarificationPanel({
                 <StickerIcon icon={cat.icon ?? 'box'} color={c} className="h-4 w-4" />
               </div>
               <div className="flex-1 text-left min-w-0">
-                <p className="text-sm font-bold text-foreground">{t.cat(cat.name)}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-bold text-foreground">{t.cat(cat.name)}</p>
+                  {isHabit && (
+                    <span
+                      className="text-[9px] font-black px-1.5 py-0.5 rounded-full"
+                      style={{ background: c + '28', color: c }}
+                    >
+                      привычка
+                    </span>
+                  )}
+                </div>
                 {!isFallback && (
                   <p className="text-[10px] font-semibold" style={{ color: c }}>
                     {reason}
@@ -157,7 +182,7 @@ export function ClarificationPanel({
                     {combo.count}× · поровну
                   </p>
                 </div>
-                {/* Divider indicator */}
+                {/* Split icon */}
                 <svg className="h-3.5 w-3.5 flex-shrink-0" style={{ color: primaryColor }} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                   <path d="M6 3v18M18 3v18M3 9h18M3 15h18" />
                 </svg>

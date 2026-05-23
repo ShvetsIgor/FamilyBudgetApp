@@ -312,9 +312,9 @@ describe('parseInput — tags', () => {
     expect(ctx.tags).toEqual(['dabbah']);
   });
 
-  it('alias-resolved key is used in tags', () => {
+  it('alias-resolved key is used in tags (from merchantKey)', () => {
     const ctx = parseInput('dabah 350');
-    expect(ctx.tags).toEqual(['dabbah']);
+    expect(ctx.tags).toEqual(['dabbah']); // tag uses normalized key
   });
 
   it('tags is empty when no merchant', () => {

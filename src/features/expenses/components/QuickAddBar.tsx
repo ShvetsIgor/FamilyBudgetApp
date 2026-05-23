@@ -42,7 +42,7 @@ export function QuickAddBar({ className }: { className?: string }) {
   const [input, setInput] = useState('');
 
   const flow = useExpenseInputFlow();
-  const { session, suggestions, stage, saving } = flow;
+  const { session, suggestions, stage, saving, habitSuggestion } = flow;
 
   const amount = session?.detectedAmount;
   const merchant = session?.detectedMerchant;

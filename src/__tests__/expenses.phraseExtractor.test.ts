@@ -29,6 +29,7 @@
 import { describe, it, expect } from 'vitest';
 import { tokenizeAndClassify } from '@/features/expenses/engine/tokenClassifier';
 import { extractPhrases } from '@/features/expenses/engine/phraseExtractor';
+import { extractFragments } from '@/features/expenses/engine/fragmentExtractor';
 import { parseInput } from '@/features/expenses/engine/inputPipeline';
 import type { SuggestionMemoryState } from '@/features/expenses/store/suggestionMemorySlice';
 

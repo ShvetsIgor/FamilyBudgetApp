@@ -35,6 +35,7 @@ import { SCORING_POLICY } from './scoringPolicy';
 export type SuggestionReason =
   | { kind: 'merchant_history'; count: number }
   | { kind: 'habit'; count: number }          // frequent pattern at this merchant
+  | { kind: 'tag_history'; tag: string; count: number } // split co-occurrence at this tag
   | { kind: 'recent_usage'; daysSince: number }
   | { kind: 'name_match' }
   | { kind: 'split_history'; comboCount: number }

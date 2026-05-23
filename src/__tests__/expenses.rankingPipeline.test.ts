@@ -36,7 +36,7 @@ const items = [
 const emptyMemory: SuggestionMemoryState = {
   merchants: {},
   recents: [],
-  splitCombos: [],
+  splitCombos: [], tagAssociations: [],
 };
 
 const today = new Date().toISOString().slice(0, 10);
@@ -46,7 +46,7 @@ function makeMemoryWithUsage(merchantKey: string, categoryId: string, count: num
   return {
     merchants: { [merchantKey]: [{ categoryId, count, lastUsed: today }] },
     recents: [],
-    splitCombos: [],
+    splitCombos: [], tagAssociations: [],
   };
 }
 
@@ -141,7 +141,7 @@ describe('ranking pipeline determinism', () => {
     const mem: SuggestionMemoryState = {
       merchants: { shop: [{ categoryId: 'food', count: 5, lastUsed: today }] },
       recents: [{ categoryId: 'food', count: 10, lastUsed: new Date().toISOString() }],
-      splitCombos: [],
+      splitCombos: [], tagAssociations: [],
     };
     const result = computeSuggestions({ merchant: 'shop', items, memory: mem });
     const food = result.find((s) => s.categoryId === 'food')!;
@@ -176,7 +176,7 @@ describe('merchant history freshness decay', () => {
     return {
       merchants: { [merchantKey]: [{ categoryId, count, lastUsed: date }] },
       recents: [],
-      splitCombos: [],
+      splitCombos: [], tagAssociations: [],
     };
   }
 

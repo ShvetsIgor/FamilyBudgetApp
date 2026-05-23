@@ -332,6 +332,7 @@ export function parseInput(raw: string, memory?: SuggestionMemoryState): ParserC
   const { fragments, clarificationHints } = extractFragmentsFromPhrases(phrases);
   const relationships = buildRelationships(fragments);
   const purchaseGroups = buildPurchaseGroups(fragments, clarificationHints);
+  const { scopes, scopeHints } = buildSemanticScopes(phrases);
 
   return {
     raw,
@@ -348,6 +349,8 @@ export function parseInput(raw: string, memory?: SuggestionMemoryState): ParserC
     clarificationHints,
     relationships,
     purchaseGroups,
+    scopes,
+    scopeHints,
   };
 }
 

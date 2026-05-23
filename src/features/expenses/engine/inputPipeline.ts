@@ -29,8 +29,9 @@ import { normalizeText, toMerchantKey, resolveAlias } from './inputNormalizer';
 import { tokenizeAndClassify, type ClassifiedToken } from './tokenClassifier';
 import { SCORING_POLICY } from './scoringPolicy';
 import { extractFragments } from './fragmentExtractor';
-import type { SemanticFragment } from './semanticFragment';
-import type { ClarificationHint } from './semanticFragment';
+import type { SemanticFragment, ClarificationHint, FragmentRelationship } from './semanticFragment';
+import type { PurchaseGroup } from './purchaseGroup';
+import { buildRelationships, buildPurchaseGroups } from './purchaseGrouper';
 
 // ── ParserContext model ───────────────────────────────────────────────────────
 

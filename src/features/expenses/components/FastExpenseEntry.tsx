@@ -254,7 +254,7 @@ export function FastExpenseEntry({
       privacy: 'regular' as const,
       comment: comment.trim() || undefined,
       amount: totalNum,
-      categoryId: selectedCatId,
+      categoryId: effectiveCatId,
       splits: splitItems,
       ...(initialStore ? { store: initialStore } : {}),
       ...(initialStoreId ? { storeId: initialStoreId } : {}),

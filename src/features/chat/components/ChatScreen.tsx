@@ -33,7 +33,7 @@ export function ChatScreen({ children, onSend, onPlus, disabled }: ChatScreenPro
         <div className="h-3" />
       </div>
 
-      <Composer onSend={onSend} disabled={disabled} />
+      <Composer onSend={onSend} onPlus={onPlus} disabled={disabled} />
     </div>
   );
 }

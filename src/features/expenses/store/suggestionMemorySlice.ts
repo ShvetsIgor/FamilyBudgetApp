@@ -126,9 +126,9 @@ const suggestionMemorySlice = createSlice({
     /** Record a single-category expense save. Updates merchant + recents memory. */
     recordExpense(
       state,
-      action: PayloadAction<{ merchant?: string; categoryId: string; date: string }>,
+      action: PayloadAction<{ merchant?: string; categoryId: string; folderId?: string; date: string }>,
     ) {
-      const { merchant, categoryId, date } = action.payload;
+      const { merchant, categoryId, folderId, date } = action.payload;
 
       // Merchant memory
       if (merchant) {

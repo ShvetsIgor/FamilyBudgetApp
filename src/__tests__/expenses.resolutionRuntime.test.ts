@@ -1098,7 +1098,6 @@ describe('constructorBridge — resolveConflictFromSession', () => {
 
 describe('constructorBridge — approveParserCorrection', () => {
   it('creates change_category action with constructor source', () => {
-    const { applyCorrection, nextCorrectionId } = require('../features/expenses/engine/sessionManager');
     const session = createSession('кофе 50');
     const correction = {
       id: nextCorrectionId(),

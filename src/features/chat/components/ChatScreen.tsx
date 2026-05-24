@@ -7,17 +7,18 @@ import { C } from '@/features/chat/styles/tokens';
 interface ChatScreenProps {
   children: React.ReactNode;
   onSend: (text: string) => void;
+  onPlus?: () => void;
   disabled?: boolean;
 }
 
-export function ChatScreen({ children, onSend, disabled }: ChatScreenProps) {
+export function ChatScreen({ children, onSend, onPlus, disabled }: ChatScreenProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  });
+  }, [children]);
 
   return (
     <div

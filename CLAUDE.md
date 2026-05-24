@@ -162,86 +162,48 @@ design-archive/                   — design system explorations (not part of bu
 - **Savings as expenses** — savings contributions create an expense record in the Savings category
 - **Auto-seed categories** — Savings category auto-created if missing on first contribution
 
-## Conversational Input Architecture (stabilized 2026-05-23)
+## Expense Entry Architecture (current — 2026-05-24)
 
-### Input pipeline layer map
+### Three entry points
 
-| Layer | File(s) | Owns |
-|-------|---------|------|
-| **normalizer** | `engine/inputNormalizer.ts` | Text normalization (NFC, lowercase, alias map, amount utilities). Single source for all text transforms. |
-| **classifier** | `engine/tokenClassifier.ts` | Token-level classification: `amount \| text \| noise`. Preserves original casing in `token.raw`. |
-| **parser** | `engine/inputPipeline.ts` | 7-stage pipeline → `ParserContext` (amount, merchant, merchantKey, tags, itemCandidates, confidenceSignals, splitHints). |
-| **compat shim** | `utils/quickAddParser.ts` | `parseQuickAdd()` wraps `parseInput()` — backward-compatible `{ amount, merchant }` interface. |
-| **intent** | `engine/intentDetector.ts` | Keyword prefix classification for non-expense intents (income/transfer/recurring). |
-| **policy** | `engine/scoringPolicy.ts` | All signal weights + thresholds. Single tuning point. |
-| **ranking** | `engine/suggestionEngine.ts` | 5-stage deterministic pipeline: context → signals → score → reasons → rank |
-| **context** | `engine/recentContextEngine.ts` | Pure context queries (merchants, categories, split combos) |
-| **session** | `store/inputSessionSlice.ts` | Transient stage machine with branch tracking (`previousStage`) |
-| **memory** | `store/suggestionMemorySlice.ts` | localStorage-persisted usage memory (merchants + recents + splitCombos + tagAssociations) |
-| **orchestrator** | `hooks/useExpenseInputFlow.ts` | Single coordination point — components must not bypass this |
-| **UI** | `components/QuickAddBar.tsx`, `ClarificationPanel.tsx` | Render + dispatch intents only |
+| Entry | Path | Use case |
+|-------|------|----------|
+| **Chat** | `/home` | Natural language: "Дабах 350" → bot parses → saves |
+| **Numpad** | `/expenses/new` | Fast manual entry: tap numbers + category |
+| **Drawer** | Desktop sidebar CTA | Form-based entry on desktop |
 
-### Input pipeline stages (inputPipeline.ts)
-
+### Chat flow (features/chat/)
 ```
-Raw text
-  Stage 1: normalizeInput    — NFC + lowercase + collapse whitespace
-  Stage 2: tokenizeInput     — split into raw tokens (original casing preserved)
-  Stage 3: classifyTokens    — assign kind: amount | text | noise
-  Stage 4: extractAmount     — last amount token; separate from rest
-  Stage 5: detectMerchant    — memory-aware: known first token = merchant, rest = items
-  Stage 6: extractItems      — remaining text tokens = itemCandidates
-  Stage 7: buildContext      — assemble ParserContext + confidenceSignals + splitHints
-→ ParserContext { raw, normalizedInput, amount, merchant, merchantKey, tags, itemCandidates, confidenceSignals, splitHints }
+User types → chat/parser/parse.ts (parseMessage)
+  → parseExpenseInput (wraps inputPipeline)
+  → bot/respond.ts (respondToUserMessage)
+  → saves via expensesService + dispatches prependExpense
 ```
 
-### Ranking pipeline stages (suggestionEngine.ts)
-
+### Input engine (features/expenses/engine/) — 7 files, all live
 ```
-Stage 1: build RankingContext  (merchantKey, memory, now)
-Stage 2: collectSignals        → SignalSet per item
-Stage 3: calculateScore        → number (policy-driven, pure)
-Stage 4: buildReasons          → SuggestionReason[] (explainable)
-Stage 5: rankCandidates        → sort by score, tie-break by id, slice topN
-```
-
-### Scoring signals
-
-| Signal | Weight | Fires when |
-|--------|--------|-----------|
-| `merchant_history` | 50 (saturates at 5 uses, decay 90d) | Category used at this merchant before |
-| `tag_history` | 25 (saturates at 3, decay 90d) | Category in tagAssociations for this merchant tag |
-| `habit` | +10 flat | merchant_history count ≥ 3 (frequencyThreshold) |
-| `recent_usage` | 20 (30-day decay) | Category used recently globally |
-| `name_match` | 10 flat | Merchant token ↔ category name substring match |
-| `split_history` | 15 (saturates at 3 combos) | Category appears in known split combos for merchant |
-
-### Stage transitions (inputSessionSlice.ts)
-
-```
-idle
-  ↓ processInput()
-parsing → clarification ─→ split      (requestSplit or large amount)
-                        └→ confirm    (saveWithCategory from clarification)
-       → confirm                      (confident suggestion, direct path)
-       → editing                      (no memory signal)
-confirm → saved → null (auto-clear 1200ms)
+inputNormalizer.ts   — NFC + lowercase + alias map + amount utils
+tokenClassifier.ts   — ClassifiedToken: amount | text | noise (raw casing preserved)
+inputPipeline.ts     — 7-stage pipeline → ParserContext (9 fields)
+intentDetector.ts    — keyword prefix: income / transfer / recurring intents
+scoringPolicy.ts     — all signal weights + thresholds (single tuning point)
+suggestionEngine.ts  — 5-stage ranking: signals → score → reasons → rank
+splitMemoryEngine.ts — SplitPreset view model, split combo ranking (pure)
 ```
 
-`previousStage` is recorded on every `advanceStage` and `markSaved` call.
+### ParserContext (trimmed — 9 fields)
+```typescript
+{ raw, normalizedInput, amount, merchant, merchantKey, tags, itemCandidates, confidenceSignals, splitHints }
+```
+
+### Memory (store/suggestionMemorySlice.ts)
+localStorage-persisted: merchants + recents + splitCombos + tagAssociations
 
 ### Architecture invariants
-
-- **inputNormalizer is the single text normalization source** — no inline `.toLowerCase()` / `.trim()` in engine or pipeline code
-- **Token casing: `raw` = display, `normalized` = key** — original case preserved through pipeline; normalization only for lookups
-- **Alias map is explicit and deterministic** — no fuzzy matching; every variant must be listed in `MERCHANT_ALIAS_MAP`
-- **suggestionEngine has zero UI dependencies** — pure functions, no imports from components/hooks
-- **All ranking weights live in scoringPolicy.ts** — no magic numbers in engine
-- **Components only render + dispatch intents** — no ranking logic in QuickAddBar or ClarificationPanel
-- **useExpenseInputFlow is the single orchestration boundary** — components import only this hook
-- **Habit signals are ranking helpers only** — never alter analytics, category IDs, or expense data
-- **Session cleanup is always via clearSession()** — no stale branch state can accumulate
-- **tagHistory fills the non-primary split category gap** — merchantHistory records only the primary; tagAssociations cover all split categories
+- **inputNormalizer is the single normalization source** — no inline toLowerCase/trim in engine
+- **Token casing: `raw` = display, `normalized` = key**
+- **All weights in scoringPolicy.ts** — no magic numbers in engine files
+- **suggestionEngine has zero UI dependencies** — pure functions only
 
 ## Categories Architecture (frozen 2026-05-23)
 

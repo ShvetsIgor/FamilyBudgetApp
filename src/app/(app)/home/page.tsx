@@ -429,7 +429,7 @@ export default function HomePage() {
 
   return (
     <>
-    <ChatScreen onSend={handleSend} disabled={typing}>
+    <ChatScreen onSend={handleSend} onPlus={() => router.push('/expenses/new')} disabled={typing}>
       {/* Pinned today hero */}
       <PinnedToday
         spent={displaySpent}

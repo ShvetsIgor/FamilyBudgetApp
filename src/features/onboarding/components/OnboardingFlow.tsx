@@ -140,7 +140,7 @@ export function OnboardingFlow({ onComplete }: Props) {
               onClick={() => setStep(2)}
               className="w-full rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground"
             >
-              Продолжить →
+              {t('onboarding.continue')}
             </button>
           </div>
         )}
@@ -150,8 +150,8 @@ export function OnboardingFlow({ onComplete }: Props) {
           <div className="flex flex-col gap-4">
             <div className="text-center">
               <p className="text-4xl mb-3">💰</p>
-              <h2 className="text-xl font-bold">Выберите валюту</h2>
-              <p className="text-sm text-muted-foreground mt-1">Можно изменить позже в настройках</p>
+              <h2 className="text-xl font-bold">{t('onboarding.chooseCurrency')}</h2>
+              <p className="text-sm text-muted-foreground mt-1">{t('onboarding.currencyHint')}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-2">

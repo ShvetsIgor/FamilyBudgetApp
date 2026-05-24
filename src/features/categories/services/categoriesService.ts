@@ -52,6 +52,29 @@ export async function updateCategory(userId: string, category: Category): Promis
   await updateDoc(doc(getDb(), 'categories', userId, data.type, id), data);
 }
 
+/**
+ * Patch only the metadata fields of a category (tags, aliases, keywords, usageCount, lastUsedAt).
+ * Does not overwrite other fields.
+ */
+export async function updateCategoryMetadata(
+  userId: string,
+  categoryId: string,
+  type: CategoryType,
+  patch: {
+    tags?: string[];
+    aliases?: string[];
+    keywords?: string[];
+    usageCount?: number;
+    lastUsedAt?: string;
+  },
+): Promise<void> {
+  const clean = Object.fromEntries(
+    Object.entries(patch).filter(([, v]) => v !== undefined),
+  );
+  if (Object.keys(clean).length === 0) return;
+  await updateDoc(doc(getDb(), 'categories', userId, type, categoryId), clean);
+}
+
 /** Hard-deletes a category. Only call when the category has never been used in any expense. */
 export async function deleteCategory(userId: string, categoryId: string, type: CategoryType): Promise<void> {
   await deleteDoc(doc(getDb(), 'categories', userId, type, categoryId));

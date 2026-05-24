@@ -329,7 +329,7 @@ export function FastExpenseEntry({
           editing === 'total' ? 'bg-primary/10 border-primary' : 'bg-transparent border-transparent'
         )}
       >
-        <span className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">Итого</span>
+        <span className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">{t('expense.numpadTotal')}</span>
         <div className="flex items-baseline gap-1">
           <span className="text-base font-bold text-muted-foreground">{symbol}</span>
           <span className="text-[32px] font-black text-foreground tracking-[-0.03em] leading-none tabular-nums">

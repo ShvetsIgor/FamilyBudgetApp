@@ -399,23 +399,23 @@ export function FastExpenseEntry({
         </div>
       )}
 
-      {/* ── Category grid (main category for leftover) ── */}
+      {/* ── Category grid (main category for leftover) — real categories, never folder IDs ── */}
       <div className="overflow-x-auto px-3.5 py-1.5 flex-shrink-0 [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
         <div className="grid grid-rows-2 grid-flow-col gap-1.5" style={{ gridAutoColumns: '64px' }}>
-          {topCats.map((cat) => {
+          {activeExpCats.map((cat) => {
             const sel = cat.id === selectedCatId;
-            const catColor = cat.color ?? '#E07A5F';
+            const cc = cat.color ?? '#E07A5F';
             return (
               <button
                 key={cat.id}
                 onClick={() => changeCategory(cat.id)}
                 className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
                 style={{
-                  background: sel ? catColor : 'hsl(var(--card))',
-                  boxShadow: sel ? `0 3px 8px ${catColor}55` : '0 1px 3px rgba(61,44,31,.06)',
+                  background: sel ? cc : 'hsl(var(--card))',
+                  boxShadow: sel ? `0 3px 8px ${cc}55` : '0 1px 3px rgba(61,44,31,.06)',
                 }}
               >
-                <StickerIcon icon={cat.icon ?? 'box'} color={sel ? '#fff' : catColor} className="h-4 w-4" />
+                <StickerIcon icon={cat.icon ?? 'box'} color={sel ? '#fff' : cc} className="h-4 w-4" />
                 <span
                   className="text-[9px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
                   style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}

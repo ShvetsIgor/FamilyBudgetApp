@@ -1,8 +1,9 @@
 'use client';
 
-import { C } from '@/features/chat/styles/tokens';
+import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 
 export function DateChip({ label }: { label: string }) {
+  const C = useChatTokens();
   return (
     <div className="flex justify-center" style={{ margin: '16px 0 6px' }}>
       <span

@@ -315,7 +315,10 @@
     "creating": "Сохранение…",
     "adding": "Сохранение…",
     "add2": "Добавить",
-    "amount": "Сумма"
+    "amount": "Сумма",
+    "numpadSave": "Положить {symbol}{total}",
+    "numpadSaving": "Сохранение…",
+    "numpadCancel": "Отмена"
   },
   "categories": {
     "title": "Категории",

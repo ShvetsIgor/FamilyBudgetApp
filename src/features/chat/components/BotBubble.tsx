@@ -11,6 +11,7 @@ interface BotBubbleProps {
 }
 
 function BotAvatar({ visible = true }: { visible?: boolean }) {
+  const C = useChatTokens();
   return (
     <div
       className="flex h-[26px] w-[26px] flex-shrink-0 items-center justify-center self-end rounded-full"

@@ -1089,7 +1089,7 @@ describe('constructorBridge — resolveConflictFromSession', () => {
       kind: 'alias_duplicate',
       tokens: ['starbucks'],
       entryIds: ['entry_high', 'entry_low'],
-      description: 'duplicate alias',
+      message: 'duplicate alias',
     };
     const op = resolveConflictFromSession(session, conflict);
     expect(op.payload.entryId).toBe('entry_low');

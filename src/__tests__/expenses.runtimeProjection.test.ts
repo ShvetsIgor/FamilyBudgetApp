@@ -71,15 +71,6 @@ import {
   isSplitReviewComplete,
 } from '../features/expenses/engine/projectionEngine';
 import {
-  openSessionProjection,
-  inspectGroupedAmbiguities,
-  extractConflictViewModels,
-  previewCorrectionApproval,
-  replayProjectedConversation,
-  summarizeUxActions,
-  validateUxImpact,
-} from '../features/expenses/engine/uxBridge';
-import {
   buildInitialResolutionState,
   resetActionIds,
 } from '../features/expenses/engine/resolutionEngine';

@@ -9,11 +9,6 @@
  *     buildClarificationPlan, hintImpactScore, applyAutoResolvePolicy
  *   - semanticEventTimeline: buildSemanticEvent, buildTimelineFromSession,
  *     filterEventsByKind, getLatestEventOfKind, countEventsByKind
- *   - resolutionDiagnostics: explainUnresolvedHint, explainSplitSuggestion,
- *     explainBlockedResolution, explainParserRetry, explainActionTrigger,
- *     buildResolutionReport
- *   - constructorBridge: createAliasFromSession, resolveConflictFromSession,
- *     approveParserCorrection, summarizeSessionForConstructor
  *   - Determinism: same inputs → same outputs
  */
 

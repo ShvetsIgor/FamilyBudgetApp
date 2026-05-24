@@ -80,8 +80,6 @@ export function resolveConflictFromSession(
     payload: {
       entryId: entryToArchive,
       reason: `Conflict kind="${conflict.kind}" resolved from session ${session.id}`,
-      conflictKind: conflict.kind,
-      allConflictingIds: conflict.entryIds,
     },
     description: `Archive conflicting entry "${entryToArchive}" (${conflict.kind}) from session ${session.id}`,
   };

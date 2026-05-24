@@ -85,6 +85,7 @@ import {
   pendingGroupReviews,
   buildGroupedSplitSummary,
 } from '../features/expenses/engine/splitWorkflowOrchestrator';
+import { buildSplitProjection } from '../features/expenses/engine/splitReviewOrchestrator';
 import {
   replayWorkflow,
   inspectWorkflowTransitions,

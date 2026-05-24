@@ -1,5 +1,6 @@
 'use client';
 import { C } from '@/features/chat/styles/tokens';
+import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 
 interface Props {
   title: string;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function RPCard({ title, action, accentColor = C.primary, children }: Props) {
+  const C = useChatTokens();
   return (
     <div style={{ background: C.card, borderRadius: 18, border: `1px solid ${C.hairline}`, overflow: 'hidden', boxShadow: '0 1px 2px rgba(61,44,31,.05), 0 4px 12px rgba(61,44,31,.05)' }}>
       <div style={{ padding: '12px 14px 8px', borderBottom: `1px solid ${C.hairline}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

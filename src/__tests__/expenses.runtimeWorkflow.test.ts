@@ -40,34 +40,7 @@ import {
   canAdvanceFromStep,
   explainStuckState,
 } from '../features/expenses/engine/conversationalNavigator';
-import {
-  buildWorkflowProgressProjection,
-  buildConversationalNavigationProjection,
-  buildCompletionStateProjection,
-  buildDeferredResolutionProjection,
-  buildWorkflowProjections,
-} from '../features/expenses/engine/workflowProjection';
-import {
-  buildGroupedSplitReview,
-  approvePartialSplit,
-  deferSplitClarification,
-  applySplitCorrection,
-  buildModifierReview,
-  isGroupReviewComplete,
-  pendingGroupReviews,
-  buildGroupedSplitSummary,
-} from '../features/expenses/engine/splitWorkflowOrchestrator';
 import { buildSplitProjection } from '../features/expenses/engine/splitReviewOrchestrator';
-import {
-  replayWorkflow,
-  inspectWorkflowTransitions,
-  validateNavigationStrategy,
-  previewDeferredResolution,
-  simulateCompletionPaths,
-  aiWorkflowHint,
-  ocrWorkflowReview,
-  adaptiveCompletion,
-} from '../features/expenses/engine/workflowBridge';
 import { createSession, resetSessionIds } from '../features/expenses/engine/sessionManager';
 import { resetActionIds, deriveResolutionState } from '../features/expenses/engine/resolutionEngine';
 import { resetEventIds } from '../features/expenses/engine/semanticEventTimeline';

@@ -14,6 +14,7 @@ interface ComposerProps {
 }
 
 export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: ComposerProps) {
+  const C = useChatTokens();
   const t = useT();
   const [value, setValue] = useState('');
   const [helpOpen, setHelpOpen] = useState(false);

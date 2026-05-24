@@ -20,6 +20,7 @@ interface Tip {
 }
 
 export function HelpSheet({ onClose }: HelpSheetProps) {
+  const C = useChatTokens();
   const t = useT();
 
   useEffect(() => {

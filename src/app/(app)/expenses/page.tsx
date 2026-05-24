@@ -69,6 +69,9 @@ export default function ExpensesPage() {
   const monthBarRef = useRef<HTMLDivElement>(null);
   const t = useT();
 
+  // Undo-delete state
+  const [undoItem, setUndoItem] = useState<{ expense: SerializableExpense; timerId: ReturnType<typeof setTimeout> } | null>(null);
+
   const isCurrentMonth = selectedMonth === currentMonth;
   const expenses = isCurrentMonth ? reduxExpenses : (localExpenses ?? []);
 

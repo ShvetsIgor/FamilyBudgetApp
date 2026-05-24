@@ -71,6 +71,22 @@ export default function ExpensesPage() {
 
   // Undo-delete state
   const [undoItem, setUndoItem] = useState<{ expense: SerializableExpense; timerId: ReturnType<typeof setTimeout> } | null>(null);
+  const undoRef = useRef<typeof undoItem>(null);
+  undoRef.current = undoItem;
+  const userRef = useRef(user);
+  userRef.current = user;
+
+  // Commit pending delete immediately when user navigates away
+  useEffect(() => {
+    return () => {
+      const u = undoRef.current;
+      const currentUser = userRef.current;
+      if (u && currentUser) {
+        clearTimeout(u.timerId);
+        deleteExpense(currentUser.id, u.expense).catch(() => {});
+      }
+    };
+  }, []); // empty deps — cleanup on unmount only
 
   const isCurrentMonth = selectedMonth === currentMonth;
   const expenses = isCurrentMonth ? reduxExpenses : (localExpenses ?? []);

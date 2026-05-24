@@ -435,18 +435,19 @@ export function FastExpenseEntry({
       {predictedContext && (() => {
         const folder = topFolders.find((f) => f.id === predictedContext.folderId);
         if (!folder) return null;
+        const folderColor = folder.color ?? '#E07A5F';
         return (
           <div className="px-3.5 pb-1 flex-shrink-0">
             <button
               onClick={() => { setPickerOpen(true); setPickerGroupId(predictedContext.folderId); }}
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all"
               style={{
-                background: folder.color + '18',
-                color: folder.color,
-                border: `1px solid ${folder.color}33`,
+                background: folderColor + '18',
+                color: folderColor,
+                border: `1px solid ${folderColor}33`,
               }}
             >
-              <StickerIcon icon={folder.icon ?? 'box'} color={folder.color} className="h-2.5 w-2.5" />
+              <StickerIcon icon={folder.icon ?? 'box'} color={folderColor} className="h-2.5 w-2.5" />
               {t.cat(folder.name)}
               <span style={{ opacity: 0.45, fontWeight: 400 }}>· {predictedContext.count}×</span>
             </button>

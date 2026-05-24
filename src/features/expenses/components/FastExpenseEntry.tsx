@@ -431,6 +431,29 @@ export function FastExpenseEntry({
         </div>
       )}
 
+      {/* Context prediction badge — shown only when merchant has enough history */}
+      {predictedContext && (() => {
+        const folder = topFolders.find((f) => f.id === predictedContext.folderId);
+        if (!folder) return null;
+        return (
+          <div className="px-3.5 pb-1 flex-shrink-0">
+            <button
+              onClick={() => { setPickerOpen(true); setPickerGroupId(predictedContext.folderId); }}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all"
+              style={{
+                background: folder.color + '18',
+                color: folder.color,
+                border: `1px solid ${folder.color}33`,
+              }}
+            >
+              <StickerIcon icon={folder.icon ?? 'box'} color={folder.color} className="h-2.5 w-2.5" />
+              {t.cat(folder.name)}
+              <span style={{ opacity: 0.45, fontWeight: 400 }}>· {predictedContext.count}×</span>
+            </button>
+          </div>
+        );
+      })()}
+
       {/* ── Category grid (main category for leftover) — real categories, never folder IDs ── */}
       <div className="overflow-x-auto px-3.5 py-2 flex-shrink-0 [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
         <div className="grid grid-rows-2 grid-flow-col gap-1.5" style={{ gridAutoColumns: '64px' }}>

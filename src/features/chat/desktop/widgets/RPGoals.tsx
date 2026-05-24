@@ -5,6 +5,7 @@ import { useAppSelector } from '@/store/store';
 import Link from 'next/link';
 
 export function RPGoals() {
+  const C = useChatTokens();
   const goals = useAppSelector((s) => s.savings?.list ?? []);
   const currency = useAppSelector((s) => s.ui.currency);
   const sym = currency === 'ILS' ? '₪' : currency === 'USD' ? '$' : '€';

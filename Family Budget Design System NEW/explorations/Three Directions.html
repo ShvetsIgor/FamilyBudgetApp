@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Family Budget — 3 направления дизайна</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: #F1F5F9; }
+  .root { min-height: 100vh; }
+</style>
+</head>
+<body>
+<div id="root" class="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+
+<script type="text/babel">
+
+// =================== PHONE FRAME ===================
+const Phone = ({ children, bg, statusColor = '#0F172A' }) => (
+  <div style={{
+    width: 390, height: 780,
+    background: bg, borderRadius: 44, overflow: 'hidden',
+    boxShadow: '0 30px 60px rgba(15, 23, 42, .18), 0 0 0 9px #1a1a1a, 0 0 0 10px #2a2a2a',
+    display:'flex', flexDirection:'column', position:'relative',
+  }}>
+    <div style={{
+      height: 36, padding: '0 26px',
+      display:'flex', alignItems:'center', justifyContent:'space-between',
+      fontSize: 14, fontWeight: 600, color: statusColor,
+      position:'relative', flexShrink: 0,
+    }}>
+      <span>9:41</span>
+      <span style={{display:'flex', gap: 4}}>
+        <span style={{width: 16, height: 10, border: '1.4px solid '+statusColor, borderRadius: 3, position:'relative'}}>
+          <span style={{position:'absolute', top:1.4, left:1.4, right:5, bottom:1.4, background: statusColor, borderRadius:1}}/>
+        </span>
+      </span>
+      <span style={{position:'absolute', top: 8, left:'50%', transform:'translateX(-50%)', width: 110, height: 28, background:'#0a0a0a', borderRadius:'0 0 16px 16px'}}/>
+    </div>
+    <div style={{flex: 1, overflow:'hidden', display:'flex', flexDirection:'column'}}>
+      {children}
+    </div>
+    <div style={{position:'absolute', bottom: 8, left:'50%', transform:'translateX(-50%)', width: 120, height: 4, background:'rgba(0,0,0,.35)', borderRadius: 999}}/>
+  </div>
+);
+
+// =================== 1. WARM & FRIENDLY ===================
+// Peach + cream, very rounded, Nunito, friendly emoji-forward
+const Warm = () => {
+  const CAT = [
+    {emoji:'🥑', name:'Food',      color:'#E07A5F', spent:1840, limit:1500},
+    {emoji:'🏡', name:'Home',      color:'#81B29A', spent:1200, limit:1800},
+    {emoji:'🚲', name:'Transport', color:'#F2CC8F', spent:860,  limit:1000},
+  ];
+  return (
+    <Phone bg="#FBF6EE" statusColor="#3D2C1F">
+      <div style={{fontFamily:'Nunito, sans-serif', flex:1, overflow:'auto', padding:'8px 22px 100px'}}>
+        {/* Header */}
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'14px 0 18px'}}>
+          <div>
+            <div style={{fontSize: 13, color:'#8E7A66', fontWeight: 600}}>Привет, Алекс ✨</div>
+            <div style={{fontSize: 22, fontWeight: 800, color:'#3D2C1F', marginTop: 2}}>Ноябрь 2026</div>
+          </div>
+          <div style={{width: 44, height: 44, borderRadius: 999, background:'#E07A5F', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontWeight:800, fontSize: 18}}>А</div>
+        </div>
+        {/* Hero balance */}
+        <div style={{
+          background: '#E07A5F', color:'#FBF6EE',
+          borderRadius: 32, padding: 24, position:'relative', overflow:'hidden',
+        }}>
+          <div style={{position:'absolute', right:-30, top:-30, width: 120, height: 120, borderRadius:'50%', background:'rgba(255,255,255,.1)'}}/>
+          <div style={{position:'absolute', right:20, bottom:-20, width: 70, height: 70, borderRadius:'50%', background:'rgba(255,255,255,.08)'}}/>
+          <div style={{fontSize: 13, opacity:.85, fontWeight: 600}}>Осталось в этом месяце</div>
+          <div style={{fontSize: 44, fontWeight: 800, marginTop: 4, letterSpacing:'-0.02em'}}>₪ 3 420</div>
+          <div style={{display:'flex', gap: 20, marginTop: 14, fontSize: 12, fontWeight: 600}}>
+            <span>↑ 8 200 доход</span>
+            <span>↓ 4 780 трат</span>
+          </div>
+        </div>
+        {/* Quick add */}
+        <div style={{display:'flex', gap: 10, marginTop: 18}}>
+          {[
+            {bg:'#81B29A', icon:'＋', label:'Расход'},
+            {bg:'#F2CC8F', icon:'↑',  label:'Доход'},
+            {bg:'#FBF6EE', icon:'🐷', label:'Копилка', border: true},
+          ].map((q, i) => (
+            <div key={i} style={{
+              flex:1, background: q.bg, color: q.border ? '#3D2C1F' : 'white',
+              border: q.border ? '2px dashed #8E7A66' : 0,
+              padding: '14px 8px', borderRadius: 22, textAlign:'center',
+              fontWeight: 700, fontSize: 13,
+            }}>
+              <div style={{fontSize: 22}}>{q.icon}</div>
+              <div style={{marginTop: 4}}>{q.label}</div>
+            </div>
+          ))}
+        </div>
+        {/* Categories */}
+        <div style={{marginTop: 22, display:'flex', justifyContent:'space-between', alignItems:'baseline'}}>
+          <div style={{fontSize: 16, fontWeight: 800, color:'#3D2C1F'}}>Бюджеты</div>
+          <div style={{fontSize: 13, color:'#E07A5F', fontWeight: 700}}>Все →</div>
+        </div>
+        <div style={{display:'flex', flexDirection:'column', gap: 10, marginTop: 12}}>
+          {CAT.map(c => {
+            const over = c.spent > c.limit;
+            const pct = Math.min(100, c.spent/c.limit*100);
+            return (
+              <div key={c.name} style={{background:'white', borderRadius: 22, padding: '14px 16px'}}>
+                <div style={{display:'flex', alignItems:'center', gap: 12}}>
+                  <div style={{width: 38, height: 38, borderRadius: 14, background: c.color + '22', display:'flex', alignItems:'center', justifyContent:'center', fontSize: 18}}>{c.emoji}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight: 700, color:'#3D2C1F', fontSize: 14}}>{c.name}</div>
+                    <div style={{fontSize: 11, color:'#8E7A66', fontWeight: 600, marginTop: 1}}>₪{c.spent} / ₪{c.limit}</div>
+                  </div>
+                  {over && <span style={{background:'#E07A5F22', color:'#E07A5F', padding:'2px 8px', borderRadius:999, fontSize: 10, fontWeight: 800}}>превышен</span>}
+                </div>
+                <div style={{height: 8, background:'#F0E8D8', borderRadius: 999, marginTop: 10, overflow:'hidden'}}>
+                  <div style={{height:'100%', width: pct+'%', background: over ? '#E07A5F' : c.color, borderRadius: 999}}/>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      {/* Bottom nav */}
+      <div style={{
+        position: 'absolute', bottom: 24, left: 22, right: 22,
+        background: 'white', borderRadius: 28, padding: '10px 18px',
+        display:'flex', justifyContent:'space-between', alignItems:'center',
+        boxShadow: '0 16px 30px rgba(61, 44, 31, .15)',
+      }}>
+        {['🏠','📋','📊','💡'].map((e, i) => (
+          <div key={i} style={{
+            width: 44, height: 44, borderRadius: 999,
+            background: i === 0 ? '#E07A5F' : 'transparent',
+            display:'flex', alignItems:'center', justifyContent:'center', fontSize: 18,
+          }}>{e}</div>
+        ))}
+      </div>
+    </Phone>
+  );
+};
+
+// =================== 2. DARK PREMIUM ===================
+// Near-black with gold accent, Space Grotesk, dense info hierarchy
+const Dark = () => {
+  const TX = [
+    {cat:'Groceries', place:'Shufersal',   amt:148.50, time:'14:22'},
+    {cat:'Coffee',    place:'Aroma',       amt:32,     time:'09:15'},
+    {cat:'Fuel',      place:'Sonol',       amt:120,    time:'08:01'},
+    {cat:'Restaurants',place:'Burgers Bar',amt:89,     time:'Yest'},
+  ];
+  return (
+    <Phone bg="#0A0A0B" statusColor="#F5F0E1">
+      <div style={{fontFamily:'"Space Grotesk", sans-serif', flex:1, overflow:'auto', padding:'12px 20px 110px', color:'#F5F0E1'}}>
+        {/* Header */}
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 0 18px'}}>
+          <div style={{display:'flex', alignItems:'center', gap: 10}}>
+            <div style={{width: 32, height: 32, borderRadius: 8, background:'linear-gradient(135deg, #D4AF6F 0%, #8B6F2E 100%)', display:'flex', alignItems:'center', justifyContent:'center', color:'#0A0A0B', fontWeight: 700, fontSize: 14}}>B</div>
+            <div>
+              <div style={{fontSize: 13, fontWeight: 600, letterSpacing:'0.02em'}}>BUDGET</div>
+              <div style={{fontSize: 10, color:'#8B7E68', textTransform:'uppercase', letterSpacing:'0.1em'}}>Family · Tier 1</div>
+            </div>
+          </div>
+          <div style={{display:'flex', gap: 6}}>
+            {['↻','⊕','◉'].map((i, x) => <div key={x} style={{width: 34, height: 34, border:'1px solid #1F1F22', borderRadius: 8, display:'flex', alignItems:'center', justifyContent:'center', color:'#8B7E68'}}>{i}</div>)}
+          </div>
+        </div>
+        {/* Hero */}
+        <div style={{borderTop:'1px solid #1F1F22', paddingTop: 18}}>
+          <div style={{fontSize: 10, color:'#8B7E68', textTransform:'uppercase', letterSpacing:'0.18em', fontWeight: 600}}>Net balance · Nov 2026</div>
+          <div style={{display:'flex', alignItems:'baseline', gap: 6, marginTop: 8}}>
+            <span style={{fontSize: 14, color:'#D4AF6F', fontWeight: 600}}>₪</span>
+            <span style={{fontSize: 56, fontWeight: 700, letterSpacing:'-0.04em', lineHeight: 1}}>3,420</span>
+            <span style={{fontSize: 16, color:'#8B7E68', fontWeight: 500}}>.00</span>
+          </div>
+          <div style={{display:'flex', gap: 24, marginTop: 16, paddingBottom: 18, borderBottom:'1px solid #1F1F22'}}>
+            <div>
+              <div style={{fontSize: 10, color:'#8B7E68', textTransform:'uppercase', letterSpacing:'0.12em'}}>Inflow</div>
+              <div style={{fontSize: 18, fontWeight: 600, color:'#A7D6B5', marginTop: 4, fontVariantNumeric:'tabular-nums'}}>+8,200</div>
+            </div>
+            <div style={{width: 1, background:'#1F1F22'}}/>
+            <div>
+              <div style={{fontSize: 10, color:'#8B7E68', textTransform:'uppercase', letterSpacing:'0.12em'}}>Outflow</div>
+              <div style={{fontSize: 18, fontWeight: 600, marginTop: 4, fontVariantNumeric:'tabular-nums'}}>−4,780</div>
+            </div>
+            <div style={{flex:1, textAlign:'right'}}>
+              <div style={{fontSize: 10, color:'#8B7E68', textTransform:'uppercase', letterSpacing:'0.12em'}}>Saved</div>
+              <div style={{fontSize: 18, fontWeight: 600, color:'#D4AF6F', marginTop: 4, fontVariantNumeric:'tabular-nums'}}>42%</div>
+            </div>
+          </div>
+        </div>
+        {/* Spark area */}
+        <div style={{padding: '16px 0', borderBottom: '1px solid #1F1F22'}}>
+          <svg viewBox="0 0 320 60" style={{width:'100%', height: 60}}>
+            <defs>
+              <linearGradient id="sp" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%"  stopColor="#D4AF6F" stopOpacity=".35"/>
+                <stop offset="100%" stopColor="#D4AF6F" stopOpacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,40 L40,32 L80,38 L120,22 L160,28 L200,14 L240,20 L280,8 L320,12 L320,60 L0,60 Z" fill="url(#sp)"/>
+            <path d="M0,40 L40,32 L80,38 L120,22 L160,28 L200,14 L240,20 L280,8 L320,12" stroke="#D4AF6F" strokeWidth="1.5" fill="none"/>
+          </svg>
+        </div>
+        {/* Transactions */}
+        <div style={{paddingTop: 16}}>
+          <div style={{display:'flex', justifyContent:'space-between', fontSize: 10, color:'#8B7E68', textTransform:'uppercase', letterSpacing:'0.18em', fontWeight: 600, marginBottom: 8}}>
+            <span>Activity</span><span>Today · 4 items</span>
+          </div>
+          {TX.map((t, i) => (
+            <div key={i} style={{display:'flex', alignItems:'center', padding:'12px 0', borderBottom:'1px solid #1F1F22'}}>
+              <div style={{width: 28, height: 28, border:'1px solid #2A2A2D', borderRadius: 6, display:'flex', alignItems:'center', justifyContent:'center', fontSize: 10, color:'#8B7E68', fontWeight: 700}}>{t.cat.slice(0,2).toUpperCase()}</div>
+              <div style={{flex:1, marginLeft: 12}}>
+                <div style={{fontSize: 14, fontWeight: 500}}>{t.place}</div>
+                <div style={{fontSize: 11, color:'#8B7E68', marginTop: 2}}>{t.cat} · {t.time}</div>
+              </div>
+              <div style={{fontVariantNumeric:'tabular-nums', fontSize: 15, fontWeight: 600}}>−{t.amt.toFixed(2)}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Bottom nav */}
+      <div style={{
+        position:'absolute', bottom: 0, left: 0, right: 0, height: 80,
+        background:'rgba(10,10,11,.85)', backdropFilter:'blur(20px)',
+        borderTop:'1px solid #1F1F22',
+        display:'flex', alignItems:'center', justifyContent:'space-around', paddingBottom: 14,
+      }}>
+        {['Home','Stats','Goals','You'].map((l, i) => (
+          <div key={l} style={{display:'flex', flexDirection:'column', alignItems:'center', gap: 4, color: i===0 ? '#D4AF6F' : '#8B7E68'}}>
+            <div style={{width: 4, height: 4, borderRadius: 999, background: i===0 ? '#D4AF6F' : 'transparent'}}/>
+            <div style={{fontSize: 11, fontWeight: 600, letterSpacing:'0.05em', textTransform:'uppercase'}}>{l}</div>
+          </div>
+        ))}
+      </div>
+    </Phone>
+  );
+};
+
+// =================== 3. EDITORIAL / APPLE ===================
+// Lots of whitespace, Fraunces serif for numbers, thin hairlines, minimal color
+const Editorial = () => {
+  const TX = [
+    {emoji:'⌑', name:'Shufersal',   tag:'Groceries',    amt:148.50},
+    {emoji:'○', name:'Aroma',       tag:'Coffee',       amt:32},
+    {emoji:'△', name:'Sonol',       tag:'Fuel',         amt:120},
+    {emoji:'□', name:'Burgers Bar', tag:'Restaurants',  amt:89},
+  ];
+  return (
+    <Phone bg="#FAFAF7" statusColor="#1A1A1A">
+      <div style={{fontFamily:'Inter, sans-serif', flex:1, overflow:'auto', padding:'8px 28px 100px', color:'#1A1A1A'}}>
+        {/* Header */}
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'18px 0 8px'}}>
+          <div style={{fontFamily:'Fraunces, serif', fontSize: 22, fontWeight: 600, letterSpacing:'-0.02em'}}>Budget.</div>
+          <div style={{fontSize: 12, color:'#8A8A88', fontWeight: 500}}>Nov 2026</div>
+        </div>
+        {/* Hero — editorial */}
+        <div style={{padding: '36px 0 28px', borderBottom: '0.5px solid #D6D5D0'}}>
+          <div style={{fontSize: 11, color:'#8A8A88', textTransform:'uppercase', letterSpacing:'0.18em', fontWeight: 600}}>You can still spend</div>
+          <div style={{fontFamily:'Fraunces, serif', fontSize: 76, fontWeight: 500, letterSpacing:'-0.05em', lineHeight: .95, marginTop: 16}}>
+            <span style={{color:'#8A8A88', fontSize: 36, verticalAlign:'top', lineHeight: 1}}>₪</span>3,420
+          </div>
+          <div style={{fontSize: 13, color:'#1A1A1A', marginTop: 14, lineHeight: 1.5, maxWidth: 280}}>
+            on track for the month. <span style={{color:'#8A8A88'}}>4 780 of 8 200 spent · 20 days left</span>
+          </div>
+        </div>
+        {/* Three columns */}
+        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', padding:'22px 0', borderBottom:'0.5px solid #D6D5D0'}}>
+          {[
+            {l:'Income',    v:'8 200',  font:'Fraunces'},
+            {l:'Spent',     v:'4 780',  font:'Fraunces'},
+            {l:'Saved',     v:'42%',    font:'Fraunces'},
+          ].map(c => (
+            <div key={c.l}>
+              <div style={{fontSize: 10, color:'#8A8A88', textTransform:'uppercase', letterSpacing:'0.14em', fontWeight: 600}}>{c.l}</div>
+              <div style={{fontFamily:'Fraunces, serif', fontSize: 26, fontWeight: 500, marginTop: 6, letterSpacing:'-0.02em'}}>{c.v}</div>
+            </div>
+          ))}
+        </div>
+        {/* Section heading */}
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'baseline', padding:'28px 0 12px'}}>
+          <div style={{fontFamily:'Fraunces, serif', fontSize: 22, fontWeight: 500, letterSpacing:'-0.02em'}}>Recent</div>
+          <div style={{fontSize: 12, color:'#1A1A1A', fontWeight: 500, borderBottom:'1px solid #1A1A1A', paddingBottom: 1}}>See all</div>
+        </div>
+        {/* Transactions */}
+        {TX.map((t, i) => (
+          <div key={i} style={{display:'flex', alignItems:'center', padding:'14px 0', borderTop: i ? '0.5px solid #D6D5D0' : 0}}>
+            <div style={{width: 28, height: 28, border:'0.5px solid #C7C5BE', borderRadius: 999, display:'flex', alignItems:'center', justifyContent:'center', fontSize: 13, color:'#1A1A1A'}}>{t.emoji}</div>
+            <div style={{flex:1, marginLeft: 14}}>
+              <div style={{fontSize: 14, fontWeight: 500}}>{t.name}</div>
+              <div style={{fontSize: 11, color:'#8A8A88', marginTop: 2, letterSpacing: '0.02em'}}>{t.tag}</div>
+            </div>
+            <div style={{fontFamily:'Fraunces, serif', fontSize: 18, fontWeight: 500, fontVariantNumeric:'tabular-nums'}}>{t.amt.toFixed(2)}</div>
+          </div>
+        ))}
+      </div>
+      {/* Bottom nav — minimal */}
+      <div style={{
+        position:'absolute', bottom: 22, left: 28, right: 28,
+        display:'flex', justifyContent:'space-between', alignItems:'center',
+        padding: '14px 22px', background:'rgba(250,250,247,.92)', backdropFilter:'blur(16px)',
+        border:'0.5px solid #D6D5D0', borderRadius: 999,
+      }}>
+        {['Home','Activity','Goals','Plus'].map((l, i) => (
+          <div key={l} style={{fontSize: 12, fontWeight: i===0 ? 600 : 500, color: i===0 ? '#1A1A1A' : '#8A8A88'}}>{l}</div>
+        ))}
+      </div>
+    </Phone>
+  );
+};
+
+// =================== CANVAS ===================
+const { DesignCanvas, DCSection, DCArtboard } = window;
+
+function App() {
+  return (
+    <DesignCanvas>
+      <DCSection id="home" title="Home screen — 3 направления">
+        <DCArtboard id="warm"      label="1 · Warm & Friendly — Nunito · персик и крем"        width={390} height={780}><Warm/></DCArtboard>
+        <DCArtboard id="dark"      label="2 · Dark Premium — Space Grotesk · золото на чёрном"  width={390} height={780}><Dark/></DCArtboard>
+        <DCArtboard id="editorial" label="3 · Editorial — Fraunces serif · много воздуха"       width={390} height={780}><Editorial/></DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!doctype html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_card.css">
+<style>
+  .cats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px 14px; }
+  .cat { display: flex; align-items: center; gap: 10px; }
+  .tile {
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .cat .label { font-size: 12px; font-weight: 500; color: hsl(var(--foreground)); }
+  .cat .hex { font-size: 10px; color: hsl(var(--muted-foreground)); font-variant-numeric: tabular-nums; }
+</style>
+<body>
+  <div class="cats">
+    <div class="cat"><div class="tile" style="background:#f9731620;color:#f97316">🍽️</div><div><div class="label">Food</div><div class="hex">#F97316</div></div></div>
+    <div class="cat"><div class="tile" style="background:#3b82f620;color:#3b82f6">🏠</div><div><div class="label">Home</div><div class="hex">#3B82F6</div></div></div>
+    <div class="cat"><div class="tile" style="background:#8b5cf620;color:#8b5cf6">🚗</div><div><div class="label">Transport</div><div class="hex">#8B5CF6</div></div></div>
+    <div class="cat"><div class="tile" style="background:#ec489920;color:#ec4899">❤️</div><div><div class="label">Health</div><div class="hex">#EC4899</div></div></div>
+    <div class="cat"><div class="tile" style="background:#06b6d420;color:#06b6d4">🛍️</div><div><div class="label">Shopping</div><div class="hex">#06B6D4</div></div></div>
+    <div class="cat"><div class="tile" style="background:#eab30820;color:#eab308">🎬</div><div><div class="label">Entertainment</div><div class="hex">#EAB308</div></div></div>
+    <div class="cat"><div class="tile" style="background:#10b98120;color:#10b981">📚</div><div><div class="label">Education</div><div class="hex">#10B981</div></div></div>
+    <div class="cat"><div class="tile" style="background:#f59e0b20;color:#f59e0b">👶</div><div><div class="label">Kids</div><div class="hex">#F59E0B</div></div></div>
+    <div class="cat"><div class="tile" style="background:#10b98120;color:#10b981">🐷</div><div><div class="label">Savings</div><div class="hex">#10B981</div></div></div>
+    <div class="cat"><div class="tile" style="background:#6b728020;color:#6b7280">📦</div><div><div class="label">Other</div><div class="hex">#6B7280</div></div></div>
+  </div>
+</body>

@@ -1,0 +1,26 @@
+<!doctype html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_card.css">
+<style>
+  .num-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+  .col-n { display: flex; flex-direction: column; gap: 6px; }
+  .big { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .tag { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  .pos { color: hsl(160 84% 39%); }
+  .neg { color: hsl(0 84% 60%); }
+  .zero { color: hsl(var(--muted-foreground)); }
+  .ccy { display: flex; gap: 14px; align-items: baseline; margin-top: 6px; }
+  .ccy span { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .helper { font-size: 11px; color: hsl(var(--muted-foreground)); }
+</style>
+<body>
+  <div class="num-grid">
+    <div class="col-n"><div class="tag">Income</div><div class="big pos">+₪3,420</div><div class="helper">always prefixed with +</div></div>
+    <div class="col-n"><div class="tag">Expense</div><div class="big neg">-₪148.50</div><div class="helper">always prefixed with −</div></div>
+    <div class="col-n"><div class="tag">Zero / balance</div><div class="big zero">₪0</div><div class="helper">no prefix when zero</div></div>
+  </div>
+  <div class="tag" style="margin-top: 4px;">Currency symbols (always before the number)</div>
+  <div class="ccy">
+    <span>₪ 1,250</span><span>$ 1,250</span><span>CA$ 1,250</span><span>₽ 1,250</span>
+  </div>
+</body>

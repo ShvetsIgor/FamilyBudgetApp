@@ -1,0 +1,39 @@
+<!doctype html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_card.css">
+<style>
+  .grid-r { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+  .cell { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+  .box {
+    width: 100%; height: 56px;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+  }
+  .lbl { font-size: 11px; color: hsl(var(--muted-foreground)); font-variant-numeric: tabular-nums; }
+  .name { font-size: 12px; font-weight: 600; }
+  .shadow-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 10px; }
+  .shadow-box {
+    height: 56px; background: hsl(var(--card));
+    border: 1px solid hsl(var(--border)); border-radius: 16px;
+  }
+  .shadow-sm { box-shadow: 0 1px 2px rgba(15,23,42,.06); }
+  .shadow-md { box-shadow: 0 4px 12px rgba(15,23,42,.08); }
+  .shadow-primary { box-shadow: 0 10px 28px hsl(221 83% 53% / 0.30); border-color: hsl(221 83% 53%); background: hsl(221 83% 53%); }
+  .scope-label { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+</style>
+<body>
+  <div class="scope-label">Radii</div>
+  <div class="grid-r">
+    <div class="cell"><div class="box" style="border-radius:8px"></div><div class="name">lg</div><div class="lbl">8 px · chips</div></div>
+    <div class="cell"><div class="box" style="border-radius:12px"></div><div class="name">xl</div><div class="lbl">12 px · inputs</div></div>
+    <div class="cell"><div class="box" style="border-radius:16px"></div><div class="name">2xl</div><div class="lbl">16 px · cards</div></div>
+    <div class="cell"><div class="box" style="border-radius:24px"></div><div class="name">3xl</div><div class="lbl">24 px · hero</div></div>
+    <div class="cell"><div class="box" style="border-radius:9999px; width:56px; height:56px"></div><div class="name">full</div><div class="lbl">FAB · avatar</div></div>
+  </div>
+  <div class="scope-label">Shadows</div>
+  <div class="shadow-grid">
+    <div class="cell" style="gap:8px;width:100%"><div class="shadow-box shadow-sm"></div><div class="name">sm</div><div class="lbl">cards on press</div></div>
+    <div class="cell" style="gap:8px;width:100%"><div class="shadow-box shadow-md"></div><div class="name">md</div><div class="lbl">secondary FABs</div></div>
+    <div class="cell" style="gap:8px;width:100%"><div class="shadow-box shadow-primary"></div><div class="name">primary glow</div><div class="lbl">hero card · FAB</div></div>
+  </div>
+</body>

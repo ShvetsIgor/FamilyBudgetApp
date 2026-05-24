@@ -1,0 +1,28 @@
+<!doctype html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_card.css">
+<style>
+  body { padding: 16px; gap: 14px; }
+  .row-empty { display: flex; gap: 14px; align-items: flex-start; }
+  .blk {
+    flex: 1; text-align: center; padding: 28px 14px;
+    border: 1px solid hsl(var(--border)); background: hsl(var(--card));
+    border-radius: 16px;
+  }
+  .blk .e { font-size: 28px; }
+  .blk .h { font-size: 14px; font-weight: 500; margin-top: 8px; }
+  .blk .p { font-size: 12px; color: hsl(var(--muted-foreground)); margin-top: 4px; }
+  .err { background: hsl(0 84% 60% / .1); color: hsl(0 84% 60%); border-radius: 8px; padding: 8px 12px; font-size: 12px; }
+  .ok  { background: hsl(160 84% 39% / .1); color: hsl(160 84% 39%); border-radius: 8px; padding: 8px 12px; font-size: 12px; font-weight: 500; }
+  .info{ background: hsl(38 92% 50% / .12); color: hsl(38 92% 50%); border-radius: 12px; padding: 10px 14px; font-size: 12px; }
+  .info b { color: hsl(38 92% 50%); }
+</style>
+<body>
+  <div class="row-empty">
+    <div class="blk"><div class="e">📭</div><div class="h">No expenses this month</div><div class="p">Tap + to add your first expense</div></div>
+    <div class="blk"><div class="e">📊</div><div class="h">No data for this period</div></div>
+  </div>
+  <div class="err">Invalid email or password.</div>
+  <div class="ok">✓ Notifications enabled</div>
+  <div class="info"><b>📩 Family Invite</b> · You have been invited to join a family. Accept to share budgets and statistics.</div>
+</body>

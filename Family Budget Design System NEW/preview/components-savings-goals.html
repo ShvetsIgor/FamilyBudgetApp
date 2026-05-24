@@ -1,0 +1,27 @@
+<!doctype html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_card.css">
+<style>
+  body { padding: 16px; gap: 12px; }
+  .card { border: 1px solid hsl(var(--border)); background: hsl(var(--card)); border-radius: 16px; padding: 12px 16px; }
+  .row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .emoji { font-size: 18px; }
+  .name { flex: 1; font-size: 14px; font-weight: 500; }
+  .meta { font-size: 12px; color: hsl(var(--muted-foreground)); font-variant-numeric: tabular-nums; }
+  .bar { height: 6px; border-radius: 999px; background: hsl(var(--muted)); overflow: hidden; }
+  .fill { height: 100%; border-radius: 999px; background: hsl(38 92% 50%); }
+</style>
+<body>
+  <div class="card">
+    <div class="row"><span class="emoji">✈️</span><span class="name">Trip to Greece</span><span class="meta">₪4,200 / ₪10,000</span></div>
+    <div class="bar"><div class="fill" style="width:42%"></div></div>
+  </div>
+  <div class="card">
+    <div class="row"><span class="emoji">💻</span><span class="name">New Laptop</span><span class="meta">₪2,800 / ₪7,000</span></div>
+    <div class="bar"><div class="fill" style="width:40%"></div></div>
+  </div>
+  <div class="card">
+    <div class="row"><span class="emoji">🐷</span><span class="name">Emergency Fund</span><span class="meta">₪14,000 / ₪20,000</span></div>
+    <div class="bar"><div class="fill" style="width:70%"></div></div>
+  </div>
+</body>

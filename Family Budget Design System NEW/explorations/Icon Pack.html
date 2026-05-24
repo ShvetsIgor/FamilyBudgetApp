@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Family Budget — Icon pack (full taxonomy)</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:#EEE6D6; font-family: var(--font-sans); color:#3D2C1F; }
+  .stage { min-height:100vh; padding:30px 20px; display:flex; gap:24px; align-items:flex-start; justify-content:center; flex-wrap:wrap; }
+  .scroll-y::-webkit-scrollbar { display:none; }
+</style>
+</head>
+<body>
+<div class="stage"><div id="root"></div></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="icons-pack.jsx"></script>
+
+<script type="text/babel">
+const { useState, useMemo } = React;
+const { I, TAXONOMY, INCOME } = window.ICON_LIB;
+const PRIMARY='#E07A5F', BROWN='#3D2C1F', CREAM='#FBF6EE', MUTED='#8E7A66', BORDER='#F0E8D8', CARD='#FFFFFF';
+
+function App() {
+  const [selectedCat, setSelectedCat] = useState(null);  // tax index or 'income'
+  const [search, setSearch] = useState('');
+
+  const allGroups = useMemo(() => [...TAXONOMY, INCOME], []);
+
+  const filteredGroups = useMemo(() => {
+    if (!search) return allGroups;
+    const q = search.toLowerCase();
+    return allGroups.map(g => ({
+      ...g,
+      subs: g.subs.filter(s =>
+        s.ru.toLowerCase().includes(q) ||
+        s.name.toLowerCase().includes(q) ||
+        s.icon.toLowerCase().includes(q)
+      )
+    })).filter(g => g.subs.length || g.ru.toLowerCase().includes(q));
+  }, [search, allGroups]);
+
+  // Stats
+  const stats = useMemo(() => {
+    const used = new Set();
+    allGroups.forEach(g => { used.add(g.icon); g.subs.forEach(s => used.add(s.icon)); });
+    return { categories: allGroups.length, subs: allGroups.reduce((s,g)=>s+g.subs.length,0), iconsTotal: Object.keys(I).length, iconsUsed: used.size };
+  }, [allGroups]);
+
+  return (
+    <>
+    {/* Phone — picker */}
+    <div style={{
+      width: 410, height: 820, background:'#FBF6EE', borderRadius:44, overflow:'hidden',
+      boxShadow:'0 30px 60px rgba(61,44,31,.22), 0 0 0 9px #1a1a1a, 0 0 0 10px #2a2a2a',
+      display:'flex', flexDirection:'column', position:'relative',
+    }}>
+      <div style={{height:36, padding:'0 26px', display:'flex', alignItems:'center', justifyContent:'space-between', fontSize:14, fontWeight:800, position:'relative', flexShrink:0}}>
+        <span>9:41</span><span>● ●</span>
+        <span style={{position:'absolute', top:8, left:'50%', transform:'translateX(-50%)', width:110, height:28, background:'#0a0a0a', borderRadius:'0 0 16px 16px'}}/>
+      </div>
+
+      <div style={{display:'flex', alignItems:'center', gap:10, padding:'4px 16px'}}>
+        <button style={{background:0, border:0, fontSize:20, color:BROWN, padding:8, cursor:'pointer'}}>✕</button>
+        <div style={{flex:1, textAlign:'center', fontSize:13, fontWeight:800, color:MUTED, textTransform:'uppercase', letterSpacing:'.08em'}}>Все категории</div>
+        <div style={{width:36}}/>
+      </div>
+
+      <div style={{padding:'0 16px 8px'}}>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Поиск категории…" style={{
+          width:'100%', padding:'10px 14px', borderRadius:14, border:`1.5px solid ${BORDER}`, background:CARD,
+          fontFamily:'inherit', fontSize:14, fontWeight:600, color:BROWN, outline:'none',
+        }}/>
+      </div>
+
+      <div className="scroll-y" style={{flex:1, overflowY:'auto', padding:'4px 14px 20px'}}>
+        {filteredGroups.map((g) => {
+          const ParentI = I[g.icon];
+          const isOpen = selectedCat === g.id;
+          return (
+            <div key={g.id} style={{marginBottom:12, background:CARD, borderRadius:18, overflow:'hidden', boxShadow:'0 1px 3px rgba(61,44,31,.06)'}}>
+              {/* parent header */}
+              <button onClick={() => setSelectedCat(isOpen ? null : g.id)} style={{
+                width:'100%', display:'flex', alignItems:'center', gap:12, padding:'12px 14px',
+                background: isOpen ? g.color + '15' : 'transparent', border:0, cursor:'pointer', fontFamily:'inherit',
+                textAlign:'left',
+              }}>
+                <div style={{width:38, height:38, padding:5, background:CREAM, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>
+                  <ParentI c={g.color} id={`p-${g.id}`}/>
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:14, fontWeight:800, color:BROWN}}>{g.ru}</div>
+                  <div style={{fontSize:11, color:MUTED, fontWeight:600, marginTop:1}}>{g.subs.length} подкатегорий</div>
+                </div>
+                <span style={{fontSize:18, color:MUTED, transform: isOpen?'rotate(90deg)':'none', transition:'transform .15s'}}>›</span>
+              </button>
+
+              {/* subs grid */}
+              {isOpen && (
+                <div style={{padding:'4px 10px 12px', display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:6}}>
+                  {g.subs.map(s => {
+                    const SI = I[s.icon];
+                    return (
+                      <div key={s.id} style={{
+                        background: g.color + '14',
+                        borderRadius:12, padding:'8px 4px', cursor:'pointer',
+                        display:'flex', flexDirection:'column', alignItems:'center', gap:4,
+                      }}>
+                        <div style={{width:30, height:30, padding:3}}>
+                          <SI c={g.color} id={`s-${s.id}`}/>
+                        </div>
+                        <span style={{fontSize:9, fontWeight:800, color:BROWN, textAlign:'center', lineHeight:1.1}}>{s.ru}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {filteredGroups.length === 0 && (
+          <div style={{textAlign:'center', padding:'40px 20px', color:MUTED, fontSize:14, fontWeight:600}}>Ничего не найдено</div>
+        )}
+      </div>
+      <div style={{position:'absolute', bottom: 8, left:'50%', transform:'translateX(-50%)', width:120, height:4, background:'rgba(0,0,0,.35)', borderRadius:999}}/>
+    </div>
+
+    {/* Side panel — icon library overview */}
+    <div style={{
+      width: 460, padding:28, background:CARD, borderRadius:24,
+      boxShadow:'0 16px 30px rgba(61,44,31,.12)', display:'flex', flexDirection:'column', gap:18,
+    }}>
+      <div>
+        <div style={{fontSize:12, color:MUTED, fontWeight:800, textTransform:'uppercase', letterSpacing:'.08em'}}>Покрытие</div>
+        <div style={{fontSize:34, fontWeight:900, marginTop:4, letterSpacing:'-0.025em'}}>{stats.iconsUsed} <span style={{fontSize:18, color:MUTED}}>/ {stats.iconsTotal} иконок</span></div>
+        <div style={{fontSize:13, color:MUTED, fontWeight:600, marginTop:4}}>{stats.categories} категорий · {stats.subs} подкатегорий</div>
+      </div>
+
+      {/* Full icon set preview */}
+      <div>
+        <div style={{fontSize:11, fontWeight:800, color:MUTED, textTransform:'uppercase', letterSpacing:'.08em', marginBottom:10}}>Все иконки в палитре</div>
+        <div style={{display:'grid', gridTemplateColumns:'repeat(8, 1fr)', gap:8}}>
+          {Object.keys(I).map((key, idx) => {
+            const Ic = I[key];
+            const colors = ['#E07A5F','#81B29A','#F2CC8F','#8AA9D6','#C97B84','#A8B89C','#D4A574','#E9B384'];
+            const c = colors[idx % colors.length];
+            return (
+              <div key={key} style={{aspectRatio:'1', background:CREAM, borderRadius:12, padding:6, display:'flex', alignItems:'center', justifyContent:'center'}}>
+                <Ic c={c} id={`all-${key}`}/>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={{fontSize:11, color:MUTED, fontWeight:600, lineHeight:1.6}}>
+        Sticker-стиль: градиент по цвету категории, тёмная подложка-обводка для глубины, белый блик. Цвет наследуется от родительской категории — поэтому 55 иконок × 12 цветов категорий = 660 валидных комбинаций.
+      </div>
+    </div>
+    </>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

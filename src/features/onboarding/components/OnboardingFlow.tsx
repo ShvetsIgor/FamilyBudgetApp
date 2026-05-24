@@ -112,7 +112,7 @@ export function OnboardingFlow({ onComplete }: Props) {
           <div className="flex flex-col gap-4">
             <div className="text-center">
               <p className="text-4xl mb-3">🌐</p>
-              <h2 className="text-xl font-bold">Выберите язык</h2>
+              <h2 className="text-xl font-bold">{t('onboarding.chooseLanguage')}</h2>
               <p className="text-sm text-muted-foreground mt-1">Choose your language</p>
             </div>
 

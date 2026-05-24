@@ -39,14 +39,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dispatch(setTheme(profile.theme));
         if (profile.weekStart) dispatch(setWeekStart(profile.weekStart));
 
-        // Seed categories if first login, then load
+        // Seed categories/folders if first login, then load all
         await seedDefaultCategories(firebaseUser.uid);
-        const [expenseCats, incomeCats] = await Promise.all([
+        const [expenseCats, incomeCats, expenseFolders, incomeFolders] = await Promise.all([
           fetchCategories(firebaseUser.uid, 'expense'),
           fetchCategories(firebaseUser.uid, 'income'),
+          fetchFolders(firebaseUser.uid, 'expense'),
+          fetchFolders(firebaseUser.uid, 'income'),
         ]);
         dispatch(setCategories({ type: 'expense', categories: expenseCats }));
         dispatch(setCategories({ type: 'income', categories: incomeCats }));
+        dispatch(setFolders({ type: 'expense', folders: expenseFolders }));
+        dispatch(setFolders({ type: 'income', folders: incomeFolders }));
 
       } catch (err) {
         console.error('[AuthProvider] error:', err);

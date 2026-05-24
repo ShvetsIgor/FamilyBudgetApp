@@ -776,7 +776,7 @@ export function CategoriesHub() {
               cursor: 'text',
             }}
           >
-            {cat.name}
+            {t.cat(cat.name)}
           </span>
         )}
 

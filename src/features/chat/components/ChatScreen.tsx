@@ -2,7 +2,7 @@
 
 import { useRef, useEffect } from 'react';
 import { Composer } from './Composer';
-import { C } from '@/features/chat/styles/tokens';
+import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 
 interface ChatScreenProps {
   children: React.ReactNode;

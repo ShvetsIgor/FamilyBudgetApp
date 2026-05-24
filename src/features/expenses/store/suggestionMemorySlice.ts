@@ -85,6 +85,7 @@ function loadFromStorage(): SuggestionMemoryState {
       recents: parsed.recents ?? [],
       splitCombos: parsed.splitCombos ?? [],
       tagAssociations: parsed.tagAssociations ?? [], // backward-compatible default
+      merchantContextStats: parsed.merchantContextStats ?? {},
     };
   } catch {
     return EMPTY;

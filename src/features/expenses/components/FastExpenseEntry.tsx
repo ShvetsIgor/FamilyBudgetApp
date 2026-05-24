@@ -68,7 +68,7 @@ export function FastExpenseEntry({
   const language = useAppSelector((s) => s.ui.language);
   const allCats = useAppSelector((s) => s.categories.expense);
   const memory = useAppSelector((s) => s.suggestionMemory);
-  const { groups: catGroups, getCatsInGroup, getGroupOf } = useCategoryGroups('expense');
+  const { groups: folderGroups, getCatsInGroup } = useCategoryGroups('expense');
   const t = useT();
   const symbol = getCurrencySymbol(currency);
   const isEdit = !!initialExpense;
@@ -83,32 +83,35 @@ export function FastExpenseEntry({
     return n === 1 ? `1 item` : `${n} items`;
   };
 
-  const topCats = useMemo(
-    () => catGroups.filter((g) => g.name !== 'Savings'),
-    [catGroups]
+  // Folders for split picker first level (UI grouping only — never saved as categoryId)
+  const topFolders = useMemo(
+    () => folderGroups.filter((g) => g.name !== 'Savings'),
+    [folderGroups]
   );
 
-  // Active categories for fallback picker when no folders are loaded
-  const activeCats = useMemo(
+  // Real active expense categories — used for main selector, suggestions, and save
+  const activeExpCats = useMemo(
     () => allCats.filter((c) => !c.archived && c.name !== 'Savings'),
     [allCats]
   );
-  const noFolders = topCats.length === 0;
+  const noFolders = topFolders.length === 0;
 
   function initSelectedCatId() {
     if (!initialExpense) {
-      // Use suggestion memory to pick best category if merchant context is available
-      if (initialStore && topCats.length > 0) {
-        const ranked = computeSuggestions({ merchant: initialStore, items: topCats, memory, topN: 1 });
+      // Use suggestion memory to pick best real category if merchant context is available
+      if (initialStore && activeExpCats.length > 0) {
+        const ranked = computeSuggestions({ merchant: initialStore, items: activeExpCats, memory, topN: 1 });
         const topId = ranked[0]?.categoryId;
         if (topId && memory.merchants[initialStore.toLowerCase().trim()]?.length) {
           return topId;
         }
       }
-      return topCats[0]?.id ?? '';
+      return activeExpCats[0]?.id ?? '';
     }
+    // Edit mode: use existing real category ID if it's still active
     const cat = allCats.find((c) => c.id === initialExpense.categoryId);
-    return getGroupOf(cat) || (cat?.id ?? topCats[0]?.id ?? '');
+    if (cat && !cat.archived) return cat.id;
+    return activeExpCats[0]?.id ?? '';
   }
 
   function initSplits(): SplitRow[] {
@@ -119,16 +122,16 @@ export function FastExpenseEntry({
     return source
       .map((sp) => {
         const cat = allCats.find((c) => c.id === sp.categoryId);
-        const groupId = getGroupOf(cat);
-        const groupCat = groupId ? allCats.find((c) => c.id === groupId) : undefined;
         if (!cat) return null;
+        // Look up the folder for display purposes (folder ID is never saved as categoryId)
+        const folder = topFolders.find((f) => f.id === cat.folderId);
         return {
           categoryId: sp.categoryId,
-          groupCatId: groupCat?.id ?? cat.id,
+          groupCatId: folder?.id ?? cat.id,
           name: cat.name,
-          groupName: groupCat?.name ?? cat.name,
+          groupName: folder?.name ?? cat.name,
           icon: cat.icon,
-          color: groupCat?.color ?? cat.color,
+          color: folder?.color ?? cat.color,
           amount: String(sp.amount),
         };
       })

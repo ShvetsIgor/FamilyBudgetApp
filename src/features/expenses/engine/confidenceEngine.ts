@@ -91,7 +91,7 @@ function computeMerchantConfidence(ctx: ParserContext): number {
 }
 
 function computeCategoryConfidence(suggestions: ScoredSuggestion[]): number {
-  if (suggestions.length === 0) return 0;
+  if (suggestions.length === 0) return 0.20;
 
   const top = suggestions[0].score;
   const second = suggestions[1]?.score ?? 0;

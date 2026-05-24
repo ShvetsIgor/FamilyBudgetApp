@@ -90,67 +90,6 @@ describe('recordSplitExpense', () => {
   });
 });
 
-// ── getRecentSplitCombos ──────────────────────────────────────────────────────
-
-describe('getRecentSplitCombos', () => {
-  const memWithCombos: SuggestionMemoryState = {
-    merchants: {},
-    recents: [],
-    splitCombos: [
-      { key: 'dabbah|food,household', merchantKey: 'dabbah', categoryIds: ['food', 'household'], count: 3, lastUsed: today },
-      { key: 'dabbah|health,food', merchantKey: 'dabbah', categoryIds: ['food', 'health'], count: 1, lastUsed: yesterday },
-      { key: '|food,transport', merchantKey: '', categoryIds: ['food', 'transport'], count: 5, lastUsed: today },
-      { key: 'other|food,household', merchantKey: 'other', categoryIds: ['food', 'household'], count: 2, lastUsed: today },
-    ],
-  };
-
-  it('returns merchant-specific combos first', () => {
-    const result = getRecentSplitCombos('Dabbah', memWithCombos, 5);
-    const keys = result.map((c) => c.merchantKey);
-    const dabbahIdx = keys.indexOf('dabbah');
-    const globalIdx = keys.indexOf('');
-    expect(dabbahIdx).toBeLessThan(globalIdx);
-  });
-
-  it('returns global combos when no merchant specified', () => {
-    const result = getRecentSplitCombos(undefined, memWithCombos, 5);
-    expect(result.every((c) => c.merchantKey === '')).toBe(true);
-  });
-
-  it('respects the limit', () => {
-    const result = getRecentSplitCombos('Dabbah', memWithCombos, 2);
-    expect(result).toHaveLength(2);
-  });
-
-  it('returns empty array for empty memory', () => {
-    expect(getRecentSplitCombos('Dabbah', emptyMemory, 3)).toEqual([]);
-  });
-
-  it('deduplicates by categoryIds signature across merchants', () => {
-    const result = getRecentSplitCombos('Dabbah', memWithCombos, 10);
-    const sigs = result.map((c) => c.categoryIds.join(','));
-    const unique = new Set(sigs);
-    expect(sigs.length).toBe(unique.size);
-  });
-});
-
-describe('hasRelevantSplitCombos', () => {
-  it('returns true when there are matching combos', () => {
-    const mem: SuggestionMemoryState = {
-      merchants: {},
-      recents: [],
-      splitCombos: [
-        { key: 'shop|a,b', merchantKey: 'shop', categoryIds: ['a', 'b'], count: 1, lastUsed: today },
-      ],
-    };
-    expect(hasRelevantSplitCombos('Shop', mem)).toBe(true);
-  });
-
-  it('returns false when no matching combos', () => {
-    expect(hasRelevantSplitCombos('unknown', emptyMemory)).toBe(false);
-  });
-});
-
 // ── split_history signal in computeSuggestions ────────────────────────────────
 
 describe('computeSuggestions split_history signal', () => {

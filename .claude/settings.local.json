@@ -57,7 +57,18 @@
       "Bash(read f *)",
       "Bash(awk '{print $9, $5}')",
       "Bash(grep -r '[$./]__TRACKED_VAR__' '--include=*.ts' '--include=*.tsx' src/)",
-      "Bash(xargs -I{} basename {})"
+      "Bash(xargs -I{} basename {})",
+      "Bash(grep -rn \"\\\\${C\\\\.\" \"C:/Users/Shvets/Desktop/FamilyBudgetApp/src/features/chat\" --include=\"*.tsx\" --include=\"*.ts\")",
+      "Bash(mv \"Family Budget Design System\" design-archive/)",
+      "Bash(mv \"Family Budget Design System NEW\" design-archive/)",
+      "Bash(mv \"Family Budget Design System v2\" design-archive/)",
+      "Bash(mv \"Family Budget Design System-desktop-v2\" design-archive/)",
+      "Bash(mv \"Family Budget Design System - CATEGORIES v2\" design-archive/)",
+      "Bash(mv \"HANDOFF.md\" docs/)",
+      "Bash(mv \"HANDOFF1.md\" docs/)",
+      "Bash(mv \"ARCHITECTURE.md\" docs/)",
+      "Bash(mv \"Category Constructor - Claude Code Prompt v2.md\" docs/)",
+      "Bash(mv \"compare_translations.js\" docs/)"
     ]
   },
   "hooks": {

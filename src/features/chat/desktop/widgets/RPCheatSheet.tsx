@@ -11,6 +11,7 @@ const examples = [
 ];
 
 export function RPCheatSheet() {
+  const C = useChatTokens();
   return (
     <RPCard title="КАК ПИСАТЬ" accentColor={C.yellow}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>

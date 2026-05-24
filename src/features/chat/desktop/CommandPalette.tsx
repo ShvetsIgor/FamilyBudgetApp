@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
-import { C } from '@/features/chat/styles/tokens';
+import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { useAppSelector } from '@/store/store';
 
 interface Props { onClose: () => void; }

@@ -101,9 +101,7 @@ export function FastExpenseEntry({
   function initSplits(): SplitRow[] {
     const source = initialExpense?.splits?.length
       ? initialExpense.splits.map((sp: SplitItem) => ({ categoryId: sp.categoryId, amount: sp.amount }))
-      : !initialExpense && draft?.splits?.length
-        ? draft.splits
-        : [];
+      : [];
 
     return source
       .map((sp) => {

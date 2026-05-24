@@ -66,7 +66,7 @@ export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
                 onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
                 className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] hover:bg-muted/80 transition-colors"
               >
-                split {effectiveParts} {expanded ? '▲' : '▼'}
+                сплит · {effectiveParts} {expanded ? '▲' : '▼'}
               </button>
             )}
             <span>·</span>

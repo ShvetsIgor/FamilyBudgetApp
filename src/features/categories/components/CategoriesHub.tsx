@@ -4,6 +4,7 @@ import { useAppSelector, useAppDispatch } from '@/store/store';
 import {
   addCategory, updateCategory, archiveCategory,
   addFolder, updateFolder as updateFolderAction, removeFolder,
+  setCategories, setFolders,
 } from '@/features/categories/store/categoriesSlice';
 import { setBudgetLimit } from '@/features/budget/store/budgetSlice';
 import {

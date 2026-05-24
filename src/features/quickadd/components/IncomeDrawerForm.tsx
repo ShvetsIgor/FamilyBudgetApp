@@ -234,7 +234,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
           onClick={() => dispatch(closeQuickAdd())}
           className="px-4 py-2.5 rounded-xl text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors border border-border"
         >
-          Отмена <kbd className="ml-1 text-[9px] font-mono opacity-50">Esc</kbd>
+          {t('income.numpadCancel')} <kbd className="ml-1 text-[9px] font-mono opacity-50">Esc</kbd>
         </button>
         <button
           onClick={handleSave}

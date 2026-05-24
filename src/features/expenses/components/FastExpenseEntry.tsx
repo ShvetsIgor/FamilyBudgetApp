@@ -403,7 +403,7 @@ export function FastExpenseEntry({
       )}
 
       {/* ── Category grid (main category for leftover) — real categories, never folder IDs ── */}
-      <div className="overflow-x-auto px-3.5 py-1.5 flex-shrink-0 [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
+      <div className="overflow-x-auto px-3.5 py-2 flex-shrink-0 [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
         <div className="grid grid-rows-2 grid-flow-col gap-1.5" style={{ gridAutoColumns: '64px' }}>
           {activeExpCats.map((cat) => {
             const sel = cat.id === selectedCatId;

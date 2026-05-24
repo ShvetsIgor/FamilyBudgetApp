@@ -1108,7 +1108,7 @@ describe('uxBridge', () => {
 
   describe('summarizeUxActions', () => {
     it('canSubmit true for empty state', () => {
-      const session = createSession('Store 100');
+      const session = createSession('');
       const summary = summarizeUxActions(session);
       expect(summary.canSubmit).toBe(true);
       expect(summary.hasHighUrgency).toBe(false);

@@ -23,8 +23,9 @@
  */
 
 import type { ConversationSession } from '../types/conversationSession';
-import type { QuickAddState, QuickAddStatus, ScoredSuggestion } from '@/features/expenses/types/quickAddState';
+import type { QuickAddState, QuickAddStatus } from '@/features/expenses/types/quickAddState';
 import { initialQuickAddState } from '@/features/expenses/types/quickAddState';
+import type { ScoredSuggestion } from '@/features/expenses/engine/suggestionEngine';
 
 // ── Status mapping ────────────────────────────────────────────────────────────
 

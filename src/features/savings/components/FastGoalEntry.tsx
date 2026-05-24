@@ -234,7 +234,7 @@ export function FastGoalEntry() {
           style={{ background: color, boxShadow: `0 12px 24px ${color}60` }}
         >
           <span className="text-lg leading-none">{icon}</span>
-          <span>{saving ? 'Сохранение…' : canSave ? `Создать · ${name} · ${symbol}\u202F${target}` : 'Введите название и сумму'}</span>
+          <span>{saving ? t('savings.numpadSaving') : canSave ? t('savings.numpadCreate', { name, symbol, target }) : t('savings.numpadCreateHint')}</span>
         </button>
       </div>
     </div>

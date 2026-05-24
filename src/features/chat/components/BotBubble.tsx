@@ -58,6 +58,7 @@ export function BotBubble({ text, time, tail = true }: BotBubbleProps) {
 }
 
 export function BotCardBubble({ children, tail = true }: { children: React.ReactNode; tail?: boolean }) {
+  const C = useChatTokens();
   return (
     <div
       className="flex items-end gap-2"

@@ -57,8 +57,8 @@ export interface SplitHint {
  * Structured context produced by the full input pipeline.
  *
  * Consumed by:
- *   - useExpenseInputFlow (orchestration)
  *   - computeSuggestions (ranking — uses merchantKey)
+ *   - parseExpenseInput (chat parser wrapper)
  *   - UI (split hints, confidence signals)
  */
 export interface ParserContext {
@@ -72,62 +72,14 @@ export interface ParserContext {
   merchant: string | undefined;
   /** Normalized merchant key for memory lookup (lowercase + alias-resolved). */
   merchantKey: string | undefined;
-  /**
-   * Tag tokens derived from merchantKey.
-   * Currently a single-element array; ready for multi-token extension.
-   */
+  /** Tag tokens derived from merchantKey. */
   tags: string[];
-  /**
-   * Non-merchant, non-amount text tokens.
-   * Potential item descriptions — useful for split flow pre-population.
-   */
+  /** Non-merchant, non-amount text tokens (potential item descriptions). */
   itemCandidates: string[];
-  /** Transparent confidence signals — fully inspectable, no hidden scoring. */
+  /** Transparent confidence signals — fully inspectable. */
   confidenceSignals: ConfidenceSignal[];
   /** Hints that split flow may be appropriate for this input. */
   splitHints: SplitHint[];
-  /**
-   * Typed semantic fragments extracted by the fragment extractor.
-   * Each fragment carries type, raw/normalized value, confidence, and candidateCategories.
-   * Empty array when input is empty or fragment extraction is unavailable.
-   */
-  fragments: SemanticFragment[];
-  /**
-   * Ambiguity signals prepared for the UX clarification layer.
-   * Empty array when input is unambiguous or fragment extraction is unavailable.
-   */
-  clarificationHints: ClarificationHint[];
-  /**
-   * Semantic phrases extracted from the token sequence before fragment construction.
-   * Intermediate representation: tokens → phrases → fragments.
-   * Empty array when input is empty.
-   */
-  phrases: SemanticPhrase[];
-  /**
-   * Directed semantic edges between fragments produced by the purchase grouper.
-   * Empty array when input is empty or no fragments were extracted.
-   */
-  relationships: FragmentRelationship[];
-  /**
-   * Grouped fragment collections — one group per detected purchase event.
-   * Currently always zero groups (empty input) or one group ('g0').
-   * The array shape supports future multi-purchase / OCR receipt expansion.
-   */
-  purchaseGroups: PurchaseGroup[];
-  /**
-   * Semantic scopes produced by the scope resolver.
-   * Each scope anchors a root phrase (item/payment/merchant) and owns
-   * the modifier and tag phrases that belong to it.
-   * Empty array when input is empty.
-   */
-  scopes: SemanticScope[];
-  /**
-   * Ambiguity signals about modifier ownership from the scope resolver.
-   * Includes orphan_modifier (no scope to attach to) and
-   * ambiguous_modifier_target (equidistant from 2+ scopes).
-   * Empty array when input is unambiguous.
-   */
-  scopeHints: ScopeHint[];
 }
 
 // ── Stage 4: Extract amount ───────────────────────────────────────────────────

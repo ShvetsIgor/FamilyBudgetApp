@@ -13,6 +13,7 @@ export interface MorningCardData {
 }
 
 export function MorningCard({ data }: { data: MorningCardData }) {
+  const C = useChatTokens();
   const t = useT();
   const { yesterdayAmount, yesterdayCatNames, todayFree, currency, hasBudget } = data;
 

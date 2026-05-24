@@ -295,9 +295,11 @@ export function FastExpenseEntry({
       } else {
         const exp = await addExpense(base);
         dispatch(prependExpense(exp));
+        const effectiveCat = activeExpCats.find((c) => c.id === effectiveCatId);
         dispatch(recordExpense({
           merchant: initialStore,
           categoryId: effectiveCatId,
+          folderId: effectiveCat?.folderId,
           date: dateStr,
         }));
         if (splitItems.length > 0) {
@@ -305,6 +307,7 @@ export function FastExpenseEntry({
           dispatch(recordSplitExpense({
             merchant: initialStore,
             categoryIds: allSplitCatIds,
+            folderIds: allSplitCatIds.map((id) => activeExpCats.find((c) => c.id === id)?.folderId),
             date: dateStr,
           }));
           const tags = initialStore ? extractTags(initialStore) : [];

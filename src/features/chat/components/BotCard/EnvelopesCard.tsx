@@ -63,6 +63,7 @@ function EnvelopeRow({ env }: { env: EnvelopeItem }) {
 }
 
 export function EnvelopesCard({ data }: { data: EnvelopesCardData }) {
+  const C = useChatTokens();
   const t = useT();
   const { envelopes, monthLabel } = data;
 

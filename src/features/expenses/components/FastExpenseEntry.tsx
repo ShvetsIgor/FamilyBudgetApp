@@ -689,8 +689,8 @@ export function FastExpenseEntry({
           }}
         >
           <StickerIcon icon={selectedCat?.icon ?? 'box'} color="#fff" className="h-5 w-5" />
-          <span>{saving ? 'Сохранение…' : isEdit ? `Сохранить ${symbol}\u202F${total}` : `Записать чек ${symbol}\u202F${total}`}</span>
-          {!isEdit && <span className="opacity-75 font-bold text-[13px]">· {posCount} {pluralRu(posCount)}</span>}
+          <span>{saving ? t('expense.numpadSaving') : isEdit ? t('expense.numpadSaveEdit', { symbol, total }) : t('expense.numpadSave', { symbol, total })}</span>
+          {!isEdit && <span className="opacity-75 font-bold text-[13px]">· {t('expense.numpadReceiptCount', { count: posCount })}</span>}
         </button>
       </div>
     </div>

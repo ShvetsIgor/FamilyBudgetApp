@@ -8,11 +8,12 @@ import { HelpSheet } from './HelpSheet';
 
 interface ComposerProps {
   onSend: (text: string) => void;
+  onPlus?: () => void;
   disabled?: boolean;
   variant?: 'mobile' | 'desktop';
 }
 
-export function Composer({ onSend, disabled, variant = 'mobile' }: ComposerProps) {
+export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: ComposerProps) {
   const t = useT();
   const [value, setValue] = useState('');
   const [helpOpen, setHelpOpen] = useState(false);

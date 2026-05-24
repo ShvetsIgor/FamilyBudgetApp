@@ -17,13 +17,6 @@ import {
 } from '@/features/expenses/engine/suggestionEngine';
 import { SCORING_POLICY } from '@/features/expenses/engine/scoringPolicy';
 import type { SuggestionMemoryState } from '@/features/expenses/store/suggestionMemorySlice';
-import { configureStore } from '@reduxjs/toolkit';
-import inputSessionReducer, {
-  setSession,
-  advanceStage,
-  markSaved,
-  clearSession,
-} from '@/features/expenses/store/inputSessionSlice';
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 

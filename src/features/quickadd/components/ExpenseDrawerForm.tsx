@@ -118,7 +118,7 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
   }
 
   const today = toDateInput(new Date());
-  const dateLabel = dateStr === today ? 'Сегодня' : format(new Date(dateStr + 'T12:00:00'), 'd MMM yyyy');
+  const dateLabel = dateStr === today ? t('expense.numpadCancel').replace('Cancel', t('expenses.today') || 'Today') : format(new Date(dateStr + 'T12:00:00'), 'd MMM yyyy');
 
   return (
     <div className="flex flex-col h-full">

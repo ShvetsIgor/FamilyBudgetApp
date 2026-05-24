@@ -1197,7 +1197,7 @@ export function CategoriesHub() {
                         <StickerIcon icon={asCat.icon} color={asCat.color} className="h-4 w-4" />
                       </div>
                       <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: T.fg }}>
-                        {libCat.name}
+                        {t.cat(libCat.name)}
                       </span>
                       <button
                         onClick={() => handleActivateFromLibrary(libCat)}

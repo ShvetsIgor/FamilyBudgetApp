@@ -1135,9 +1135,10 @@ export function CategoriesHub() {
               </button>
             )}
           </div>
+          </>
         )}
 
-        {/* Library section */}
+        {/* Standard Library section — collapsed by default, available for activation */}
         {libraryItems.length > 0 && tab === 'expense' && !searchQuery && (
           <div style={{ marginBottom: 8 }}>
             <button

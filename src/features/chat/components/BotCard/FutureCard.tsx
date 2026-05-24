@@ -14,6 +14,7 @@ interface FutureCardProps {
 }
 
 export function FutureCard({ amount, currency, note, dateLabel, onConfirm, onCancel }: FutureCardProps) {
+  const C = useChatTokens();
   const t = useT();
   return (
     <div className="p-3.5">

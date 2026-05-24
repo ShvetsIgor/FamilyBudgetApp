@@ -260,36 +260,36 @@ savingsGoals/{userId}/{goalId}
 monthlyStats/{userId}/{YYYY-MM}
 ```
 
-## Feature Status (2026-05-12)
-- [x] Next.js + TypeScript + Tailwind setup
-- [x] Redux Toolkit store
-- [x] Firebase lazy initialization
-- [x] Auth — email/password + Google sign-in/sign-up
-- [x] ThemeProvider (dark/light + RTL for Hebrew)
-- [x] Header + BottomNav
-- [x] i18n — full coverage en/ru/he, all strings via t() hook
-- [x] PWA manifest + icons + update banner
-- [x] Design system — Nunito font, warm palette, design tokens, category colors
-- [x] Logo — pig logo-mark SVG, wordmark SVG, favicon, PWA icons
-- [x] Categories — tree view, CRUD, color/icon, default seed, reset to defaults
-- [x] Add Expense form + split logic (SplitEditor)
-- [x] Expenses list — grouped by date, search/filter
-- [x] Expense detail + edit
-- [x] Income — add/list, category picker
-- [x] Statistics — pie chart + bar chart, monthly breakdown by category
-- [x] Analytics — trends and insights page
-- [x] Recurring payments — CRUD, upcoming bills on Home + Expenses
-- [x] Savings goals — CRUD, contribute (creates expense), sync on delete
-- [x] Account page — profile, theme, language, currency, family, CSV export
-- [x] Home — quick-add buttons, upcoming bills, recent expenses, real data
-- [x] Onboarding flow
-- [x] Budget feature (service + slice)
-- [x] Family feature (service + slice)
-- [ ] Firebase config (.env.local) — waiting for user
-- [ ] Firestore security rules
-- [ ] Family invite flow (UI)
-- [ ] Push notifications (backend)
-- [ ] Deploy (Vercel)
+## Feature Status (2026-05-24)
+
+### Complete ✅
+- Next.js 15 + TypeScript + Tailwind + Redux Toolkit
+- Firebase lazy init (auth + Firestore offline cache + Storage)
+- Auth — email/password + Google sign-in/sign-up
+- Dark/light theme (CSS variables + useChatTokens hook for chat)
+- RTL support (Hebrew)
+- i18n — full en/ru/he coverage
+- PWA — manifest, icons, service worker, update banner
+- Design system — Nunito font, warm palette, sticker icons (55 SVGs)
+- Categories — folder tree, CRUD, library, presets, reset to defaults
+- Expenses — chat entry, numpad entry, split, edit, delete, undo
+- Income — numpad entry, list, edit, delete
+- Statistics — pie + bar charts, budgets, monthly breakdown
+- Analytics — trends, DOW chart, avg daily by month
+- Recurring payments — CRUD, upcoming bills widget
+- Savings goals — CRUD, contribute (creates expense)
+- Account — profile, theme, language, currency, family, CSV export
+- Conversational home — morning greeting, weekly summary, clarify cards
+- Desktop shell — Sidebar + TopBar + AddDrawer + CommandPalette
+- Error boundaries + 404 page
+- Repository clean — design-archive/, docs/ separated from production
+
+### Pending (blocked on Firebase config)
+- [ ] Firebase `.env.local` — waiting for user to provide credentials
+- [ ] Firestore security rules — write and deploy
+- [ ] Family invite flow UI
+- [ ] Push notifications (backend required)
+- [ ] Deploy to Vercel (ready technically, blocked on Firebase config)
 
 ## Change Log
 - **2026-05-10** — Phase 1 bootstrap: Next.js, Firebase auth, layout system.

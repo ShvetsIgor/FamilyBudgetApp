@@ -1080,7 +1080,7 @@ describe('constructorBridge — resolveConflictFromSession', () => {
     };
     const op = resolveConflictFromSession(session, conflict);
     expect(op.type).toBe('archive_entry');
-    expect(op.payload.conflictKind).toBe('phrase_overlap');
+    expect((op.payload as { entryId: string }).entryId).toBe('entry_b');
   });
 
   it('archives last entry (lower precedence)', () => {

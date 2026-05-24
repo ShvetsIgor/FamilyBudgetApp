@@ -18,8 +18,9 @@ import {
   DEFAULT_EXPENSE_FOLDER_SEEDS,
   DEFAULT_INCOME_FOLDER_SEEDS,
 } from './defaultCategories';
-import { bulkCreateFolders } from './categoryFoldersService';
+import { bulkCreateFolders, fetchFolders } from './categoryFoldersService';
 import { legacyCategoryMap } from '../compat/legacyCategoryMap';
+import { CATEGORY_BLUEPRINTS } from '../preset/categoryPresets';
 
 function colRef(userId: string, type: CategoryType) {
   return collection(getDb(), 'categories', userId, type);

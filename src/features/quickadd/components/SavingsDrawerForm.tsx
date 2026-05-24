@@ -7,6 +7,7 @@ import { updateGoalItem } from '@/features/savings/store/savingsSlice';
 import { addContribution } from '@/features/savings/services/savingsService';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { cn } from '@/shared/utils/cn';
+import { useT } from '@/shared/hooks/useT';
 
 const AMOUNT_PRESETS = [500, 1000, 5000, 10000];
 

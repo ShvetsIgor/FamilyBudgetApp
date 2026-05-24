@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, MessageSquare, Calendar, ChevronLeft, Scissors, ChevronRight } from 'lucide-react';
 import { format, parseISO, isToday, isYesterday } from 'date-fns';
@@ -15,32 +15,12 @@ import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
 import type { Category, SerializableExpense, SplitItem } from '@/shared/types';
 import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
-import { useMemo } from 'react';
 import { recordExpense, recordSplitExpense, recordTagAssociation, extractTags } from '@/features/expenses/store/suggestionMemorySlice';
 import { buildExpenseDraft } from '@/features/expenses/engine/buildExpenseDraft';
-
-interface SplitRow {
-  categoryId: string;
-  groupCatId: string;
-  name: string;
-  groupName: string;
-  icon: string;
-  color: string;
-  amount: string;
-}
+import { useSplitEditor, applyKey, type SplitRow } from '@/features/expenses/hooks/useSplitEditor';
 
 const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫'] as const;
 type NumKey = (typeof NUMPAD_KEYS)[number];
-
-function applyKey(cur: string, key: NumKey): string {
-  if (key === '.') {
-    if (cur.includes('.')) return cur;
-    return cur + '.';
-  }
-  if (key === '⌫') { const s = cur.slice(0, -1); return s === '' ? '0' : s; }
-  if (cur === '0') return String(key);
-  return cur + String(key);
-}
 
 
 interface Props {

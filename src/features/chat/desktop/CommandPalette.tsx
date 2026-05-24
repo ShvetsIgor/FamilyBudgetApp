@@ -7,6 +7,7 @@ import { useAppSelector } from '@/store/store';
 interface Props { onClose: () => void; }
 
 export function CommandPalette({ onClose }: Props) {
+  const C = useChatTokens();
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const expenses = useAppSelector((s) => s.expenses.list ?? []);

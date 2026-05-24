@@ -6,6 +6,7 @@ import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { CommandPalette } from './CommandPalette';
 
 export function DesktopChatHeader() {
+  const C = useChatTokens();
   const [cmdOpen, setCmdOpen] = useState(false);
 
   return (

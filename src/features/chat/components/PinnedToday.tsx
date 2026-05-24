@@ -18,6 +18,7 @@ interface PinnedTodayProps {
 }
 
 export function PinnedToday({ spent, total, currency, dayLabel, budgetMode, onSettings }: PinnedTodayProps) {
+  const C = useChatTokens();
   const t = useT();
   const sym = getCurrencySymbol(currency);
   const left = Math.max(0, total - spent);

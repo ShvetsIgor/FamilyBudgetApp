@@ -198,6 +198,15 @@ const suggestionMemorySlice = createSlice({
         .sort((a, b) => new Date(b.lastUsed).getTime() - new Date(a.lastUsed).getTime())
         .slice(0, MAX_SPLIT_COMBOS);
 
+      // Context stats — record folders for each split category
+      if (merchant && folderIds) {
+        const key = normalizeTag(merchant);
+        if (!state.merchantContextStats[key]) state.merchantContextStats[key] = {};
+        for (const fid of folderIds) {
+          if (fid) state.merchantContextStats[key][fid] = (state.merchantContextStats[key][fid] ?? 0) + 1;
+        }
+      }
+
       saveToStorage(state);
     },
 

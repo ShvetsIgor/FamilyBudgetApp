@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { C } from '@/features/chat/styles/tokens';
+import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { RPCard } from './RPCard';
 import { usePinnedToday } from '../usePinnedToday';
 import { useAppSelector } from '@/store/store';

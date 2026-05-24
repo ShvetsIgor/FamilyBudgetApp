@@ -2,7 +2,7 @@
 import { Search } from 'lucide-react';
 import { useState } from 'react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
-import { C } from '@/features/chat/styles/tokens';
+import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { CommandPalette } from './CommandPalette';
 
 export function DesktopChatHeader() {

@@ -473,15 +473,36 @@ export function FastExpenseEntry({
           );
         })}
 
-        {/* Add split button */}
-        <button
-          onClick={openPicker}
-          className="rounded-[14px] py-2.5 flex items-center justify-center gap-1.5 text-sm font-extrabold transition-all border-2 border-dashed flex-shrink-0"
-          style={{ borderColor: catColor + '77', color: catColor, background: 'transparent' }}
-        >
-          <span className="text-lg leading-none">＋</span>
-          Уточнить позицию
-        </button>
+        {/* Add split button row */}
+        <div className="flex gap-2 flex-shrink-0">
+          <button
+            onClick={openPicker}
+            className="flex-1 rounded-[14px] py-2.5 flex items-center justify-center gap-1.5 text-sm font-extrabold transition-all border-2 border-dashed"
+            style={{ borderColor: catColor + '77', color: catColor, background: 'transparent' }}
+          >
+            <span className="text-lg leading-none">＋</span>
+            Уточнить позицию
+          </button>
+          {splits.length >= 1 && totalNum > 0 && (
+            <button
+              onClick={() => {
+                const count = splits.length + 1;
+                const share = Math.round((totalNum / count) * 100) / 100;
+                const extra = Math.round((totalNum - share * count) * 100) / 100;
+                setSplits((prev) =>
+                  prev.map((s, i) => ({
+                    ...s,
+                    amount: String(i === prev.length - 1 ? share + extra : share),
+                  }))
+                );
+              }}
+              className="rounded-[14px] px-3 py-2.5 text-[11px] font-black transition-all border-2 border-dashed flex-shrink-0"
+              style={{ borderColor: catColor + '55', color: catColor, background: catColor + '0a' }}
+            >
+              ÷{splits.length + 1}
+            </button>
+          )}
+        </div>
 
         {/* Group category picker */}
         {pickerOpen && (

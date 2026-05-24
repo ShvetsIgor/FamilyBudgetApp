@@ -318,7 +318,9 @@
     "amount": "Сумма",
     "numpadSave": "Положить {symbol}{total}",
     "numpadSaving": "Сохранение…",
-    "numpadCancel": "Отмена"
+    "numpadCancel": "Отмена",
+    "numpadCreate": "Создать · {name} · {symbol}{target}",
+    "numpadCreateHint": "Введите название и сумму"
   },
   "categories": {
     "title": "Категории",

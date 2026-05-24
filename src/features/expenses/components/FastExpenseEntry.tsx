@@ -65,6 +65,7 @@ export function FastExpenseEntry({
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
+  const language = useAppSelector((s) => s.ui.language);
   const allCats = useAppSelector((s) => s.categories.expense);
   const memory = useAppSelector((s) => s.suggestionMemory);
   const { groups: catGroups, getCatsInGroup, getGroupOf } = useCategoryGroups('expense');
@@ -72,10 +73,27 @@ export function FastExpenseEntry({
   const symbol = getCurrencySymbol(currency);
   const isEdit = !!initialExpense;
 
+  // Plural receipt count — avoids broken t() key lookup for _one/_few/_many variants
+  const fmtCount = (n: number) => {
+    if (language === 'ru') {
+      if (n === 1) return `1 позиция`;
+      if (n >= 2 && n <= 4) return `${n} позиции`;
+      return `${n} позиций`;
+    }
+    return n === 1 ? `1 item` : `${n} items`;
+  };
+
   const topCats = useMemo(
     () => catGroups.filter((g) => g.name !== 'Savings'),
     [catGroups]
   );
+
+  // Active categories for fallback picker when no folders are loaded
+  const activeCats = useMemo(
+    () => allCats.filter((c) => !c.archived && c.name !== 'Savings'),
+    [allCats]
+  );
+  const noFolders = topCats.length === 0;
 
   function initSelectedCatId() {
     if (!initialExpense) {

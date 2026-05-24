@@ -6,6 +6,7 @@ import { usePinnedToday } from '../usePinnedToday';
 import { useAppSelector } from '@/store/store';
 
 export function RPToday() {
+  const C = useChatTokens();
   const { spent, left, pct, dailyLimit } = usePinnedToday();
   const currency = useAppSelector((s) => s.ui.currency);
   const sym = currency === 'ILS' ? '₪' : currency === 'USD' ? '$' : '€';

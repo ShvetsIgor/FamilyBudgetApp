@@ -71,6 +71,7 @@ const EMPTY: SuggestionMemoryState = {
   recents: [],
   splitCombos: [],
   tagAssociations: [],
+  merchantContextStats: {},
 };
 
 function loadFromStorage(): SuggestionMemoryState {

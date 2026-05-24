@@ -526,7 +526,7 @@ export function FastExpenseEntry({
                 {pickerGroupId ? t.cat(pickerGroupFolder?.name ?? '') : 'Разделы'}
               </div>
               <button
-                onClick={() => { setPickerOpen(false); setPickerGroupId(null); }}
+                onClick={() => closePicker()}
                 className="ml-auto text-muted-foreground hover:text-foreground"
               >
                 <X size={13} />

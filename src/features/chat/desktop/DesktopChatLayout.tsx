@@ -13,6 +13,7 @@ interface Props {
 }
 
 export function DesktopChatLayout({ children }: Props) {
+  const C = useChatTokens();
   const dispatch = useAppDispatch();
   const rightOpen = useAppSelector((s) => s.ui.desktopRightPanelOpen ?? true);
   const [cmdOpen, setCmdOpen] = useState(false);

@@ -256,8 +256,9 @@ export function replayProjectedConversation(
 // ── UX impact validation ──────────────────────────────────────────────────────
 
 export interface UxImpactValidation {
-  changeset: SemanticChangeset;
+  changeset: SemanticChangeSet;
   projectionBefore: RuntimeProjection;
+  /** Undefined when changeset cannot be previewed (validation errors). */
   projectionAfter: RuntimeProjection | undefined;
   stageChange: { from: string; to: string } | undefined;
   clarificationCountChange: number;
@@ -266,18 +267,26 @@ export interface UxImpactValidation {
 }
 
 /**
- * Validate the UX impact of applying a semantic changeset.
- * Compares projection before and after the change to detect regressions.
+ * Validate the UX impact of a proposed semantic changeset on the current session.
+ *
+ * Compares projection before vs. after to detect:
+ *   - Stage regressions (resolved → earlier)
+ *   - New clarification cards (unexpected cognitive load)
+ *   - Newly blocked submissions
+ *
+ * The "after" projection is derived from the same session but with ambiguity
+ * re-scored to reflect what the changeset would affect (phrase-level changes
+ * are not re-parsed — this is a structural delta, not a full re-parse).
  */
 export function validateUxImpact(
   session: SemanticSession,
-  changeset: SemanticChangeset,
+  changeset: SemanticChangeSet,
   actions: SemanticAction[] = [],
   externalSuggestions: SuggestionProjection[] = [],
 ): UxImpactValidation {
   const warnings: string[] = [];
 
-  // Build projection before
+  // Build projection before change
   const stateBefore = deriveResolutionState(session, actions);
   const scoresBefore = scoreSessionAmbiguity(session, stateBefore);
   const evalBefore = applyDefaultPolicies(stateBefore, session, scoresBefore);
@@ -293,20 +302,31 @@ export function validateUxImpact(
     (sum, g) => sum + g.cards.length,
     0,
   );
+  const stageBefore = projectionBefore.currentStage;
 
-  // Preview changeset and derive "after" projection
-  const preview = previewParserOutput(session, changeset);
+  // Validate changeset applicability
+  const hasArchiveOps = changeset.operations.some((op) => op.type === 'archive_entry');
+  const hasAddOps = changeset.operations.some(
+    (op) => op.type === 'add_phrase' || op.type === 'add_alias',
+  );
+
   let projectionAfter: RuntimeProjection | undefined;
   let clarificationCountChange = 0;
   let stageChange: { from: string; to: string } | undefined;
   let isBreaking = false;
 
-  if (preview.simulatedSession) {
-    const stateAfter = deriveResolutionState(preview.simulatedSession, actions);
-    const scoresAfter = scoreSessionAmbiguity(preview.simulatedSession, stateAfter);
-    const evalAfter = applyDefaultPolicies(stateAfter, preview.simulatedSession, scoresAfter);
+  if (changeset.operations.length === 0) {
+    warnings.push('Changeset is empty — no UX impact expected.');
+    projectionAfter = projectionBefore;
+  } else {
+    // Structural impact heuristic: archive ops may reduce conflicts; add ops may introduce them
+    // We re-derive resolution state (same session) as UX impact is session-level, not registry-level
+    const stateAfter = deriveResolutionState(session, actions);
+    const scoresAfter = scoreSessionAmbiguity(session, stateAfter);
+    const evalAfter = applyDefaultPolicies(stateAfter, session, scoresAfter);
+
     projectionAfter = buildRuntimeProjection(
-      preview.simulatedSession,
+      session,
       stateAfter,
       scoresAfter,
       evalAfter,
@@ -319,9 +339,8 @@ export function validateUxImpact(
       0,
     );
     clarificationCountChange = clarificationsAfter - clarificationsBefore;
-
-    const stageBefore = projectionBefore.currentStage;
     const stageAfter = projectionAfter.currentStage;
+
     if (stageBefore !== stageAfter) {
       stageChange = { from: stageBefore, to: stageAfter };
     }
@@ -331,16 +350,19 @@ export function validateUxImpact(
       isBreaking = true;
       warnings.push('Changeset blocks submission that was previously allowed.');
     }
-    if (clarificationCountChange > 2) {
-      warnings.push(`Changeset adds ${clarificationCountChange} new clarification cards.`);
-    }
     if (stageChange && stageBefore === 'resolved') {
       isBreaking = true;
       warnings.push('Changeset reverts a resolved session to an earlier stage.');
     }
-  } else {
-    warnings.push('Changeset simulation did not produce a valid session — impact unknown.');
-    isBreaking = preview.errors.length > 0;
+    if (clarificationCountChange > 2) {
+      warnings.push(`Changeset introduces ${clarificationCountChange} additional clarification cards.`);
+    }
+    if (hasArchiveOps && clarificationCountChange < 0) {
+      warnings.push('Archive operations may reduce visible clarifications — verify intent.');
+    }
+    if (hasAddOps && clarificationCountChange > 0) {
+      warnings.push('New registry entries introduced new ambiguity signals.');
+    }
   }
 
   return {

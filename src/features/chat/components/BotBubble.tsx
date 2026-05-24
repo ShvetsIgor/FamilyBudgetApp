@@ -29,6 +29,7 @@ function BotAvatar({ visible = true }: { visible?: boolean }) {
 export { BotAvatar };
 
 export function BotBubble({ text, time, tail = true }: BotBubbleProps) {
+  const C = useChatTokens();
   return (
     <div
       className="flex items-end gap-2"

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { parseISO, differenceInDays } from 'date-fns';
 
 export function RPBills() {
+  const C = useChatTokens();
   const recurring = useAppSelector((s) => s.recurring?.list ?? []);
   const currency = useAppSelector((s) => s.ui.currency);
   const sym = currency === 'ILS' ? '₪' : currency === 'USD' ? '$' : '€';

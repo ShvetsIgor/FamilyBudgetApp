@@ -80,7 +80,11 @@ export interface Category {
   order: number;
   type: CategoryType;
   archived?: boolean;
-  tags?: string[];  // contextual search hints; not semantic categories
+  tags?: string[];      // contextual search hints; not semantic categories
+  aliases?: string[];   // alternate names / store names for matching
+  keywords?: string[];  // item-level hints (e.g. "milk", "bread")
+  usageCount?: number;  // times this category has been used
+  lastUsedAt?: string;  // ISO-8601 date of last use
 }
 
 // ─── Expense ─────────────────────────────────────────────────────────────────

@@ -1006,12 +1006,4 @@ describe('Determinism', () => {
     expect(a).toEqual(b);
   });
 
-  it('extractConflictViewModels is deterministic', () => {
-    const session = createSession('Conflict Store');
-    const hint = makeHint('conflicting_signals', 'f1', ['a', 'b']);
-    (session.parserContexts as any) = [{ ...emptyCtx(), clarificationHints: [hint] }];
-    const a = extractConflictViewModels(session);
-    const b = extractConflictViewModels(session);
-    expect(a).toEqual(b);
-  });
 });

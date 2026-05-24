@@ -271,11 +271,11 @@ export function FastExpenseEntry({
         dispatch(prependExpense(exp));
         dispatch(recordExpense({
           merchant: initialStore,
-          categoryId: selectedCatId,
+          categoryId: effectiveCatId,
           date: dateStr,
         }));
         if (splitItems.length > 0) {
-          const allSplitCatIds = [selectedCatId, ...splitItems.map((s) => s.categoryId)];
+          const allSplitCatIds = [effectiveCatId, ...splitItems.map((s) => s.categoryId)];
           dispatch(recordSplitExpense({
             merchant: initialStore,
             categoryIds: allSplitCatIds,

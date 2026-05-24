@@ -40,7 +40,9 @@
     "numpadTotal": "סה״כ",
     "numpadSave": "שמור קבלה {symbol}{total}",
     "numpadSaveEdit": "שמור {symbol}{total}",
-    "numpadSaving": "שומר…"
+    "numpadSaving": "שומר…",
+    "numpadCancel": "ביטול",
+    "numpadPos": "{count} פריט."
   },
   "stats": {
     "title": "סטטיסטיקה",

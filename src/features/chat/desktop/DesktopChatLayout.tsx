@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setDesktopRightPanelOpen } from '@/features/ui/store/uiSlice';
-import { C } from '@/features/chat/styles/tokens';
+import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { DesktopChatHeader } from './DesktopChatHeader';
 import { RightPanel } from './RightPanel';
 import { ChevronLeft, ChevronRight } from 'lucide-react';

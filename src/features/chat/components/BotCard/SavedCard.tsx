@@ -1,7 +1,7 @@
 'use client';
 
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
-import { C } from '@/features/chat/styles/tokens';
+import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 
 interface SavedCardProps {
   icon: string;

@@ -532,7 +532,9 @@ export function FastExpenseEntry({
             style={{ borderColor: catColor + '77', color: catColor, background: 'transparent' }}
           >
             <span className="text-lg leading-none">＋</span>
-            Уточнить позицию
+            {shouldSuggestSplit && splits.length === 0
+              ? 'Разбить на позиции'
+              : 'Уточнить позицию'}
           </button>
           {splits.length >= 1 && totalNum > 0 && (
             <button

@@ -334,7 +334,7 @@ export function FastExpenseEntry({
             ? t('expense.numpadEdit')
             : fromChat && initialStore
               ? t('expense.numpadReceipt', { store: initialStore })
-              : t('expense.numpadReceiptCount', { count: splits.length + 1 })}
+              : fmtCount(splits.length + 1)}
         </div>
         <div className="w-8" />
       </div>

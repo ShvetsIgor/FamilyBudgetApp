@@ -6,11 +6,12 @@ interface Props {
   folders: WizardFolder[];
   categories: WizardCategory[];
   onFinish: () => void;
+  onQuickAdd?: () => void; // optional: navigate to quick add / home
   currency: string;
   locale?: string;
 }
 
-export function StepDone({ folders, categories, onFinish, currency, locale = 'ru' }: Props) {
+export function StepDone({ folders, categories, onFinish, onQuickAdd, currency, locale = 'ru' }: Props) {
   const enabledFolderIds = new Set(folders.map((f) => f.id));
   const totalCategories = categories.filter(
     (c) => c.enabled && enabledFolderIds.has(c.folderId)
@@ -26,7 +27,7 @@ export function StepDone({ folders, categories, onFinish, currency, locale = 'ru
         </div>
         <h2 className="text-2xl font-bold text-[#3D2C1F] mb-1">Всё готово!</h2>
         <p className="text-sm text-[#8E7A66] max-w-xs">
-          Можно начинать отслеживать бюджет. Категории всегда можно изменить в настройках.
+          Категории настроены. Начните добавлять расходы прямо сейчас.
         </p>
       </div>
 
@@ -79,12 +80,23 @@ export function StepDone({ folders, categories, onFinish, currency, locale = 'ru
         })}
       </div>
 
-      <button
-        onClick={onFinish}
-        className="w-full rounded-2xl bg-[#E07A5F] py-4 text-base font-bold text-white hover:bg-[#C9684E] transition-colors"
-      >
-        Начать вести бюджет
-      </button>
+      {/* CTAs */}
+      <div className="space-y-3 pb-2">
+        <button
+          onClick={onFinish}
+          className="w-full rounded-2xl bg-[#E07A5F] py-4 text-base font-bold text-white hover:bg-[#C9684E] transition-colors"
+        >
+          Начать вести бюджет
+        </button>
+        {onQuickAdd && (
+          <button
+            onClick={() => { onFinish(); onQuickAdd(); }}
+            className="w-full rounded-2xl border-2 border-[#E07A5F] py-3.5 text-sm font-semibold text-[#E07A5F] hover:bg-[#FAEAE2] transition-colors"
+          >
+            Добавить первый расход
+          </button>
+        )}
+      </div>
     </div>
   );
 }

@@ -16,6 +16,7 @@ interface SavedCardProps {
 }
 
 export function SavedCard({ icon, color, title, hint, amount, currency, isIncome, alert, onUndo }: SavedCardProps) {
+  const C = useChatTokens();
   const badgeColor = isIncome ? '#10b981' : C.sage;
   const amountColor = isIncome ? '#10b981' : C.fg;
 

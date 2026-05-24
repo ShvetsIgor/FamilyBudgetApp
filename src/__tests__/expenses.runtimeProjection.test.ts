@@ -696,7 +696,7 @@ describe('splitReviewOrchestrator', () => {
 
 describe('actionSuggester', () => {
   it('returns accept_suggestion when nothing pending', () => {
-    const session = createSession('user1', 'SuperMarket 150');
+    const session = createSession('SuperMarket 150');
     const state = emptyResolutionState();
     const evalResult = emptyEvalResult();
     const scores = makeScoreReport(0);
@@ -707,7 +707,7 @@ describe('actionSuggester', () => {
   });
 
   it('resolve_merchant has high urgency for conflicting_signals', () => {
-    const session = createSession('user1', 'Apple Store');
+    const session = createSession('Apple Store');
     const hint = makeHint('conflicting_signals', 'f1', []);
     (session.parserContexts as any) = [{ ...emptyCtx(), clarificationHints: [hint] }];
     const state: ResolutionState = { ...emptyResolutionState(), unresolvedHints: ['f1'] };
@@ -720,7 +720,7 @@ describe('actionSuggester', () => {
   });
 
   it('retry_parse suggested when blocked resolutions exist', () => {
-    const session = createSession('user1', 'Store 200');
+    const session = createSession('Store 200');
     const state: ResolutionState = { ...emptyResolutionState(), blockedResolutions: ['g1'] };
     const evalResult = emptyEvalResult();
     const scores = makeScoreReport(50);
@@ -731,7 +731,7 @@ describe('actionSuggester', () => {
   });
 
   it('confirm_split suggested for split groups with ask decision', () => {
-    const session = createSession('user1', 'Market 300');
+    const session = createSession('Market 300');
     (session.pendingGroups as any) = [makeGroup('g1', true)];
     const state: ResolutionState = { ...emptyResolutionState(), pendingGroups: ['g1'] };
     const evalResult = {
@@ -746,7 +746,7 @@ describe('actionSuggester', () => {
   });
 
   it('accept_suggestion when all decisions are auto_resolve', () => {
-    const session = createSession('user1', 'Grocery 100');
+    const session = createSession('Grocery 100');
     const state = emptyResolutionState();
     const evalResult = {
       ...emptyEvalResult(),
@@ -759,7 +759,7 @@ describe('actionSuggester', () => {
   });
 
   it('suggestNextAction returns first suggestion', () => {
-    const session = createSession('user1', 'Conflict Store');
+    const session = createSession('Conflict Store');
     const hint = makeHint('conflicting_signals', 'f1', []);
     (session.parserContexts as any) = [{ ...emptyCtx(), clarificationHints: [hint] }];
     const state: ResolutionState = { ...emptyResolutionState(), unresolvedHints: ['f1'] };
@@ -772,7 +772,7 @@ describe('actionSuggester', () => {
 
   it('suggestNextAction returns undefined when nothing to suggest (empty list)', () => {
     // Nothing pending + no auto_resolve decisions → still returns save suggestion
-    const session = createSession('user1', '');
+    const session = createSession('');
     const state = emptyResolutionState();
     const evalResult = emptyEvalResult();
     const scores = makeScoreReport(0);
@@ -783,7 +783,7 @@ describe('actionSuggester', () => {
 
   describe('filterSuggestionsByUrgency / filterSuggestionsByType', () => {
     it('filters by urgency', () => {
-      const session = createSession('user1', 'Store 100');
+      const session = createSession('Store 100');
       const state: ResolutionState = { ...emptyResolutionState(), blockedResolutions: ['g1'] };
       const evalResult = emptyEvalResult();
       const scores = makeScoreReport(50);
@@ -793,7 +793,7 @@ describe('actionSuggester', () => {
     });
 
     it('filters by type', () => {
-      const session = createSession('user1', 'Store 100');
+      const session = createSession('Store 100');
       const state: ResolutionState = { ...emptyResolutionState(), blockedResolutions: ['g1'] };
       const evalResult = emptyEvalResult();
       const scores = makeScoreReport(50);
@@ -804,7 +804,7 @@ describe('actionSuggester', () => {
   });
 
   it('suggestion IDs are unique across calls', () => {
-    const session = createSession('user1', '');
+    const session = createSession('');
     const state = emptyResolutionState();
     const evalResult = emptyEvalResult();
     const scores = makeScoreReport(0);
@@ -823,33 +823,33 @@ describe('actionSuggester', () => {
 describe('projectionEngine', () => {
   describe('deriveProjectionStage', () => {
     it('returns resolved when session.status === resolved', () => {
-      const session = createSession('user1', '');
+      const session = createSession('');
       (session as any).status = 'resolved';
       const state = emptyResolutionState();
       expect(deriveProjectionStage(session, state)).toBe('resolved');
     });
 
     it('returns resolved when session.status === cancelled', () => {
-      const session = createSession('user1', '');
+      const session = createSession('');
       (session as any).status = 'cancelled';
       const state = emptyResolutionState();
       expect(deriveProjectionStage(session, state)).toBe('resolved');
     });
 
     it('returns clarification when unresolvedHints exist', () => {
-      const session = createSession('user1', 'Store 100');
+      const session = createSession('Store 100');
       const state: ResolutionState = { ...emptyResolutionState(), unresolvedHints: ['h1'] };
       expect(deriveProjectionStage(session, state)).toBe('clarification');
     });
 
     it('returns input when nothing is present', () => {
-      const session = createSession('user1', '');
+      const session = createSession('');
       const state = emptyResolutionState();
       expect(deriveProjectionStage(session, state)).toBe('input');
     });
 
     it('returns review when pendingGroups exist but no hints or split', () => {
-      const session = createSession('user1', 'Store 100');
+      const session = createSession('Store 100');
       (session.pendingGroups as any) = [makeGroup('g1', false)];
       const state: ResolutionState = { ...emptyResolutionState(), pendingGroups: ['g1'] };
       expect(deriveProjectionStage(session, state)).toBe('review');
@@ -876,7 +876,7 @@ describe('projectionEngine', () => {
 
   describe('buildRuntimeProjection', () => {
     it('produces a valid RuntimeProjection shape', () => {
-      const session = createSession('user1', 'SuperMarket 150');
+      const session = createSession('SuperMarket 150');
       const state = buildInitialResolutionState(session);
       const scores = scoreSessionAmbiguity(session, state);
       const evalResult = applyDefaultPolicies(state, session, scores);
@@ -891,7 +891,7 @@ describe('projectionEngine', () => {
     });
 
     it('canSubmit false when unresolvedHints exist', () => {
-      const session = createSession('user1', 'Store 200');
+      const session = createSession('Store 200');
       const state: ResolutionState = { ...emptyResolutionState(), unresolvedHints: ['h1'] };
       const scores = scoreSessionAmbiguity(session, state);
       const evalResult = applyDefaultPolicies(state, session, scores);
@@ -900,7 +900,7 @@ describe('projectionEngine', () => {
     });
 
     it('canSubmit true when everything resolved', () => {
-      const session = createSession('user1', 'Store 100');
+      const session = createSession('Store 100');
       const state = emptyResolutionState();
       const scores = scoreSessionAmbiguity(session, state);
       const evalResult = applyDefaultPolicies(state, session, scores);
@@ -909,7 +909,7 @@ describe('projectionEngine', () => {
     });
 
     it('canSubmit false when session.status === cancelled', () => {
-      const session = createSession('user1', '');
+      const session = createSession('');
       (session as any).status = 'cancelled';
       const state = emptyResolutionState();
       const scores = scoreSessionAmbiguity(session, state);
@@ -919,7 +919,7 @@ describe('projectionEngine', () => {
     });
 
     it('externalSuggestions passed to visibleSuggestions', () => {
-      const session = createSession('user1', 'Store');
+      const session = createSession('Store');
       const state = emptyResolutionState();
       const scores = scoreSessionAmbiguity(session, state);
       const evalResult = applyDefaultPolicies(state, session, scores);
@@ -932,7 +932,7 @@ describe('projectionEngine', () => {
     });
 
     it('deterministic — same inputs same output', () => {
-      const session = createSession('user1', 'Grocery 300');
+      const session = createSession('Grocery 300');
       const state = buildInitialResolutionState(session);
       const scores = scoreSessionAmbiguity(session, state);
       const evalResult = applyDefaultPolicies(state, session, scores);
@@ -947,7 +947,7 @@ describe('projectionEngine', () => {
 
   describe('derived helpers', () => {
     it('requiresUserInteraction true when clarifications present', () => {
-      const session = createSession('user1', 'Store 100');
+      const session = createSession('Store 100');
       const hint = makeHint('unknown_merchant', 'f1', []);
       (session.parserContexts as any) = [{ ...emptyCtx(), clarificationHints: [hint] }];
       const state: ResolutionState = { ...emptyResolutionState(), unresolvedHints: ['f1'] };
@@ -958,7 +958,7 @@ describe('projectionEngine', () => {
     });
 
     it('countTotalVisibleCards sums all cards', () => {
-      const session = createSession('user1', 'Store 200');
+      const session = createSession('Store 200');
       const hints = [
         makeHint('unknown_merchant', 'f1', []),
         makeHint('conflicting_signals', 'f2', []),
@@ -977,7 +977,7 @@ describe('projectionEngine', () => {
     });
 
     it('isSplitReviewComplete returns true when no splitReview', () => {
-      const session = createSession('user1', 'Store');
+      const session = createSession('Store');
       const state = emptyResolutionState();
       const scores = scoreSessionAmbiguity(session, state);
       const evalResult = applyDefaultPolicies(state, session, scores);
@@ -994,7 +994,7 @@ describe('projectionEngine', () => {
 describe('uxBridge', () => {
   describe('openSessionProjection', () => {
     it('returns snapshot with all required fields', () => {
-      const session = createSession('user1', 'SuperMarket 200');
+      const session = createSession('SuperMarket 200');
       const snap = openSessionProjection(session);
       expect(snap.sessionId).toBe(session.id);
       expect(snap.projection).toBeDefined();
@@ -1004,13 +1004,13 @@ describe('uxBridge', () => {
     });
 
     it('projection currentStage is input for empty session', () => {
-      const session = createSession('user1', '');
+      const session = createSession('');
       const snap = openSessionProjection(session);
       expect(snap.projection.currentStage).toBe('input');
     });
 
     it('canSubmit true for clean session with no pending', () => {
-      const session = createSession('user1', 'Store 100');
+      const session = createSession('');
       const snap = openSessionProjection(session);
       expect(snap.projection.canSubmit).toBe(true);
     });
@@ -1018,7 +1018,7 @@ describe('uxBridge', () => {
 
   describe('inspectGroupedAmbiguities', () => {
     it('returns empty result for clean session', () => {
-      const session = createSession('user1', 'Store 100');
+      const session = createSession('Store 100');
       const result = inspectGroupedAmbiguities(session);
       expect(result.groups).toHaveLength(0);
       expect(result.totalCards).toBe(0);
@@ -1027,7 +1027,7 @@ describe('uxBridge', () => {
     });
 
     it('returns groups when hints need clarification', () => {
-      const session = createSession('user1', 'Unknown Store 150');
+      const session = createSession('Unknown Store 150');
       const hint = makeHint('unknown_merchant', 'f1', []);
       (session.parserContexts as any) = [{ ...emptyCtx(), clarificationHints: [hint] }];
       // Mark as needing user action via manual injection
@@ -1040,13 +1040,13 @@ describe('uxBridge', () => {
 
   describe('extractConflictViewModels', () => {
     it('returns empty for session without clarification hints', () => {
-      const session = createSession('user1', 'Store');
+      const session = createSession('Store');
       const conflicts = extractConflictViewModels(session);
       expect(conflicts).toHaveLength(0);
     });
 
     it('returns conflict VM for conflicting_signals hint', () => {
-      const session = createSession('user1', 'Conflict Store');
+      const session = createSession('Conflict Store');
       const hint = makeHint('conflicting_signals', 'f1', ['merchant_a', 'merchant_b']);
       (session.parserContexts as any) = [{ ...emptyCtx(), clarificationHints: [hint] }];
       const conflicts = extractConflictViewModels(session);
@@ -1056,7 +1056,7 @@ describe('uxBridge', () => {
     });
 
     it('non-conflict hints not included', () => {
-      const session = createSession('user1', 'Store');
+      const session = createSession('Store');
       const hints = [
         makeHint('unknown_merchant', 'f1', []),
         makeHint('conflicting_signals', 'f2', ['a', 'b']),
@@ -1070,7 +1070,7 @@ describe('uxBridge', () => {
 
   describe('previewCorrectionApproval', () => {
     it('returns approved false for unknown correctionId', () => {
-      const session = createSession('user1', 'Store');
+      const session = createSession('Store');
       const result = previewCorrectionApproval(session, 'nonexistent_id');
       expect(result.approved).toBe(false);
       expect(result.projectionAfter).toBeUndefined();
@@ -1079,7 +1079,7 @@ describe('uxBridge', () => {
 
   describe('replayProjectedConversation', () => {
     it('returns empty steps for no actions', () => {
-      const session = createSession('user1', 'Store 100');
+      const session = createSession('Store 100');
       const replay = replayProjectedConversation(session, [], DEFAULT_POLICIES);
       expect(replay.steps).toHaveLength(0);
       expect(replay.totalSteps).toBe(0);
@@ -1088,7 +1088,7 @@ describe('uxBridge', () => {
     });
 
     it('step count matches action count', () => {
-      const session = createSession('user1', 'Store 100');
+      const session = createSession('Store 100');
       const actions = [
         {
           id: 'act_1',
@@ -1108,7 +1108,7 @@ describe('uxBridge', () => {
 
   describe('summarizeUxActions', () => {
     it('canSubmit true for empty state', () => {
-      const session = createSession('user1', 'Store 100');
+      const session = createSession('Store 100');
       const summary = summarizeUxActions(session);
       expect(summary.canSubmit).toBe(true);
       expect(summary.hasHighUrgency).toBe(false);
@@ -1116,7 +1116,7 @@ describe('uxBridge', () => {
     });
 
     it('hasHighUrgency true when conflicting_signals unresolved', () => {
-      const session = createSession('user1', 'Conflict Store 200');
+      const session = createSession('Conflict Store 200');
       const hint = makeHint('conflicting_signals', 'f1', []);
       (session.parserContexts as any) = [{ ...emptyCtx(), clarificationHints: [hint] }];
       // Inject state manually by creating a session with unresolved hints
@@ -1127,7 +1127,7 @@ describe('uxBridge', () => {
     });
 
     it('hasBlockedItems true when blocked resolutions exist', () => {
-      const session = createSession('user1', 'Store');
+      const session = createSession('Store');
       // Can't inject state directly — summarizeUxActions uses deriveResolutionState internally
       // Verify function returns correct shape
       const summary = summarizeUxActions(session);
@@ -1138,7 +1138,7 @@ describe('uxBridge', () => {
 
   describe('validateUxImpact', () => {
     it('returns isBreaking false and no warnings for empty changeset', () => {
-      const session = createSession('user1', 'Store 100');
+      const session = createSession('Store 100');
       const changeset = { id: 'cs_1', description: 'test', operations: [] };
       const result = validateUxImpact(session, changeset as any);
       expect(result.isBreaking).toBe(false);
@@ -1147,7 +1147,7 @@ describe('uxBridge', () => {
     });
 
     it('projectionBefore matches what openSessionProjection returns', () => {
-      const session = createSession('user1', 'Store 100');
+      const session = createSession('Store 100');
       const snap = openSessionProjection(session);
       const changeset = { id: 'cs_1', description: 'test', operations: [] };
       const result = validateUxImpact(session, changeset as any);
@@ -1164,7 +1164,7 @@ describe('uxBridge', () => {
 describe('Determinism', () => {
   it('openSessionProjection is deterministic for same session', () => {
     resetSuggestionIds();
-    const session = createSession('user1', 'Grocery 200');
+    const session = createSession('Grocery 200');
     const a = openSessionProjection(session);
     resetSuggestionIds();
     const b = openSessionProjection(session);
@@ -1199,7 +1199,7 @@ describe('Determinism', () => {
   });
 
   it('extractConflictViewModels is deterministic', () => {
-    const session = createSession('user1', 'Conflict Store');
+    const session = createSession('Conflict Store');
     const hint = makeHint('conflicting_signals', 'f1', ['a', 'b']);
     (session.parserContexts as any) = [{ ...emptyCtx(), clarificationHints: [hint] }];
     const a = extractConflictViewModels(session);

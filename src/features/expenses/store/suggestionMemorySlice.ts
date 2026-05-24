@@ -262,6 +262,7 @@ const suggestionMemorySlice = createSlice({
       state.recents = [];
       state.splitCombos = [];
       state.tagAssociations = [];
+      state.merchantContextStats = {};
       saveToStorage(state);
     },
   },

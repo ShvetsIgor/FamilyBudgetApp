@@ -35,6 +35,7 @@ import {
 } from '../store/selectors';
 import { filterCategoriesByQuery } from '../utils/tagUtils';
 import { CATEGORY_ALIAS_MAP } from '../config/categoryLabels';
+import { useT } from '@/shared/hooks/useT';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {

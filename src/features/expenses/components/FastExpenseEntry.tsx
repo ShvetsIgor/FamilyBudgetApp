@@ -262,8 +262,6 @@ export function FastExpenseEntry({
             }
           }
         }
-        dispatch(clearDraft());
-
         if (fromChat) {
           // Add bot "split saved" message to chat
           const { addMessage } = await import('@/features/chat/services/messagesService');

@@ -38,9 +38,9 @@ function memberInitial(name?: string | null, email?: string | null): string {
   return name?.[0]?.toUpperCase() ?? email?.[0]?.toUpperCase() ?? '?';
 }
 
-const MEMBER_COLORS = [C.primary, C.sage, C.lavender, C.caramel, C.blueSoft];
-
 export function MenuOverlay({ onClose }: MenuOverlayProps) {
+  const C = useChatTokens();
+  const MEMBER_COLORS = [C.primary, C.sage, C.lavender, C.caramel, C.blueSoft];
   const t = useT();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);

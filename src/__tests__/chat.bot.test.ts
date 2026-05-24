@@ -61,7 +61,7 @@ function makeCtx(overrides: Partial<BotContext> = {}): BotContext {
   folders.forEach((f) => foldersById.set(f.id, f));
 
   const incomeCats: Category[] = [
-    { id: 'salary', name: 'Зарплата', icon: 'briefcase', color: '#81B29A', type: 'income', isPrivate: false, order: 0 },
+    { id: 'salary', userId: 'u1', name: 'Зарплата', icon: 'briefcase', color: '#81B29A', type: 'income', isPrivate: false, order: 0 },
   ];
   const incomeMap = new Map<string, Category>();
   incomeCats.forEach((c) => incomeMap.set(c.id, c));

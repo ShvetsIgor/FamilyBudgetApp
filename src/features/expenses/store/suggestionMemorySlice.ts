@@ -56,6 +56,8 @@ export interface SuggestionMemoryState {
    * independent of split combo membership.
    */
   tagAssociations: TagAssociation[];
+  /** Merchant context stats — merchantKey → folderId → count */
+  merchantContextStats: Record<string, Record<string, number>>;
 }
 
 const MAX_RECENTS = 20;

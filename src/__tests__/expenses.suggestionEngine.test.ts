@@ -6,7 +6,7 @@ import {
   isSuggestionAmbiguous,
   type ScoredSuggestion,
 } from '@/features/expenses/engine/suggestionEngine';
-import { inferStage, SPLIT_AMOUNT_THRESHOLD } from '@/features/expenses/hooks/useInputSession';
+
 import type { SuggestionMemoryState } from '@/features/expenses/store/suggestionMemorySlice';
 
 const emptyMemory: SuggestionMemoryState = { merchants: {}, recents: [], splitCombos: [], tagAssociations: [] };

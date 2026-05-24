@@ -98,13 +98,11 @@ export function FastExpenseEntry({
 
   function initSelectedCatId() {
     if (!initialExpense) {
-      // Use suggestion memory to pick best real category if merchant context is available
+      // Use buildExpenseDraft to pick best real category from merchant history
       if (initialStore && activeExpCats.length > 0) {
-        const ranked = computeSuggestions({ merchant: initialStore, items: activeExpCats, memory, topN: 1 });
-        const topId = ranked[0]?.categoryId;
-        if (topId && memory.merchants[initialStore.toLowerCase().trim()]?.length) {
-          return topId;
-        }
+        const init = buildExpenseDraft({ merchant: initialStore }, activeExpCats, memory);
+        const topId = init.suggestedCategories[0]?.categoryId;
+        if (topId) return topId;
       }
       return activeExpCats[0]?.id ?? '';
     }

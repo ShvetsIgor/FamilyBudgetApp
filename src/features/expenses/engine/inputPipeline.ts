@@ -267,12 +267,6 @@ export function parseInput(raw: string, memory?: SuggestionMemoryState): ParserC
   const tags = merchantKey ? [merchantKey] : [];
   const confidenceSignals = buildConfidenceSignals(amount, merchantKey, itemCandidates, memory);
   const splitHints = buildSplitHints(amount, itemCandidates);
-  // Phrase stage (runs before fragment construction — phrases are the intermediate layer)
-  const phrases = extractPhrases(classified, memory);
-  const { fragments, clarificationHints } = extractFragmentsFromPhrases(phrases);
-  const relationships = buildRelationships(fragments);
-  const purchaseGroups = buildPurchaseGroups(fragments, clarificationHints);
-  const { scopes, scopeHints } = buildSemanticScopes(phrases);
 
   return {
     raw,
@@ -284,13 +278,6 @@ export function parseInput(raw: string, memory?: SuggestionMemoryState): ParserC
     itemCandidates,
     confidenceSignals,
     splitHints,
-    phrases,
-    fragments,
-    clarificationHints,
-    relationships,
-    purchaseGroups,
-    scopes,
-    scopeHints,
   };
 }
 
@@ -305,12 +292,5 @@ function emptyContext(raw: string): ParserContext {
     itemCandidates: [],
     confidenceSignals: [],
     splitHints: [],
-    phrases: [],
-    fragments: [],
-    clarificationHints: [],
-    relationships: [],
-    purchaseGroups: [],
-    scopes: [],
-    scopeHints: [],
   };
 }

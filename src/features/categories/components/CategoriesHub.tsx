@@ -1262,6 +1262,26 @@ export function CategoriesHub() {
           </div>
         )}
 
+        {/* Reset to defaults */}
+        {!searchQuery && (
+          <div style={{ textAlign: 'center', marginTop: 8, marginBottom: 8 }}>
+            <button
+              onClick={handleReset}
+              style={{
+                fontSize: 12,
+                color: T.subLight,
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                padding: '4px 8px',
+              }}
+            >
+              Сбросить к умолчаниям
+            </button>
+          </div>
+        )}
+
       </div>
 
       {/* ── Sheets ─────────────────────────────────────────────────────────── */}

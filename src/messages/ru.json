@@ -142,7 +142,11 @@
     "confirmDelete": "Удалить этот доход?",
     "record": "Записать",
     "recurring": "Ежемесячный доход",
-    "recurringHint": "автоматически добавится каждый месяц"
+    "recurringHint": "автоматически добавится каждый месяц",
+    "numpadSave": "Записать доход {symbol}{total}",
+    "numpadSaving": "Сохранение…",
+    "numpadCancel": "Отмена",
+    "numpadToday": "Сегодня"
   },
   "expenses": {
     "title": "Расходы",

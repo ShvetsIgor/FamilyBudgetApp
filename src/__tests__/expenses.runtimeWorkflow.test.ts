@@ -45,8 +45,6 @@ import { createSession, resetSessionIds } from '../features/expenses/engine/sess
 import { resetActionIds, deriveResolutionState } from '../features/expenses/engine/resolutionEngine';
 import { resetEventIds } from '../features/expenses/engine/semanticEventTimeline';
 import { resetSuggestionIds } from '../features/expenses/engine/actionSuggester';
-import { DEFAULT_POLICIES } from '../features/expenses/engine/policyEngine';
-import { scoreSessionAmbiguity } from '../features/expenses/engine/ambiguityScorer';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

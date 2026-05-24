@@ -332,7 +332,7 @@ export function FastExpenseEntry({
   // Picker: folder → real categories in that folder
   // pickerGroupId is a folder ID — look up in topFolders, NOT allCats
   const pickerGroupFolder = pickerGroupId ? topFolders.find((f) => f.id === pickerGroupId) : null;
-  const pickerGroupCats = pickerGroupId ? getCatsInGroup(pickerGroupId) : [];
+  const pickerGroupFolders = pickerGroupId ? getCatsInGroup(pickerGroupId) : [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:bg-black/50 lg:backdrop-blur-sm">
@@ -544,9 +544,9 @@ export function FastExpenseEntry({
               )}
               <div
                 className="text-[11px] font-extrabold uppercase tracking-[.08em]"
-                style={{ color: pickerGroupCat?.color ?? 'hsl(var(--muted-foreground))' }}
+                style={{ color: pickerGroupFolder?.color ?? 'hsl(var(--muted-foreground))' }}
               >
-                {pickerGroupId ? t.cat(pickerGroupCat?.name ?? '') : 'Выберите категорию'}
+                {pickerGroupId ? t.cat(pickerGroupFolder?.name ?? '') : 'Выберите категорию'}
               </div>
               <button
                 onClick={() => { setPickerOpen(false); setPickerGroupId(null); }}
@@ -599,7 +599,7 @@ export function FastExpenseEntry({
             ) : (
               /* Show categories in selected folder group */
               <div className="grid grid-cols-4 gap-1.5">
-                {pickerGroupCats.length > 0 ? pickerGroupCats.map((s) => {
+                {pickerGroupFolders.length > 0 ? pickerGroupFolders.map((s) => {
                   const selected = !!splits.find((x) => x.categoryId === s.id);
                   return (
                     <button
@@ -611,13 +611,13 @@ export function FastExpenseEntry({
                       }
                       className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
                       style={{
-                        background: selected ? (pickerGroupCat?.color ?? catColor) + '30' : (pickerGroupCat?.color ?? catColor) + '14',
-                        borderColor: selected ? (pickerGroupCat?.color ?? catColor) : 'transparent',
+                        background: selected ? (pickerGroupFolder?.color ?? catColor) + '30' : (pickerGroupFolder?.color ?? catColor) + '14',
+                        borderColor: selected ? (pickerGroupFolder?.color ?? catColor) : 'transparent',
                       }}
                     >
-                      <StickerIcon icon={s.icon} color={pickerGroupCat?.color ?? catColor} className="h-3.5 w-3.5" />
+                      <StickerIcon icon={s.icon} color={pickerGroupFolder?.color ?? catColor} className="h-3.5 w-3.5" />
                       <span className="leading-tight text-center line-clamp-1">{t.cat(s.name)}</span>
-                      {selected && <span className="text-[8px]" style={{ color: pickerGroupCat?.color ?? catColor }}>✓</span>}
+                      {selected && <span className="text-[8px]" style={{ color: pickerGroupFolder?.color ?? catColor }}>✓</span>}
                     </button>
                   );
                 }) : (

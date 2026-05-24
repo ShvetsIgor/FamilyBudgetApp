@@ -15,7 +15,7 @@
  */
 
 import { parseInput } from '@/features/expenses/engine/inputPipeline';
-import type { SuggestionMemoryState } from '@/store/suggestionMemorySlice';
+import type { SuggestionMemoryState } from '@/features/expenses/store/suggestionMemorySlice';
 import type { Category } from '@/shared/types';
 import { suggestCategoriesFromInput } from '@/features/categories/utils/categorySuggestions';
 

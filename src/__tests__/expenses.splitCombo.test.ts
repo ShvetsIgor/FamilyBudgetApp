@@ -18,6 +18,7 @@ function makeStore(initial?: Partial<SuggestionMemoryState>) {
         merchants: initial?.merchants ?? {},
         recents: initial?.recents ?? [],
         splitCombos: initial?.splitCombos ?? [],
+        tagAssociations: initial?.tagAssociations ?? [],
       },
     },
   });

@@ -192,10 +192,10 @@ export function OnboardingFlow({ onComplete }: Props) {
             </div>
 
             <div className="w-full rounded-2xl border border-border bg-card p-4 text-left flex flex-col gap-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Быстрый старт</p>
-              <p className="text-sm">1. Добавьте расход через <span className="font-semibold">+</span></p>
-              <p className="text-sm">2. Посмотрите статистику на вкладке <span className="font-semibold">📊</span></p>
-              <p className="text-sm">3. Настройте категории и бюджеты в аккаунте</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('onboarding.quickStart')}</p>
+              <p className="text-sm">{t('onboarding.step1')}</p>
+              <p className="text-sm">{t('onboarding.step2')}</p>
+              <p className="text-sm">{t('onboarding.step3')}</p>
             </div>
 
             <button

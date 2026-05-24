@@ -27,6 +27,7 @@ export interface WeeklyCardData {
 }
 
 function EnvelopeRow({ env }: { env: WeeklyEnvelope }) {
+  const C = useChatTokens();
   const pct = env.limit > 0 ? Math.min(100, (env.spent / env.limit) * 100) : 0;
   const over = env.spent > env.limit;
 

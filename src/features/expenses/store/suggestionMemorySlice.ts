@@ -145,6 +145,12 @@ const suggestionMemorySlice = createSlice({
         state.merchants[key] = usages
           .sort((a, b) => b.count - a.count)
           .slice(0, MAX_PER_MERCHANT);
+
+        // Context stats — record which folder this merchant was used in
+        if (folderId) {
+          if (!state.merchantContextStats[key]) state.merchantContextStats[key] = {};
+          state.merchantContextStats[key][folderId] = (state.merchantContextStats[key][folderId] ?? 0) + 1;
+        }
       }
 
       // Recent category usage

@@ -574,9 +574,7 @@ export function FastExpenseEntry({
                           <button
                             key={preset.id}
                             onClick={() => {
-                              presetCats.forEach((cat) => {
-                                if (!splits.find((x) => x.categoryId === cat.id)) addSplit(cat);
-                              });
+                              addSplitBatch(presetCats);
                             }}
                             className="flex items-center gap-1.5 px-2.5 py-2 rounded-[10px] text-[10px] font-bold text-left transition-all"
                             style={{ background: catColor + '12', border: `1px solid ${catColor}33` }}

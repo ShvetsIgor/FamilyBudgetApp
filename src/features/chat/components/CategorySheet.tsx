@@ -5,7 +5,7 @@ import { Search, X } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { useT } from '@/shared/hooks/useT';
-import { C } from '@/features/chat/styles/tokens';
+import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import type { Category } from '@/shared/types';
 import { isActiveCategory } from '@/features/categories/policy/categoryPolicy';
 import { buildFolderSections } from '@/features/categories/utils/folderSections';

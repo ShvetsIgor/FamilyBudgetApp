@@ -42,19 +42,6 @@ import {
   type ConversationEvent,
 } from '../features/chat/types/conversationEvents';
 
-// Transitions
-import {
-  canTransition,
-  validNextStatuses,
-  isTerminalStatus,
-  applyTransition,
-  startParsing,
-  requestClarification,
-  readyToConfirm,
-  completeSession,
-  cancelSession,
-  reparseSession,
-} from '../features/chat/engine/conversationTransitions';
 
 // ExpenseDraft
 import {

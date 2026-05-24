@@ -1154,11 +1154,16 @@ export function CategoriesHub() {
                 cursor: 'pointer',
               }}
             >
-              <span style={{ fontSize: 11, fontWeight: 700, color: T.sub, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                В библиотеке ({libraryItems.length})
-              </span>
-              <span style={{ fontSize: 11, color: T.subLight }}>
-                {showLibrary ? '▴ Скрыть' : '▸ Показать'}
+              <div>
+                <span style={{ fontSize: 11, fontWeight: 700, color: T.sub, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  Стандартная библиотека
+                </span>
+                <div style={{ fontSize: 11, color: T.subLight, marginTop: 1 }}>
+                  Готовые контексты — добавляйте при необходимости
+                </div>
+              </div>
+              <span style={{ fontSize: 11, color: T.subLight, flexShrink: 0 }}>
+                {showLibrary ? '▴' : '▸ ' + libraryItems.length}
               </span>
             </button>
 

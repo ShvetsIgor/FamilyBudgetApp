@@ -103,7 +103,15 @@
     "confirmDelete": "Delete this expense?",
     "payment": "Payment",
     "privacy2": "Privacy",
-    "split2": "Split"
+    "split2": "Split",
+    "numpadEdit": "Edit",
+    "numpadReceipt": "Receipt · {store}",
+    "numpadReceiptCount_one": "{count} item",
+    "numpadReceiptCount_other": "{count} items",
+    "numpadTotal": "Total",
+    "numpadSave": "Save receipt {symbol}{total}",
+    "numpadSaveEdit": "Save {symbol}{total}",
+    "numpadSaving": "Saving…"
   },
   "income": {
     "title": "Add Income",

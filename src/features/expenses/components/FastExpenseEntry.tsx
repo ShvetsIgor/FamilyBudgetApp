@@ -165,9 +165,9 @@ export function FastExpenseEntry({
 
   function tap(key: NumKey) {
     if (editing === 'total') {
-      setTotal((cur) => applyKey(cur, key));
+      setTotal((cur) => applyKey(cur, String(key)));
     } else {
-      tapOnSplit(editing, key);
+      tapOnSplit(editing, String(key));
     }
   }
 

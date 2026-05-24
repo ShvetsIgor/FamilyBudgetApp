@@ -493,17 +493,7 @@ export function FastExpenseEntry({
           </button>
           {splits.length >= 1 && totalNum > 0 && (
             <button
-              onClick={() => {
-                const count = splits.length + 1;
-                const share = Math.round((totalNum / count) * 100) / 100;
-                const extra = Math.round((totalNum - share * count) * 100) / 100;
-                setSplits((prev) =>
-                  prev.map((s, i) => ({
-                    ...s,
-                    amount: String(i === prev.length - 1 ? share + extra : share),
-                  }))
-                );
-              }}
+              onClick={splitEven}
               className="rounded-[14px] px-3 py-2.5 text-[11px] font-black transition-all border-2 border-dashed flex-shrink-0"
               style={{ borderColor: catColor + '55', color: catColor, background: catColor + '0a' }}
             >

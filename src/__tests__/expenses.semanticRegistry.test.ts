@@ -26,12 +26,6 @@ import {
   type RegistryEntryKind,
   type RegistrySource,
 } from '@/features/expenses/engine/semanticRegistry';
-import {
-  inspectParserOutput,
-  explainPhraseMatches,
-  listAppliedRules,
-  derivePhraseMatchRule,
-} from '@/features/expenses/engine/parserInspector';
 import { parseInput } from '@/features/expenses/engine/inputPipeline';
 import type { SemanticPhrase } from '@/features/expenses/engine/semanticPhrase';
 

@@ -291,6 +291,27 @@ monthlyStats/{userId}/{YYYY-MM}
 - [ ] Push notifications (backend required)
 - [ ] Deploy to Vercel (ready technically, blocked on Firebase config)
 
+## Deploy Checklist
+
+### To deploy (once Firebase config is available):
+1. Copy `.env.local.example` → `.env.local`, fill Firebase credentials
+2. `npm run build` — must pass clean
+3. `npm run lint` — must pass (warnings OK, errors not)
+4. `npx vitest run` — 427 tests must pass
+5. Deploy: `vercel --prod` (Vercel CLI) or connect GitHub repo to Vercel dashboard
+6. Set environment variables in Vercel dashboard (copy from `.env.local`)
+7. Write Firestore security rules (see `docs/ARCHITECTURE.md`)
+
+### Environment variables needed
+```
+NEXT_PUBLIC_FIREBASE_API_KEY
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+NEXT_PUBLIC_FIREBASE_PROJECT_ID
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+NEXT_PUBLIC_FIREBASE_APP_ID
+```
+
 ## Change Log
 - **2026-05-10** — Phase 1 bootstrap: Next.js, Firebase auth, layout system.
 - **2026-05-10** — Steps 3–11: Categories, Expense form+split, Expenses list, Income, Statistics, Analytics, Recurring payments, Savings goals, Account page, Home with real data.

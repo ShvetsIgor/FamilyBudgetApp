@@ -54,7 +54,10 @@
       "PowerShell(Stop-Process *)",
       "Bash(start *)",
       "Bash(npx tsx *)",
-      "Bash(read f *)"
+      "Bash(read f *)",
+      "Bash(awk '{print $9, $5}')",
+      "Bash(grep -r '[$./]__TRACKED_VAR__' '--include=*.ts' '--include=*.tsx' src/)",
+      "Bash(xargs -I{} basename {})"
     ]
   },
   "hooks": {

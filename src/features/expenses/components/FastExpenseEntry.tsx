@@ -187,8 +187,9 @@ export function FastExpenseEntry({
 
   function addSplit(sub: Category) {
     if (splits.find((s) => s.categoryId === sub.id)) return;
-    const groupCat = pickerGroupId ? allCats.find((c) => c.id === pickerGroupId) : null;
-    const color = groupCat?.color ?? sub.color;
+    // pickerGroupId is a folder ID — look it up in topFolders, not allCats
+    const groupFolder = pickerGroupId ? topFolders.find((f) => f.id === pickerGroupId) : null;
+    const color = groupFolder?.color ?? sub.color;
     setSplits((prev) => {
       const next = [
         ...prev,

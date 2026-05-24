@@ -230,10 +230,19 @@ export function FastExpenseEntry({
 
   async function handleSave() {
     if (!user || totalNum <= 0 || saving) return;
+
+    // Safety guard: selectedCatId must be a real active category, never a folder ID
+    const effectiveCatId = activeExpCats.some((c) => c.id === selectedCatId)
+      ? selectedCatId
+      : activeExpCats[0]?.id ?? '';
+    if (!effectiveCatId) return; // no valid categories at all
+
     setSaving(true);
 
     const splitItems: SplitItem[] = splits
       .filter((sp) => parseFloat(sp.amount) > 0)
+      // Guard: only include splits whose categoryId is a real active category
+      .filter((sp) => activeExpCats.some((c) => c.id === sp.categoryId))
       .map((sp) => ({ categoryId: sp.categoryId, amount: parseFloat(sp.amount) }));
 
     const base = {

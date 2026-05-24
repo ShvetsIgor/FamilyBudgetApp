@@ -1,8 +1,9 @@
 'use client';
-import { C } from '@/features/chat/styles/tokens';
+import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { RPCard } from './RPCard';
 
 export function RPFirstSteps() {
+  const C = useChatTokens();
   const steps = [
     { done: true, label: 'Зарегистрировался' },
     { done: false, label: 'Задай бюджет на месяц' },

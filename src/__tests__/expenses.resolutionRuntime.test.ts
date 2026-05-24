@@ -113,7 +113,6 @@ beforeEach(() => {
   resetSessionIds();
   resetActionIds();
   resetEventIds();
-  resetBridgeIds();
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════

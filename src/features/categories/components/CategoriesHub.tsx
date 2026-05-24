@@ -636,7 +636,7 @@ export function CategoriesHub() {
             }}
           >
             <span style={{ flex: 1, fontSize: 12, color: '#E05050' }}>
-              Удалить «{folder.name}»? Категории потеряют группу.
+              Удалить «{t.cat(folder.name)}»? Категории потеряют группу.
             </span>
             <button
               onClick={() => handleFolderDelete(folder)}

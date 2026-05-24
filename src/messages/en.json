@@ -111,7 +111,9 @@
     "numpadTotal": "Total",
     "numpadSave": "Save receipt {symbol}{total}",
     "numpadSaveEdit": "Save {symbol}{total}",
-    "numpadSaving": "Saving…"
+    "numpadSaving": "Saving…",
+    "numpadCancel": "Cancel",
+    "numpadPos": "{count} pos."
   },
   "income": {
     "title": "Add Income",

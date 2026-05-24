@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { C, RAD, SHADOW } from '@/features/chat/styles/tokens';
+import { RAD, SHADOW } from '@/features/chat/styles/tokens';
+import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { setBudgetMode, setBudgetDailyLimit, setBudgetMonthlyLimit } from '@/features/ui/store/uiSlice';
 import type { BudgetMode } from '@/features/ui/store/uiSlice';

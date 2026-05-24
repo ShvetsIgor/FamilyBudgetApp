@@ -7,11 +7,26 @@ export type DefaultCategoryEntry = Omit<Category, 'userId'>;
 /** CategoryFolder document shape ready for Firestore write (userId added by service). */
 export type DefaultFolderEntry = Omit<CategoryFolder, 'userId'>;
 
+// ─── Core context IDs ─────────────────────────────────────────────────────────
+// Only these 9 folders + their categories are seeded for new users.
+// Remaining blueprints are available via the Standard Library in CategoriesHub.
+const CORE_FOLDER_IDS = new Set([
+  'food',           // Supermarket
+  'home',           // Home
+  'transport',      // Transport
+  'health',         // Health
+  'shopping',       // Shopping
+  'entertainment',  // Entertainment
+  'travel',         // Travel
+  'work',           // Work
+  'subscriptions',  // Subscriptions
+]);
+
 // ─── Folder seeds ─────────────────────────────────────────────────────────────
-// Folder blueprints → CategoryFolder documents. Folders are UI grouping only.
+// Only core contexts seeded — the rest live in the Standard Library.
 
 export const DEFAULT_EXPENSE_FOLDER_SEEDS: DefaultFolderEntry[] = FOLDER_BLUEPRINTS
-  .filter((f) => f.id !== 'income')
+  .filter((f) => CORE_FOLDER_IDS.has(f.id))
   .map((f, order) => ({
     id: f.id,
     name: f.name,
@@ -33,12 +48,12 @@ export const DEFAULT_INCOME_FOLDER_SEEDS: DefaultFolderEntry[] = FOLDER_BLUEPRIN
   }));
 
 // ─── Category seeds ───────────────────────────────────────────────────────────
-// Category blueprints only → Category documents with folderId set.
-// Folder blueprints are NOT represented here — they are UI grouping, not categories.
+// Only categories belonging to core folders are seeded.
+// Non-core categories are accessible via the Standard Library.
 
 export const DEFAULT_EXPENSE_CATEGORIES: DefaultCategoryEntry[] = [
   ...CATEGORY_BLUEPRINTS
-    .filter((c) => c.folderId !== 'income')
+    .filter((c) => CORE_FOLDER_IDS.has(c.folderId))
     .map((c, order) => ({
       id: c.id,
       name: c.name,

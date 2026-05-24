@@ -55,9 +55,7 @@ export function parseExpenseInput(
 ): ParsedExpenseInput {
   const ctx = parseInput(input, memory);
 
-  const tokens = ctx.itemCandidates
-    .map((ic) => ic.rawValue)
-    .filter((v) => v.length >= 2);
+  const tokens = ctx.itemCandidates.filter((v) => v.length >= 2);
 
   const suggestions = suggestCategoriesFromInput(input, categories, 5)
     .map((s) => ({

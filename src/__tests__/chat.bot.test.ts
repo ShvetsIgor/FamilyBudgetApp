@@ -47,9 +47,9 @@ function makeUserMsg(text: string, overrides: Partial<SerializableChatMessage> =
 
 function makeCtx(overrides: Partial<BotContext> = {}): BotContext {
   const cats: Category[] = [
-    { id: 'dining',    name: 'Кафе',      icon: 'plate',  color: '#D4A574', type: 'expense', isPrivate: false, order: 0 },
-    { id: 'coffee',    name: 'Кофе',      icon: 'coffee', color: '#D4A574', type: 'expense', isPrivate: false, order: 0, folderId: 'dining' },
-    { id: 'groceries', name: 'Продукты',  icon: 'cart',   color: '#E07A5F', type: 'expense', isPrivate: false, order: 0 },
+    { id: 'dining',    userId: 'u1', name: 'Кафе',      icon: 'plate',  color: '#D4A574', type: 'expense', isPrivate: false, order: 0 },
+    { id: 'coffee',    userId: 'u1', name: 'Кофе',      icon: 'coffee', color: '#D4A574', type: 'expense', isPrivate: false, order: 0, folderId: 'dining' },
+    { id: 'groceries', userId: 'u1', name: 'Продукты',  icon: 'cart',   color: '#E07A5F', type: 'expense', isPrivate: false, order: 0 },
   ];
   const map = new Map<string, Category>();
   cats.forEach((c) => map.set(c.id, c));

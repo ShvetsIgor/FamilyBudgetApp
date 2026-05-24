@@ -197,7 +197,7 @@ export function FastExpenseEntry({
           categoryId: sub.id,
           groupCatId: pickerGroupId ?? selectedCatId,
           name: sub.name,
-          groupName: groupCat?.name ?? selectedCat?.name ?? '',
+          groupName: groupFolder?.name ?? selectedCat?.name ?? '',
           icon: sub.icon,
           color,
           amount: '0',

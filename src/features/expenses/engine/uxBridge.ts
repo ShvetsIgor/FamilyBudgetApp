@@ -21,7 +21,7 @@ import type { SemanticAction } from './semanticAction';
 import type { SessionAmbiguityReport } from './ambiguityScorer';
 import type { PolicyEvaluationResult } from './runtimePolicy';
 import type { RuntimePolicy } from './runtimePolicy';
-import type { SemanticChangeset } from './semanticChangeset';
+import type { SemanticChangeSet } from './semanticChangeset';
 import type {
   RuntimeProjection,
   SuggestionProjection,
@@ -33,7 +33,6 @@ import { applyDefaultPolicies } from './policyEngine';
 import { scoreSessionAmbiguity } from './ambiguityScorer';
 import { deriveResolutionState } from './resolutionEngine';
 import { buildActionSuggestions } from './actionSuggester';
-import { previewParserOutput } from './semanticSimulator';
 import { replaySessionWithPolicies } from './policyBridge';
 import { groupClarificationCards, buildClarificationCards, filterGroupsForBehavior } from './clarificationPresenter';
 

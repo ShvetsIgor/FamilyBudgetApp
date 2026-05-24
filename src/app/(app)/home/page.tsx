@@ -230,7 +230,7 @@ export default function HomePage() {
       // Slash command — save user message, skip expense parsing
       if (isSlashCommand(text)) {
         await addMessage({ userId, senderId: userId, kind: 'user', text, status: 'saved' });
-        await new Promise((r) => setTimeout(r, 400));
+        await new Promise((r) => setTimeout(r, 150));
         await handleSlashCommand(text, enrichedCtx);
         return;
       }
@@ -246,7 +246,7 @@ export default function HomePage() {
         status: 'pending',
       });
 
-      await new Promise((r) => setTimeout(r, 600));
+      await new Promise((r) => setTimeout(r, 250));
 
       const reply = await respondToUserMessage(userMsg, parsed, enrichedCtx);
       for (const botMsg of reply.messages) {
@@ -302,7 +302,7 @@ export default function HomePage() {
         status: 'saved',
       });
 
-      await new Promise((r) => setTimeout(r, 400));
+      await new Promise((r) => setTimeout(r, 150));
 
       // Bypass re-parse — we already know the category and date
       const parsed: import('@/shared/types/message').ParseResult = {
@@ -351,7 +351,7 @@ export default function HomePage() {
         status: 'saved',
       });
 
-      await new Promise((r) => setTimeout(r, 400));
+      await new Promise((r) => setTimeout(r, 150));
 
       const parsed: import('@/shared/types/message').ParseResult = {
         amount,

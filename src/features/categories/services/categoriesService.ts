@@ -147,29 +147,65 @@ export async function resetCategoriesToDefaults(userId: string): Promise<Record<
 }
 
 export async function seedDefaultCategories(userId: string): Promise<void> {
-  const [existingExpense, existingIncome] = await Promise.all([
+  const [existingExpense, existingIncome, existingExpFolders, existingIncFolders] = await Promise.all([
     fetchCategories(userId, 'expense'),
     fetchCategories(userId, 'income'),
+    fetchFolders(userId, 'expense'),
+    fetchFolders(userId, 'income'),
   ]);
 
-  if (existingExpense.length > 0 && existingIncome.length > 0) return;
+  const db = getDb();
 
+  // ── Seed missing categories ──────────────────────────────────────────────────
   if (existingExpense.length === 0) {
-    await bulkCreateFolders(userId, DEFAULT_EXPENSE_FOLDER_SEEDS);
     for (const cat of DEFAULT_EXPENSE_CATEGORIES) {
       const { id, ...rest } = cat;
       const clean = Object.fromEntries(Object.entries({ ...rest, userId }).filter(([, v]) => v !== undefined));
       await setDoc(doc(colRef(userId, 'expense'), id), clean);
     }
   }
-
   if (existingIncome.length === 0) {
-    await bulkCreateFolders(userId, DEFAULT_INCOME_FOLDER_SEEDS);
     for (const cat of DEFAULT_INCOME_CATEGORIES) {
       const { id, ...rest } = cat;
       const clean = Object.fromEntries(Object.entries({ ...rest, userId }).filter(([, v]) => v !== undefined));
       await setDoc(doc(colRef(userId, 'income'), id), clean);
     }
+  }
+
+  // ── Seed missing folders (checked independently — folders may be missing even if cats exist) ──
+  if (existingExpFolders.length === 0) {
+    await bulkCreateFolders(userId, DEFAULT_EXPENSE_FOLDER_SEEDS);
+  } else {
+    // Ensure individual missing default folders are created (partial migration)
+    const existingFolderIds = new Set(existingExpFolders.map((f) => f.id));
+    const missingFolders = DEFAULT_EXPENSE_FOLDER_SEEDS.filter((f) => !existingFolderIds.has(f.id));
+    if (missingFolders.length > 0) await bulkCreateFolders(userId, missingFolders);
+  }
+
+  if (existingIncFolders.length === 0) {
+    await bulkCreateFolders(userId, DEFAULT_INCOME_FOLDER_SEEDS);
+  } else {
+    const existingFolderIds = new Set(existingIncFolders.map((f) => f.id));
+    const missingFolders = DEFAULT_INCOME_FOLDER_SEEDS.filter((f) => !existingFolderIds.has(f.id));
+    if (missingFolders.length > 0) await bulkCreateFolders(userId, missingFolders);
+  }
+
+  // ── Migrate categories missing folderId (existing users) ────────────────────
+  // Build categoryId → folderId from blueprints
+  const blueprintFolderMap = new Map<string, string>(
+    CATEGORY_BLUEPRINTS.map((b) => [b.id, b.folderId]),
+  );
+
+  const catsToMigrate = existingExpense.filter(
+    (c) => !c.folderId && blueprintFolderMap.has(c.id),
+  );
+  if (catsToMigrate.length > 0) {
+    const batch = writeBatch(db);
+    for (const cat of catsToMigrate) {
+      const folderId = blueprintFolderMap.get(cat.id)!;
+      batch.update(doc(colRef(userId, 'expense'), cat.id), { folderId });
+    }
+    await batch.commit();
   }
 }
 

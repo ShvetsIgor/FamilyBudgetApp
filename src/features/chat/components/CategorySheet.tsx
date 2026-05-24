@@ -25,6 +25,7 @@ interface CategorySheetProps {
 }
 
 export function CategorySheet({ onSelect, onClose, categories: categoriesOverride }: CategorySheetProps) {
+  const C = useChatTokens();
   const t = useT();
   const [query, setQuery] = useState('');
   const expenseCats = useAppSelector((s) => s.categories.expense);

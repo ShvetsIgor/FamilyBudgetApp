@@ -1,6 +1,7 @@
 'use client';
 
-import { C, SHADOW, RAD } from '@/features/chat/styles/tokens';
+import { SHADOW, RAD } from '@/features/chat/styles/tokens';
+import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 
 interface UserBubbleProps {
   text: string;

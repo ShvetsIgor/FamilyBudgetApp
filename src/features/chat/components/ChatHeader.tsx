@@ -12,6 +12,7 @@ interface ChatHeaderProps {
 }
 
 export function ChatHeader({ onMenu, onBell }: ChatHeaderProps) {
+  const C = useChatTokens();
   const t = useT();
   const unread = useAppSelector((s) => s.notifications.items.filter((n) => !n.read).length);
 

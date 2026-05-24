@@ -44,7 +44,6 @@ import { buildSplitProjection } from '../features/expenses/engine/splitReviewOrc
 import { createSession, resetSessionIds } from '../features/expenses/engine/sessionManager';
 import { resetActionIds, deriveResolutionState } from '../features/expenses/engine/resolutionEngine';
 import { resetEventIds } from '../features/expenses/engine/semanticEventTimeline';
-import { resetBridgeIds } from '../features/expenses/engine/constructorBridge';
 import { resetSuggestionIds } from '../features/expenses/engine/actionSuggester';
 import { applyDefaultPolicies, DEFAULT_POLICIES } from '../features/expenses/engine/policyEngine';
 import { scoreSessionAmbiguity } from '../features/expenses/engine/ambiguityScorer';

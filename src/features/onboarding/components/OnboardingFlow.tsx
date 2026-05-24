@@ -185,10 +185,9 @@ export function OnboardingFlow({ onComplete }: Props) {
           <div className="flex flex-col gap-4 items-center text-center">
             <p className="text-5xl">🎉</p>
             <div>
-              <h2 className="text-xl font-bold">Всё готово!</h2>
+              <h2 className="text-xl font-bold">{t('onboarding.allSet')}</h2>
               <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                Нажмите <span className="font-semibold text-primary">+</span> внизу экрана чтобы добавить первый расход.
-                Удачи с бюджетом!
+                {t('onboarding.allSetHint')}
               </p>
             </div>
 

@@ -61,6 +61,7 @@ function EnvelopeRow({ env }: { env: WeeklyEnvelope }) {
 }
 
 export function WeeklyCard({ data }: { data: WeeklyCardData }) {
+  const C = useChatTokens();
   const t = useT();
   const { weekNum, weekRange, totalSpent, totalBudget, saved, savingsGoalName, envelopes, bestDay, worstDay, mostFrequent, currency } = data;
 

@@ -542,8 +542,30 @@ export function FastExpenseEntry({
               </button>
             </div>
 
-            {pickerGroupId === null ? (
-              /* Show all parent categories */
+            {noFolders ? (
+              /* Fallback: no folders loaded — show all active categories directly */
+              <div className="grid grid-cols-4 gap-1.5">
+                {activeCats.length > 0 ? activeCats.map((cat) => {
+                  const selected = !!splits.find((x) => x.categoryId === cat.id);
+                  const c = cat.color ?? '#E07A5F';
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => selected ? removeSplit(splits.findIndex((x) => x.categoryId === cat.id)) : addSplit(cat)}
+                      className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
+                      style={{ background: selected ? c + '30' : c + '14', borderColor: selected ? c : 'transparent' }}
+                    >
+                      <StickerIcon icon={cat.icon ?? 'box'} color={c} className="h-3.5 w-3.5" />
+                      <span className="leading-tight text-center line-clamp-1">{t.cat(cat.name)}</span>
+                      {selected && <span className="text-[8px]" style={{ color: c }}>✓</span>}
+                    </button>
+                  );
+                }) : (
+                  <p className="col-span-4 text-center text-xs text-muted-foreground py-3">Нет категорий</p>
+                )}
+              </div>
+            ) : pickerGroupId === null ? (
+              /* Show folder groups */
               <div className="grid grid-cols-4 gap-1.5">
                 {topCats.map((cat) => {
                   const c = cat.color ?? '#E07A5F';
@@ -552,10 +574,7 @@ export function FastExpenseEntry({
                       key={cat.id}
                       onClick={() => setPickerGroupId(cat.id)}
                       className="flex flex-col items-center gap-0.5 px-0.5 py-2 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
-                      style={{
-                        background: c + '18',
-                        borderColor: 'transparent',
-                      }}
+                      style={{ background: c + '18', borderColor: 'transparent' }}
                     >
                       <StickerIcon icon={cat.icon ?? 'box'} color={c} className="h-4 w-4" />
                       <span className="leading-tight text-center line-clamp-1">{t.cat(cat.name)}</span>
@@ -564,7 +583,7 @@ export function FastExpenseEntry({
                 })}
               </div>
             ) : (
-              /* Show categories in selected group */
+              /* Show categories in selected folder group */
               <div className="grid grid-cols-4 gap-1.5">
                 {pickerGroupCats.length > 0 ? pickerGroupCats.map((s) => {
                   const selected = !!splits.find((x) => x.categoryId === s.id);
@@ -588,7 +607,10 @@ export function FastExpenseEntry({
                     </button>
                   );
                 }) : (
-                  <p className="col-span-4 text-center text-xs text-muted-foreground py-3">Нет категорий</p>
+                  <div className="col-span-4 flex flex-col items-center gap-1 py-3">
+                    <p className="text-center text-xs text-muted-foreground">Нет категорий в группе</p>
+                    <button onClick={() => setPickerGroupId(null)} className="text-[10px] text-primary font-semibold">← Назад</button>
+                  </div>
                 )}
               </div>
             )}

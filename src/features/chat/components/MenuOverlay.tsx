@@ -145,7 +145,8 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
 
         {/* Footer */}
         <div
-          className="flex-shrink-0 flex items-center gap-3 px-4 pt-3.5 pb-8"
+          className="flex-shrink-0 flex items-center gap-3 px-4 pt-3.5"
+          style={{ paddingBottom: 'max(32px, env(safe-area-inset-bottom))' }}
           style={{ borderTop: `1px solid ${C.hairline}` }}
         >
           <div className="flex">

@@ -161,38 +161,14 @@ export function FastExpenseEntry({
 
   const selectedCat = allCats.find((c) => c.id === selectedCatId);
 
-  const merchantKey = useMemo(
-    () => (initialStore ? normalizeMerchantKey(initialStore) : ''),
-    [initialStore],
+  /** Unified expense draft — single source of truth for all suggestion/context decisions. */
+  const draft = useMemo(
+    () => buildExpenseDraft({ merchant: initialStore }, activeExpCats, memory),
+    [initialStore, activeExpCats, memory],
   );
 
-  const hasMerchantHistory = useMemo(
-    () => (merchantKey ? hasEnoughHistory(merchantKey, memory) : false),
-    [merchantKey, memory],
-  );
-
-  const predictedContext = useMemo(() => {
-    if (!merchantKey || !hasMerchantHistory) return null;
-    return getSuggestedContext(merchantKey, memory);
-  }, [merchantKey, hasMerchantHistory, memory]);
-
-  /** Top category suggestions — only shown when real merchant-specific history exists. */
-  const suggestedCatIds = useMemo(() => {
-    if (isEdit || !merchantKey || !hasMerchantHistory || activeExpCats.length === 0) return [];
-    const ranked = computeSuggestions({ merchant: initialStore, items: activeExpCats, memory });
-    return ranked
-      .filter((s) =>
-        s.reasons.some(
-          (r) =>
-            r.kind === 'merchant_history' ||
-            r.kind === 'habit' ||
-            r.kind === 'tag_history' ||
-            r.kind === 'split_history',
-        ),
-      )
-      .slice(0, 4)
-      .map((s) => s.categoryId);
-  }, [isEdit, merchantKey, hasMerchantHistory, activeExpCats, memory, initialStore]);
+  const { suggestedContext: predictedContext, hasMerchantHistory, shouldSuggestSplit, splitPresets } = draft;
+  const suggestedCatIds = isEdit ? [] : draft.suggestedCategories.slice(0, 4).map((s) => s.categoryId);
 
   const totalNum = parseFloat(total) || 0;
   const splitsSum = splits.reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);

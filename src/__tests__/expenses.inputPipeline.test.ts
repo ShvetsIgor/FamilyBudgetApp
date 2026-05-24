@@ -25,7 +25,7 @@ import {
   tokenizeAndClassify,
 } from '@/features/expenses/engine/tokenClassifier';
 import { parseInput } from '@/features/expenses/engine/inputPipeline';
-import { parseQuickAdd } from '@/features/expenses/utils/quickAddParser';
+
 import type { SuggestionMemoryState } from '@/features/expenses/store/suggestionMemorySlice';
 
 // ── Test helpers ──────────────────────────────────────────────────────────────

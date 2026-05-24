@@ -613,7 +613,42 @@ export function FastExpenseEntry({
             ) : pickerGroupId === null ? (
               /* Show folders — tap a folder to see real categories inside */
               <div>
-                {/* History shortcuts — only if real merchant data exists */}
+                {/* Split presets — one-tap combo reuse from learned history */}
+                {splitPresets.length > 0 && !isEdit && (
+                  <div className="mb-2.5">
+                    <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[.08em] mb-1.5 px-0.5">
+                      Как обычно · {splitPresets[0].count}×
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      {splitPresets.map((preset) => {
+                        const presetCats = preset.categoryIds
+                          .map((id) => activeExpCats.find((c) => c.id === id))
+                          .filter(Boolean) as typeof activeExpCats;
+                        if (presetCats.length < 2) return null;
+                        return (
+                          <button
+                            key={preset.id}
+                            onClick={() => {
+                              presetCats.forEach((cat) => {
+                                if (!splits.find((x) => x.categoryId === cat.id)) addSplit(cat);
+                              });
+                            }}
+                            className="flex items-center gap-1.5 px-2.5 py-2 rounded-[10px] text-[10px] font-bold text-left transition-all"
+                            style={{ background: catColor + '12', border: `1px solid ${catColor}33` }}
+                          >
+                            <span style={{ color: catColor }}>↩</span>
+                            <span className="flex-1 text-foreground">
+                              {presetCats.map((c) => t.cat(c.name)).join(' + ')}
+                            </span>
+                            <span className="text-muted-foreground font-normal">{preset.count}×</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="h-px bg-border mt-2.5 mb-2" />
+                  </div>
+                )}
+                {/* Category shortcuts from merchant history */}
                 {suggestedCatIds.length > 0 && initialStore && !isEdit && (
                   <div className="mb-2.5">
                     <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[.08em] mb-1.5 px-0.5">

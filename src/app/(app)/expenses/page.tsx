@@ -277,6 +277,25 @@ export default function ExpensesPage() {
       >
         <Plus size={24} color="white" />
       </button>
+
+      {/* ── Undo delete toast ── */}
+      {undoItem && (
+        <div className="fixed bottom-28 left-4 right-4 z-40 flex items-center gap-3 rounded-2xl bg-foreground px-4 py-3 shadow-xl lg:left-auto lg:right-6 lg:max-w-sm">
+          <span className="flex-1 text-sm font-semibold text-background truncate">
+            Удалено: {undoItem.expense.store || undoItem.expense.comment || 'Расход'}
+          </span>
+          <button
+            onClick={() => {
+              clearTimeout(undoItem.timerId);
+              dispatch({ type: 'expenses/prependExpense', payload: undoItem.expense });
+              setUndoItem(null);
+            }}
+            className="shrink-0 rounded-xl bg-background/20 px-3 py-1.5 text-sm font-bold text-background hover:bg-background/30 transition-colors"
+          >
+            Отменить
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -27,7 +27,6 @@
  */
 
 import type { ParserContext } from './inputPipeline';
-import type { ParserTrace } from './parserTrace';
 import type { ClarificationHint } from './semanticFragment';
 import type { PurchaseGroup } from './purchaseGroup';
 

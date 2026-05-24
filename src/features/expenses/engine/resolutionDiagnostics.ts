@@ -258,12 +258,10 @@ export function explainParserRetry(action: SemanticAction): DiagnosticReason {
  * Explain why a semantic action was triggered (by source).
  */
 export function explainActionTrigger(action: SemanticAction): DiagnosticReason {
-  const codeMap: Partial<Record<string, DiagnosticReasonCode>> = {
-    user:        'ACTION_TRIGGERED_BY_USER',
-    runtime:     'ACTION_TRIGGERED_BY_RUNTIME',
-    // eslint-disable-next-line @typescript-eslint/dot-notation
-    ['constructor']: 'ACTION_TRIGGERED_BY_CONSTRUCTOR',
-  } as Record<string, DiagnosticReasonCode>;
+  const codeMap: { [key: string]: DiagnosticReasonCode } = {} as { [key: string]: DiagnosticReasonCode };
+  codeMap['user'] = 'ACTION_TRIGGERED_BY_USER';
+  codeMap['runtime'] = 'ACTION_TRIGGERED_BY_RUNTIME';
+  codeMap['constructor'] = 'ACTION_TRIGGERED_BY_CONSTRUCTOR';
   const code = codeMap[action.source] ?? 'ACTION_TRIGGERED_BY_USER';
 
   const messages: Record<string, string> = {

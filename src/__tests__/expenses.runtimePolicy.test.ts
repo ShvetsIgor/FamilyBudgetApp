@@ -727,8 +727,7 @@ describe('matchingEscalations', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 17. policyDiagnostics
-// ═══════════════════════════════════════════════════════════════════════════════
+// 17. Determinism
 
 describe('buildPolicyDiagnosticEntry', () => {
   it('creates entry with policy reference', () => {

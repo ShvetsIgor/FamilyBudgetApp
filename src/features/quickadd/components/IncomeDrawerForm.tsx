@@ -79,7 +79,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
   }
 
   const today = toDateInput(new Date());
-  const dateLabel = dateStr === today ? 'Сегодня' : format(new Date(dateStr + 'T12:00:00'), 'd MMM yyyy');
+  const dateLabel = dateStr === today ? t('common.today') : format(new Date(dateStr + 'T12:00:00'), 'd MMM yyyy');
 
   return (
     <div className="flex flex-col h-full">

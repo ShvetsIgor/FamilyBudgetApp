@@ -33,6 +33,7 @@ export function ClarifyCard({
   amount, currency, chips, unknownNote, storeName, isRepeat, categories,
   onSelectChip, onAllCategories, onOtherText, onSplit,
 }: ClarifyCardProps) {
+  const C = useChatTokens();
   const t = useT();
   const [selectedParent, setSelectedParent] = useState<ClarifyChip | null>(null);
   const [otherMode, setOtherMode] = useState(false);

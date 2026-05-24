@@ -175,7 +175,7 @@ export function OnboardingFlow({ onComplete }: Props) {
               onClick={() => setStep(3)}
               className="w-full rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground"
             >
-              Продолжить →
+              {t('onboarding.continue')}
             </button>
           </div>
         )}

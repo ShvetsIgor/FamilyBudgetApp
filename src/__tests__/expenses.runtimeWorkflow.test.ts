@@ -707,10 +707,10 @@ describe('conversationalNavigator', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 5. workflowProjection
+// 5. Determinism
 // ═══════════════════════════════════════════════════════════════════════════════
 
-describe('workflowProjection', () => {
+describe('PLACEHOLDER_DELETE', () => {
   function makeWorkflow() {
     const session = createSession('');
     const state = emptyResolutionState();

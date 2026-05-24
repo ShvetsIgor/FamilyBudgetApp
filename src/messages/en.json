@@ -313,7 +313,10 @@
     "creating": "Saving…",
     "adding": "Saving…",
     "add2": "Add",
-    "amount": "Amount"
+    "amount": "Amount",
+    "numpadSave": "Put {symbol}{total}",
+    "numpadSaving": "Saving…",
+    "numpadCancel": "Cancel"
   },
   "categories": {
     "title": "Categories",

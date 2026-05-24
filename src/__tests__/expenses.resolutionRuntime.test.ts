@@ -773,7 +773,6 @@ describe('buildTimelineFromSession', () => {
   });
 
   it('includes resolution_transition for resolved session', () => {
-    const { resolveSession } = require('../features/expenses/engine/sessionManager');
     const session = resolveSession(createSession('кофе 50'));
     const timeline = buildTimelineFromSession(session);
     const resolved = filterEventsByKind(timeline, 'resolution_transition');

@@ -19,6 +19,7 @@ export interface EnvelopesCardData {
 }
 
 function EnvelopeRow({ env }: { env: EnvelopeItem }) {
+  const C = useChatTokens();
   const hasLimit = env.limit > 0;
   const pct = hasLimit ? Math.min(100, (env.spent / env.limit) * 100) : 0;
   const over = hasLimit && env.spent > env.limit;

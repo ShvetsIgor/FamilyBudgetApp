@@ -313,10 +313,10 @@ export function FastExpenseEntry({
         </button>
         <div className="flex-1 text-center text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">
           {isEdit
-            ? 'Редактировать'
+            ? t('expense.numpadEdit')
             : fromChat && initialStore
-              ? `Чек · ${initialStore}`
-              : `Чек · ${splits.length + 1} ${pluralRu(splits.length + 1)}`}
+              ? t('expense.numpadReceipt', { store: initialStore })
+              : t('expense.numpadReceiptCount', { count: splits.length + 1 })}
         </div>
         <div className="w-8" />
       </div>

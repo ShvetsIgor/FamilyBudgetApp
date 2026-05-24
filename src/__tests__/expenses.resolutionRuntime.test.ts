@@ -66,7 +66,13 @@ import {
   extractUnknownMerchants,
   hasMerchantCorrections,
 } from '../features/expenses/engine/constructorBridge';
-import { createSession, resetSessionIds } from '../features/expenses/engine/sessionManager';
+import {
+  createSession,
+  resolveSession,
+  applyCorrection,
+  nextCorrectionId,
+  resetSessionIds,
+} from '../features/expenses/engine/sessionManager';
 import type { ClarificationHint } from '../features/expenses/engine/semanticFragment';
 import type { PurchaseGroup } from '../features/expenses/engine/purchaseGroup';
 import type { RegistryConflict } from '../features/expenses/engine/semanticRegistry';

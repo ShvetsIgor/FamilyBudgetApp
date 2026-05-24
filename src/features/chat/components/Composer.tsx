@@ -39,13 +39,16 @@ export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: Compo
   return (
     <div className="flex-shrink-0" style={{ background: C.bg }}>
       <div
-        className="flex items-center gap-2 px-3 pb-3 pt-2.5"
-        style={{ borderTop: `1px solid ${C.hairline}` }}
+        className="flex items-center gap-2 px-3 pt-2.5"
+        style={{
+          borderTop: `1px solid ${C.hairline}`,
+          paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)',
+        }}
       >
         <button
-          className="flex h-[38px] w-[38px] items-center justify-center rounded-xl transition-colors"
+          className="flex h-[38px] w-[38px] items-center justify-center rounded-xl transition-colors active:opacity-60"
           style={{ color: C.sub }}
-          onClick={() => alert('Скоро: фото чека и голосовой ввод')}
+          onClick={onPlus}
         >
           <Plus size={22} strokeWidth={2.2} />
         </button>

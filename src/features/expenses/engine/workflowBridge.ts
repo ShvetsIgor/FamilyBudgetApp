@@ -159,7 +159,7 @@ export function inspectWorkflowTransitions(
         trigger: step.actionApplied.type as NavigationActionType,
         actionId: step.actionApplied.id,
         isValid: true, // actions that caused transitions were valid
-        timestamp: step.actionApplied.timestamp ?? Date.now(),
+        timestamp: step.actionApplied.createdAt ?? Date.now(),
       });
     }
   }

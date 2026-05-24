@@ -1001,54 +1001,62 @@ export function CategoriesHub() {
             </div>
           )
         ) : isEmpty ? (
-          /* Empty state */
+          /* Chat-first empty state */
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
-              border: `2px dashed ${T.hairline}`,
-              borderRadius: 18,
-              padding: '40px 16px',
+              border: `1.5px dashed ${T.hairline}`,
+              borderRadius: 20,
+              padding: '36px 20px 28px',
               textAlign: 'center',
-              gap: 10,
+              gap: 12,
             }}
           >
             <div
               style={{
-                width: 56,
-                height: 56,
-                borderRadius: 16,
-                backgroundColor: T.bgSoft,
+                width: 64,
+                height: 64,
+                borderRadius: 18,
+                backgroundColor: `${T.primary}18`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <StickerIcon icon="box" color={T.sub} className="h-8 w-8" />
+              <StickerIcon icon="cart" color={T.primary} className="h-9 w-9" />
             </div>
-            <p style={{ fontSize: 14, fontWeight: 600, color: T.fg }}>Нет активных категорий</p>
-            <p style={{ fontSize: 12, color: T.sub }}>Создайте папку с нуля или запустите конструктор</p>
-            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+            <div>
+              <p style={{ fontSize: 15, fontWeight: 700, color: T.fg, marginBottom: 6 }}>
+                Категории растут сами
+              </p>
+              <p style={{ fontSize: 13, color: T.sub, lineHeight: 1.5, maxWidth: 280, margin: '0 auto' }}>
+                Просто пишите в чат: <span style={{ color: T.fg, fontWeight: 600 }}>«Дабах 1000»</span> — система научится и предложит контексты автоматически.
+              </p>
+            </div>
+            <p style={{ fontSize: 12, color: T.subLight, marginTop: -4 }}>
+              Или добавьте несколько контекстов для старта:
+            </p>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
               <button
                 onClick={() => setFolderEditor({ open: true })}
                 style={{
                   padding: '10px 16px',
                   borderRadius: 14,
-                  backgroundColor: T.fg,
-                  color: '#fff',
+                  backgroundColor: T.bgSoft,
+                  color: T.fg,
                   fontSize: 13,
                   fontWeight: 700,
-                  border: 'none',
+                  border: `1px solid ${T.hairline}`,
                   cursor: 'pointer',
                 }}
               >
-                Настроить с нуля
+                + Создать папку
               </button>
               {tab === 'expense' && (
                 <button
-                  onClick={() => setShowWizard(true)}
+                  onClick={() => setShowLibrary(true)}
                   style={{
                     padding: '10px 16px',
                     borderRadius: 14,
@@ -1060,13 +1068,13 @@ export function CategoriesHub() {
                     cursor: 'pointer',
                   }}
                 >
-                  Конструктор
+                  Из библиотеки
                 </button>
               )}
             </div>
           </div>
         ) : (
-          /* Outliner list */
+          /* Outliner list — user's own collection */
           <div
             style={{
               backgroundColor: T.card,

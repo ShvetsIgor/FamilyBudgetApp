@@ -1018,7 +1018,7 @@ describe('uxBridge', () => {
 
   describe('inspectGroupedAmbiguities', () => {
     it('returns empty result for clean session', () => {
-      const session = createSession('Store 100');
+      const session = createSession('');
       const result = inspectGroupedAmbiguities(session);
       expect(result.groups).toHaveLength(0);
       expect(result.totalCards).toBe(0);

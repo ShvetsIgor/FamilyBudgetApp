@@ -13,6 +13,7 @@ const AMOUNT_PRESETS = [500, 1000, 5000, 10000];
 
 export function SavingsDrawerForm({ accent }: { accent: string }) {
   const dispatch = useAppDispatch();
+  const t = useT();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const goals = useAppSelector((s) => s.savings.list);

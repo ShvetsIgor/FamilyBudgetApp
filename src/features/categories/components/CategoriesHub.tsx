@@ -15,7 +15,6 @@ import {
   resetCategoriesToDefaults,
 } from '@/features/categories/services/categoriesService';
 import { remapExpenseCategories } from '@/features/expenses/store/expensesSlice';
-import { setCategories, setFolders } from '@/features/categories/store/categoriesSlice';
 import {
   DEFAULT_EXPENSE_CATEGORIES,
   DEFAULT_INCOME_CATEGORIES,

@@ -12,6 +12,7 @@ interface ChatScreenProps {
 }
 
 export function ChatScreen({ children, onSend, onPlus, disabled }: ChatScreenProps) {
+  const C = useChatTokens();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

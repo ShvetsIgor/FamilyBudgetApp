@@ -5,10 +5,6 @@ import suggestionMemoryReducer, {
   recordSplitExpense,
 } from '@/features/expenses/store/suggestionMemorySlice';
 import type { SuggestionMemoryState } from '@/features/expenses/store/suggestionMemorySlice';
-import {
-  getRecentSplitCombos,
-  hasRelevantSplitCombos,
-} from '@/features/expenses/engine/recentContextEngine';
 import { computeSuggestions } from '@/features/expenses/engine/suggestionEngine';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

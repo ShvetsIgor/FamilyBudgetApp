@@ -239,10 +239,20 @@ export default function ExpensesPage() {
                         expense={e}
                         onClick={() => router.push(`/expenses/${e.id}`)}
                         onEdit={() => router.push(`/expenses/${e.id}/edit`)}
-                        onDelete={async () => {
+                        onDelete={() => {
                           if (!user) return;
+                          // Cancel any previous pending delete
+                          if (undoItem) {
+                            clearTimeout(undoItem.timerId);
+                            deleteExpense(user.id, undoItem.expense).catch(() => {});
+                          }
+                          // Optimistic remove
                           dispatch(removeExpense(e.id));
-                          try { await deleteExpense(user.id, e); } catch { /* ignore */ }
+                          const timerId = setTimeout(async () => {
+                            try { await deleteExpense(user.id, e); } catch { /* ignore */ }
+                            setUndoItem(null);
+                          }, 5000);
+                          setUndoItem({ expense: e, timerId });
                         }}
                       />
                     ))}

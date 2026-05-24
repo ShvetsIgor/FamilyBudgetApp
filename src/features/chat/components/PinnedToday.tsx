@@ -1,7 +1,8 @@
 'use client';
 
 import { Settings2 } from 'lucide-react';
-import { C, SHADOW, RAD } from '@/features/chat/styles/tokens';
+import { SHADOW, RAD } from '@/features/chat/styles/tokens';
+import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
 import type { Currency } from '@/shared/types';

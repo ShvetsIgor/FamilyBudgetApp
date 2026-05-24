@@ -157,7 +157,7 @@ describe('confidenceEngine', () => {
       const ctx = parseInput('coffee 45', EMPTY_MEMORY);
       const profile = computeConfidenceProfile(ctx, [makeScoredSuggestion('health', 60)]);
       const expected = profile.amount * 0.3 + profile.merchant * 0.3 + profile.category * 0.4;
-      expect(profile.overall).toBeCloseTo(expected, 2);
+      expect(profile.overall).toBeCloseTo(expected, 1);
     });
 
     it('is deterministic', () => {

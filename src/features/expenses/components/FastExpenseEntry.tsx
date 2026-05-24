@@ -548,7 +548,7 @@ export function FastExpenseEntry({
                 className="text-[11px] font-extrabold uppercase tracking-[.08em]"
                 style={{ color: pickerGroupFolder?.color ?? 'hsl(var(--muted-foreground))' }}
               >
-                {pickerGroupId ? t.cat(pickerGroupFolder?.name ?? '') : 'Выберите категорию'}
+                {pickerGroupId ? t.cat(pickerGroupFolder?.name ?? '') : 'Разделы'}
               </div>
               <button
                 onClick={() => { setPickerOpen(false); setPickerGroupId(null); }}

@@ -1051,8 +1051,8 @@ describe('constructorBridge — createAliasFromSession', () => {
     const session = createSession('кофе 50');
     const op = createAliasFromSession(session, 'cofe', 'coffee');
     expect(op.type).toBe('add_alias');
-    expect(op.payload.token).toBe('cofe');
-    expect(op.payload.canonicalKey).toBe('coffee');
+    expect((op.payload as { variant: string }).variant).toBe('cofe');
+    expect((op.payload as { canonical: string }).canonical).toBe('coffee');
   });
 
   it('description references session id', () => {

@@ -639,7 +639,7 @@ export function FastExpenseEntry({
                 {suggestedCatIds.length > 0 && initialStore && !isEdit && (
                   <div className="mb-2.5">
                     <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[.08em] mb-1.5 px-0.5">
-                      История · {initialStore}
+                      {initialStore} · история
                     </div>
                     <div className="grid grid-cols-4 gap-1.5">
                       {suggestedCatIds.map((id) => {

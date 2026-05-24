@@ -140,7 +140,11 @@
     "confirmDelete": "Delete this income entry?",
     "record": "Record",
     "recurring": "Monthly income",
-    "recurringHint": "will be added automatically each month"
+    "recurringHint": "will be added automatically each month",
+    "numpadSave": "Record income {symbol}{total}",
+    "numpadSaving": "Saving…",
+    "numpadCancel": "Cancel",
+    "numpadToday": "Today"
   },
   "expenses": {
     "title": "Expenses",

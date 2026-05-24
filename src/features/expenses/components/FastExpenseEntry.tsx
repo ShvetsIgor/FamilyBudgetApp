@@ -42,11 +42,6 @@ function applyKey(cur: string, key: NumKey): string {
   return cur + String(key);
 }
 
-function pluralRu(n: number) {
-  if (n === 1) return 'позиция';
-  if (n >= 2 && n <= 4) return 'позиции';
-  return 'позиций';
-}
 
 interface Props {
   initialExpense?: SerializableExpense;

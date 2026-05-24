@@ -1075,6 +1075,10 @@ export function CategoriesHub() {
           </div>
         ) : (
           /* Outliner list — user's own collection */
+          <>
+          <div style={{ fontSize: 11, fontWeight: 700, color: T.subLight, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6, paddingLeft: 2 }}>
+            Моя коллекция
+          </div>
           <div
             style={{
               backgroundColor: T.card,

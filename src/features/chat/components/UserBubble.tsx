@@ -11,6 +11,7 @@ interface UserBubbleProps {
 }
 
 export function UserBubble({ text, time, status = 'sent', tail = true }: UserBubbleProps) {
+  const C = useChatTokens();
   return (
     <div
       className="flex justify-end"

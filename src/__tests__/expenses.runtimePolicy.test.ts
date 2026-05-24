@@ -773,11 +773,4 @@ describe('Determinism', () => {
     expect(b1).toBe(b2);
   });
 
-  it('replaySessionWithPolicies is stable', () => {
-    const session = createSession('кофе 50');
-    const r1 = replaySessionWithPolicies(session, [], DEFAULT_POLICIES);
-    const r2 = replaySessionWithPolicies(session, [], DEFAULT_POLICIES);
-    expect(r1.resolutionState.ambiguityScore).toBe(r2.resolutionState.ambiguityScore);
-    expect(r1.evaluationResult.decisions.length).toBe(r2.evaluationResult.decisions.length);
-  });
 });

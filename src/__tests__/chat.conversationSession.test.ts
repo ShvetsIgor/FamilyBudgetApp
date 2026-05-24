@@ -63,48 +63,6 @@ import {
   type DraftSplitItem,
 } from '../features/expenses/types/expenseDraft';
 
-// IntentClassifier
-import {
-  classifyIntent,
-  intentIs,
-  isModificationIntent,
-  isDestructiveIntent,
-  isTerminalIntent,
-} from '../features/chat/engine/intentClassifier';
-
-// SessionMemory
-import {
-  createSessionMemory,
-  setTentativeMerchant,
-  addTentativeCategory,
-  addTentativeTag,
-  addReferencedSplitId,
-  addContextualReferent,
-  removeContextualReferent,
-  buildGlobalMemoryPatch,
-  resolveReferent,
-  getLatestReferent,
-  hasContextualReferents,
-  hasTentativeData,
-} from '../features/chat/engine/sessionMemory';
-
-// ConversationInspector
-import {
-  inspectConversationSession,
-  explainTransition,
-  explainClarification,
-  buildSessionTimeline,
-  explainLastTransition,
-  explainAllClarifications,
-} from '../features/chat/engine/conversationInspector';
-
-// QuickAddBridge
-import {
-  sessionStatusToQuickAddStatus,
-  quickAddFromSession,
-  applyQuickAddToSession,
-  initialQuickAddForSession,
-} from '../features/chat/engine/quickAddBridge';
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 

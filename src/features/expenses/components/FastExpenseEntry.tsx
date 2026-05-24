@@ -559,7 +559,7 @@ export function FastExpenseEntry({
             {noFolders ? (
               /* Fallback: no folders loaded — show all active categories directly */
               <div className="grid grid-cols-4 gap-1.5">
-                {activeCats.length > 0 ? activeCats.map((cat) => {
+                {activeExpCats.length > 0 ? activeExpCats.map((cat) => {
                   const selected = !!splits.find((x) => x.categoryId === cat.id);
                   const c = cat.color ?? '#E07A5F';
                   return (

@@ -5,7 +5,6 @@
  *   - inputNormalizer: normalizeText, toMerchantKey, resolveAlias, amount utilities
  *   - tokenClassifier: classifyToken, tokenizeAndClassify
  *   - inputPipeline: parseInput (all 7 stages), ParserContext shape
- *   - parseQuickAdd: backward compatibility
  *
  * All tests are deterministic: same inputs → same outputs, always.
  */

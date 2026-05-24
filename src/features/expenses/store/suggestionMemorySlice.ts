@@ -171,9 +171,9 @@ const suggestionMemorySlice = createSlice({
     /** Record a split expense save. Updates split combo memory for one-tap reuse. */
     recordSplitExpense(
       state,
-      action: PayloadAction<{ merchant?: string; categoryIds: string[]; date: string }>,
+      action: PayloadAction<{ merchant?: string; categoryIds: string[]; folderIds?: (string | undefined)[]; date: string }>,
     ) {
-      const { merchant, categoryIds, date } = action.payload;
+      const { merchant, categoryIds, folderIds, date } = action.payload;
       if (categoryIds.length < 2) return; // not a real split
 
       const merchantKey = normalizeTag(merchant ?? '');

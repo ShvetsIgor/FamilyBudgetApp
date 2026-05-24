@@ -373,7 +373,7 @@ export function FastExpenseEntry({
       {suggestedCatIds.length > 0 && initialStore && !isEdit && (
         <div className="flex gap-2 px-3.5 pb-1 flex-shrink-0 overflow-x-auto [scrollbar-width:none]">
           {suggestedCatIds.map((id) => {
-            const cat = topCats.find((c) => c.id === id);
+            const cat = activeExpCats.find((c) => c.id === id);
             if (!cat) return null;
             const sel = id === selectedCatId;
             const c = cat.color ?? '#E07A5F';

@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Plus, Mic, Send } from 'lucide-react';
-import { C } from '@/features/chat/styles/tokens';
+import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { useT } from '@/shared/hooks/useT';
 import { HelpSheet } from './HelpSheet';
 

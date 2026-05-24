@@ -370,33 +370,35 @@ export function FastExpenseEntry({
         </div>
       </div>
 
-      {/* ── Suggestion chips (shown when merchant memory has signal) ── */}
+      {/* ── Suggestion chips (merchant history — shown only when real history exists) ── */}
       {suggestedCatIds.length > 0 && initialStore && !isEdit && (
-        <div className="flex gap-2 px-3.5 pb-1 flex-shrink-0 overflow-x-auto [scrollbar-width:none]">
-          {suggestedCatIds.map((id) => {
-            const cat = activeExpCats.find((c) => c.id === id);
-            if (!cat) return null;
-            const sel = id === selectedCatId;
-            const c = cat.color ?? '#E07A5F';
-            return (
-              <button
-                key={id}
-                onClick={() => changeCategory(id)}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap flex-shrink-0 transition-all"
-                style={{
-                  background: sel ? c : c + '18',
-                  color: sel ? '#fff' : c,
-                  border: `1.5px solid ${sel ? c : c + '44'}`,
-                }}
-              >
-                <StickerIcon icon={cat.icon ?? 'box'} color={sel ? '#fff' : c} className="h-3 w-3" />
-                {t.cat(cat.name)}
-              </button>
-            );
-          })}
-          <span className="text-[10px] font-semibold text-muted-foreground self-center flex-shrink-0">
-            · из истории
-          </span>
+        <div className="px-3.5 pb-2 flex-shrink-0">
+          <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[.08em] mb-1.5">
+            История · {initialStore}
+          </div>
+          <div className="flex gap-2 overflow-x-auto [scrollbar-width:none]">
+            {suggestedCatIds.map((id) => {
+              const cat = activeExpCats.find((c) => c.id === id);
+              if (!cat) return null;
+              const sel = id === selectedCatId;
+              const c = cat.color ?? '#E07A5F';
+              return (
+                <button
+                  key={id}
+                  onClick={() => changeCategory(id)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap flex-shrink-0 transition-all"
+                  style={{
+                    background: sel ? c : c + '18',
+                    color: sel ? '#fff' : c,
+                    border: `1.5px solid ${sel ? c : c + '44'}`,
+                  }}
+                >
+                  <StickerIcon icon={cat.icon ?? 'box'} color={sel ? '#fff' : c} className="h-3 w-3" />
+                  {t.cat(cat.name)}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 

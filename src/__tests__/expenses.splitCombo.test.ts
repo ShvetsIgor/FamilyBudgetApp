@@ -102,9 +102,7 @@ describe('computeSuggestions split_history signal', () => {
 
   it('boosts a category that appears in split combos for this merchant', () => {
     const mem: SuggestionMemoryState = {
-      merchants: {},
-      recents: [],
-      splitCombos: [
+      merchants: {}, recents: [], tagAssociations: [], splitCombos: [
         { key: 'shop|food,health', merchantKey: 'shop', categoryIds: ['food', 'health'], count: 3, lastUsed: today },
       ],
     };
@@ -118,6 +116,7 @@ describe('computeSuggestions split_history signal', () => {
     const mem: SuggestionMemoryState = {
       merchants: {},
       recents: [],
+      tagAssociations: [],
       splitCombos: [
         { key: 'shop|food,health', merchantKey: 'shop', categoryIds: ['food', 'health'], count: 2, lastUsed: today },
       ],

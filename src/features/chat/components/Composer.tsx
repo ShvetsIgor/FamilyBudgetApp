@@ -100,7 +100,7 @@ export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: Compo
           <button
             className="flex h-[38px] w-[38px] items-center justify-center rounded-xl transition-colors"
             style={{ color: C.sub }}
-            onClick={() => alert('Голосовой ввод — скоро')}
+            onClick={onPlus}
           >
             <Mic size={22} strokeWidth={2} />
           </button>

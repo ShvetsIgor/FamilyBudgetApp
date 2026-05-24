@@ -3,7 +3,8 @@
 import { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
-import { C, RAD, SHADOW } from '@/features/chat/styles/tokens';
+import { RAD, SHADOW } from '@/features/chat/styles/tokens';
+import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { useT } from '@/shared/hooks/useT';
 
 interface HelpSheetProps {

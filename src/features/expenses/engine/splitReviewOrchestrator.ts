@@ -41,8 +41,8 @@ export function buildSplitItemProjection(
             (modPhrase.tokenIndexes[0] ?? 0) -
             (fragment.id.charCodeAt(1) || 0),
           ) < 5;
-          if (isNear && modPhrase.text) {
-            modifiers.push(modPhrase.text);
+          if (isNear && modPhrase.rawText) {
+            modifiers.push(modPhrase.rawText);
           }
         }
       }

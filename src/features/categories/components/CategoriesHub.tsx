@@ -557,7 +557,7 @@ export function CategoriesHub() {
                 cursor: 'text',
               }}
             >
-              {folder.name}
+              {t.cat(folder.name)}
             </span>
           )}
 

@@ -203,7 +203,7 @@ export function OnboardingFlow({ onComplete }: Props) {
               disabled={saving}
               className="w-full rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
             >
-              {saving ? 'Сохранение…' : 'Открыть приложение'}
+              {saving ? t('onboarding.saving') : t('onboarding.open')}
             </button>
           </div>
         )}

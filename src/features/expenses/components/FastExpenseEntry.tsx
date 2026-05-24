@@ -361,7 +361,7 @@ export function FastExpenseEntry({
         return (
           <div className="px-3.5 pb-1 flex-shrink-0">
             <button
-              onClick={() => { setPickerOpen(true); setPickerGroupId(predictedContext.folderId); }}
+              onClick={() => { openPicker(); setPickerGroupId(predictedContext.folderId); }}
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all"
               style={{
                 background: folderColor + '18',

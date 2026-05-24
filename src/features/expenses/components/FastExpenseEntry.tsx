@@ -163,11 +163,11 @@ export function FastExpenseEntry({
 
   /** Top 3 category suggestions based on merchant context + usage history. */
   const suggestedCatIds = useMemo(() => {
-    if (isEdit || topCats.length === 0) return [];
-    return computeSuggestions({ merchant: initialStore, items: topCats, memory, topN: 3 }).map(
+    if (isEdit || activeExpCats.length === 0) return [];
+    return computeSuggestions({ merchant: initialStore, items: activeExpCats, memory, topN: 3 }).map(
       (s) => s.categoryId,
     );
-  }, [isEdit, topCats, initialStore, memory]);
+  }, [isEdit, activeExpCats, initialStore, memory]);
 
   const totalNum = parseFloat(total) || 0;
   const splitsSum = splits.reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);

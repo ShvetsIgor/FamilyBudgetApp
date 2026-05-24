@@ -51,25 +51,6 @@ import {
   matchingEscalations,
 } from '../features/expenses/engine/conversationalStrategy';
 import {
-  buildPolicyDiagnosticReport,
-  buildPolicyDiagnosticEntry,
-  explainWhyClarificationTriggered,
-  explainWhyAutoResolved,
-  explainWhyDeferred,
-  explainWhichPolicyApplied,
-} from '../features/expenses/engine/policyDiagnostics';
-import {
-  editPolicy,
-  togglePolicy,
-  updatePolicyConfig,
-  previewPolicyImpact,
-  replaySessionWithPolicies,
-  compareStrategies,
-  inspectEscalationPath,
-  mergePolicySets,
-  summarizePolicies,
-} from '../features/expenses/engine/policyBridge';
-import {
   buildInitialResolutionState,
   resetActionIds,
 } from '../features/expenses/engine/resolutionEngine';

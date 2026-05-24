@@ -329,8 +329,9 @@ export function FastExpenseEntry({
 
   const catColor = selectedCat?.color ?? '#E07A5F';
 
-  // Picker: group → flat categories in that group
-  const pickerGroupCat = pickerGroupId ? allCats.find((c) => c.id === pickerGroupId) : null;
+  // Picker: folder → real categories in that folder
+  // pickerGroupId is a folder ID — look up in topFolders, NOT allCats
+  const pickerGroupFolder = pickerGroupId ? topFolders.find((f) => f.id === pickerGroupId) : null;
   const pickerGroupCats = pickerGroupId ? getCatsInGroup(pickerGroupId) : [];
 
   return (

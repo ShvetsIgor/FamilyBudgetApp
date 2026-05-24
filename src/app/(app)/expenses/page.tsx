@@ -287,7 +287,7 @@ export default function ExpensesPage() {
           <button
             onClick={() => {
               clearTimeout(undoItem.timerId);
-              dispatch({ type: 'expenses/prependExpense', payload: undoItem.expense });
+              dispatch(prependExpense(undoItem.expense));
               setUndoItem(null);
             }}
             className="shrink-0 rounded-xl bg-background/20 px-3 py-1.5 text-sm font-bold text-background hover:bg-background/30 transition-colors"

@@ -316,7 +316,9 @@
     "amount": "Amount",
     "numpadSave": "Put {symbol}{total}",
     "numpadSaving": "Saving…",
-    "numpadCancel": "Cancel"
+    "numpadCancel": "Cancel",
+    "numpadCreate": "Create · {name} · {symbol}{target}",
+    "numpadCreateHint": "Enter name and amount"
   },
   "categories": {
     "title": "Categories",

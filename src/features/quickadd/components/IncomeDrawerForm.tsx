@@ -243,7 +243,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
           style={{ background: catColor, boxShadow: `0 8px 20px ${catColor}55` }}
         >
           <StickerIcon icon={selectedCat?.icon ?? 'wallet'} color="#fff" className="h-4 w-4" />
-          <span>{saving ? 'Сохранение…' : `Записать доход ${symbol}\u202F${amount || '0'}`}</span>
+          <span>{saving ? t('income.numpadSaving') : t('income.numpadSave', { symbol, total: amount || '0' })}</span>
           <kbd className="ml-1 px-1.5 py-0.5 rounded bg-white/20 text-[9px] font-mono">⌘↵</kbd>
         </button>
       </div>

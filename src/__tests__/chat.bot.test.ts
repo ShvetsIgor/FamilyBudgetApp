@@ -144,13 +144,13 @@ describe('respondToUserMessage', () => {
     const botMsg = reply.messages[0];
     expect(botMsg.kind).toBe('bot');
     expect(botMsg.card?.kind).toBe('saved');
-    expect(botMsg.card?.data.amount).toBe(65);
+    expect(((botMsg.card?.data) as any).amount).toBe(65);
   });
 
   it('«65 кофе» → saved-card использует цвет категории', async () => {
     const parsed = parseMessage('65 кофе', { learned: {} });
     const reply = await respondToUserMessage(makeUserMsg('65 кофе'), parsed, makeCtx());
-    expect(reply.messages[0].card?.data.color).toBe('#D4A574');
+    expect(((reply.messages[0].card?.data) as any).color).toBe('#D4A574');
   });
 
   it('«65 кофе» → expense создаётся через addExpense', async () => {
@@ -173,21 +173,21 @@ describe('respondToUserMessage', () => {
     const parsed = parseMessage('65 кофе', { learned: {} });
     const reply = await respondToUserMessage(makeUserMsg('65 кофе'), parsed, makeCtx());
     // coffee has folderId='dining', folder name='Кафе'
-    expect(reply.messages[0].card?.data.groupName).toBe('Кафе');
+    expect(((reply.messages[0].card?.data) as any).groupName).toBe('Кафе');
   });
 
   it('только число «150» → clarify card', async () => {
     const parsed = parseMessage('150', { learned: {} });
     const reply = await respondToUserMessage(makeUserMsg('150'), parsed, makeCtx());
     expect(reply.messages[0].card?.kind).toBe('clarify');
-    expect(reply.messages[0].card?.data.amount).toBe(150);
+    expect(((reply.messages[0].card?.data) as any).amount).toBe(150);
     expect(reply.expense).toBeUndefined();
   });
 
   it('«clarify» → chips содержат top-категории из ctx', async () => {
     const parsed = parseMessage('150', { learned: {} });
     const reply = await respondToUserMessage(makeUserMsg('150'), parsed, makeCtx({ topCategoryIds: ['dining', 'groceries'] }));
-    const chips = reply.messages[0].card?.data.chips as { id: string }[];
+    const chips = ((reply.messages[0].card?.data) as any).chips as { id: string }[];
     expect(chips.some((c) => c.id === 'dining')).toBe(true);
   });
 

@@ -19,7 +19,7 @@ const makeExpense = (id: string, categoryId: string): SerializableExpense => ({
   tags: [],
   privacy: 'regular',
   splits: [],
-  createdAt: '2026-05-01T10:00:00.000Z',
+  isRecurring: false, createdAt: '2026-05-01T10:00:00.000Z',
   updatedAt: '2026-05-01T10:00:00.000Z',
 });
 

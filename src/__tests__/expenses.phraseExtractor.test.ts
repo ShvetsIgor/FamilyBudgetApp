@@ -45,7 +45,7 @@ function emptyMemory(): SuggestionMemoryState {
 
 function memoryWith(merchantKey: string): SuggestionMemoryState {
   return {
-    merchants: { [merchantKey]: [{ categoryId: 'groceries', count: 3, lastUsedAt: Date.now() }] },
+    merchants: { [merchantKey]: [{ categoryId: 'groceries', count: 3, lastUsed: new Date().toISOString().slice(0, 10) }] },
     recents: [],
     splitCombos: [],
     tagAssociations: [],

@@ -1,9 +1,6 @@
 /**
  * LAYER: input pipeline — modular, deterministic text-to-context transformation.
  *
- * Replaces the primitive quickAddParser with a staged pipeline that produces
- * a rich ParserContext consumed by the suggestion engine and orchestration layer.
- *
  * Architecture invariants:
  *   - Every stage is a pure function — same inputs → same output, always.
  *   - Stages operate on typed data (ClassifiedToken[]), not raw strings.
@@ -21,21 +18,12 @@
  *   Stage 7: buildContext      — assemble ParserContext with signals + hints
  *
  * ParserContext is the canonical output. Use parseInput() as the entry point.
- * For backward compatibility, parseQuickAdd() wraps parseInput().
  */
 
 import type { SuggestionMemoryState } from '../store/suggestionMemorySlice';
 import { normalizeText, toMerchantKey, resolveAlias } from './inputNormalizer';
 import { tokenizeAndClassify, type ClassifiedToken } from './tokenClassifier';
 import { SCORING_POLICY } from './scoringPolicy';
-import { extractFragmentsFromPhrases } from './fragmentExtractor';
-import type { SemanticFragment, ClarificationHint, FragmentRelationship } from './semanticFragment';
-import type { SemanticPhrase } from './semanticPhrase';
-import type { PurchaseGroup } from './purchaseGroup';
-import { buildRelationships, buildPurchaseGroups } from './purchaseGrouper';
-import { extractPhrases } from './phraseExtractor';
-import type { SemanticScope, ScopeHint } from './semanticScope';
-import { buildSemanticScopes } from './scopeResolver';
 
 // ── ParserContext model ───────────────────────────────────────────────────────
 

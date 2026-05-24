@@ -4,6 +4,7 @@ import { RPCard } from './RPCard';
 import { useAppSelector } from '@/store/store';
 
 export function RPRecent() {
+  const C = useChatTokens();
   const expenses = useAppSelector((s) => s.expenses.list ?? []);
   const categories = useAppSelector((s) => s.categories.expense);
   const currency = useAppSelector((s) => s.ui.currency);

@@ -277,7 +277,7 @@ export function FastExpenseEntry({
                 title: initialStore ?? t.cat(selectedCat?.name ?? ''),
                 catName: null,
                 groupName: null,
-                hint: `сплит · ${posCount} ${pluralRu(posCount)}`,
+                hint: `сплит · ${t('expense.numpadReceiptCount', { count: posCount })}`,
                 amount: totalNum,
                 currency: sym,
                 expenseId: exp.id,

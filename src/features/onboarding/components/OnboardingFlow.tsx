@@ -30,6 +30,7 @@ interface Props {
 
 export function OnboardingFlow({ onComplete }: Props) {
   const dispatch = useAppDispatch();
+  const t = useT();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const language = useAppSelector((s) => s.ui.language);

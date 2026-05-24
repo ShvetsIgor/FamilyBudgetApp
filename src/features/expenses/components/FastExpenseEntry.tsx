@@ -332,7 +332,7 @@ export function FastExpenseEntry({
   // Picker: folder → real categories in that folder
   // pickerGroupId is a folder ID — look up in topFolders, NOT allCats
   const pickerGroupFolder = pickerGroupId ? topFolders.find((f) => f.id === pickerGroupId) : null;
-  const pickerGroupFolders = pickerGroupId ? getCatsInGroup(pickerGroupId) : [];
+  const pickerGroupCats = pickerGroupId ? getCatsInGroup(pickerGroupId) : [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:bg-black/50 lg:backdrop-blur-sm">
@@ -633,7 +633,7 @@ export function FastExpenseEntry({
             ) : (
               /* Show categories in selected folder group */
               <div className="grid grid-cols-4 gap-1.5">
-                {pickerGroupFolders.length > 0 ? pickerGroupFolders.map((s) => {
+                {pickerGroupCats.length > 0 ? pickerGroupCats.map((s) => {
                   const selected = !!splits.find((x) => x.categoryId === s.id);
                   return (
                     <button

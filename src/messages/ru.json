@@ -104,7 +104,16 @@
     "confirmDelete": "Удалить этот расход?",
     "payment": "Оплата",
     "privacy2": "Приватность",
-    "split2": "Разбивка"
+    "split2": "Разбивка",
+    "numpadEdit": "Редактировать",
+    "numpadReceipt": "Чек · {store}",
+    "numpadReceiptCount_one": "{count} позиция",
+    "numpadReceiptCount_few": "{count} позиции",
+    "numpadReceiptCount_many": "{count} позиций",
+    "numpadTotal": "Итого",
+    "numpadSave": "Записать чек {symbol}{total}",
+    "numpadSaveEdit": "Сохранить {symbol}{total}",
+    "numpadSaving": "Сохранение…"
   },
   "income": {
     "title": "Новый доход",

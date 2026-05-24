@@ -134,7 +134,7 @@ export interface SemanticSession {
    * Optional parser traces (present when tracing was requested).
    * Parallel to parserContexts.
    */
-  traces: ParserTrace[];
+  traces: unknown[];
   /** Clarification state when status = 'awaiting_clarification'. */
   clarificationState: ClarificationState | undefined;
   /** Groups that still need user decision. */

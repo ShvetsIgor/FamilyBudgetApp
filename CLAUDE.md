@@ -25,63 +25,85 @@ src/
     layout.tsx                    — root layout, Providers
     providers.tsx                 — Redux + ThemeProvider + AuthProvider
     page.tsx                      — redirect → /home
+    not-found.tsx                 — 404 page
     auth/
       layout.tsx
       login/page.tsx              — email/password + Google sign-in
       register/page.tsx           — email/password + Google sign-up
+      error.tsx                   — auth error boundary
     (app)/                        — authenticated route group
-      layout.tsx                  — Header + BottomNav wrapper
-      home/page.tsx               — Quick Add, upcoming bills, recent expenses
+      layout.tsx                  — AppShell wrapper + data loading
+      error.tsx                   — app error boundary
+      home/page.tsx               — chat UI, expense entry, morning greeting
       expenses/
-        page.tsx                  — grouped by date, search/filter
-        new/page.tsx              — new expense form
+        page.tsx                  — grouped by date, search/filter, month picker
+        new/page.tsx              — FastExpenseEntry numpad
         [id]/page.tsx             — expense detail
-        [id]/edit/page.tsx        — edit expense
-      categories/page.tsx         — tree view, CRUD, reset to defaults
-      statistics/page.tsx         — pie + bar charts, monthly breakdown
-      analytics/page.tsx          — trends, insights
+        [id]/edit/page.tsx        — edit expense (FastExpenseEntry)
+      income/
+        page.tsx                  — income list
+        new/page.tsx              — FastIncomeEntry numpad
+        [id]/edit/page.tsx        — edit income
+      categories/page.tsx         — folder tree, CRUD, library
+      statistics/page.tsx         — pie + bar charts, budgets, monthly breakdown
+      analytics/page.tsx          — trends, DOW chart, avg daily
       recurring/page.tsx          — recurring payments CRUD
-      savings/page.tsx            — savings goals CRUD + contribute
+      savings/
+        page.tsx                  — savings goals CRUD
+        new/page.tsx              — new goal form
+        contribute/page.tsx       — contribute numpad
       account/page.tsx            — profile, theme, language, currency, family, export CSV
   features/
     auth/
-      components/
-        AuthProvider.tsx          — Firebase onAuthStateChanged
-        LoginForm.tsx
-        RegisterForm.tsx
-        GoogleButton.tsx
+      components/                 — AuthProvider, LoginForm, RegisterForm, GoogleButton
       services/authService.ts
       store/authSlice.ts
     categories/
-      components/
-        CategoryForm.tsx
-        CategoryIcon.tsx
-        CategoryPicker.tsx
-        CategoryTree.tsx
-      services/
-        categoriesService.ts
-        defaultCategories.ts      — seed data for default categories
+      components/                 — CategoryIcon, CategoryPicker, CategorySheet, constructor/*
+      config/                     — categoryLabels.ts, libraryConfig.ts
+      hooks/useCategoryGroups.ts
+      policy/categoryPolicy.ts    — isActiveCategory gate
+      preset/categoryPresets.ts   — onboarding blueprints only
+      selectors/                  — selectFolderSections, selectAvailableLibrary
+      services/                   — categoriesService, defaultCategories
       store/categoriesSlice.ts
+      utils/                      — folderSections, statsAggregation, tagUtils
+    chat/
+      bot/                        — context, respond, morning, weekly, slash
+      components/                 — ChatScreen, Composer, ChatHeader, MenuOverlay,
+                                    BotBubble, UserBubble, BotCard/*, PinnedToday, Typing
+      desktop/                    — DesktopChatLayout, DesktopChatHeader, CommandPalette, widgets/*
+      hooks/                      — useChatMessages, useLearnedKeywords, useStoreProfiles
+      parser/                     — parse, itemDictionary, dictionaries/*, learning
+      services/                   — messagesService, storeProfilesService
+      store/                      — chatSlice, storeProfilesSlice
+      styles/                     — tokens.ts, useChatTokens.ts (dark-mode-aware)
     expenses/
-      components/
-        ExpenseCard.tsx
-        ExpenseForm.tsx           — with split support
-        SplitEditor.tsx           — inline split editor
+      components/                 — ExpenseCard, ExpenseForm, FastExpenseEntry, SplitEditor
+      engine/                     — inputNormalizer, inputPipeline, intentDetector,
+                                    scoringPolicy, splitMemoryEngine, suggestionEngine, tokenClassifier
       services/expensesService.ts
-      store/expensesSlice.ts
+      store/                      — expensesSlice, suggestionMemorySlice
       utils/splitAlgorithm.ts
     income/
-      components/
-        IncomeCard.tsx
-        IncomeForm.tsx
+      components/                 — IncomeCard, IncomeForm, FastIncomeEntry
       services/incomeService.ts
       store/incomeSlice.ts
+    notifications/
+      components/NotificationsPanel.tsx
+      store/notificationsSlice.ts
+    onboarding/
+      components/OnboardingFlow.tsx
+    quickadd/
+      components/                 — AddDrawer (desktop), ExpenseDrawerForm, IncomeDrawerForm, SavingsDrawerForm
+      store/quickAddSlice.ts
     recurring/
       components/UpcomingBills.tsx
       hooks/useRecurringNotifications.ts
       services/recurringService.ts
       store/recurringSlice.ts
     savings/
+      components/                 — FastSavingsEntry, FastGoalEntry
       services/savingsService.ts
       store/savingsSlice.ts
     stats/
@@ -92,15 +114,15 @@ src/
     family/
       services/familyService.ts
       store/familySlice.ts
-    onboarding/
-      components/OnboardingFlow.tsx
     ui/
-      store/uiSlice.ts            — theme, language, currency, offline
+      store/uiSlice.ts            — theme, language, currency, weekStart, budgetMode
   shared/
     components/
-      Header.tsx                  — sticky, offline indicator, wordmark logo, recurring icon
-      BottomNav.tsx               — 4 tabs: Add / Expenses / Stats / Analytics
+      AppShell.tsx                — mobile (ChatHeader+main) / desktop (Sidebar+TopBar) layout
+      Sidebar.tsx                 — desktop nav
+      TopBar.tsx                  — desktop top bar
       ThemeProvider.tsx           — applies dark class + RTL dir to <html>
+      MiniCalendar.tsx            — date picker shared component
       LoadingScreen.tsx
       UpdateBanner.tsx            — PWA update prompt
     hooks/
@@ -111,19 +133,17 @@ src/
       i18n.ts
     types/index.ts                — all TypeScript interfaces
     utils/
-      cn.ts                       — tailwind-merge helper
-      colors.ts
-      currency.ts                 — formatAmount, getCurrencySymbol
-      exportCsv.ts                — CSV export for account page
+      cn.ts / colors.ts / currency.ts / exportCsv.ts
   store/store.ts                  — Redux store + typed hooks
   messages/
     en.json / ru.json / he.json   — full i18n coverage
+  __tests__/                      — Vitest test suite (427 tests)
 public/
-  logo-mark.svg                   — pig logo mark
-  wordmark.svg                    — text wordmark
-  favicon.ico / favicon.svg
-  icon-192.png / icon-512.png     — PWA icons
-  manifest.json
+  icons/                          — PWA icons (192, 512, apple-touch)
+  logo-mark.svg / logo-wordmark.svg
+  manifest.json / sw.js
+docs/                             — reference docs, handoffs (not part of build)
+design-archive/                   — design system explorations (not part of build)
 ```
 
 ## Firebase Setup

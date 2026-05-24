@@ -582,6 +582,37 @@ export function FastExpenseEntry({
               </div>
             ) : pickerGroupId === null ? (
               /* Show folders — tap a folder to see real categories inside */
+              <div>
+                {/* History shortcuts — only if real merchant data exists */}
+                {suggestedCatIds.length > 0 && initialStore && !isEdit && (
+                  <div className="mb-2.5">
+                    <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[.08em] mb-1.5 px-0.5">
+                      История · {initialStore}
+                    </div>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {suggestedCatIds.map((id) => {
+                        const cat = activeExpCats.find((c) => c.id === id);
+                        if (!cat) return null;
+                        const selected = !!splits.find((x) => x.categoryId === cat.id);
+                        const c = cat.color ?? '#E07A5F';
+                        return (
+                          <button
+                            key={id}
+                            onClick={() => selected ? removeSplit(splits.findIndex((x) => x.categoryId === cat.id)) : addSplit(cat)}
+                            className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
+                            style={{ background: selected ? c + '30' : c + '14', borderColor: selected ? c : 'transparent' }}
+                          >
+                            <StickerIcon icon={cat.icon ?? 'box'} color={c} className="h-3.5 w-3.5" />
+                            <span className="leading-tight text-center line-clamp-1">{t.cat(cat.name)}</span>
+                            {selected && <span className="text-[8px]" style={{ color: c }}>✓</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="h-px bg-border mt-2.5 mb-2" />
+                  </div>
+                )}
+                {/* Folder tiles */}
               <div className="grid grid-cols-4 gap-1.5">
                 {topFolders.map((folder) => {
                   const c = folder.color ?? '#E07A5F';

@@ -56,9 +56,8 @@ export function createAliasFromSession(
     id: nextOpId(),
     type: 'add_alias',
     payload: {
-      token: merchantToken,
-      canonicalKey: canonicalMerchantKey,
-      sourceSessionId: session.id,
+      variant: merchantToken,
+      canonical: canonicalMerchantKey,
     },
     description: `Add alias "${merchantToken}" → "${canonicalMerchantKey}" (derived from session ${session.id})`,
   };

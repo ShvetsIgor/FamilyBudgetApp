@@ -120,10 +120,6 @@ export function FastExpenseEntry({
 
   const [total, setTotal] = useState(startTotal);
   const [selectedCatId, setSelectedCatId] = useState(initSelectedCatId);
-  const [splits, setSplits] = useState<SplitRow[]>(initSplits);
-  const [editing, setEditing] = useState<'total' | number>('total');
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [pickerGroupId, setPickerGroupId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash' | 'other'>(
     initialExpense?.paymentMethod ?? 'card'
   );
@@ -149,62 +145,35 @@ export function FastExpenseEntry({
   const suggestedCatIds = isEdit ? [] : draft.suggestedCategories.slice(0, 4).map((s) => s.categoryId);
 
   const totalNum = parseFloat(total) || 0;
-  const splitsSum = splits.reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
-  const remainder = Math.max(0, totalNum - splitsSum);
-  const posCount = splits.filter((s) => parseFloat(s.amount) > 0).length + (remainder > 0 ? 1 : 0);
+
+  // Compute initial splits once at mount
+  const [initialSplitsOnce] = useState(initSplits);
+
+  const splitEditor = useSplitEditor({
+    totalNum,
+    topFolders,
+    selectedCatId,
+    selectedCat,
+    initialSplits: initialSplitsOnce,
+    onSplitAdded: () => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }),
+  });
+  const {
+    splits, editing, setEditing, pickerOpen, pickerGroupId, setPickerGroupId,
+    addSplit, addSplitBatch, removeSplit, openPicker, closePicker, tapOnSplit, splitEven,
+    splitsSum, remainder, splitsOverflow, posCount,
+  } = splitEditor;
 
   function tap(key: NumKey) {
     if (editing === 'total') {
       setTotal((cur) => applyKey(cur, key));
     } else {
-      const idx = editing;
-      setSplits((prev) =>
-        prev.map((s, i) => (i === idx ? { ...s, amount: applyKey(s.amount, key) } : s))
-      );
+      tapOnSplit(editing, key);
     }
-  }
-
-  function addSplit(sub: Category) {
-    if (splits.find((s) => s.categoryId === sub.id)) return;
-    // pickerGroupId is a folder ID — look it up in topFolders, not allCats
-    const groupFolder = pickerGroupId ? topFolders.find((f) => f.id === pickerGroupId) : null;
-    const color = groupFolder?.color ?? sub.color;
-    setSplits((prev) => {
-      const next = [
-        ...prev,
-        {
-          categoryId: sub.id,
-          groupCatId: pickerGroupId ?? selectedCatId,
-          name: sub.name,
-          groupName: groupFolder?.name ?? selectedCat?.name ?? '',
-          icon: sub.icon,
-          color,
-          amount: '0',
-        },
-      ];
-      setEditing(next.length - 1);
-      requestAnimationFrame(() =>
-        scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
-      );
-      return next;
-    });
-    setPickerOpen(false);
-    setPickerGroupId(null);
-  }
-
-  function removeSplit(i: number) {
-    setSplits((prev) => prev.filter((_, j) => j !== i));
-    setEditing('total');
   }
 
   function changeCategory(id: string) {
     setSelectedCatId(id);
     setEditing('total');
-  }
-
-  function openPicker() {
-    setPickerOpen(true);
-    setPickerGroupId(null);
   }
 
   async function handleSave() {

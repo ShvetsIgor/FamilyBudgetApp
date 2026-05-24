@@ -15,6 +15,7 @@ interface Props {
 }
 
 export function BudgetSettingsSheet({ autoDaily, onClose }: Props) {
+  const C = useChatTokens();
   const t = useT();
   const dispatch = useAppDispatch();
   const currency = useAppSelector((s) => s.ui.currency);

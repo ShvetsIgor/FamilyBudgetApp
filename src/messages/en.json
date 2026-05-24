@@ -588,5 +588,26 @@
       "online": "Family online · {n}",
       "onlyYou": "Just you"
     }
+  },
+  "onboarding": {
+    "hi": "Hi{name}!",
+    "welcome": "Welcome to Family Budget — your personal finance assistant.",
+    "feature1": "Add expenses in seconds",
+    "feature2": "Monthly statistics and analytics",
+    "feature3": "Savings goals and category budgets",
+    "feature4": "Recurring payments with reminders",
+    "start": "Get started →",
+    "chooseLanguage": "Choose language",
+    "chooseCurrency": "Choose currency",
+    "currencyHint": "Can be changed later in settings",
+    "continue": "Continue →",
+    "allSet": "All set!",
+    "allSetHint": "Tap + at the bottom to add your first expense.",
+    "quickStart": "Quick start",
+    "step1": "1. Add an expense via +",
+    "step2": "2. View statistics on the 📊 tab",
+    "step3": "3. Set category budgets in account settings",
+    "open": "Open app",
+    "saving": "Saving…"
   }
 }

@@ -8,6 +8,7 @@ import { setCurrency, setLanguage } from '@/features/ui/store/uiSlice';
 import { setUser } from '@/features/auth/store/authSlice';
 import { formatAmount } from '@/shared/utils/currency';
 import type { Currency, Language } from '@/shared/types';
+import { useT } from '@/shared/hooks/useT';
 
 const LANGUAGES: { value: Language; flag: string; label: string }[] = [
   { value: 'ru', flag: '🇷🇺', label: 'Русский' },
@@ -15,17 +16,10 @@ const LANGUAGES: { value: Language; flag: string; label: string }[] = [
 ];
 
 const CURRENCIES: { value: Currency; label: string; example: string }[] = [
-  { value: 'ILS', label: '₪ Шекель', example: formatAmount(1000, 'ILS') },
-  { value: 'USD', label: '$ Доллар', example: formatAmount(1000, 'USD') },
-  { value: 'CAD', label: 'CA$ Канадский', example: formatAmount(1000, 'CAD') },
-  { value: 'RUB', label: '₽ Рубль', example: formatAmount(1000, 'RUB') },
-];
-
-const FEATURES = [
-  { icon: '💸', text: 'Добавляйте расходы за секунды' },
-  { icon: '📊', text: 'Статистика и аналитика по месяцам' },
-  { icon: '🎯', text: 'Цели накоплений и бюджет по категориям' },
-  { icon: '🔄', text: 'Регулярные платежи с напоминаниями' },
+  { value: 'ILS', label: '₪ Shekel', example: formatAmount(1000, 'ILS') },
+  { value: 'USD', label: '$ Dollar', example: formatAmount(1000, 'USD') },
+  { value: 'CAD', label: 'CA$ Canadian', example: formatAmount(1000, 'CAD') },
+  { value: 'RUB', label: '₽ Ruble', example: formatAmount(1000, 'RUB') },
 ];
 
 const TOTAL_STEPS = 4;

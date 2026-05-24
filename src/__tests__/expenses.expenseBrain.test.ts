@@ -16,11 +16,6 @@ import {
 } from '../features/expenses/engine/splitMemoryEngine';
 import { buildExpenseContext } from '../features/expenses/engine/expenseContextBuilder';
 import {
-  explainSuggestion,
-  inspectExpenseContext,
-  explainAllSuggestions,
-} from '../features/expenses/engine/suggestionInspector';
-import {
   initialQuickAddState,
   applyContextToQuickAdd,
   confirmSuggestion,

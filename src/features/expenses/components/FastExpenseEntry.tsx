@@ -403,7 +403,7 @@ export function FastExpenseEntry({
       {suggestedCatIds.length > 0 && initialStore && !isEdit && (
         <div className="px-3.5 pb-2 flex-shrink-0">
           <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[.08em] mb-1.5">
-            История · {initialStore}
+            {initialStore} · история
           </div>
           <div className="flex gap-2 overflow-x-auto [scrollbar-width:none]">
             {suggestedCatIds.map((id) => {

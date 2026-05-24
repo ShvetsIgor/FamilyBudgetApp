@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import {
   addCategory, updateCategory, archiveCategory,
@@ -19,8 +19,6 @@ import {
 } from '@/features/categories/services/categoryFoldersService';
 import { saveBudget } from '@/features/budget/services/budgetService';
 import type { Category, CategoryFolder, CategoryType } from '@/shared/types';
-import { CategoryRow } from './CategoryRow';
-import { FolderSection } from './FolderSection';
 import { CategoryEditorSheet } from './CategoryEditorSheet';
 import { FolderEditorSheet } from './FolderEditorSheet';
 import { ConstructorWizard } from './constructor/ConstructorWizard';
@@ -38,6 +36,20 @@ import {
 import { filterCategoriesByQuery } from '../utils/tagUtils';
 import { CATEGORY_ALIAS_MAP } from '../config/categoryLabels';
 
+// ─── Design tokens ────────────────────────────────────────────────────────────
+const T = {
+  bg: '#FBF6EE',
+  bgSoft: '#F4ECDE',
+  card: '#FFFFFF',
+  fg: '#3D2C1F',
+  sub: '#8E7A66',
+  subLight: '#B6A48E',
+  hairline: '#EDE0CC',
+  primary: '#E07A5F',
+};
+
+// ─── Interfaces ───────────────────────────────────────────────────────────────
+
 interface EditorState {
   open: boolean;
   category?: Category;
@@ -49,6 +61,232 @@ interface FolderEditorState {
   folder?: CategoryFolder;
 }
 
+type ContextMenuTarget =
+  | { kind: 'folder'; id: string }
+  | { kind: 'category'; id: string };
+
+interface InlineEditState {
+  kind: 'folder-rename' | 'cat-rename' | 'cat-new' | 'folder-new';
+  id: string; // folder id for cat-new; target id for renames; '' for folder-new
+}
+
+// ─── Small chevron icons ──────────────────────────────────────────────────────
+
+function ChevronRight() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <path d="M4.5 2.5L7.5 6l-3 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ChevronDown() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <path d="M2.5 4.5L6 7.5l3.5-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function DotsIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <circle cx="3" cy="8" r="1.5" fill="currentColor" />
+      <circle cx="8" cy="8" r="1.5" fill="currentColor" />
+      <circle cx="13" cy="8" r="1.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+// ─── Inline input row ─────────────────────────────────────────────────────────
+
+interface InlineInputRowProps {
+  placeholder: string;
+  indent?: boolean;
+  onSave: (value: string) => void;
+  onCancel: () => void;
+}
+
+function InlineInputRow({ placeholder, indent, onSave, onCancel }: InlineInputRowProps) {
+  const [value, setValue] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const commit = useCallback(() => {
+    const trimmed = value.trim();
+    if (trimmed) onSave(trimmed);
+    else onCancel();
+  }, [value, onSave, onCancel]);
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        paddingLeft: indent ? 44 : 12,
+        paddingRight: 12,
+        paddingTop: 6,
+        paddingBottom: 6,
+        minHeight: 40,
+      }}
+    >
+      {/* placeholder icon */}
+      <div
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: 8,
+          backgroundColor: T.bgSoft,
+          flexShrink: 0,
+        }}
+      />
+      <input
+        ref={inputRef}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder={placeholder}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commit();
+          if (e.key === 'Escape') onCancel();
+        }}
+        onBlur={commit}
+        style={{
+          flex: 1,
+          fontSize: 13,
+          color: T.fg,
+          background: 'transparent',
+          border: 'none',
+          outline: 'none',
+          borderBottom: `1px solid ${T.hairline}`,
+          padding: '2px 0',
+        }}
+      />
+      <span style={{ fontSize: 11, color: T.subLight, flexShrink: 0 }}>Enter ↵</span>
+    </div>
+  );
+}
+
+// ─── Inline rename span/input ─────────────────────────────────────────────────
+
+interface InlineRenameProps {
+  value: string;
+  onSave: (value: string) => void;
+  onCancel: () => void;
+  style?: React.CSSProperties;
+}
+
+function InlineRename({ value: initial, onSave, onCancel, style }: InlineRenameProps) {
+  const [value, setValue] = useState(initial);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, []);
+
+  const commit = useCallback(() => {
+    const trimmed = value.trim();
+    if (trimmed && trimmed !== initial) onSave(trimmed);
+    else onCancel();
+  }, [value, initial, onSave, onCancel]);
+
+  return (
+    <input
+      ref={inputRef}
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') commit();
+        if (e.key === 'Escape') onCancel();
+      }}
+      onBlur={commit}
+      style={{
+        flex: 1,
+        minWidth: 0,
+        fontSize: 14,
+        fontWeight: 700,
+        color: T.fg,
+        background: 'transparent',
+        border: 'none',
+        outline: 'none',
+        borderBottom: `1px solid ${T.primary}`,
+        ...style,
+      }}
+    />
+  );
+}
+
+// ─── Context menu dropdown ────────────────────────────────────────────────────
+
+interface MenuOption {
+  label: string;
+  danger?: boolean;
+  onClick: () => void;
+}
+
+interface ContextMenuProps {
+  options: MenuOption[];
+  onClose: () => void;
+}
+
+function ContextMenu({ options, onClose }: ContextMenuProps) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handle = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    };
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, [onClose]);
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        position: 'absolute',
+        right: 0,
+        top: '100%',
+        zIndex: 100,
+        backgroundColor: T.card,
+        border: `1px solid ${T.hairline}`,
+        borderRadius: 12,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+        minWidth: 160,
+        overflow: 'hidden',
+      }}
+    >
+      {options.map((opt, i) => (
+        <button
+          key={i}
+          onClick={() => { opt.onClick(); onClose(); }}
+          style={{
+            display: 'block',
+            width: '100%',
+            textAlign: 'left',
+            padding: '10px 14px',
+            fontSize: 13,
+            fontWeight: 500,
+            color: opt.danger ? '#E05050' : T.fg,
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            borderBottom: i < options.length - 1 ? `1px solid ${T.hairline}` : 'none',
+          }}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export function CategoriesHub() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
@@ -58,6 +296,10 @@ export function CategoriesHub() {
   const [editor, setEditor] = useState<EditorState>({ open: false });
   const [folderEditor, setFolderEditor] = useState<FolderEditorState>({ open: false });
   const [searchQuery, setSearchQuery] = useState('');
+  const [collapsedFolderIds, setCollapsedFolderIds] = useState<Set<string>>(new Set());
+  const [contextMenu, setContextMenu] = useState<ContextMenuTarget | null>(null);
+  const [inlineEdit, setInlineEdit] = useState<InlineEditState | null>(null);
+  const [confirmDeleteFolderId, setConfirmDeleteFolderId] = useState<string | null>(null);
 
   const folders = useAppSelector((s) => selectFolders(s, tab));
   const rootFolders = useAppSelector((s) => selectRootFolders(s, tab));
@@ -76,7 +318,6 @@ export function CategoriesHub() {
       rootFolders.map((f) => [f.id, selectChildFolders(s, f.id, tab)])
     )
   );
-
   const ungroupedCats = useAppSelector((s) => selectUnfolderedCategories(s, tab));
   const allActiveCats = useAppSelector((s) => selectAllActiveCategories(s, tab));
   const searchResults = filterCategoriesByQuery(searchQuery, allActiveCats, CATEGORY_ALIAS_MAP);
@@ -84,20 +325,23 @@ export function CategoriesHub() {
   const existingCategoryIds = new Set(allCategories.map((c) => c.id));
   const existingFolderIds = new Set(folders.map((f) => f.id));
 
-  const activeCount = folders.length;
-  const totalBudget = Object.values(categoriesInFolderMap).flat()
-    .reduce((s, c) => s + (budgetLimits[c.id] ?? 0), 0);
-
   if (!user) return null;
 
-  // ── Category editor ────────────────────────────────────────────────────────
+  const isEmpty = folders.length === 0 && ungroupedCats.length === 0;
+
+  const toggleFolder = (id: string) => {
+    setCollapsedFolderIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  // ── Category CRUD ──────────────────────────────────────────────────────────
 
   const openEditor = (cat: Category) => {
-    setEditor({
-      open: true,
-      category: cat,
-      folderId: cat.folderId ?? undefined,
-    });
+    setEditor({ open: true, category: cat, folderId: cat.folderId ?? undefined });
   };
 
   const openNewCategoryInFolder = (folderId: string) => {
@@ -117,15 +361,61 @@ export function CategoriesHub() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!editor.category || !user) return;
-    if (!confirm('Удалить эту категорию?')) return;
-    await archiveCategoryInFirestore(user.id, editor.category.id, editor.category.type);
-    dispatch(archiveCategory({ id: editor.category.id, type: editor.category.type }));
-    setEditor({ open: false });
+  const handleDeleteCategory = async (cat: Category) => {
+    if (!user) return;
+    if (!confirm('Архивировать эту категорию?')) return;
+    await archiveCategoryInFirestore(user.id, cat.id, cat.type);
+    dispatch(archiveCategory({ id: cat.id, type: cat.type }));
   };
 
-  // ── Folder editor ──────────────────────────────────────────────────────────
+  // ── Inline rename handlers ─────────────────────────────────────────────────
+
+  const handleFolderRename = async (folder: CategoryFolder, newName: string) => {
+    if (!user) return;
+    const updated: CategoryFolder = { ...folder, name: newName };
+    await updateFolderInDb(user.id, updated);
+    dispatch(updateFolderAction(updated));
+    setInlineEdit(null);
+  };
+
+  const handleCategoryRename = async (cat: Category, newName: string) => {
+    if (!user) return;
+    const updated: Category = { ...cat, name: newName };
+    await updateCategoryInDb(user.id, updated);
+    dispatch(updateCategory(updated));
+    setInlineEdit(null);
+  };
+
+  const handleInlineCreateCategory = async (folderId: string, name: string, folder: CategoryFolder) => {
+    if (!user) return;
+    const catsInFolder = categoriesInFolderMap[folderId] ?? [];
+    const created = await addCategoryToDb(user.id, {
+      name,
+      icon: folder.icon ?? 'box',
+      color: folder.color ?? T.primary,
+      type: tab,
+      folderId,
+      order: catsInFolder.length,
+      isPrivate: false,
+    });
+    dispatch(addCategory(created));
+    setInlineEdit(null);
+  };
+
+  const handleInlineCreateFolder = async (name: string) => {
+    if (!user) return;
+    const created = await addFolderToDb(user.id, {
+      name,
+      icon: 'box',
+      color: T.primary,
+      type: tab,
+      order: folders.length,
+    });
+    dispatch(addFolder(created));
+    setInlineEdit(null);
+  };
+
+  // ── Folder CRUD ────────────────────────────────────────────────────────────
 
   const handleFolderSave = async (data: Omit<CategoryFolder, 'id' | 'userId'> & { id?: string }) => {
     if (!user) return;
@@ -140,19 +430,17 @@ export function CategoriesHub() {
     }
   };
 
-  const handleFolderDelete = async () => {
-    if (!folderEditor.folder || !user) return;
-    if (!confirm('Удалить папку? Категории останутся, но потеряют группу.')) return;
-    // Unlink all categories in this folder
-    const catsInFolder = categoriesInFolderMap[folderEditor.folder.id] ?? [];
+  const handleFolderDelete = async (folder: CategoryFolder) => {
+    if (!user) return;
+    const catsInFolder = categoriesInFolderMap[folder.id] ?? [];
     for (const cat of catsInFolder) {
       const updated: Category = { ...cat, folderId: null };
       await updateCategoryInDb(user.id, updated);
       dispatch(updateCategory(updated));
     }
-    await deleteFolderFromDb(user.id, folderEditor.folder.id, folderEditor.folder.type);
-    dispatch(removeFolder({ id: folderEditor.folder.id, type: folderEditor.folder.type }));
-    setFolderEditor({ open: false });
+    await deleteFolderFromDb(user.id, folder.id, folder.type);
+    dispatch(removeFolder({ id: folder.id, type: folder.type }));
+    setConfirmDeleteFolderId(null);
   };
 
   // ── Library activation ─────────────────────────────────────────────────────
@@ -181,228 +469,745 @@ export function CategoriesHub() {
     }
   };
 
-  const isEmpty = folders.length === 0 && ungroupedCats.length === 0;
+  // ── Render helpers ─────────────────────────────────────────────────────────
 
-  return (
-    <div className="px-4 pt-4 pb-24 space-y-4 max-w-lg mx-auto">
-      {/* Tab bar */}
-      <div className="flex rounded-2xl bg-[#F4ECDE] p-1">
-        {(['expense', 'income'] as CategoryType[]).map((tp) => (
-          <button
-            key={tp}
-            onClick={() => setTab(tp)}
-            className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all ${
-              tab === tp ? 'bg-white text-[#3D2C1F] shadow-sm' : 'text-[#8E7A66]'
-            }`}
-          >
-            {tp === 'expense' ? 'Расходы' : 'Доходы'}
-          </button>
-        ))}
-      </div>
+  const renderFolderRow = (folder: CategoryFolder, indent = 0) => {
+    const cats = categoriesInFolderMap[folder.id] ?? [];
+    const isCollapsed = collapsedFolderIds.has(folder.id);
+    const isRenamingThis = inlineEdit?.kind === 'folder-rename' && inlineEdit.id === folder.id;
+    const isMenuOpen = contextMenu?.kind === 'folder' && contextMenu.id === folder.id;
+    const isConfirmDelete = confirmDeleteFolderId === folder.id;
 
-      {/* Constructor CTA — only for expenses */}
-      {tab === 'expense' && (
-        <button
-          onClick={() => setShowWizard(true)}
-          className="w-full rounded-2xl p-5 text-left bg-gradient-to-br from-[#E07A5F] to-[#C9684E] text-white relative overflow-hidden"
+    return (
+      <div key={folder.id} style={{ marginBottom: 2 }}>
+        {/* Folder header row */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            paddingLeft: 8 + indent * 20,
+            paddingRight: 8,
+            height: 48,
+            cursor: 'pointer',
+            borderRadius: 14,
+            backgroundColor: isMenuOpen ? T.bgSoft : 'transparent',
+            position: 'relative',
+          }}
         >
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-20">
-            <StickerIcon icon="chart_up" color="white" className="h-16 w-16" />
-          </div>
-          <div className="relative">
-            <p className="text-xs font-semibold uppercase tracking-wide opacity-80 mb-1">Конструктор</p>
-            <p className="text-base font-bold">Настройте категории по шагам</p>
-            <p className="text-xs opacity-75 mt-1">Выберите из 19 групп, уточните подкатегории, установите бюджеты</p>
-          </div>
-        </button>
-      )}
+          {/* Chevron — tap to collapse */}
+          <button
+            onClick={() => toggleFolder(folder.id)}
+            style={{
+              width: 24,
+              height: 24,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: T.subLight,
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
+            {isCollapsed ? <ChevronRight /> : <ChevronDown />}
+          </button>
 
-      {/* Search */}
-      {!isEmpty && (
-        <div className="relative">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#B6A48E]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-          </svg>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Поиск по названию или тегам…"
-            className="w-full rounded-xl bg-[#F4ECDE] pl-9 pr-9 py-2.5 text-sm text-[#3D2C1F] placeholder:text-[#B6A48E] outline-none focus:ring-2 focus:ring-[#E07A5F]/30"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#B6A48E] hover:text-[#8E7A66]"
+          {/* Icon tile */}
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              backgroundColor: `${folder.color ?? T.primary}33`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <StickerIcon icon={folder.icon ?? 'box'} color={folder.color ?? T.primary} className="h-5 w-5" />
+          </div>
+
+          {/* Folder name (tap to rename inline) */}
+          {isRenamingThis ? (
+            <InlineRename
+              value={folder.name}
+              onSave={(v) => handleFolderRename(folder, v)}
+              onCancel={() => setInlineEdit(null)}
+            />
+          ) : (
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                setInlineEdit({ kind: 'folder-rename', id: folder.id });
+              }}
+              style={{
+                flex: 1,
+                minWidth: 0,
+                fontSize: 14,
+                fontWeight: 700,
+                color: T.fg,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                cursor: 'text',
+              }}
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path d="M18 6 6 18M6 6l12 12"/>
-              </svg>
+              {folder.name}
+            </span>
+          )}
+
+          {/* Category count badge */}
+          <span
+            style={{
+              fontSize: 10,
+              color: T.subLight,
+              fontWeight: 600,
+              flexShrink: 0,
+            }}
+          >
+            {cats.length}
+          </span>
+
+          {/* ··· button */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setContextMenu(isMenuOpen ? null : { kind: 'folder', id: folder.id });
+              }}
+              style={{
+                width: 32,
+                height: 32,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 8,
+                color: T.subLight,
+                background: isMenuOpen ? T.hairline : 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <DotsIcon />
             </button>
+
+            {isMenuOpen && (
+              <ContextMenu
+                options={[
+                  {
+                    label: 'Изменить',
+                    onClick: () => setFolderEditor({ open: true, folder }),
+                  },
+                  {
+                    label: isCollapsed ? 'Развернуть' : 'Свернуть',
+                    onClick: () => toggleFolder(folder.id),
+                  },
+                  {
+                    label: 'Удалить папку',
+                    danger: true,
+                    onClick: () => setConfirmDeleteFolderId(folder.id),
+                  },
+                ]}
+                onClose={() => setContextMenu(null)}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Delete confirm */}
+        {isConfirmDelete && (
+          <div
+            style={{
+              marginLeft: 8 + indent * 20,
+              marginRight: 8,
+              marginBottom: 4,
+              padding: '10px 14px',
+              borderRadius: 12,
+              backgroundColor: '#FFF0F0',
+              border: '1px solid #FFD5D5',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            <span style={{ flex: 1, fontSize: 12, color: '#E05050' }}>
+              Удалить «{folder.name}»? Категории потеряют группу.
+            </span>
+            <button
+              onClick={() => handleFolderDelete(folder)}
+              style={{
+                padding: '4px 10px',
+                borderRadius: 8,
+                backgroundColor: '#E05050',
+                color: '#fff',
+                fontSize: 12,
+                fontWeight: 600,
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              Удалить
+            </button>
+            <button
+              onClick={() => setConfirmDeleteFolderId(null)}
+              style={{
+                padding: '4px 10px',
+                borderRadius: 8,
+                backgroundColor: T.bgSoft,
+                color: T.sub,
+                fontSize: 12,
+                fontWeight: 600,
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              Отмена
+            </button>
+          </div>
+        )}
+
+        {/* Expanded contents */}
+        {!isCollapsed && (
+          <div style={{ marginBottom: 4 }}>
+            {cats.map((cat) => renderCategoryRow(cat))}
+
+            {/* Inline new category input */}
+            {inlineEdit?.kind === 'cat-new' && inlineEdit.id === folder.id ? (
+              <InlineInputRow
+                placeholder="Название категории"
+                indent
+                onSave={(name) => handleInlineCreateCategory(folder.id, name, folder)}
+                onCancel={() => setInlineEdit(null)}
+              />
+            ) : (
+              <button
+                onClick={() => setInlineEdit({ kind: 'cat-new', id: folder.id })}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  paddingLeft: 44,
+                  paddingRight: 12,
+                  height: 32,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: T.primary,
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  width: '100%',
+                  textAlign: 'left',
+                }}
+              >
+                + Добавить категорию
+              </button>
+            )}
+
+            {/* Separator */}
+            <div style={{ height: 1, backgroundColor: T.hairline, margin: '4px 8px' }} />
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderCategoryRow = (cat: Category) => {
+    const isRenamingThis = inlineEdit?.kind === 'cat-rename' && inlineEdit.id === cat.id;
+    const isMenuOpen = contextMenu?.kind === 'category' && contextMenu.id === cat.id;
+
+    return (
+      <div
+        key={cat.id}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          paddingLeft: 44,
+          paddingRight: 8,
+          height: 40,
+          borderRadius: 12,
+          backgroundColor: isMenuOpen ? T.bgSoft : 'transparent',
+          position: 'relative',
+        }}
+      >
+        {/* Icon tile */}
+        <div
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: 8,
+            backgroundColor: `${cat.color}33`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <StickerIcon icon={cat.icon} color={cat.color} className="h-4 w-4" />
+        </div>
+
+        {/* Name (tap to rename) */}
+        {isRenamingThis ? (
+          <InlineRename
+            value={cat.name}
+            onSave={(v) => handleCategoryRename(cat, v)}
+            onCancel={() => setInlineEdit(null)}
+            style={{ fontSize: 13, fontWeight: 500 }}
+          />
+        ) : (
+          <span
+            onClick={(e) => {
+              e.stopPropagation();
+              setInlineEdit({ kind: 'cat-rename', id: cat.id });
+            }}
+            style={{
+              flex: 1,
+              minWidth: 0,
+              fontSize: 13,
+              fontWeight: 500,
+              color: T.fg,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              cursor: 'text',
+            }}
+          >
+            {cat.name}
+          </span>
+        )}
+
+        {/* ··· button */}
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setContextMenu(isMenuOpen ? null : { kind: 'category', id: cat.id });
+            }}
+            style={{
+              width: 32,
+              height: 32,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 8,
+              color: T.subLight,
+              background: isMenuOpen ? T.hairline : 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            <DotsIcon />
+          </button>
+
+          {isMenuOpen && (
+            <ContextMenu
+              options={[
+                {
+                  label: 'Изменить',
+                  onClick: () => openEditor(cat),
+                },
+                {
+                  label: 'Переместить',
+                  onClick: () => openEditor(cat),
+                },
+                {
+                  label: 'Архивировать',
+                  danger: true,
+                  onClick: () => handleDeleteCategory(cat),
+                },
+              ]}
+              onClose={() => setContextMenu(null)}
+            />
           )}
         </div>
-      )}
+      </div>
+    );
+  };
 
-      {/* Summary */}
-      {activeCount > 0 && !searchQuery && (
-        <div className="flex items-center justify-between px-1">
-          <span className="text-xs text-[#8E7A66]">
-            {activeCount > 0 ? `${activeCount} папок` : ''}
-            {totalBudget > 0 ? ` · ₪${totalBudget.toLocaleString()}/мес` : ''}
-          </span>
-          <div className="flex gap-3">
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  return (
+    <div
+      style={{
+        backgroundColor: T.bg,
+        minHeight: '100%',
+        paddingBottom: 'calc(96px + env(safe-area-inset-bottom))',
+      }}
+    >
+      <div style={{ maxWidth: 520, margin: '0 auto', padding: '16px 16px 0' }}>
+
+        {/* Tab switcher */}
+        <div
+          style={{
+            display: 'flex',
+            backgroundColor: T.bgSoft,
+            borderRadius: 16,
+            padding: 4,
+            marginBottom: 12,
+          }}
+        >
+          {(['expense', 'income'] as CategoryType[]).map((tp) => (
             <button
-              onClick={() => setFolderEditor({ open: true })}
-              className="text-xs font-semibold text-[#8E7A66]"
+              key={tp}
+              onClick={() => { setTab(tp); setSearchQuery(''); }}
+              style={{
+                flex: 1,
+                borderRadius: 12,
+                padding: '8px 0',
+                fontSize: 14,
+                fontWeight: 600,
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                backgroundColor: tab === tp ? T.card : 'transparent',
+                color: tab === tp ? T.fg : T.sub,
+                boxShadow: tab === tp ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+              }}
             >
-              + Папка
+              {tp === 'expense' ? 'Расходы' : 'Доходы'}
             </button>
-            <button
-              onClick={() => setEditor({ open: true })}
-              className="text-xs font-semibold text-[#E07A5F]"
-            >
-              + Добавить
-            </button>
-          </div>
+          ))}
         </div>
-      )}
 
-      {/* Categories / Folders list */}
-      <div className="space-y-2">
-        {isEmpty ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#EDE0CC] py-10 text-center gap-3">
-            <div className="h-14 w-14 rounded-2xl bg-[#F4ECDE] flex items-center justify-center">
-              <StickerIcon icon="box" color="#8E7A66" className="h-9 w-9" />
-            </div>
-            <p className="text-sm font-semibold text-[#3D2C1F]">Нет активных категорий</p>
-            <p className="text-xs text-[#8E7A66]">Запустите конструктор или добавьте вручную</p>
-            {tab === 'expense' && (
+        {/* Header row: search + constructor link */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center' }}>
+          {/* Search bar */}
+          <div style={{ flex: 1, position: 'relative' }}>
+            <svg
+              style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: T.subLight }}
+              width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
+            >
+              <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+            </svg>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Поиск…"
+              style={{
+                width: '100%',
+                paddingLeft: 30,
+                paddingRight: searchQuery ? 28 : 10,
+                paddingTop: 8,
+                paddingBottom: 8,
+                fontSize: 13,
+                borderRadius: 12,
+                backgroundColor: T.bgSoft,
+                border: 'none',
+                outline: 'none',
+                color: T.fg,
+                boxSizing: 'border-box',
+              }}
+            />
+            {searchQuery && (
               <button
-                onClick={() => setShowWizard(true)}
-                className="rounded-2xl bg-[#E07A5F] px-5 py-2.5 text-sm font-bold text-white"
+                onClick={() => setSearchQuery('')}
+                style={{
+                  position: 'absolute',
+                  right: 8,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'transparent',
+                  border: 'none',
+                  color: T.subLight,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
               >
-                Запустить конструктор
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path d="M18 6 6 18M6 6l12 12"/>
+                </svg>
               </button>
             )}
           </div>
-        ) : searchQuery ? (
-          // ── Search results ───────────────────────────────────────────────
-          searchResults.length > 0 ? (
-            <>
-              <p className="text-xs text-[#8E7A66] px-1">{searchResults.length} результатов</p>
-              {searchResults.map((cat) => (
-                <CategoryRow
-                  key={cat.id}
-                  category={cat}
-                  budget={budgetLimits[cat.id] ?? 0}
-                  onEdit={() => openEditor(cat)}
-                />
-              ))}
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center rounded-2xl bg-[#F4ECDE] py-8 text-center gap-2">
-              <p className="text-sm font-semibold text-[#3D2C1F]">Ничего не найдено</p>
-              <p className="text-xs text-[#8E7A66]">Попробуйте другой запрос</p>
-            </div>
-          )
-        ) : (
-          // ── Folder tree ──────────────────────────────────────────────────
-          <>
-            {rootFolders.map((folder) => (
-              <div key={folder.id}>
-                <FolderSection
-                  folder={folder}
-                  categories={categoriesInFolderMap[folder.id] ?? []}
-                  budgetLimits={budgetLimits}
-                  onEditFolder={() => setFolderEditor({ open: true, folder })}
-                  onEditCategory={openEditor}
-                  onAddCategory={() => openNewCategoryInFolder(folder.id)}
-                />
-                {/* Child folders */}
-                {childFoldersMap[folder.id]?.map((child) => (
-                  <div key={child.id} className="ml-4">
-                    <FolderSection
-                      folder={child}
-                      categories={categoriesInFolderMap[child.id] ?? []}
-                      budgetLimits={budgetLimits}
-                      onEditFolder={() => setFolderEditor({ open: true, folder: child })}
-                      onEditCategory={(cat) => setEditor({ open: true, category: cat, folderId: child.id })}
-                      onAddCategory={() => setEditor({ open: false, category: undefined, folderId: child.id })}
-                    />
-                  </div>
-                ))}
-              </div>
-            ))}
-            {ungroupedCats.map((cat) => (
-              <CategoryRow
-                key={cat.id}
-                category={cat}
-                budget={budgetLimits[cat.id] ?? 0}
-                onEdit={() => openEditor(cat)}
-              />
-            ))}
-          </>
-        )}
-      </div>
 
-      {/* Library section */}
-      {libraryItems.length > 0 && tab === 'expense' && (
-        <div className="space-y-2">
-          <button
-            onClick={() => setShowLibrary((v) => !v)}
-            className="flex items-center justify-between w-full px-1"
-          >
-            <span className="text-xs font-semibold text-[#8E7A66] uppercase tracking-wide">
-              В библиотеке ({libraryItems.length})
-            </span>
-            <span className="text-xs text-[#B6A48E]">{showLibrary ? 'Скрыть' : 'Показать'}</span>
-          </button>
-
-          {showLibrary && (
-            <div className="space-y-2">
-              {libraryItems.map((libCat) => {
-                const asCat: Category = {
-                  id: libCat.id,
-                  userId: user.id,
-                  name: libCat.name,
-                  icon: libCat.icon,
-                  color: libCat.color,
-                  type: tab,
-                  order: 0,
-                  isPrivate: false,
-                };
-                return (
-                  <CategoryRow
-                    key={libCat.id}
-                    category={asCat}
-                        fromLibrary
-                    onEdit={() => {}}
-                    onActivate={() => handleActivateFromLibrary(libCat)}
-                  />
-                );
-              })}
-            </div>
+          {/* Constructor link */}
+          {tab === 'expense' && (
+            <button
+              onClick={() => setShowWizard(true)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: 12,
+                backgroundColor: `${T.primary}15`,
+                color: T.primary,
+                fontSize: 12,
+                fontWeight: 700,
+                border: 'none',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              ⚡ Конструктор
+            </button>
           )}
         </div>
-      )}
 
-      {/* Create manually — hidden during search */}
-      {!searchQuery && <div className="flex gap-2">
-        <button
-          onClick={() => setFolderEditor({ open: true })}
-          className="flex-1 rounded-2xl border-2 border-dashed border-[#EDE0CC] py-3 text-sm font-semibold text-[#8E7A66] hover:border-[#8E7A66]/40 transition-colors"
-        >
-          + Папка
-        </button>
-        <button
-          onClick={() => setEditor({ open: true })}
-          className="flex-1 rounded-2xl border-2 border-dashed border-[#EDE0CC] py-3 text-sm font-semibold text-[#8E7A66] hover:border-[#E07A5F]/40 hover:text-[#E07A5F] transition-colors"
-        >
-          + Категорию
-        </button>
-      </div>}
+        {/* ── Content area ────────────────────────────────────────────────── */}
 
-      {/* Category Editor Sheet */}
+        {searchQuery ? (
+          /* Search results */
+          searchResults.length > 0 ? (
+            <div
+              style={{
+                backgroundColor: T.card,
+                borderRadius: 18,
+                border: `1px solid ${T.hairline}`,
+                overflow: 'hidden',
+                marginBottom: 8,
+              }}
+            >
+              <div style={{ padding: '8px 12px 4px', fontSize: 11, color: T.sub, fontWeight: 600 }}>
+                {searchResults.length} результатов
+              </div>
+              {searchResults.map((cat) => renderCategoryRow(cat))}
+            </div>
+          ) : (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: T.bgSoft,
+                borderRadius: 18,
+                padding: '32px 16px',
+                textAlign: 'center',
+                gap: 6,
+              }}
+            >
+              <p style={{ fontSize: 14, fontWeight: 600, color: T.fg }}>Ничего не найдено</p>
+              <p style={{ fontSize: 12, color: T.sub }}>Попробуйте другой запрос</p>
+            </div>
+          )
+        ) : isEmpty ? (
+          /* Empty state */
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: `2px dashed ${T.hairline}`,
+              borderRadius: 18,
+              padding: '40px 16px',
+              textAlign: 'center',
+              gap: 10,
+            }}
+          >
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 16,
+                backgroundColor: T.bgSoft,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <StickerIcon icon="box" color={T.sub} className="h-8 w-8" />
+            </div>
+            <p style={{ fontSize: 14, fontWeight: 600, color: T.fg }}>Нет активных категорий</p>
+            <p style={{ fontSize: 12, color: T.sub }}>Создайте папку с нуля или запустите конструктор</p>
+            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+              <button
+                onClick={() => setFolderEditor({ open: true })}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: 14,
+                  backgroundColor: T.fg,
+                  color: '#fff',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                Настроить с нуля
+              </button>
+              {tab === 'expense' && (
+                <button
+                  onClick={() => setShowWizard(true)}
+                  style={{
+                    padding: '10px 16px',
+                    borderRadius: 14,
+                    backgroundColor: T.primary,
+                    color: '#fff',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Конструктор
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          /* Outliner list */
+          <div
+            style={{
+              backgroundColor: T.card,
+              borderRadius: 18,
+              border: `1px solid ${T.hairline}`,
+              overflow: 'hidden',
+              marginBottom: 8,
+              padding: '4px 0',
+            }}
+          >
+            {rootFolders.map((folder) => (
+              <div key={folder.id}>
+                {renderFolderRow(folder)}
+                {/* Child folders */}
+                {(childFoldersMap[folder.id] ?? []).map((child) =>
+                  renderFolderRow(child, 1)
+                )}
+              </div>
+            ))}
+
+            {/* Ungrouped categories */}
+            {ungroupedCats.map((cat) => renderCategoryRow(cat))}
+
+            {/* Add folder row */}
+            {inlineEdit?.kind === 'folder-new' ? (
+              <div style={{ padding: '4px 8px' }}>
+                <InlineInputRow
+                  placeholder="Название папки"
+                  indent={false}
+                  onSave={handleInlineCreateFolder}
+                  onCancel={() => setInlineEdit(null)}
+                />
+              </div>
+            ) : (
+              <button
+                onClick={() => setInlineEdit({ kind: 'folder-new', id: '' })}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%',
+                  margin: '8px 0 4px',
+                  padding: '8px 0',
+                  border: `1.5px dashed ${T.hairline}`,
+                  borderRadius: 12,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: T.sub,
+                  background: 'transparent',
+                  cursor: 'pointer',
+                }}
+              >
+                ＋ Новая папка
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Library section */}
+        {libraryItems.length > 0 && tab === 'expense' && !searchQuery && (
+          <div style={{ marginBottom: 8 }}>
+            <button
+              onClick={() => setShowLibrary((v) => !v)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                width: '100%',
+                padding: '8px 4px',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <span style={{ fontSize: 11, fontWeight: 700, color: T.sub, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                В библиотеке ({libraryItems.length})
+              </span>
+              <span style={{ fontSize: 11, color: T.subLight }}>
+                {showLibrary ? '▴ Скрыть' : '▸ Показать'}
+              </span>
+            </button>
+
+            {showLibrary && (
+              <div
+                style={{
+                  backgroundColor: T.card,
+                  borderRadius: 18,
+                  border: `1px solid ${T.hairline}`,
+                  overflow: 'hidden',
+                  padding: '4px 0',
+                }}
+              >
+                {libraryItems.map((libCat) => {
+                  const asCat: Category = {
+                    id: libCat.id,
+                    userId: user.id,
+                    name: libCat.name,
+                    icon: libCat.icon,
+                    color: libCat.color,
+                    type: tab,
+                    order: 0,
+                    isPrivate: false,
+                  };
+                  return (
+                    <div
+                      key={libCat.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        paddingLeft: 12,
+                        paddingRight: 12,
+                        height: 44,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 9,
+                          backgroundColor: `${asCat.color}33`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <StickerIcon icon={asCat.icon} color={asCat.color} className="h-4 w-4" />
+                      </div>
+                      <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: T.fg }}>
+                        {libCat.name}
+                      </span>
+                      <button
+                        onClick={() => handleActivateFromLibrary(libCat)}
+                        style={{
+                          padding: '4px 12px',
+                          borderRadius: 10,
+                          backgroundColor: `${T.primary}15`,
+                          color: T.primary,
+                          fontSize: 12,
+                          fontWeight: 700,
+                          border: 'none',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Добавить
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+      </div>
+
+      {/* ── Sheets ─────────────────────────────────────────────────────────── */}
+
       <CategoryEditorSheet
         open={editor.open}
         onClose={() => setEditor({ open: false })}
@@ -418,21 +1223,29 @@ export function CategoriesHub() {
           dispatch(setBudgetLimit({ categoryId: editor.category.id, limit }));
         }}
         onSave={handleSave}
-        onDelete={editor.category ? handleDelete : undefined}
+        onDelete={editor.category ? async () => {
+          if (!editor.category || !user) return;
+          await archiveCategoryInFirestore(user.id, editor.category.id, editor.category.type);
+          dispatch(archiveCategory({ id: editor.category.id, type: editor.category.type }));
+          setEditor({ open: false });
+        } : undefined}
       />
 
-      {/* Folder Editor Sheet */}
       <FolderEditorSheet
         open={folderEditor.open}
         onClose={() => setFolderEditor({ open: false })}
         initial={folderEditor.folder}
         type={tab}
         onSave={handleFolderSave}
-        onDelete={folderEditor.folder ? handleFolderDelete : undefined}
+        onDelete={folderEditor.folder ? async () => {
+          if (!folderEditor.folder) return;
+          if (!confirm('Удалить папку? Категории останутся, но потеряют группу.')) return;
+          await handleFolderDelete(folderEditor.folder);
+          setFolderEditor({ open: false });
+        } : undefined}
         availableFolders={rootFolders.filter((f) => f.id !== folderEditor.folder?.id)}
       />
 
-      {/* Constructor Wizard */}
       <ConstructorWizard
         open={showWizard}
         onClose={() => setShowWizard(false)}

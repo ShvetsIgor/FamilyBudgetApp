@@ -32,7 +32,15 @@
     "other": "אחר",
     "personal": "אישי",
     "family": "משפחתי",
-    "secret": "סודי"
+    "secret": "סודי",
+    "numpadEdit": "עריכה",
+    "numpadReceipt": "קבלה · {store}",
+    "numpadReceiptCount_one": "פריט {count}",
+    "numpadReceiptCount_other": "{count} פריטים",
+    "numpadTotal": "סה״כ",
+    "numpadSave": "שמור קבלה {symbol}{total}",
+    "numpadSaveEdit": "שמור {symbol}{total}",
+    "numpadSaving": "שומר…"
   },
   "stats": {
     "title": "סטטיסטיקה",

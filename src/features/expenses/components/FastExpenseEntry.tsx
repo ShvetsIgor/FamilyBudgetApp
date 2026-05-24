@@ -414,7 +414,10 @@ export function FastExpenseEntry({
         {/* Parent/leftover row */}
         <div
           className="bg-card rounded-[14px] p-3 flex items-center gap-3 flex-shrink-0"
-          style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}
+          style={{
+            boxShadow: '0 1px 3px rgba(61,44,31,.06)',
+            border: splitsOverflow ? '1.5px solid hsl(var(--destructive))' : '1.5px solid transparent',
+          }}
         >
           <CategoryIcon icon={selectedCat?.icon ?? 'box'} color={catColor} size="md" />
           <div className="flex-1 min-w-0">
@@ -426,6 +429,11 @@ export function FastExpenseEntry({
             </div>
             {splits.length > 0 && (
               <div className="text-[11px] text-muted-foreground font-semibold mt-0.5">остаток после уточнений</div>
+            )}
+            {splitsOverflow && (
+              <div className="text-[9px] font-bold text-destructive mt-0.5">
+                превышено на {symbol}{(splitsSum - totalNum).toFixed(2)}
+              </div>
             )}
           </div>
           <span className="text-lg font-black text-foreground tabular-nums">

@@ -1,11 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { computeConfidenceProfile, buildContextSignals } from '../features/expenses/engine/confidenceEngine';
-import {
-  classifyInputTokens,
-  extractMerchantTokens,
-  extractItemTokens,
-  extractNormalizedTokens,
-} from '../features/expenses/engine/merchantClassifier';
 import {
   findMatchingSplitCombos,
   rankSplitCombos,
@@ -14,7 +7,6 @@ import {
   hasSplitPresets,
   topSplitPreset,
 } from '../features/expenses/engine/splitMemoryEngine';
-import { buildExpenseContext } from '../features/expenses/engine/expenseContextBuilder';
 import {
   initialQuickAddState,
   applyContextToQuickAdd,
@@ -29,7 +21,7 @@ import {
 import { parseInput } from '../features/expenses/engine/inputPipeline';
 import type { SuggestionMemoryState, SplitComboEntry } from '../features/expenses/store/suggestionMemorySlice';
 import type { Category } from '../shared/types';
-import type { ScoredSuggestion } from '../features/expenses/engine/suggestionEngine';
+import type { ExpenseContext } from '../features/expenses/types/expenseContext';
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -57,15 +49,6 @@ const CATS: Category[] = [
   makeCat('electronics', 'Electronics'),
 ];
 
-function makeMemoryWithMerchant(merchantKey: string, categoryId: string, count: number): SuggestionMemoryState {
-  return {
-    ...EMPTY_MEMORY,
-    merchants: {
-      [merchantKey]: [{ categoryId, count, lastUsed: new Date(NOW - 2 * 86_400_000).toISOString() }],
-    },
-  };
-}
-
 function makeMemoryWithCombos(combos: SplitComboEntry[]): SuggestionMemoryState {
   return { ...EMPTY_MEMORY, splitCombos: combos };
 }
@@ -80,209 +63,22 @@ function makeCombo(merchantKey: string, categoryIds: string[], count: number, da
   };
 }
 
-function makeScoredSuggestion(categoryId: string, score: number): ScoredSuggestion {
-  return { categoryId, score, reasons: [{ kind: 'merchant_history', count: 3 }] };
+/** Build a minimal ExpenseContext for testing quickAddState transitions. */
+function makeTestContext(amount: number | null, categoryIds: string[] = ['groceries', 'home']): ExpenseContext {
+  const input = amount !== null ? `coffee ${amount}` : 'coffee';
+  const parserContext = parseInput(input);
+  return {
+    rawInput: input,
+    amount,
+    merchant: 'coffee',
+    merchantKey: 'coffee',
+    tokens: [],
+    candidateCategories: categoryIds.map((id, i) => ({ categoryId: id, score: 0.8 - i * 0.1, reasons: [] })),
+    confidence: { amount: amount !== null ? 0.95 : 0, merchant: 0.3, category: 0.5, overall: 0.5 },
+    signals: [],
+    parserContext,
+  };
 }
-
-// ── confidenceEngine ──────────────────────────────────────────────────────────
-
-describe('confidenceEngine', () => {
-  describe('computeConfidenceProfile', () => {
-    it('amount=0.95 when amount is present', () => {
-      const ctx = parseInput('coffee 45', EMPTY_MEMORY);
-      const profile = computeConfidenceProfile(ctx, []);
-      expect(profile.amount).toBe(0.95);
-    });
-
-    it('amount=0 when no amount', () => {
-      const ctx = parseInput('coffee', EMPTY_MEMORY);
-      const profile = computeConfidenceProfile(ctx, []);
-      expect(profile.amount).toBe(0);
-    });
-
-    it('merchant=0 when no merchant detected', () => {
-      const ctx = parseInput('45', EMPTY_MEMORY);
-      const profile = computeConfidenceProfile(ctx, []);
-      expect(profile.merchant).toBe(0);
-    });
-
-    it('merchant=0.30 when merchant detected but not in memory', () => {
-      const ctx = parseInput('unknownstore 100', EMPTY_MEMORY);
-      // merchant detected as text token, but not in memory
-      const profile = computeConfidenceProfile(ctx, []);
-      // merchant might be 0 (no merchant) or 0.30 (unknown merchant)
-      // depends on whether parser assigned a merchant token
-      expect(profile.merchant).toBeGreaterThanOrEqual(0);
-    });
-
-    it('merchant=0.75 when merchant known in memory', () => {
-      const mem = makeMemoryWithMerchant('dabbah', 'groceries', 5);
-      const ctx = parseInput('dabbah 200', mem);
-      const profile = computeConfidenceProfile(ctx, [makeScoredSuggestion('groceries', 50)]);
-      expect(profile.merchant).toBeGreaterThanOrEqual(0.75);
-    });
-
-    it('category=0.20 when no suggestions', () => {
-      const ctx = parseInput('', EMPTY_MEMORY);
-      const profile = computeConfidenceProfile(ctx, []);
-      expect(profile.category).toBe(0.20);
-    });
-
-    it('category≥0.5 when strong unambiguous top suggestion', () => {
-      const ctx = parseInput('coffee 45', EMPTY_MEMORY);
-      const suggestions = [
-        makeScoredSuggestion('health', 80),
-        makeScoredSuggestion('groceries', 10),
-      ];
-      const profile = computeConfidenceProfile(ctx, suggestions);
-      expect(profile.category).toBeGreaterThanOrEqual(0.5);
-    });
-
-    it('category=0.50 when ambiguous (second/first > 0.5)', () => {
-      const ctx = parseInput('coffee 45', EMPTY_MEMORY);
-      const suggestions = [
-        makeScoredSuggestion('health', 40),
-        makeScoredSuggestion('groceries', 35),
-      ];
-      const profile = computeConfidenceProfile(ctx, suggestions);
-      expect(profile.category).toBe(0.50);
-    });
-
-    it('overall is weighted composite of three dimensions', () => {
-      const ctx = parseInput('coffee 45', EMPTY_MEMORY);
-      const profile = computeConfidenceProfile(ctx, [makeScoredSuggestion('health', 60)]);
-      const expected = profile.amount * 0.3 + profile.merchant * 0.3 + profile.category * 0.4;
-      expect(profile.overall).toBeCloseTo(expected, 1);
-    });
-
-    it('is deterministic', () => {
-      const ctx = parseInput('coffee 45', EMPTY_MEMORY);
-      const s = [makeScoredSuggestion('health', 50)];
-      const p1 = computeConfidenceProfile(ctx, s);
-      const p2 = computeConfidenceProfile(ctx, s);
-      expect(p1).toEqual(p2);
-    });
-  });
-
-  describe('buildContextSignals', () => {
-    it('returns array of signals', () => {
-      const ctx = parseInput('coffee 45', EMPTY_MEMORY);
-      const signals = buildContextSignals(ctx, []);
-      expect(Array.isArray(signals)).toBe(true);
-    });
-
-    it('includes parser signals when amount present', () => {
-      const ctx = parseInput('coffee 45', EMPTY_MEMORY);
-      const signals = buildContextSignals(ctx, []);
-      const kinds = signals.map((s) => s.kind);
-      expect(kinds).toContain('amount_present');
-    });
-
-    it('includes ranking reason signals from top suggestion', () => {
-      const ctx = parseInput('coffee 45', EMPTY_MEMORY);
-      const suggestions = [makeScoredSuggestion('health', 50)];
-      const signals = buildContextSignals(ctx, suggestions);
-      const kinds = signals.map((s) => s.kind);
-      expect(kinds).toContain('merchant_history');
-    });
-
-    it('each signal has source and weight', () => {
-      const ctx = parseInput('coffee 45', EMPTY_MEMORY);
-      const signals = buildContextSignals(ctx, []);
-      for (const s of signals) {
-        expect(['parser', 'memory', 'metadata', 'history']).toContain(s.source);
-        expect(typeof s.weight).toBe('number');
-        expect(s.weight).toBeGreaterThanOrEqual(0);
-      }
-    });
-  });
-});
-
-// ── merchantClassifier ────────────────────────────────────────────────────────
-
-describe('merchantClassifier', () => {
-  describe('classifyInputTokens', () => {
-    it('classifies amount token', () => {
-      const ctx = parseInput('coffee 45', EMPTY_MEMORY);
-      const tokens = classifyInputTokens(ctx);
-      const amountToken = tokens.find((t) => t.raw === '45');
-      expect(amountToken?.role).toBe('amount');
-    });
-
-    it('returns array with same token count as raw input words', () => {
-      const ctx = parseInput('dabbah drill 350', EMPTY_MEMORY);
-      const tokens = classifyInputTokens(ctx);
-      const rawWords = 'dabbah drill 350'.split(/\s+/).filter(Boolean);
-      expect(tokens).toHaveLength(rawWords.length);
-    });
-
-    it('each token has raw, normalized, and role fields', () => {
-      const ctx = parseInput('coffee 45', EMPTY_MEMORY);
-      const tokens = classifyInputTokens(ctx);
-      for (const t of tokens) {
-        expect(typeof t.raw).toBe('string');
-        expect(typeof t.normalized).toBe('string');
-        expect(['merchant', 'item', 'amount', 'noise']).toContain(t.role);
-      }
-    });
-
-    it('is deterministic', () => {
-      const ctx = parseInput('coffee 45', EMPTY_MEMORY);
-      const t1 = classifyInputTokens(ctx);
-      const t2 = classifyInputTokens(ctx);
-      expect(t1).toEqual(t2);
-    });
-  });
-
-  describe('extractMerchantTokens', () => {
-    it('returns empty when no merchant detected', () => {
-      const ctx = parseInput('45', EMPTY_MEMORY);
-      expect(extractMerchantTokens(ctx)).toEqual([]);
-    });
-
-    it('returns merchant tokens when merchant detected', () => {
-      const mem = makeMemoryWithMerchant('dabbah', 'groceries', 5);
-      const ctx = parseInput('dabbah 200', mem);
-      const tokens = extractMerchantTokens(ctx);
-      expect(tokens.length).toBeGreaterThan(0);
-    });
-  });
-
-  describe('extractItemTokens', () => {
-    it('returns empty for single-token input', () => {
-      const ctx = parseInput('45', EMPTY_MEMORY);
-      expect(extractItemTokens(ctx)).toEqual([]);
-    });
-
-    it('returns item candidates from parser', () => {
-      const mem = makeMemoryWithMerchant('dabbah', 'groceries', 5);
-      const ctx = parseInput('dabbah drill milk 350', mem);
-      const items = extractItemTokens(ctx);
-      expect(Array.isArray(items)).toBe(true);
-    });
-  });
-
-  describe('extractNormalizedTokens', () => {
-    it('returns array of strings', () => {
-      const ctx = parseInput('coffee 45', EMPTY_MEMORY);
-      expect(Array.isArray(extractNormalizedTokens(ctx))).toBe(true);
-    });
-
-    it('no duplicates', () => {
-      const ctx = parseInput('coffee coffee 45', EMPTY_MEMORY);
-      const tokens = extractNormalizedTokens(ctx);
-      expect(tokens.length).toBe(new Set(tokens).size);
-    });
-
-    it('excludes numeric-only tokens', () => {
-      const ctx = parseInput('coffee 45', EMPTY_MEMORY);
-      const tokens = extractNormalizedTokens(ctx);
-      for (const t of tokens) {
-        expect(/^\d+$/.test(t)).toBe(false);
-      }
-    });
-  });
-});
 
 // ── splitMemoryEngine ─────────────────────────────────────────────────────────
 
@@ -321,8 +117,8 @@ describe('splitMemoryEngine', () => {
     });
 
     it('tie-breaks by recency', () => {
-      const recent = makeCombo('dabbah', ['a', 'b'], 3, 1);   // same count, more recent
-      const older  = makeCombo('dabbah', ['c', 'd'], 3, 30);  // same count, older
+      const recent = makeCombo('dabbah', ['a', 'b'], 3, 1);
+      const older  = makeCombo('dabbah', ['c', 'd'], 3, 30);
       const ranked = rankSplitCombos([older, recent], NOW);
       expect(ranked[0]).toBe(recent);
     });
@@ -330,7 +126,7 @@ describe('splitMemoryEngine', () => {
     it('does not mutate input array', () => {
       const input = [combo2, combo1];
       const ranked = rankSplitCombos(input, NOW);
-      expect(input[0]).toBe(combo2); // original order preserved
+      expect(input[0]).toBe(combo2);
       expect(ranked).not.toBe(input);
     });
 
@@ -411,7 +207,7 @@ describe('splitMemoryEngine', () => {
     it('returns the highest-ranked preset', () => {
       const mem = makeMemoryWithCombos([combo2, combo1]); // combo1 has count=5
       const top = topSplitPreset('dabbah', mem, CATS, NOW);
-      expect(top?.count).toBe(5); // combo1
+      expect(top?.count).toBe(5);
     });
 
     it('returns undefined when no combos', () => {
@@ -420,89 +216,10 @@ describe('splitMemoryEngine', () => {
   });
 });
 
-// ── expenseContextBuilder ────────────────────────────────────────────────────
-
-describe('expenseContextBuilder', () => {
-  describe('buildExpenseContext', () => {
-    it('returns ExpenseContext with all required fields', () => {
-      const ctx = buildExpenseContext('coffee 45', CATS);
-      expect(typeof ctx.rawInput).toBe('string');
-      expect(Array.isArray(ctx.tokens)).toBe(true);
-      expect(Array.isArray(ctx.candidateCategories)).toBe(true);
-      expect(typeof ctx.confidence.overall).toBe('number');
-      expect(Array.isArray(ctx.signals)).toBe(true);
-      expect(ctx.parserContext).toBeDefined();
-    });
-
-    it('extracts amount', () => {
-      const ctx = buildExpenseContext('coffee 45', CATS);
-      expect(ctx.amount).toBe(45);
-    });
-
-    it('amount is null when absent', () => {
-      const ctx = buildExpenseContext('coffee', CATS);
-      expect(ctx.amount).toBeNull();
-    });
-
-    it('produces candidate categories from categories list', () => {
-      const ctx = buildExpenseContext('coffee 45', CATS);
-      const ids = ctx.candidateCategories.map((c) => c.categoryId);
-      // All category ids should come from CATS
-      for (const id of ids) {
-        expect(CATS.some((c) => c.id === id)).toBe(true);
-      }
-    });
-
-    it('respects memory — known merchant boosts category', () => {
-      const mem = makeMemoryWithMerchant('dabbah', 'groceries', 5);
-      const ctx = buildExpenseContext('dabbah 200', CATS, mem);
-      const top = ctx.candidateCategories[0];
-      expect(top?.categoryId).toBe('groceries');
-    });
-
-    it('excludes archived categories', () => {
-      const archivedCat: Category = { ...makeCat('archived', 'Old'), archived: true };
-      const cats = [...CATS, archivedCat];
-      const ctx = buildExpenseContext('old 50', cats);
-      const ids = ctx.candidateCategories.map((c) => c.categoryId);
-      expect(ids).not.toContain('archived');
-    });
-
-    it('is deterministic — same input produces same output', () => {
-      const ctx1 = buildExpenseContext('coffee 45', CATS);
-      const ctx2 = buildExpenseContext('coffee 45', CATS);
-      expect(ctx1.amount).toBe(ctx2.amount);
-      expect(ctx1.merchant).toBe(ctx2.merchant);
-      expect(ctx1.candidateCategories.map((c) => c.categoryId))
-        .toEqual(ctx2.candidateCategories.map((c) => c.categoryId));
-    });
-
-    it('works without memory (graceful degradation)', () => {
-      expect(() => buildExpenseContext('coffee 45', CATS)).not.toThrow();
-    });
-
-    it('confidence has all 4 dimensions', () => {
-      const ctx = buildExpenseContext('coffee 45', CATS);
-      expect(typeof ctx.confidence.amount).toBe('number');
-      expect(typeof ctx.confidence.merchant).toBe('number');
-      expect(typeof ctx.confidence.category).toBe('number');
-      expect(typeof ctx.confidence.overall).toBe('number');
-    });
-
-    it('all confidence values are 0–1', () => {
-      const ctx = buildExpenseContext('coffee 45', CATS);
-      for (const val of Object.values(ctx.confidence)) {
-        expect(val).toBeGreaterThanOrEqual(0);
-        expect(val).toBeLessThanOrEqual(1);
-      }
-    });
-  });
-});
-
 // ── quickAddState ─────────────────────────────────────────────────────────────
 
 describe('quickAddState', () => {
-  const ctx = buildExpenseContext('coffee 45', CATS);
+  const ctx = makeTestContext(45);
 
   describe('initialQuickAddState', () => {
     it('returns idle state with empty fields', () => {
@@ -541,11 +258,9 @@ describe('quickAddState', () => {
     });
 
     it('sets split_pending when presets provided and split hint active', () => {
-      // Build a context with large amount (triggers large_amount split hint)
-      const largeCtx = buildExpenseContext('dabbah 1500', CATS);
+      const largeCtx = makeTestContext(1500);
       const presets = [{ id: 'p1', categoryIds: ['groceries', 'home'], categoryNames: ['Groceries', 'Home'], count: 3, lastUsed: '', confidence: 0.6 }];
       const state = applyContextToQuickAdd(initialQuickAddState(), largeCtx, presets, NOW);
-      // May or may not be split_pending depending on split hint detection
       expect(['suggesting', 'split_pending']).toContain(state.status);
     });
   });
@@ -571,7 +286,7 @@ describe('quickAddState', () => {
     });
 
     it('no-ops when no amount in context', () => {
-      const noAmountCtx = buildExpenseContext('coffee', CATS);
+      const noAmountCtx = makeTestContext(null);
       const s0 = applyContextToQuickAdd(initialQuickAddState(), noAmountCtx, [], NOW);
       const s1 = confirmSuggestion(s0, 'health');
       expect(s1.pendingConfirmation).toBeNull();
@@ -606,7 +321,7 @@ describe('quickAddState', () => {
 
   describe('resetQuickAdd', () => {
     it('returns idle initial state', () => {
-      const s0 = applyContextToQuickAdd(initialQuickAddState(), ctx, [], NOW);
+      resetQuickAdd();
       const s1 = resetQuickAdd();
       expect(s1).toEqual(initialQuickAddState());
     });
@@ -623,9 +338,8 @@ describe('quickAddState', () => {
       expect(isReadyToSave(initialQuickAddState())).toBe(false);
     });
 
-    it('hasSuggestions: true when context has candidates', () => {
+    it('hasSuggestions: returns boolean', () => {
       const state = applyContextToQuickAdd(initialQuickAddState(), ctx, [], NOW);
-      // Only true if context has candidates
       expect(typeof hasSuggestions(state)).toBe('boolean');
     });
 

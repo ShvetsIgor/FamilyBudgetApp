@@ -924,12 +924,28 @@ export function CategoriesHub() {
             )}
           </div>
 
-          {/* Constructor link */}
-          {tab === 'expense' && (
+          {/* Quick-add actions */}
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
             <button
-              onClick={() => setShowWizard(true)}
+              onClick={() => setFolderEditor({ open: true })}
               style={{
-                padding: '8px 12px',
+                padding: '8px 10px',
+                borderRadius: 12,
+                backgroundColor: T.bgSoft,
+                color: T.sub,
+                fontSize: 12,
+                fontWeight: 700,
+                border: `1px solid ${T.hairline}`,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              + Папка
+            </button>
+            <button
+              onClick={() => setEditor({ open: true })}
+              style={{
+                padding: '8px 10px',
                 borderRadius: 12,
                 backgroundColor: `${T.primary}15`,
                 color: T.primary,
@@ -940,9 +956,9 @@ export function CategoriesHub() {
                 whiteSpace: 'nowrap',
               }}
             >
-              ⚡ Конструктор
+              + Категория
             </button>
-          )}
+          </div>
         </div>
 
         {/* ── Content area ────────────────────────────────────────────────── */}

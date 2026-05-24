@@ -480,6 +480,19 @@ export function CategoriesHub() {
     }
   };
 
+  // ── Reset to defaults ─────────────────────────────────────────────────────
+
+  const handleReset = async () => {
+    if (!user) return;
+    if (!confirm('Сбросить все категории к стандартным? Ваши кастомные категории и папки будут удалены.')) return;
+    const idMap = await resetCategoriesToDefaults(user.id);
+    dispatch(setCategories({ type: 'expense', categories: DEFAULT_EXPENSE_CATEGORIES.map((c) => ({ ...c, userId: user.id })) }));
+    dispatch(setCategories({ type: 'income', categories: DEFAULT_INCOME_CATEGORIES.map((c) => ({ ...c, userId: user.id })) }));
+    dispatch(setFolders({ type: 'expense', folders: DEFAULT_EXPENSE_FOLDER_SEEDS.map((f) => ({ ...f, userId: user.id })) }));
+    dispatch(setFolders({ type: 'income', folders: DEFAULT_INCOME_FOLDER_SEEDS.map((f) => ({ ...f, userId: user.id })) }));
+    if (Object.keys(idMap).length > 0) dispatch(remapExpenseCategories(idMap));
+  };
+
   // ── Render helpers ─────────────────────────────────────────────────────────
 
   const renderFolderRow = (folder: CategoryFolder, indent = 0) => {

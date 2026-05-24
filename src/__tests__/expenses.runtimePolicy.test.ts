@@ -56,7 +56,6 @@ import {
 } from '../features/expenses/engine/resolutionEngine';
 import { createSession, resetSessionIds } from '../features/expenses/engine/sessionManager';
 import { resetEventIds } from '../features/expenses/engine/semanticEventTimeline';
-import { resetBridgeIds } from '../features/expenses/engine/constructorBridge';
 import type { SessionAmbiguityReport } from '../features/expenses/engine/ambiguityScorer';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────

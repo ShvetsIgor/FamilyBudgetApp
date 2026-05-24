@@ -11,7 +11,16 @@ import {
   addCategoryWithId,
   updateCategory as updateCategoryInDb,
   archiveCategoryInFirestore,
+  resetCategoriesToDefaults,
 } from '@/features/categories/services/categoriesService';
+import { remapExpenseCategories } from '@/features/expenses/store/expensesSlice';
+import { setCategories, setFolders } from '@/features/categories/store/categoriesSlice';
+import {
+  DEFAULT_EXPENSE_CATEGORIES,
+  DEFAULT_INCOME_CATEGORIES,
+  DEFAULT_EXPENSE_FOLDER_SEEDS,
+  DEFAULT_INCOME_FOLDER_SEEDS,
+} from '@/features/categories/services/defaultCategories';
 import {
   addFolder as addFolderToDb,
   updateFolder as updateFolderInDb,

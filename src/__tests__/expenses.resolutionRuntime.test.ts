@@ -1076,7 +1076,7 @@ describe('constructorBridge — resolveConflictFromSession', () => {
       kind: 'phrase_overlap',
       tokens: ['credit', 'card'],
       entryIds: ['entry_a', 'entry_b'],
-      description: 'two entries overlap',
+      message: 'two entries overlap',
     };
     const op = resolveConflictFromSession(session, conflict);
     expect(op.type).toBe('archive_entry');

@@ -82,18 +82,18 @@ export function OnboardingFlow({ onComplete }: Props) {
             <div className="text-center">
               <p className="text-4xl mb-3">👋</p>
               <h1 className="text-2xl font-bold">
-                Привет{user?.name ? `, ${user.name.split(' ')[0]}` : ''}!
+                {t('onboarding.hi', { name: user?.name ? `, ${user.name.split(' ')[0]}` : '' })}
               </h1>
               <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-                Добро пожаловать в Family Budget — ваш личный финансовый помощник.
+                {t('onboarding.welcome')}
               </p>
             </div>
 
             <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4">
-              {FEATURES.map((f) => (
-                <div key={f.text} className="flex items-center gap-3">
-                  <span className="text-xl shrink-0">{f.icon}</span>
-                  <p className="text-sm">{f.text}</p>
+              {(['💸', '📊', '🎯', '🔄'] as const).map((icon, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <span className="text-xl shrink-0">{icon}</span>
+                  <p className="text-sm">{t(`onboarding.feature${i + 1}`)}</p>
                 </div>
               ))}
             </div>
@@ -102,7 +102,7 @@ export function OnboardingFlow({ onComplete }: Props) {
               onClick={() => setStep(1)}
               className="w-full rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground"
             >
-              Начать →
+              {t('onboarding.start')}
             </button>
           </div>
         )}

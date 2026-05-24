@@ -1,9 +1,11 @@
 'use client';
 
 import { BotAvatar } from './BotBubble';
-import { C, SHADOW, RAD } from '@/features/chat/styles/tokens';
+import { SHADOW, RAD } from '@/features/chat/styles/tokens';
+import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 
 export function Typing() {
+  const C = useChatTokens();
   return (
     <div className="flex items-end gap-2" style={{ margin: '8px 14px 2px' }}>
       <BotAvatar />

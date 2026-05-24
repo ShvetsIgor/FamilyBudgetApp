@@ -137,7 +137,6 @@ beforeEach(() => {
   resetSessionIds();
   resetActionIds();
   resetEventIds();
-  resetBridgeIds();
   resetSuggestionIds();
   resetWorkflowIds();
 });

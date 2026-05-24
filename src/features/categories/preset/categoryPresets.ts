@@ -42,8 +42,8 @@ export interface CategoryBlueprint {
 // Income folder is last — filter by `f.id !== 'income'` for expense-only flows.
 
 export const FOLDER_BLUEPRINTS: readonly FolderBlueprint[] = [
-  { id: 'food',          name: 'Food & Drinks',   ru: 'Еда и напитки',   color: '#E07A5F', icon: 'cart'      },
-  { id: 'home',          name: 'Home & Bills',    ru: 'Дом и счета',     color: '#81B29A', icon: 'house'     },
+  { id: 'food',          name: 'Supermarket',     ru: 'Супермаркет',     color: '#E07A5F', icon: 'cart'      },
+  { id: 'home',          name: 'Home',            ru: 'Дом',             color: '#81B29A', icon: 'house'     },
   { id: 'transport',     name: 'Transport',       ru: 'Транспорт',       color: '#F2CC8F', icon: 'bus'       },
   { id: 'car',           name: 'Car',             ru: 'Машина',          color: '#8AA9D6', icon: 'car'       },
   { id: 'health',        name: 'Health',          ru: 'Здоровье',        color: '#C97B84', icon: 'heart'     },

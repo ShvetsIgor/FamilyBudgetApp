@@ -66,7 +66,7 @@ export function parseExpenseInput(
     }));
 
   return {
-    amount: ctx.amount,
+    amount: ctx.amount ?? null,
     tokens,
     merchant: ctx.merchant ?? null,
     merchantKey: ctx.merchantKey ?? null,

@@ -113,7 +113,9 @@
     "numpadTotal": "Итого",
     "numpadSave": "Записать чек {symbol}{total}",
     "numpadSaveEdit": "Сохранить {symbol}{total}",
-    "numpadSaving": "Сохранение…"
+    "numpadSaving": "Сохранение…",
+    "numpadCancel": "Отмена",
+    "numpadPos": "{count} поз."
   },
   "income": {
     "title": "Новый доход",

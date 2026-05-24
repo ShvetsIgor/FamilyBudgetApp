@@ -579,19 +579,19 @@ export function FastExpenseEntry({
                 )}
               </div>
             ) : pickerGroupId === null ? (
-              /* Show folder groups */
+              /* Show folders — tap a folder to see real categories inside */
               <div className="grid grid-cols-4 gap-1.5">
-                {topCats.map((cat) => {
-                  const c = cat.color ?? '#E07A5F';
+                {topFolders.map((folder) => {
+                  const c = folder.color ?? '#E07A5F';
                   return (
                     <button
-                      key={cat.id}
-                      onClick={() => setPickerGroupId(cat.id)}
+                      key={folder.id}
+                      onClick={() => setPickerGroupId(folder.id)}
                       className="flex flex-col items-center gap-0.5 px-0.5 py-2 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
                       style={{ background: c + '18', borderColor: 'transparent' }}
                     >
-                      <StickerIcon icon={cat.icon ?? 'box'} color={c} className="h-4 w-4" />
-                      <span className="leading-tight text-center line-clamp-1">{t.cat(cat.name)}</span>
+                      <StickerIcon icon={folder.icon ?? 'box'} color={c} className="h-4 w-4" />
+                      <span className="leading-tight text-center line-clamp-1">{t.cat(folder.name)}</span>
                     </button>
                   );
                 })}

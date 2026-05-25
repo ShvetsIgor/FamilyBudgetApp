@@ -33,18 +33,25 @@ interface ClarifyCardProps {
 
 export function ClarifyCard({
   amount, currency, chips, unknownNote, storeName, isRepeat, isTagLearning, categories,
-  onSelectChip, onAllCategories, onOtherText, onSplit,
+  onSelectChip, onAllCategories, onOtherText, onSplit, onCreateFolder,
 }: ClarifyCardProps) {
   const C = useChatTokens();
   const t = useT();
   const [selectedParent, setSelectedParent] = useState<ClarifyChip | null>(null);
   const [otherMode, setOtherMode] = useState(false);
   const [otherText, setOtherText] = useState('');
+  const [createFolderMode, setCreateFolderMode] = useState(false);
+  const [folderName, setFolderName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (otherMode) inputRef.current?.focus();
   }, [otherMode]);
+
+  useEffect(() => {
+    if (createFolderMode) folderInputRef.current?.focus();
+  }, [createFolderMode]);
 
   const headerText = selectedParent
     ? t.cat(selectedParent.name)

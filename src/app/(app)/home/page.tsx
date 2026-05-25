@@ -548,6 +548,7 @@ export default function HomePage() {
                     unknownNote={d.parsedNote as string | undefined}
                     isRepeat={(d.isRepeat as boolean | undefined) ?? false}
                     storeName={d.storeName as string | undefined}
+                    isTagLearning={(d.isTagLearning as boolean | undefined) ?? false}
                     categories={cardIsIncome ? allIncomeCats : allExpenseCats}
                     onSelectChip={(chip) => cardIsIncome
                       ? handleIncomeClarifyChip(

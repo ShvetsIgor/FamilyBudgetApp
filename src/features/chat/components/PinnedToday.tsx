@@ -22,6 +22,7 @@ export function PinnedToday({ spent, total, currency, dayLabel, budgetMode, onSe
   const t = useT();
   const sym = getCurrencySymbol(currency);
   const left = Math.max(0, total - spent);
+  const over = Math.max(0, spent - total);
   const spentPct = total > 0 ? Math.min(100, Math.round((spent / total) * 100)) : 0;
   const isOver = total > 0 && spent > total;
 

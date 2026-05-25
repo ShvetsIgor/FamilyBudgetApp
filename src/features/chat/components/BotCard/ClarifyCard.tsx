@@ -22,6 +22,7 @@ interface ClarifyCardProps {
   unknownNote?: string;
   storeName?: string;
   isRepeat?: boolean;
+  isTagLearning?: boolean;
   categories?: Category[];
   onSelectChip: (chip: ClarifyChip) => void;
   onAllCategories: () => void;
@@ -30,7 +31,7 @@ interface ClarifyCardProps {
 }
 
 export function ClarifyCard({
-  amount, currency, chips, unknownNote, storeName, isRepeat, categories,
+  amount, currency, chips, unknownNote, storeName, isRepeat, isTagLearning, categories,
   onSelectChip, onAllCategories, onOtherText, onSplit,
 }: ClarifyCardProps) {
   const C = useChatTokens();

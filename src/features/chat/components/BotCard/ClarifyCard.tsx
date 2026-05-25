@@ -53,9 +53,19 @@ export function ClarifyCard({
     if (createFolderMode) folderInputRef.current?.focus();
   }, [createFolderMode]);
 
+  const handleFolderSubmit = () => {
+    const trimmed = folderName.trim();
+    if (!trimmed) return;
+    if (onCreateFolder) onCreateFolder(trimmed);
+    setCreateFolderMode(false);
+    setFolderName('');
+  };
+
   const headerText = selectedParent
     ? t.cat(selectedParent.name)
-    : storeName && isTagLearning
+    : createFolderMode
+      ? t('chat.clarify.newFolder')
+      : storeName && isTagLearning
       ? t('chat.clarify.whatIs').replace('{store}', storeName)
       : storeName
         ? t('chat.clarify.atStore').replace('{store}', storeName)

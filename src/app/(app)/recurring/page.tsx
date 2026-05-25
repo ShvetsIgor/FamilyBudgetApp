@@ -110,7 +110,7 @@ export default function RecurringPage() {
             try {
               const exp = await addExpense({
                 userId: user.id, amount: data.amount, currency: data.currency,
-                categoryId: data.categoryId, date: new Date(),
+                categoryId: data.categoryId, date: data.startDate,
                 paymentMethod: 'card', splits: [], tags: ['recurring'], privacy: 'regular',
                 store: data.name, comment: data.comment || undefined,
               });
@@ -229,7 +229,7 @@ export default function RecurringPage() {
       <RecurringForm
         initial={formMode.mode === 'edit' ? formMode.item : undefined}
         onSave={handleSave} onCancel={() => setFormMode(null)}
-        currency={currency} freq={FREQ} types={TYPES}
+        currency={currency} freq={FREQ}
       />
     </div>
   ) : (
@@ -288,7 +288,7 @@ export default function RecurringPage() {
           <RecurringForm
             initial={formMode.mode === 'edit' ? formMode.item : undefined}
             onSave={handleSave} onCancel={() => setFormMode(null)}
-            currency={currency} freq={FREQ} types={TYPES}
+            currency={currency} freq={FREQ}
           />
         )}
       </div>
@@ -333,13 +333,12 @@ export default function RecurringPage() {
 
 // ── RecurringForm ─────────────────────────────────────────────────────────────
 
-function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
+function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
   initial?: SerializableRecurringPayment;
   onSave: (d: Omit<AddRecurringInput, 'userId'>) => Promise<void>;
   onCancel: () => void;
   currency: string;
   freq: { value: RecurringFrequency; label: string }[];
-  types: { value: RecurringType; label: string; icon: string }[];
 }) {
   const t = useT();
   const allExpCats = useAppSelector((s) => s.categories.expense);
@@ -495,48 +494,6 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
             )}
           </div>
 
-          {/* Type grid */}
-          <div>
-            <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider mb-1.5 px-0.5">
-              {t('recurring.type')}
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {types.map((tp) => {
-                const sel = type === tp.value;
-                return (
-                  <button
-                    key={tp.value}
-                    onClick={() => setType(tp.value)}
-                    className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
-                    style={{
-                      background: sel ? catColor : 'hsl(var(--card))',
-                      boxShadow: sel ? `0 3px 8px ${catColor}55` : '0 1px 3px rgba(61,44,31,.06)',
-                    }}
-                  >
-                    <span className="text-base leading-none">{tp.icon}</span>
-                    <span
-                      className="text-[9px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
-                      style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}
-                    >
-                      {tp.value === 'custom' && typeLabel ? typeLabel : tp.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            {type === 'custom' && (
-              <input
-                type="text"
-                value={typeLabel}
-                onChange={(e) => setTypeLabel(e.target.value)}
-                placeholder="Свой тип…"
-                autoFocus
-                className="mt-2 block w-full px-3 py-2 rounded-xl text-sm bg-card border border-border outline-none transition-colors"
-                style={{ borderColor: catColor }}
-              />
-            )}
-          </div>
-
           {/* Frequency chips */}
           <div>
             <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider mb-1.5 px-0.5">
@@ -667,7 +624,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
             className="w-full py-[12px] rounded-[16px] flex items-center justify-center gap-2 text-[14px] font-black text-white transition-opacity disabled:opacity-50 border-0"
             style={{ background: catColor, boxShadow: `0 12px 24px ${catColor}60` }}
           >
-            <span className="text-base leading-none">{types.find((tp) => tp.value === type)?.icon ?? '🔄'}</span>
+            <span className="text-base leading-none">🔄</span>
             <span>
               {saving
                 ? t('recurring.saving')
@@ -697,23 +654,6 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq, types }: {
             onChange={(e) => setAmount(e.target.value || '0')}
             className="w-full bg-transparent text-2xl font-bold outline-none tabular-nums text-destructive"
           />
-        </div>
-        <div className="rounded-2xl border border-border bg-card p-4">
-          <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.type')}</label>
-          <div className="grid grid-cols-3 gap-2">
-            {types.map((tp) => (
-              <button key={tp.value} type="button" onClick={() => setType(tp.value)}
-                className={`flex flex-col items-center gap-1 rounded-xl py-2 text-xs border transition-colors ${type === tp.value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'}`}>
-                <span>{tp.icon}</span>
-                <span>{tp.value === 'custom' && typeLabel ? typeLabel : tp.label}</span>
-              </button>
-            ))}
-          </div>
-          {type === 'custom' && (
-            <input type="text" value={typeLabel} onChange={(e) => setTypeLabel(e.target.value)}
-              placeholder="Свой тип…"
-              className="mt-2 w-full bg-transparent text-sm outline-none border-b border-border pb-1" />
-          )}
         </div>
         <div className="rounded-2xl border border-border bg-card p-4">
           <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.frequency')}</label>

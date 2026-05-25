@@ -3,6 +3,7 @@
 import { useAppSelector } from '@/store/store';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { formatAmount } from '@/shared/utils/currency';
+import { useT } from '@/shared/hooks/useT';
 import type { SerializableIncome } from '@/shared/types';
 
 interface Props {
@@ -21,6 +22,7 @@ const METHOD_ICONS: Record<string, string> = {
 export function IncomeCard({ income, onDelete, onEdit }: Props) {
   const categories = useAppSelector((s) => s.categories.income);
   const category = categories.find((c) => c.id === income.categoryId);
+  const t = useT();
 
   return (
     <div className="flex w-full items-center gap-3 px-4 py-3">
@@ -32,10 +34,10 @@ export function IncomeCard({ income, onDelete, onEdit }: Props) {
 
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">
-          {income.comment || category?.name || 'Income'}
+          {income.comment || (category ? t.cat(category.name) : t('income.title'))}
         </p>
         <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-          <span>{category?.name}</span>
+          <span>{category ? t.cat(category.name) : ''}</span>
           <span>·</span>
           <span>{METHOD_ICONS[income.method] ?? '🔄'}</span>
           {income.privacy === 'secret' && <span>🔒</span>}

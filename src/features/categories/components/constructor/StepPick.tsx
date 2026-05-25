@@ -7,11 +7,12 @@ import { CC } from '../../styles/tokens';
 interface Props {
   folders: WizardFolder[];
   onToggle: (id: string) => void;
+  onToggleExpanded: (id: string) => void;
   onAddCustom: () => void;
   locale?: string;
 }
 
-export function StepPick({ folders, onToggle, onAddCustom, locale = 'ru' }: Props) {
+export function StepPick({ folders, onToggle, onToggleExpanded, onAddCustom, locale = 'ru' }: Props) {
   const [query, setQuery] = useState('');
 
   const q = query.toLowerCase().trim();
@@ -75,34 +76,41 @@ export function StepPick({ folders, onToggle, onAddCustom, locale = 'ru' }: Prop
             {filtered.map((folder) => {
               const displayName = locale === 'ru' && folder.ru ? folder.ru : folder.name;
               return (
-                <button
-                  key={folder.id}
-                  onClick={() => onToggle(folder.id)}
-                  className={`relative flex flex-col items-center gap-2 rounded-2xl p-3 border-2 transition-all ${
-                    folder.enabled
-                      ? 'border-transparent shadow-md'
-                      : 'border-[#EDE0CC] bg-white hover:border-[#E07A5F]/30'
-                  }`}
-                  style={folder.enabled ? { backgroundColor: `${folder.color}15`, borderColor: `${folder.color}40` } : {}}
-                >
-                  {folder.enabled && (
-                    <div
-                      className="absolute top-2 right-2 h-4 w-4 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
-                      style={{ backgroundColor: folder.color }}
-                    >
-                      ✓
-                    </div>
-                  )}
-                  <div
-                    className="h-12 w-12 rounded-xl flex items-center justify-center"
-                    style={{ backgroundColor: `${folder.color}20` }}
+                <div key={folder.id} className="flex flex-col gap-1">
+                  <button
+                    onClick={() => onToggle(folder.id)}
+                    className={`relative flex flex-col items-center gap-2 rounded-2xl p-3 border-2 transition-all ${
+                      folder.enabled
+                        ? 'border-transparent shadow-md'
+                        : 'border-[#EDE0CC] bg-white hover:border-[#E07A5F]/30'
+                    }`}
+                    style={folder.enabled ? { backgroundColor: `${folder.color}15`, borderColor: `${folder.color}40` } : {}}
                   >
-                    <StickerIcon icon={folder.icon} color={folder.color} className="h-8 w-8" />
-                  </div>
-                  <span className="text-[11px] font-semibold text-[#3D2C1F] text-center leading-tight">
-                    {displayName}
-                  </span>
-                </button>
+                    {folder.enabled && (
+                      <div
+                        className="absolute top-2 right-2 h-4 w-4 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
+                        style={{ backgroundColor: folder.color }}
+                      >
+                        ✓
+                      </div>
+                    )}
+                    <div
+                      className="h-12 w-12 rounded-xl flex items-center justify-center"
+                      style={{ backgroundColor: `${folder.color}20` }}
+                    >
+                      <StickerIcon icon={folder.icon} color={folder.color} className="h-8 w-8" />
+                    </div>
+                    <span className="text-[11px] font-semibold text-[#3D2C1F] text-center leading-tight">
+                      {displayName}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => onToggleExpanded(folder.id)}
+                    className="text-[10px] text-[#8E7A66] flex items-center justify-center gap-0.5 hover:text-[#3D2C1F] transition-colors"
+                  >
+                    {folder.expanded ? '▲' : '▼'}
+                  </button>
+                </div>
               );
             })}
 

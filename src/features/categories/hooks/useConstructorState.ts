@@ -14,6 +14,7 @@ export interface WizardFolder {
   enabled: boolean;
   budget: number | null;
   isCustom?: boolean;
+  expanded?: boolean;
 }
 
 /** Represents a flat category blueprint in the wizard (will become Category with folderId). */
@@ -38,6 +39,7 @@ function initFolders(existingIds: Set<string>): WizardFolder[] {
       ...f,
       enabled: existingIds.has(f.id) || DEFAULT_ENABLED.has(f.id),
       budget: null,
+      expanded: false,
     }));
 }
 
@@ -64,6 +66,9 @@ export function useConstructorState(existingCategoryIds: Set<string>) {
   const toggleFolder = (id: string) =>
     setFolders((prev) => prev.map((f) => (f.id === id ? { ...f, enabled: !f.enabled } : f)));
 
+  const toggleFolderExpanded = (id: string) =>
+    setFolders((prev) => prev.map((f) => (f.id === id ? { ...f, expanded: !f.expanded } : f)));
+
   const toggleCategory = (id: string) =>
     setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, enabled: !c.enabled } : c)));
 
@@ -89,7 +94,7 @@ export function useConstructorState(existingCategoryIds: Set<string>) {
   return {
     step, setStep,
     folders, categories,
-    toggleFolder, toggleCategory,
+    toggleFolder, toggleFolderExpanded, toggleCategory,
     setBudget, addCustomFolder, addCustomCategory,
     canNext, enabledFolders, getCatsInFolder,
   };

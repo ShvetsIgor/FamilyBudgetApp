@@ -43,6 +43,8 @@ export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
   const effectiveParts =
     expense.splits.filter((s) => s.amount > 0).length + (mainPortion > 0.01 ? 1 : 0);
   const hasSplit = effectiveParts > 1;
+  const isRecurring = expense.tags?.includes('recurring') ?? false;
+  const isSavings = expense.tags?.includes('savings') ?? false;
 
   return (
     <div className="flex flex-col">
@@ -70,7 +72,8 @@ export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
               </button>
             )}
             <span>·</span>
-            <span>{PAYMENT_ICONS[expense.paymentMethod]}</span>
+            {isRecurring && <span title="Регулярный">🔄</span>}
+            {!isRecurring && !isSavings && <span>{PAYMENT_ICONS[expense.paymentMethod]}</span>}
             {expense.privacy === 'secret' && <span>🔒</span>}
           </p>
         </button>

@@ -247,7 +247,7 @@ export async function respondToUserMessage(
   }
 
   // ── Case 1.5: store known but no items → ask what was bought, suggest from profile
-  if (parsed.confidence === 'low' && parsed.storeId) {
+  if (parsed.storeId && (parsed.confidence === 'low' || !ctx.storeProfiles?.[parsed.storeId] || (ctx.storeProfiles[parsed.storeId].probableCategories ?? []).length === 0)) {
     const profile = ctx.storeProfiles?.[parsed.storeId];
     let chips: { id: string; name: string; icon: string; color: string }[];
 

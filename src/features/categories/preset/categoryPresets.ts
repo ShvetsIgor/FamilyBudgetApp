@@ -43,6 +43,7 @@ export interface CategoryBlueprint {
 
 export const FOLDER_BLUEPRINTS: readonly FolderBlueprint[] = [
   { id: 'food',          name: 'Supermarket',     ru: 'Супермаркет',     color: '#E07A5F', icon: 'cart'      },
+  { id: 'dining',        name: 'Dining Out',      ru: 'Вне дома',        color: '#E07A5F', icon: 'plate'     },
   { id: 'home',          name: 'Home',            ru: 'Дом',             color: '#81B29A', icon: 'house'     },
   { id: 'transport',     name: 'Transport',       ru: 'Транспорт',       color: '#F2CC8F', icon: 'bus'       },
   { id: 'car',           name: 'Car',             ru: 'Машина',          color: '#8AA9D6', icon: 'car'       },
@@ -76,11 +77,11 @@ export const CATEGORY_BLUEPRINTS: readonly CategoryBlueprint[] = [
   { id: 'dairy',             folderId: 'food',          name: 'Dairy',              ru: 'Молочные',           icon: 'cart',        color: '#E07A5F' },
   { id: 'meat_fish',         folderId: 'food',          name: 'Meat & Fish',        ru: 'Мясо и рыба',        icon: 'cart',        color: '#E07A5F' },
   { id: 'fruits_veg',        folderId: 'food',          name: 'Fruits & Veg',       ru: 'Фрукты и овощи',     icon: 'cart',        color: '#E07A5F' },
-  { id: 'restaurant',        folderId: 'food',          name: 'Restaurant',         ru: 'Ресторан',           icon: 'plate',       color: '#E07A5F' },
-  { id: 'coffee',            folderId: 'food',          name: 'Coffee',             ru: 'Кофе',               icon: 'coffee',      color: '#E07A5F' },
-  { id: 'fast_food',         folderId: 'food',          name: 'Fast Food',          ru: 'Фастфуд',            icon: 'burger',      color: '#E07A5F' },
-  { id: 'delivery',          folderId: 'food',          name: 'Delivery',           ru: 'Доставка',           icon: 'delivery',    color: '#E07A5F' },
-  { id: 'snacks',            folderId: 'food',          name: 'Snacks',             ru: 'Снэки',              icon: 'icecream',    color: '#E07A5F' },
+  { id: 'restaurant',        folderId: 'dining',        name: 'Restaurant',         ru: 'Ресторан',           icon: 'plate',       color: '#E07A5F' },
+  { id: 'coffee',            folderId: 'dining',        name: 'Coffee',             ru: 'Кофе',               icon: 'coffee',      color: '#E07A5F' },
+  { id: 'fast_food',         folderId: 'dining',        name: 'Fast Food',          ru: 'Фастфуд',            icon: 'burger',      color: '#E07A5F' },
+  { id: 'delivery',          folderId: 'dining',        name: 'Delivery',           ru: 'Доставка',           icon: 'delivery',    color: '#E07A5F' },
+  { id: 'snacks',            folderId: 'dining',        name: 'Snacks',             ru: 'Снэки',              icon: 'icecream',    color: '#E07A5F' },
   { id: 'alcohol',           folderId: 'food',          name: 'Alcohol',            ru: 'Алкоголь',           icon: 'wine',        color: '#E07A5F' },
   { id: 'food_other',        folderId: 'food',          name: 'Other',              ru: 'Прочее',             icon: 'box',         color: '#E07A5F' },
 

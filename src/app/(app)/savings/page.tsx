@@ -50,8 +50,8 @@ export default function SavingsPage() {
       }
       dispatch(prependExpense(await addExpense({
         userId: user.id, amount, currency: goal.currency, categoryId: catId,
-        date: new Date(), paymentMethod: 'other',
-        comment: `Savings: ${goal.name}${note ? ' · ' + note : ''}`,
+        date: new Date(), paymentMethod: 'card',
+        comment: `${goal.name}${note ? ' · ' + note : ''}`,
         tags: ['savings'], privacy: 'regular', splits: [], goalId: goal.id,
       })));
     }

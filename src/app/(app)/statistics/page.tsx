@@ -140,7 +140,7 @@ export default function StatisticsPage() {
                     overBudget ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground hover:text-foreground'
                   )}
                 >
-                  {overBudget ? t('stats.over') : limit > 0 ? `/ ${formatAmount(limit, currency)}` : t('stats.addLimit')}
+                  {overBudget ? `−${formatAmount(d.amount - limit, currency)}` : limit > 0 ? `/ ${formatAmount(limit, currency)}` : t('stats.addLimit')}
                 </button>
               )}
             </div>

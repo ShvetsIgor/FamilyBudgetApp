@@ -31,7 +31,7 @@ export function ConstructorWizard({ open, onClose, existingCategoryIds, existing
 
   const {
     step, setStep, folders, categories,
-    toggleFolder, toggleCategory, setBudget,
+    toggleFolder, toggleFolderExpanded, toggleCategory, setBudget,
     addCustomFolder, addCustomCategory,
     canNext, enabledFolders,
   } = useConstructorState(existingCategoryIds);
@@ -135,6 +135,7 @@ export function ConstructorWizard({ open, onClose, existingCategoryIds, existing
           <StepPick
             folders={folders}
             onToggle={toggleFolder}
+            onToggleExpanded={toggleFolderExpanded}
             onAddCustom={() => setShowCustomSheet(true)}
           />
         )}

@@ -113,13 +113,8 @@ export async function resetCategoriesToDefaults(userId: string): Promise<Record<
     ]);
   }
 
-  // Recreate categories with stable preset IDs
+  // Recreate ONLY income categories (not expense — let users add from Library)
   const batch = writeBatch(db);
-  for (const cat of DEFAULT_EXPENSE_CATEGORIES) {
-    const { id, ...rest } = cat;
-    const clean = Object.fromEntries(Object.entries({ ...rest, userId }).filter(([, v]) => v !== undefined));
-    batch.set(doc(colRef(userId, 'expense'), id), clean);
-  }
   for (const cat of DEFAULT_INCOME_CATEGORIES) {
     const { id, ...rest } = cat;
     const clean = Object.fromEntries(Object.entries({ ...rest, userId }).filter(([, v]) => v !== undefined));
@@ -127,11 +122,8 @@ export async function resetCategoriesToDefaults(userId: string): Promise<Record<
   }
   await batch.commit();
 
-  // Recreate folders
-  await Promise.all([
-    bulkCreateFolders(userId, DEFAULT_EXPENSE_FOLDER_SEEDS),
-    bulkCreateFolders(userId, DEFAULT_INCOME_FOLDER_SEEDS),
-  ]);
+  // Recreate ONLY income folder
+  await bulkCreateFolders(userId, DEFAULT_INCOME_FOLDER_SEEDS);
 
   // Build oldId→newId map: match by name, then apply legacyCategoryMap for unmapped old IDs
   const oldIdToNewId: Record<string, string> = {};

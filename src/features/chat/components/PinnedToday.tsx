@@ -72,7 +72,7 @@ export function PinnedToday({ spent, total, currency, dayLabel, budgetMode, onSe
                 className="text-[22px] font-[900] tabular-nums leading-none"
                 style={{ letterSpacing: -0.5, color: isOver ? '#FFD166' : 'white' }}
               >
-                {total > 0 ? `${sym}\u202F${left.toLocaleString()}` : `${sym}\u202F${spent.toLocaleString()}`}
+                {total > 0 ? `${sym}\u202F${(isOver ? over : left).toLocaleString()}` : `${sym}\u202F${spent.toLocaleString()}`}
               </span>
               {total > 0 && (
                 <span className="text-[11.5px] font-[700] opacity-80" style={{ color: 'white' }}>

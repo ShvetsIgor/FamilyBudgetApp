@@ -515,6 +515,7 @@
       "refine": "Clarify:",
       "common": "Often chosen",
       "atStore": "What did you buy at {store}?",
+      "whatIs": "What category for {store}?",
       "all": "All categories",
       "other": "Other",
       "whatBought": "What did you buy?",

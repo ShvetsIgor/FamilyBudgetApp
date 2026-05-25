@@ -52,5 +52,5 @@ const storeProfilesSlice = createSlice({
   },
 });
 
-export const { setProfiles, upsertProfile } = storeProfilesSlice.actions;
+export const { setProfiles, upsertProfile, clearProfiles } = storeProfilesSlice.actions;
 export default storeProfilesSlice.reducer;

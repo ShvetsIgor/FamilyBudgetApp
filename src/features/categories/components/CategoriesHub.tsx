@@ -494,6 +494,7 @@ export function CategoriesHub() {
     dispatch(setFolders({ type: 'income', folders: DEFAULT_INCOME_FOLDER_SEEDS.map((f) => ({ ...f, userId: user.id })) }));
     if (Object.keys(idMap).length > 0) dispatch(remapExpenseCategories(idMap));
     dispatch(clearMemory());
+    dispatch(clearProfiles());
   };
 
   // ── Render helpers ─────────────────────────────────────────────────────────

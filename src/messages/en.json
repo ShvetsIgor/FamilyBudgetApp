@@ -521,7 +521,10 @@
       "whatBought": "What did you buy?",
       "split": "Split",
       "promise": "tell me — I'll remember this word forever",
-      "undo": "Undo"
+      "undo": "Undo",
+      "newFolder": "New folder",
+      "folderName": "Folder name",
+      "createFolder": "Create folder"
     },
     "future": {
       "question": "Is this a future expense?",

@@ -273,13 +273,15 @@ export async function respondToUserMessage(
 
       chips = [...profileChips, ...fillChips];
     } else {
-      // No history → show top parent categories
-      chips = topCategoryIds
-        .slice(0, 4)
-        .map((id) => categoriesById.get(id))
-        .filter(Boolean)
-        .map((c) => ({ id: c!.id, name: c!.name, icon: c!.icon, color: c!.color }));
+      // No history → show expense folders first (two-stage: folder → category)
+      chips = Array.from(ctx.foldersById.values())
+        .filter((f) => f.type === 'expense')
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        .slice(0, 8)
+        .map((f) => ({ id: f.id, name: f.name, icon: f.icon ?? 'box', color: f.color ?? '#E07A5F' }));
     }
+
+    const isTagLearning = !profile || (profile.probableCategories ?? []).length === 0;
 
     return {
       messages: [
@@ -290,6 +292,7 @@ export async function respondToUserMessage(
             data: {
               amount: parsed.amount,
               chips,
+              isTagLearning,
               parsedDate: parsed.date,
               parsedDateLabel: parsed.dateLabel,
               parsedNote: parsed.note,

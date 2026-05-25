@@ -395,6 +395,30 @@ export default function HomePage() {
     } catch { /* ignore */ }
   }, [userId, allExpenses, dispatch]);
 
+  const handleCreateFolder = useCallback(async (name: string) => {
+    if (!userId) return;
+    const trimmed = name.trim();
+    if (!trimmed) return;
+
+    const newFolder = await addFolder(userId, {
+      name: trimmed,
+      icon: 'box',
+      color: '#94A3B8',
+      order: 99,
+      type: 'expense',
+    });
+    dispatch(addFolderAction(newFolder));
+
+    const botMsg = await addMessage({
+      userId,
+      senderId: 'bot' as const,
+      kind: 'bot' as const,
+      text: `Папка «${trimmed}» создана. Добавь категории в разделе категорий — потом запиши трату заново.`,
+      status: 'saved' as const,
+    });
+    void botMsg;
+  }, [userId, dispatch]);
+
   const handleFutureConfirm = useCallback(async (botMsgId: string, data: FutureCardData) => {
     if (!userId || sendingRef.current) return;
     sendingRef.current = true;

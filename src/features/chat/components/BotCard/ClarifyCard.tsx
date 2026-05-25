@@ -28,6 +28,7 @@ interface ClarifyCardProps {
   onAllCategories: () => void;
   onOtherText?: (text: string) => void;
   onSplit?: () => void;
+  onCreateFolder?: (name: string) => void;
 }
 
 export function ClarifyCard({

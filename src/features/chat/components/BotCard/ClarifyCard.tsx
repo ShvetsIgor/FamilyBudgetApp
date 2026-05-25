@@ -273,7 +273,7 @@ export function ClarifyCard({
         </div>
       )}
 
-      {!selectedParent && !otherMode && (
+      {!selectedParent && !otherMode && !createFolderMode && (
         <>
           <button
             onClick={onAllCategories}

@@ -105,7 +105,10 @@ export function ClarifyCard({
   };
 
   const handleBack = () => {
-    if (otherMode) {
+    if (createFolderMode) {
+      setCreateFolderMode(false);
+      setFolderName('');
+    } else if (otherMode) {
       setOtherMode(false);
       setOtherText('');
     } else {

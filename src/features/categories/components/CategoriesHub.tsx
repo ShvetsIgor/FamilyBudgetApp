@@ -16,6 +16,7 @@ import {
 } from '@/features/categories/services/categoriesService';
 import { remapExpenseCategories } from '@/features/expenses/store/expensesSlice';
 import { clearMemory } from '@/features/expenses/store/suggestionMemorySlice';
+import { clearProfiles } from '@/features/chat/store/storeProfilesSlice';
 import {
   DEFAULT_EXPENSE_CATEGORIES,
   DEFAULT_INCOME_CATEGORIES,

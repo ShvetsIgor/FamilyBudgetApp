@@ -14,6 +14,9 @@ const storeProfilesSlice = createSlice({
     setProfiles(state, action: PayloadAction<Record<string, StoreProfile>>) {
       state.profiles = action.payload;
     },
+    clearProfiles(state) {
+      state.profiles = {};
+    },
     upsertProfile(
       state,
       action: PayloadAction<{

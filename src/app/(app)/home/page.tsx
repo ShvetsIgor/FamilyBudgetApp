@@ -7,6 +7,8 @@ import { ru } from 'date-fns/locale';
 
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setTyping, removeMessage } from '@/features/chat/store/chatSlice';
+import { addFolder as addFolderAction } from '@/features/categories/store/categoriesSlice';
+import { addFolder } from '@/features/categories/services/categoryFoldersService';
 import { prependExpense, removeExpense, mergeExpenses } from '@/features/expenses/store/expensesSlice';
 import { prependIncome } from '@/features/income/store/incomeSlice';
 

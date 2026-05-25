@@ -47,13 +47,15 @@ export function ClarifyCard({
 
   const headerText = selectedParent
     ? t.cat(selectedParent.name)
-    : storeName
-      ? t('chat.clarify.atStore').replace('{store}', storeName)
-      : isRepeat
-        ? t('chat.clarify.refine')
-        : unknownNote
-          ? t('chat.clarify.unknown')
-          : t('chat.clarify.common');
+    : storeName && isTagLearning
+      ? t('chat.clarify.whatIs').replace('{store}', storeName)
+      : storeName
+        ? t('chat.clarify.atStore').replace('{store}', storeName)
+        : isRepeat
+          ? t('chat.clarify.refine')
+          : unknownNote
+            ? t('chat.clarify.unknown')
+            : t('chat.clarify.common');
 
   const currentChips: ClarifyChip[] = selectedParent && categories
     ? categories

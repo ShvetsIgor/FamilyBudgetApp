@@ -106,6 +106,12 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
     };
   }
 
-  // Nothing matched
+  // Unrecognized text with amount → treat as unknown store name for folder-first clarification
+  if (rest.trim()) {
+    const storeName = rest.trim().replace(/\b\p{L}/gu, (c) => c.toUpperCase());
+    const storeId = `unknown_${rest.trim().toLowerCase().replace(/\s+/g, '_')}`;
+    return { amount, categoryId: null, confidence: 'low', storeId, storeName, note: storeName, ...df };
+  }
+
   return { amount, categoryId: null, confidence: 'failed', note, ...df };
 }

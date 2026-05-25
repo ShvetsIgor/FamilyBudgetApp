@@ -119,7 +119,7 @@ export function ClarifyCard({
   return (
     <div className="p-3.5">
       <div className="mb-2 flex items-center gap-1.5">
-        {(selectedParent || otherMode) && (
+        {(selectedParent || otherMode || createFolderMode) && (
           <button
             onClick={handleBack}
             className="flex items-center active:opacity-50 transition-opacity"
@@ -151,6 +151,38 @@ export function ClarifyCard({
           <button
             onClick={handleOtherSubmit}
             disabled={!otherText.trim()}
+            className="flex items-center justify-center active:scale-95 transition-transform disabled:opacity-30"
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 999,
+              background: C.primary,
+              color: '#fff',
+              border: 'none',
+              flexShrink: 0,
+            }}
+          >
+            <ArrowRight size={14} strokeWidth={2.5} />
+          </button>
+        </div>
+      ) : createFolderMode ? (
+        <div className="flex items-center gap-2">
+          <input
+            ref={folderInputRef}
+            value={folderName}
+            onChange={(e) => setFolderName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleFolderSubmit(); }}
+            placeholder={t('chat.clarify.folderName')}
+            className="flex-1 text-[13px] font-[700] outline-none bg-transparent"
+            style={{
+              color: C.fg,
+              borderBottom: `1.5px solid ${C.hairline}`,
+              paddingBottom: 4,
+            }}
+          />
+          <button
+            onClick={handleFolderSubmit}
+            disabled={!folderName.trim()}
             className="flex items-center justify-center active:scale-95 transition-transform disabled:opacity-30"
             style={{
               width: 28,
@@ -218,6 +250,24 @@ export function ClarifyCard({
             >
               <Scissors size={13} strokeWidth={2.5} />
               {t('chat.clarify.split')}
+            </button>
+          )}
+
+          {isTagLearning && !selectedParent && !otherMode && onCreateFolder && (
+            <button
+              onClick={() => setCreateFolderMode(true)}
+              className="inline-flex items-center gap-1.5 text-[12.5px] font-[800] transition-all active:scale-95"
+              style={{
+                padding: '7px 12px 7px 10px',
+                borderRadius: 999,
+                background: 'transparent',
+                border: `1.5px dashed ${C.sub}77`,
+                color: C.sub,
+                boxShadow: SHADOW.bubble,
+              }}
+            >
+              <FolderPlus size={13} strokeWidth={2.5} />
+              {t('chat.clarify.createFolder')}
             </button>
           )}
         </div>

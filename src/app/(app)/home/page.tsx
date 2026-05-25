@@ -612,6 +612,7 @@ export default function HomePage() {
                       });
                       router.push(`/expenses/new?${params.toString()}`);
                     }}
+                    onCreateFolder={cardIsIncome ? undefined : (name) => handleCreateFolder(name)}
                     onOtherText={cardIsIncome ? undefined : (text) => {
                       const itemHit = matchItem(text.toLowerCase());
                       if (itemHit) {

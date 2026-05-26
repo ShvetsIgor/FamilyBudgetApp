@@ -272,8 +272,26 @@ export default function HomePage() {
     storeId?: string,
     storeName?: string,
     storeGroup?: string,
+    isTagLearning?: boolean,
   ) => {
     if (!userId || sendingRef.current) return;
+
+    // If chip is a folder (isTagLearning mode) → navigate to split UI
+    const isFolderChip = isTagLearning && allExpenseFolders.some((f) => f.id === chip.id);
+    if (isFolderChip) {
+      const params = new URLSearchParams({
+        fromChat: 'true',
+        amount: String(amount),
+        folderId: chip.id,
+        folderName: chip.name,
+        ...(storeId ? { storeId } : {}),
+        ...(storeName ? { storeName } : {}),
+        ...(storeGroup ? { storeGroup } : {}),
+      });
+      router.push(`/expenses/new?${params.toString()}`);
+      return;
+    }
+
     sendingRef.current = true;
 
     const chipCat = allExpenseCats.find((c) => c.id === chip.id);

@@ -10,6 +10,8 @@ import { setCurrency, setLanguage, setTheme, setWeekStart } from '@/features/ui/
 import { setCategories, setFolders } from '@/features/categories/store/categoriesSlice';
 import { fetchCategories, seedDefaultCategories } from '@/features/categories/services/categoriesService';
 import { fetchFolders } from '@/features/categories/services/categoryFoldersService';
+import { fetchStoreProfiles } from '@/features/chat/services/storeProfilesService';
+import { setProfiles } from '@/features/chat/store/storeProfilesSlice';
 import type { UserProfile } from '@/shared/types';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {

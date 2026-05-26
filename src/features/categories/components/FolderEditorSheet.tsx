@@ -61,7 +61,7 @@ export function FolderEditorSheet({ open, onClose, initial, type, onSave, onDele
           {/* Header */}
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-[#3D2C1F]">
-              {initial?.id ? 'Редактировать папку' : 'Новая папка'}
+              {initial?.id ? 'Редактировать раздел' : 'Новый раздел'}
             </h2>
             <button onClick={onClose} className="text-[#8E7A66] hover:text-[#3D2C1F] text-xl leading-none">✕</button>
           </div>

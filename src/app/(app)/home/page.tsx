@@ -152,8 +152,8 @@ export default function HomePage() {
 
   const allExpenses = useAppSelector((s) => s.expenses.list);
   const allExpenseCats = useAppSelector((s) => s.categories.expense);
-  const allIncomeCats = useAppSelector((s) => s.categories.income);
   const allExpenseFolders = useAppSelector((s) => s.categories.folders.expense ?? []);
+  const allIncomeCats = useAppSelector((s) => s.categories.income);
   const savingsGoals = useAppSelector((s) => s.savings.list);
   const [budgetSettingsOpen, setBudgetSettingsOpen] = useState(false);
 
@@ -276,18 +276,12 @@ export default function HomePage() {
   ) => {
     if (!userId || sendingRef.current) return;
 
-    // If chip is a folder (isTagLearning mode) → navigate to split UI
-    const isFolderChip = isTagLearning && allExpenseFolders.some((f) => f.id === chip.id);
-    if (isFolderChip) {
-      const params = new URLSearchParams({
-        fromChat: 'true',
-        amount: String(amount),
-        folderId: chip.id,
-        folderName: chip.name,
-        ...(storeId ? { storeId } : {}),
-        ...(storeName ? { storeName } : {}),
-        ...(storeGroup ? { storeGroup } : {}),
-      });
+    // isTagLearning + folder chip → navigate to split UI, do not save expense yet
+    if (isTagLearning && allExpenseFolders.some(f => f.id === chip.id)) {
+      const params = new URLSearchParams({ fromChat: 'true', amount: String(amount), folderId: chip.id, folderName: chip.name });
+      if (storeId) params.set('storeId', storeId);
+      if (storeName) params.set('storeName', storeName);
+      if (storeGroup) params.set('storeGroup', storeGroup);
       router.push(`/expenses/new?${params.toString()}`);
       return;
     }
@@ -348,7 +342,7 @@ export default function HomePage() {
       dispatch(setTyping(false));
       sendingRef.current = false;
     }
-  }, [userId, buildEnrichedCtx, dispatch, allExpenseFolders, router]);
+  }, [userId, buildEnrichedCtx, dispatch]);
 
   const handleIncomeClarifyChip = useCallback(async (
     amount: number,
@@ -416,7 +410,7 @@ export default function HomePage() {
 
   const handleCreateFolder = useCallback(async (
     name: string,
-    amount: number,
+    amount?: number,
     storeId?: string,
     storeName?: string,
     storeGroup?: string,
@@ -434,16 +428,11 @@ export default function HomePage() {
     });
     dispatch(addFolderAction(newFolder));
 
-    // Navigate to split UI with the new folder pre-selected
-    const params = new URLSearchParams({
-      fromChat: 'true',
-      amount: String(amount),
-      folderId: newFolder.id,
-      folderName: newFolder.name,
-      ...(storeId ? { storeId } : {}),
-      ...(storeName ? { storeName } : {}),
-      ...(storeGroup ? { storeGroup } : {}),
-    });
+    // Navigate directly to split UI — no bot message, flow continues unbroken
+    const params = new URLSearchParams({ fromChat: 'true', amount: String(amount ?? 0), folderId: newFolder.id, folderName: newFolder.name });
+    if (storeId) params.set('storeId', storeId);
+    if (storeName) params.set('storeName', storeName);
+    if (storeGroup) params.set('storeGroup', storeGroup);
     router.push(`/expenses/new?${params.toString()}`);
   }, [userId, dispatch, router]);
 
@@ -641,13 +630,7 @@ export default function HomePage() {
                       });
                       router.push(`/expenses/new?${params.toString()}`);
                     }}
-                    onCreateFolder={cardIsIncome ? undefined : (name) => handleCreateFolder(
-                      name,
-                      d.amount as number,
-                      d.storeId as string | undefined,
-                      d.storeName as string | undefined,
-                      d.storeGroup as string | undefined,
-                    )}
+                    onCreateFolder={cardIsIncome ? undefined : (name) => handleCreateFolder(name, d.amount as number, d.storeId as string | undefined, d.storeName as string | undefined, d.storeGroup as string | undefined)}
                     onOtherText={cardIsIncome ? undefined : (text) => {
                       const itemHit = matchItem(text.toLowerCase());
                       if (itemHit) {

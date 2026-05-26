@@ -82,6 +82,7 @@ export function ClarifyCard({
     : chips;
 
   const handleChipClick = (chip: ClarifyChip) => {
+    // In tag-learning mode chips are folders — select directly, no drill-down
     if (!isTagLearning && !selectedParent && categories) {
       const subs = categories.filter((c) => c.folderId === chip.id);
       if (subs.length > 0) {

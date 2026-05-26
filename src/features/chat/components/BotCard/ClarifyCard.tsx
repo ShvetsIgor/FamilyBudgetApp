@@ -82,7 +82,7 @@ export function ClarifyCard({
     : chips;
 
   const handleChipClick = (chip: ClarifyChip) => {
-    if (!selectedParent && categories) {
+    if (!isTagLearning && !selectedParent && categories) {
       const subs = categories.filter((c) => c.folderId === chip.id);
       if (subs.length > 0) {
         setSelectedParent(chip);

@@ -165,7 +165,7 @@ export function CategoryEditorSheet({
                       : { backgroundColor: '#F4ECDE', color: '#8E7A66' }
                   }
                 >
-                  Без папки
+                  Без раздела
                 </button>
                 {availableFolders.map((f) => (
                   <button

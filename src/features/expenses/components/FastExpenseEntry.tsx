@@ -902,7 +902,7 @@ export function FastExpenseEntry({
       type="expense"
       folderId={pickerGroupId ?? undefined}
       initial={{ folderId: pickerGroupId ?? undefined }}
-      availableFolders={topFolders as CategoryFolder[]}
+      availableFolders={topFolders as unknown as CategoryFolder[]}
       onSave={async (catData) => {
         const name = catData.name?.trim();
         if (!name || !user || inlineCreating) return;

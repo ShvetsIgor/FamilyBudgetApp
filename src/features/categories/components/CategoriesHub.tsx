@@ -1078,7 +1078,7 @@ export function CategoriesHub() {
                   cursor: 'pointer',
                 }}
               >
-                + Создать папку
+                + Создать раздел
               </button>
               {tab === 'expense' && (
                 <button

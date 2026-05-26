@@ -76,6 +76,7 @@ export interface Category {
   icon: string;
   color: string;
   folderId?: string | null;
+  extraFolderIds?: string[];  // additional folders this category appears in (beyond primary folderId)
   isPrivate: boolean;
   order: number;
   type: CategoryType;

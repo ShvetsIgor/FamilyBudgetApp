@@ -84,7 +84,7 @@ export function FolderEditorSheet({ open, onClose, initial, type, onSave, onDele
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Название папки"
+              placeholder="Название раздела"
               className="w-full rounded-xl border border-[#EDE0CC] bg-white px-3 py-2.5 text-sm text-[#3D2C1F] outline-none focus:border-[#E07A5F] placeholder:text-[#B6A48E]"
             />
           </div>

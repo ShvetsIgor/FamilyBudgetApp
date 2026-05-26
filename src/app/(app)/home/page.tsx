@@ -628,6 +628,7 @@ export default function HomePage() {
                         ...(d.storeId ? { storeId: d.storeId as string } : {}),
                         ...(d.storeName ? { storeName: d.storeName as string } : {}),
                         ...(d.storeGroup ? { storeGroup: d.storeGroup as string } : {}),
+                        ...(d.parsedDate ? { date: d.parsedDate as string } : {}),
                       });
                       router.push(`/expenses/new?${params.toString()}`);
                     }}

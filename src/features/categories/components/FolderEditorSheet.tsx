@@ -72,7 +72,7 @@ export function FolderEditorSheet({ open, onClose, initial, type, onSave, onDele
               <StickerIcon icon={icon} color={color} className="h-8 w-8" />
             </div>
             <div>
-              <p className="font-semibold text-[#3D2C1F] text-sm">{name || 'Название папки'}</p>
+              <p className="font-semibold text-[#3D2C1F] text-sm">{name || 'Название раздела'}</p>
               <p className="text-xs text-[#8E7A66]">{type === 'expense' ? 'Группа расходов' : 'Группа доходов'}</p>
             </div>
           </div>

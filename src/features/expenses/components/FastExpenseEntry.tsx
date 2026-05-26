@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, MessageSquare, Calendar, ChevronLeft, Scissors, ChevronRight } from 'lucide-react';
+import { X, MessageSquare, Calendar, ChevronLeft, Scissors, ChevronRight, FolderPlus } from 'lucide-react';
 import { format, parseISO, isToday, isYesterday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import { prependExpense, updateExpense as updateExpenseAction } from '@/features/expenses/store/expensesSlice';
 import { addExpense, updateExpense } from '@/features/expenses/services/expensesService';
+import { addCategory as addCategoryFirestore } from '@/features/categories/services/categoriesService';
+import { addCategory as addCategoryAction } from '@/features/categories/store/categoriesSlice';
 import { CategoryIcon, StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { cn } from '@/shared/utils/cn';

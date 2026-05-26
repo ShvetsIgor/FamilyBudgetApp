@@ -144,9 +144,9 @@ export function FastExpenseEntry({
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Inline category creation state (used inside split picker)
-  const [inlineCreateMode, setInlineCreateMode] = useState(false);
-  const [inlineCatName, setInlineCatName] = useState('');
+  // Folder/category editor state (used inside split picker)
+  const [showFolderEditor, setShowFolderEditor] = useState(false);
+  const [showCategoryEditor, setShowCategoryEditor] = useState(false);
   const [inlineCreating, setInlineCreating] = useState(false);
 
   const selectedCat = allCats.find((c) => c.id === selectedCatId);

@@ -57,6 +57,7 @@ export function CategoryEditorSheet({
       setBudgetVal(budget ?? null);
       setConfirmDelete(false);
       setSelectedFolderId(initial?.folderId ?? folderIdProp ?? null);
+      setExtraFolderIds(initial?.extraFolderIds ?? []);
       setTags(initial?.tags ?? []);
       setTagInput('');
     }

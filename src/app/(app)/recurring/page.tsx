@@ -534,7 +534,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
                     key={cat.id}
                     onClick={() => {
                       if (sel) { setSelectedGroupId(''); setCategoryId(''); }
-                      else { setSelectedGroupId(cat.id); setCategoryId(cat.id); }
+                      else { setSelectedGroupId(cat.id); setCategoryId(''); }
                     }}
                     className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
                     style={{

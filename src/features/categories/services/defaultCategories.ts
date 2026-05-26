@@ -8,18 +8,20 @@ export type DefaultCategoryEntry = Omit<Category, 'userId'>;
 export type DefaultFolderEntry = Omit<CategoryFolder, 'userId'>;
 
 // ─── Core context IDs ─────────────────────────────────────────────────────────
-// Only these 9 folders + their categories are seeded for new users.
+// Only these 11 folders + their categories are seeded for new users.
 // Remaining blueprints are available via the Standard Library in CategoriesHub.
 const CORE_FOLDER_IDS = new Set([
-  'food',           // Supermarket
-  'home',           // Home
-  'transport',      // Transport
-  'health',         // Health
-  'shopping',       // Shopping
-  'entertainment',  // Entertainment
-  'travel',         // Travel
-  'work',           // Work
-  'subscriptions',  // Subscriptions
+  'food',           // Супермаркет
+  'dining',         // Вне дома
+  'home',           // Дом
+  'transport',      // Транспорт
+  'car',            // Машина
+  'health',         // Здоровье
+  'kids',           // Дети
+  'shopping',       // Покупки / Одежда
+  'technology',     // Технологии
+  'entertainment',  // Развлечения
+  'travel',         // Путешествия
 ]);
 
 // ─── Folder seeds ─────────────────────────────────────────────────────────────

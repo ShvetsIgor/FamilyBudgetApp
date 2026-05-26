@@ -634,7 +634,7 @@ export function CategoriesHub() {
                     onClick: () => toggleFolder(folder.id),
                   },
                   {
-                    label: 'Удалить папку',
+                    label: 'Удалить раздел',
                     danger: true,
                     onClick: () => setConfirmDeleteFolderId(folder.id),
                   },

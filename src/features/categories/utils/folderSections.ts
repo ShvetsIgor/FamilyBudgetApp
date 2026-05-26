@@ -40,7 +40,7 @@ export function buildFolderSections(
 ): FolderSection[] {
   const sections: FolderSection[] = [];
   for (const folder of folders) {
-    const cats = activeCats.filter((c) => c.folderId === folder.id);
+    const cats = activeCats.filter((c) => c.folderId === folder.id || c.extraFolderIds?.includes(folder.id));
     if (cats.length > 0) {
       sections.push({ folderId: folder.id, folderName: folder.name, folderColor: folder.color, cats });
     }

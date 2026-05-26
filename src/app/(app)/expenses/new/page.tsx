@@ -24,6 +24,8 @@ export default function NewExpensePage() {
   const initialStore = searchParams.get('storeName') ?? undefined;
   const initialStoreId = searchParams.get('storeId') ?? undefined;
   const initialStoreGroup = searchParams.get('storeGroup') ?? undefined;
+  const initialFolderId = searchParams.get('folderId') ?? undefined;
+  const initialFolderName = searchParams.get('folderName') ?? undefined;
 
   return (
     <FastExpenseEntry
@@ -32,6 +34,8 @@ export default function NewExpensePage() {
       initialStore={initialStore}
       initialStoreId={initialStoreId}
       initialStoreGroup={initialStoreGroup}
+      initialFolderId={initialFolderId}
+      initialFolderName={initialFolderName}
     />
   );
 }

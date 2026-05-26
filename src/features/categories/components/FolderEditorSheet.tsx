@@ -93,7 +93,7 @@ export function FolderEditorSheet({ open, onClose, initial, type, onSave, onDele
           {availableFolders && availableFolders.length > 0 && (
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-[#8E7A66] uppercase tracking-wide">
-                Родительская папка <span className="normal-case font-normal text-[#B6A48E]">(необязательно)</span>
+                Родительский раздел <span className="normal-case font-normal text-[#B6A48E]">(необязательно)</span>
               </label>
               <div className="flex flex-wrap gap-2">
                 <button

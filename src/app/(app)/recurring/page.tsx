@@ -377,11 +377,19 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
   async function handleSubmit() {
     if (!name.trim()) { setError('Введите название'); return; }
     if (amountNum <= 0 || saving) return;
+
+    // If only group is selected (no specific category), pick first in group
+    let effectiveCategoryId = categoryId;
+    if (!effectiveCategoryId && selectedGroupId) {
+      const firstInGroup = getCatsInGroup(selectedGroupId)[0];
+      effectiveCategoryId = firstInGroup?.id ?? '';
+    }
+
     setError(''); setSaving(true);
     try {
       await onSave({
         name: name.trim(), amount: amountNum, currency: currency as never,
-        categoryId, frequency, startDate: parseLocalDate(startDate),
+        categoryId: effectiveCategoryId, frequency, startDate: parseLocalDate(startDate),
         type, typeLabel: type === 'custom' ? typeLabel.trim() || undefined : undefined,
         reminderDays, comment: comment.trim() || undefined,
       });

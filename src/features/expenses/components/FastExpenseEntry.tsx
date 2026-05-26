@@ -744,57 +744,16 @@ export function FastExpenseEntry({
                     </button>
                   );
                 })}
-                {/* Inline category creation */}
-                {inlineCreateMode ? (
-                  <div className="col-span-4 flex items-center gap-1.5 mt-1">
-                    <input
-                      autoFocus
-                      value={inlineCatName}
-                      onChange={(e) => setInlineCatName(e.target.value)}
-                      onKeyDown={async (e) => {
-                        if (e.key === 'Escape') { setInlineCreateMode(false); setInlineCatName(''); }
-                        if (e.key === 'Enter') {
-                          const name = inlineCatName.trim();
-                          if (!name || !user || !pickerGroupId || inlineCreating) return;
-                          setInlineCreating(true);
-                          try {
-                            const newCat = await addCategoryFirestore(user.id, { name, icon: 'box', color: pickerGroupFolder?.color ?? '#94A3B8', folderId: pickerGroupId, isPrivate: false, order: 99, type: 'expense' });
-                            dispatch(addCategoryAction(newCat));
-                            addSplit(newCat);
-                          } finally { setInlineCreating(false); setInlineCreateMode(false); setInlineCatName(''); }
-                        }
-                      }}
-                      placeholder="Название категории"
-                      className="flex-1 text-[11px] font-bold outline-none bg-transparent border-b border-border pb-0.5"
-                    />
-                    <button
-                      disabled={!inlineCatName.trim() || inlineCreating}
-                      onClick={async () => {
-                        const name = inlineCatName.trim();
-                        if (!name || !user || !pickerGroupId || inlineCreating) return;
-                        setInlineCreating(true);
-                        try {
-                          const newCat = await addCategoryFirestore(user.id, { name, icon: 'box', color: pickerGroupFolder?.color ?? '#94A3B8', folderId: pickerGroupId, isPrivate: false, order: 99, type: 'expense' });
-                          dispatch(addCategoryAction(newCat));
-                          addSplit(newCat);
-                        } finally { setInlineCreating(false); setInlineCreateMode(false); setInlineCatName(''); }
-                      }}
-                      className="text-[9px] font-bold px-2 py-1 rounded-md disabled:opacity-40"
-                      style={{ background: pickerGroupFolder?.color ?? catColor, color: '#fff' }}
-                    >
-                      {inlineCreating ? '…' : '✓'}
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setInlineCreateMode(true)}
-                    className="col-span-4 flex items-center justify-center gap-1 py-1.5 rounded-[9px] text-[9px] font-extrabold border border-dashed mt-0.5"
-                    style={{ borderColor: (pickerGroupFolder?.color ?? catColor) + '55', color: pickerGroupFolder?.color ?? catColor }}
-                  >
-                    <Plus size={10} strokeWidth={2.5} />
-                    Создать категорию
-                  </button>
-                )}
+                {/* Open CategoryEditorSheet for inline category creation */}
+                <button
+                  onClick={() => setShowCategoryEditor(true)}
+                  className="col-span-4 flex items-center justify-center gap-1 py-1.5 rounded-[9px] text-[9px] font-extrabold border border-dashed mt-0.5"
+                  style={{ borderColor: (pickerGroupFolder?.color ?? catColor) + '55', color: pickerGroupFolder?.color ?? catColor }}
+                  disabled={inlineCreating}
+                >
+                  <Plus size={10} strokeWidth={2.5} />
+                  {inlineCreating ? '…' : 'Создать категорию'}
+                </button>
               </div>
             )}
           </div>

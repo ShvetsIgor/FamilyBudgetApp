@@ -348,7 +348,7 @@ export default function HomePage() {
       dispatch(setTyping(false));
       sendingRef.current = false;
     }
-  }, [userId, buildEnrichedCtx, dispatch]);
+  }, [userId, buildEnrichedCtx, dispatch, allExpenseFolders, router]);
 
   const handleIncomeClarifyChip = useCallback(async (
     amount: number,

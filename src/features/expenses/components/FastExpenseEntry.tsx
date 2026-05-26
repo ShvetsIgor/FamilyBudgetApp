@@ -877,5 +877,54 @@ export function FastExpenseEntry({
       </div>
     </div>
     </div>
+
+    {/* ── FolderEditorSheet: create new section from split picker ── */}
+    <FolderEditorSheet
+      open={showFolderEditor}
+      onClose={() => setShowFolderEditor(false)}
+      type="expense"
+      onSave={async (data: Omit<CategoryFolder, 'id' | 'userId'> & { id?: string }) => {
+        if (!user) return;
+        const { id: _id, ...rest } = data;
+        const newFolder = await addFolderToDb(user.id, rest);
+        dispatch(addFolderAction(newFolder));
+        setPickerGroupId(newFolder.id);
+        setActiveFolderId(newFolder.id);
+        setShowFolderEditor(false);
+      }}
+    />
+
+    {/* ── CategoryEditorSheet: create new category from split picker ── */}
+    <CategoryEditorSheet
+      open={showCategoryEditor}
+      onClose={() => setShowCategoryEditor(false)}
+      type="expense"
+      folderId={pickerGroupId ?? undefined}
+      initial={{ folderId: pickerGroupId ?? undefined }}
+      availableFolders={topFolders as CategoryFolder[]}
+      onSave={async (catData) => {
+        const name = catData.name?.trim();
+        if (!name || !user || inlineCreating) return;
+        setInlineCreating(true);
+        try {
+          const color = catData.color ?? pickerGroupFolder?.color ?? '#94A3B8';
+          const newCat = await addCategoryFirestore(user.id, {
+            name,
+            icon: catData.icon ?? 'box',
+            color,
+            folderId: catData.folderId ?? pickerGroupId ?? undefined,
+            isPrivate: catData.isPrivate ?? false,
+            order: 99,
+            type: 'expense',
+            ...(catData.tags ? { tags: catData.tags } : {}),
+          });
+          dispatch(addCategoryAction(newCat));
+          addSplit(newCat);
+        } finally {
+          setInlineCreating(false);
+          setShowCategoryEditor(false);
+        }
+      }}
+    />
   );
 }

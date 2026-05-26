@@ -143,6 +143,7 @@ export default function RecurringPage() {
         paymentMethod: 'card', splits: [], tags: ['recurring'], privacy: 'regular',
         store: item.name,
         comment: item.comment || undefined,
+        recurringId: item.id,
       });
       dispatch(prependExpense(exp));
     }

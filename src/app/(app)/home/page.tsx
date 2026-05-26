@@ -282,6 +282,7 @@ export default function HomePage() {
       if (storeId) params.set('storeId', storeId);
       if (storeName) params.set('storeName', storeName);
       if (storeGroup) params.set('storeGroup', storeGroup);
+      if (parsedDate) params.set('date', parsedDate);
       router.push(`/expenses/new?${params.toString()}`);
       return;
     }

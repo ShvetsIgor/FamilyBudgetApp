@@ -1,52 +1,57 @@
-# Family Budget
+# family.budget
 
-A conversational family budget tracker — mobile-first PWA built with Next.js 15, Firebase, and Redux Toolkit.
+Conversational family budget tracker built around fast natural-language expense entry, split purchases, and history-based learning.
 
-## Features
+## Product Principles
 
-- **Chat-based expense entry** — type naturally ("Дабах 350", "Coffee 12") and the bot parses and saves
-- **Numpad entry** — fast manual entry with split support
-- **Categories** — folder tree with 55 sticker icons, budget limits, library
-- **Income tracking** — income entry with categories
-- **Statistics** — pie chart, bar chart, monthly breakdown, budget progress
-- **Analytics** — trends, day-of-week spending, avg daily by month
-- **Recurring payments** — upcoming bills widget
-- **Savings goals** — CRUD + contributions
-- **Family sharing** — shared budget with family members
-- **Dark mode** — full dark/light theme
-- **PWA** — installable, offline-capable via Firestore local cache
-- **Multilingual** — English, Russian, Hebrew (RTL)
+- **Chat-first**: the main flow starts in `/home`, not in forms or setup screens.
+- **Split-first**: supermarket and mixed purchases should naturally continue into split UI.
+- **Context is not category**: merchant/store context guides the flow, while real categories stay semantic.
+- **Deterministic learning**: no AI dependency for the core expense brain; ranking comes from usage history, split memory, tag associations, and store profiles.
+- **Categories are secondary**: the category editor exists for cleanup, renaming, archiving, and library activation, not as a mandatory onboarding step.
 
-## Stack
+## Current Architecture
 
-- **Next.js 15** — App Router, TypeScript strict
-- **Firebase** — Auth + Firestore (offline cache) + Storage
-- **Redux Toolkit** — global state
-- **Tailwind CSS** + shadcn/ui — styling
-- **Recharts** — charts
-- **next-pwa** — PWA support
-- **date-fns** — date utilities
-- **Vitest** — 427 tests
+- **Primary expense flow**: chat input on `/home` -> parser -> bot clarify/save flow -> optional split route to `/expenses/new`.
+- **Shared memory layer**: chat saves and manual saves now both feed `suggestionMemory` plus store profiles, so merchant history is no longer isolated to the numpad path.
+- **Atomic expense writes**: create, edit, and delete now update the expense document and `monthlyStats` in a single batched Firestore write.
+- **Session isolation**: Redux state resets when auth becomes `null`, preventing cross-user stale slices after logout/login switches.
+- **Recurring expense model**: generated expenses now keep `recurringId` and `isRecurring` aligned.
+- **Date consistency**: chat weekly summaries, recurring notifications, and chat context use local date keys instead of mixed UTC day boundaries.
+
+## Main Features
+
+- Chat-based expense entry with clarify cards
+- Split purchases with inline category creation
+- Fast numpad/manual expense entry
+- Income tracking
+- Statistics and analytics
+- Recurring payments
+- Savings goals
+- Family account model
+- PWA support
+- English and Russian UI
+
+## Current Limits
+
+- Hebrew/RTL is intentionally paused and is not part of the active runtime contract right now.
+- Split persistence is still stored as one expense with `splits[]`; there is no separate `splitGroup` entity yet.
+- The chat parser still uses the legacy dictionary/store parser for merchant detection; the newer expense engine currently complements the flow through shared memory rather than replacing that parser outright.
+- The category constructor and library are still present as advanced screens, even though they are now de-emphasized in primary navigation.
 
 ## Setup
 
-### 1. Clone and install
+### 1. Install
 
 ```bash
-git clone <repo-url>
-cd FamilyBudgetApp
 npm install
 ```
 
 ### 2. Configure Firebase
 
-```bash
-cp .env.local.example .env.local
-```
+Copy `.env.local.example` to `.env.local` and fill:
 
-Edit `.env.local` with your Firebase project credentials:
-
-```
+```env
 NEXT_PUBLIC_FIREBASE_API_KEY=...
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
@@ -59,46 +64,22 @@ NEXT_PUBLIC_FIREBASE_APP_ID=...
 
 ```bash
 npm run dev
-# → http://localhost:3000
 ```
 
-### 4. Build
+## Verification
 
 ```bash
-npm run build   # production build
-npm run lint    # type + lint check
-npx vitest run  # 427 tests
+npm run lint
+npm run build
+npm test
 ```
 
-## Deploy to Vercel
+Current baseline after the 2026-05-27 alignment pass:
 
-1. Push to GitHub
-2. Connect repo at [vercel.com](https://vercel.com)
-3. Add environment variables (copy from `.env.local`)
-4. Deploy — Vercel auto-detects Next.js
+- `npm run lint` — green
+- `npm run build` — green
+- `npm test` — `483/483` green
 
-Or via CLI:
-```bash
-npm install -g vercel
-vercel --prod
-```
+## Reference
 
-## Project Structure
-
-```
-src/
-  app/          — Next.js App Router pages
-  features/     — feature modules (auth, chat, expenses, categories, ...)
-  shared/       — shared components, hooks, utils, types
-  store/        — Redux store
-  messages/     — i18n strings (en/ru/he)
-public/         — static assets, PWA icons, manifest
-docs/           — reference docs and handoffs
-design-archive/ — design system explorations (not part of build)
-```
-
-See `CLAUDE.md` for full architecture reference.
-
-## License
-
-Private — all rights reserved.
+- High-context architecture and handoff notes live in `CLAUDE.md`.

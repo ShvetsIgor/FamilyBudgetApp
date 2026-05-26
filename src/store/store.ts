@@ -1,6 +1,6 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
-import authReducer from '@/features/auth/store/authSlice';
+import authReducer, { clearAuth, setUser } from '@/features/auth/store/authSlice';
 import uiReducer from '@/features/ui/store/uiSlice';
 import categoriesReducer from '@/features/categories/store/categoriesSlice';
 import expensesReducer from '@/features/expenses/store/expensesSlice';
@@ -15,23 +15,34 @@ import chatReducer from '@/features/chat/store/chatSlice';
 import storeProfilesReducer from '@/features/chat/store/storeProfilesSlice';
 import notificationsReducer from '@/features/notifications/store/notificationsSlice';
 
+const appReducer = combineReducers({
+  auth: authReducer,
+  ui: uiReducer,
+  categories: categoriesReducer,
+  expenses: expensesReducer,
+  income: incomeReducer,
+  recurring: recurringReducer,
+  savings: savingsReducer,
+  family: familyReducer,
+  budget: budgetReducer,
+  quickAdd: quickAddReducer,
+  suggestionMemory: suggestionMemoryReducer,
+  chat: chatReducer,
+  storeProfiles: storeProfilesReducer,
+  notifications: notificationsReducer,
+});
+
+const rootReducer: typeof appReducer = (state, action) => {
+  const payload = 'payload' in action ? action.payload : undefined;
+  const shouldResetAppState =
+    action.type === clearAuth.type ||
+    (action.type === setUser.type && payload === null);
+
+  return appReducer(shouldResetAppState ? undefined : state, action);
+};
+
 export const store = configureStore({
-  reducer: {
-    auth: authReducer,
-    ui: uiReducer,
-    categories: categoriesReducer,
-    expenses: expensesReducer,
-    income: incomeReducer,
-    recurring: recurringReducer,
-    savings: savingsReducer,
-    family: familyReducer,
-    budget: budgetReducer,
-    quickAdd: quickAddReducer,
-    suggestionMemory: suggestionMemoryReducer,
-    chat: chatReducer,
-    storeProfiles: storeProfilesReducer,
-    notifications: notificationsReducer,
-  },
+  reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
@@ -41,7 +52,7 @@ export const store = configureStore({
     }),
 });
 
-export type RootState = ReturnType<typeof store.getState>;
+export type RootState = ReturnType<typeof appReducer>;
 export type AppDispatch = typeof store.dispatch;
 
 export const useAppDispatch = () => useDispatch<AppDispatch>();

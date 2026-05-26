@@ -237,7 +237,7 @@ export function FastExpenseEntry({
 
     try {
       if (isEdit && initialExpense) {
-        const updated = await updateExpense({ ...base, id: initialExpense.id });
+        const updated = await updateExpense({ ...base, id: initialExpense.id, previousExpense: initialExpense });
         dispatch(updateExpenseAction(updated));
         router.push(`/expenses/${initialExpense.id}`);
       } else {

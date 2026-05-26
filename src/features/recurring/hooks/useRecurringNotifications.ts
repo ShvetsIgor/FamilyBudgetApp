@@ -4,12 +4,13 @@ import { useEffect } from 'react';
 import { differenceInCalendarDays, parseISO } from 'date-fns';
 import { useAppSelector } from '@/store/store';
 import { sendNotification } from '@/shared/hooks/useNotifications';
+import { toLocalDateKey } from '@/shared/utils/dateKey';
 
 const STORAGE_KEY = 'notified_recurring';
 const NOTIFY_DAYS_AHEAD = 2;
 
 function getTodayKey(): string {
-  return new Date().toISOString().slice(0, 10);
+  return toLocalDateKey(new Date());
 }
 
 function getNotifiedSet(): Set<string> {

@@ -4,6 +4,7 @@ import { store } from '@/store/store';
 import { addNotification } from '@/features/notifications/store/notificationsSlice';
 import type { BotContext } from './context';
 import type { WeeklyCardData, WeeklyEnvelope } from '@/features/chat/components/BotCard/WeeklyCard';
+import { toLocalDateKey } from '@/shared/utils/dateKey';
 
 const STORAGE_KEY = 'chat_lastWeeklyAt';
 const DAY_NAMES: Record<number, string> = { 0: 'Вс', 1: 'Пн', 2: 'Вт', 3: 'Ср', 4: 'Чт', 5: 'Пт', 6: 'Сб' };
@@ -42,9 +43,12 @@ export async function sendWeeklySummary(ctx: BotContext): Promise<void> {
   const weekRange = `${format(weekStart, 'd', { locale: ru })}–${format(weekEnd, 'd MMMM', { locale: ru })}`;
 
   const allExpenses = (ctx as unknown as Record<string, unknown>).allExpenses as Array<{ amount: number; categoryId: string; date: string }> ?? [];
-  const weekStartStr = weekStart.toISOString().slice(0, 10);
-  const weekEndStr = weekEnd.toISOString().slice(0, 10);
-  const weekExpenses = allExpenses.filter((e) => e.date >= weekStartStr && e.date <= weekEndStr);
+  const weekStartStr = toLocalDateKey(weekStart);
+  const weekEndStr = toLocalDateKey(weekEnd);
+  const weekExpenses = allExpenses.filter((e) => {
+    const expenseDay = toLocalDateKey(e.date);
+    return expenseDay >= weekStartStr && expenseDay <= weekEndStr;
+  });
   const totalSpent = weekExpenses.reduce((s, e) => s + e.amount, 0);
 
   const monthBudget = (ctx as unknown as Record<string, unknown>).monthBudget as number ?? 0;
@@ -68,7 +72,10 @@ export async function sendWeeklySummary(ctx: BotContext): Promise<void> {
     .slice(0, 5);
 
   const daySpent: Record<string, number> = {};
-  weekExpenses.forEach((e) => { daySpent[e.date.slice(0, 10)] = (daySpent[e.date.slice(0, 10)] ?? 0) + e.amount; });
+  weekExpenses.forEach((e) => {
+    const dayKey = toLocalDateKey(e.date);
+    daySpent[dayKey] = (daySpent[dayKey] ?? 0) + e.amount;
+  });
   let bestDay = '—', worstDay = '—';
   const dayEntries = Object.entries(daySpent);
   if (dayEntries.length > 0) {

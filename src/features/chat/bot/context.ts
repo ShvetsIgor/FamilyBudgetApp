@@ -1,25 +1,19 @@
+import type { SuggestionMemoryState } from '@/features/expenses/store/suggestionMemorySlice';
+import type { Category, CategoryFolder, Currency, StoreProfile } from '@/shared/types';
+import { toLocalDateKey } from '@/shared/utils/dateKey';
 import type { RootState } from '@/store/store';
-import type { Category, CategoryFolder, StoreProfile } from '@/shared/types';
-import type { Currency } from '@/shared/types';
-
 
 export interface BotContext {
   userId: string;
   currency: Currency;
-  /** All expense categories indexed by id */
   categoriesById: Map<string, Category>;
-  /** Expense folders indexed by id — for display path text only, never for routing logic */
   foldersById: Map<string, CategoryFolder>;
-  /** Top categories by usage — for clarify chips */
   topCategoryIds: string[];
-  /** All income categories indexed by id */
   incomeCategoriesById: Map<string, Category>;
-  /** Top income categories — for income clarify chips */
   topIncomeCategoryIds: string[];
-  /** Today's total spent (from Redux expenses slice) */
   todaySpent: number;
-  /** Store purchase history — keyed by storeId */
   storeProfiles: Record<string, StoreProfile>;
+  suggestionMemory: SuggestionMemoryState;
 }
 
 const TOP_FALLBACK = ['groceries', 'dining', 'transport', 'health', 'home', 'shopping'];
@@ -33,47 +27,51 @@ export function collectBotContext(state: RootState): BotContext | null {
   const allIncomeCats = state.categories.income;
 
   const categoriesById = new Map<string, Category>();
-  allCats.forEach((c) => categoriesById.set(c.id, c));
+  allCats.forEach((category) => categoriesById.set(category.id, category));
 
   const incomeCategoriesById = new Map<string, Category>();
-  allIncomeCats.forEach((c) => incomeCategoriesById.set(c.id, c));
+  allIncomeCats.forEach((category) => incomeCategoriesById.set(category.id, category));
 
   const foldersById = new Map<string, CategoryFolder>();
-  (state.categories.folders.expense ?? []).forEach((f) => foldersById.set(f.id, f));
+  (state.categories.folders.expense ?? []).forEach((folder) => foldersById.set(folder.id, folder));
 
-  // Frequency of each category from expense history — domain layer uses categoryId only
   const freq: Record<string, number> = {};
-  state.expenses.list.forEach((e) => {
-    freq[e.categoryId] = (freq[e.categoryId] ?? 0) + 1;
+  state.expenses.list.forEach((expense) => {
+    freq[expense.categoryId] = (freq[expense.categoryId] ?? 0) + 1;
   });
 
-  // Top categories sorted by usage
-  const rootCats = allCats.filter((c) => !c.archived);
+  const rootCats = allCats.filter((category) => !category.archived);
   const topCategoryIds = rootCats
     .sort((a, b) => (freq[b.id] ?? 0) - (freq[a.id] ?? 0))
     .slice(0, 5)
-    .map((c) => c.id);
+    .map((category) => category.id);
 
-  // Pad with fallbacks
-  for (const fb of TOP_FALLBACK) {
+  for (const fallback of TOP_FALLBACK) {
     if (topCategoryIds.length >= 5) break;
     const found = rootCats.find(
-      (c) => !topCategoryIds.includes(c.id) && c.id.includes(fb),
+      (category) => !topCategoryIds.includes(category.id) && category.id.includes(fallback),
     );
     if (found) topCategoryIds.push(found.id);
   }
 
-  // Top income categories
-  const incomeRoots = allIncomeCats.filter((c) => !c.archived);
-  const topIncomeCategoryIds = incomeRoots.slice(0, 6).map((c) => c.id);
+  const incomeRoots = allIncomeCats.filter((category) => !category.archived);
+  const topIncomeCategoryIds = incomeRoots.slice(0, 6).map((category) => category.id);
 
-  // Today's spent
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = toLocalDateKey(new Date());
   const todaySpent = state.expenses.list
-    .filter((e) => e.date.startsWith(todayStr))
-    .reduce((s, e) => s + e.amount, 0);
+    .filter((expense) => expense.date.startsWith(todayStr))
+    .reduce((sum, expense) => sum + expense.amount, 0);
 
-  const storeProfiles = state.storeProfiles?.profiles ?? {};
-
-  return { userId, currency, categoriesById, foldersById, topCategoryIds, incomeCategoriesById, topIncomeCategoryIds, todaySpent, storeProfiles };
+  return {
+    userId,
+    currency,
+    categoriesById,
+    foldersById,
+    topCategoryIds,
+    incomeCategoriesById,
+    topIncomeCategoryIds,
+    todaySpent,
+    storeProfiles: state.storeProfiles?.profiles ?? {},
+    suggestionMemory: state.suggestionMemory,
+  };
 }

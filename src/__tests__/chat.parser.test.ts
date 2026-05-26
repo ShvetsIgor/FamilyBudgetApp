@@ -1,131 +1,131 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { parseMessage } from '@/features/chat/parser/parse';
 
 const noLearned = { learned: {} };
 
 describe('parseMessage', () => {
-  it('хлеб 50 → categoryId=bakery, medium', () => {
-    const r = parseMessage('хлеб 50', noLearned);
-    expect(r.amount).toBe(50);
-    expect(r.categoryId).toBe('bakery');
-    expect(r.confidence).toBe('medium');
+  it('parses bakery keyword with medium confidence', () => {
+    const result = parseMessage('хлеб 50', noLearned);
+    expect(result.amount).toBe(50);
+    expect(result.categoryId).toBe('bakery');
+    expect(result.confidence).toBe('medium');
   });
 
-  it('кофе 65 → categoryId=coffee, medium', () => {
-    const r = parseMessage('кофе 65', noLearned);
-    expect(r.amount).toBe(65);
-    expect(r.categoryId).toBe('coffee');
-    expect(r.confidence).toBe('medium');
+  it('parses coffee keyword with medium confidence', () => {
+    const result = parseMessage('кофе 65', noLearned);
+    expect(result.amount).toBe(65);
+    expect(result.categoryId).toBe('coffee');
+    expect(result.confidence).toBe('medium');
   });
 
-  it('только число 150 → failed (нет категории)', () => {
-    const r = parseMessage('150', noLearned);
-    expect(r.amount).toBe(150);
-    expect(r.categoryId).toBeNull();
-    expect(r.confidence).toBe('failed');
+  it('keeps number-only input in failed state', () => {
+    const result = parseMessage('150', noLearned);
+    expect(result.amount).toBe(150);
+    expect(result.categoryId).toBeNull();
+    expect(result.confidence).toBe('failed');
   });
 
-  it('такси 120 → categoryId=taxi, medium', () => {
-    const r = parseMessage('такси 120', noLearned);
-    expect(r.amount).toBe(120);
-    expect(r.categoryId).toBe('taxi');
-    expect(r.confidence).toBe('medium');
+  it('parses taxi keyword with medium confidence', () => {
+    const result = parseMessage('такси 120', noLearned);
+    expect(result.amount).toBe(120);
+    expect(result.categoryId).toBe('taxi');
+    expect(result.confidence).toBe('medium');
   });
 
-  it('☕ 30 → categoryId=coffee, high (emoji)', () => {
-    const r = parseMessage('☕ 30', noLearned);
-    expect(r.amount).toBe(30);
-    expect(r.categoryId).toBe('coffee');
-    expect(r.confidence).toBe('high');
+  it('uses emoji hits as high-confidence category matches', () => {
+    const result = parseMessage('☕ 30', noLearned);
+    expect(result.amount).toBe(30);
+    expect(result.categoryId).toBe('coffee');
+    expect(result.confidence).toBe('high');
   });
 
-  it('/баланс → slash-command → failed', () => {
-    const r = parseMessage('/баланс', noLearned);
-    expect(r.amount).toBe(0);
-    expect(r.confidence).toBe('failed');
+  it('treats slash commands as failed expense parses', () => {
+    const result = parseMessage('/баланс', noLearned);
+    expect(result.amount).toBe(0);
+    expect(result.confidence).toBe('failed');
   });
 
-  it('netflix 299 → categoryId=streaming, high (self-describing store)', () => {
-    const r = parseMessage('netflix 299', noLearned);
-    expect(r.amount).toBe(299);
-    expect(r.categoryId).toBe('streaming');
-    expect(r.confidence).toBe('high');
+  it('recognizes self-describing stores with high confidence', () => {
+    const result = parseMessage('netflix 299', noLearned);
+    expect(result.amount).toBe(299);
+    expect(result.categoryId).toBe('streaming');
+    expect(result.confidence).toBe('high');
   });
 
-  it('аренда 5000 → categoryId=rent, medium', () => {
-    const r = parseMessage('аренда 5000', noLearned);
-    expect(r.amount).toBe(5000);
-    expect(r.categoryId).toBe('rent');
-    expect(r.confidence).toBe('medium');
+  it('parses rent keyword with medium confidence', () => {
+    const result = parseMessage('аренда 5000', noLearned);
+    expect(result.amount).toBe(5000);
+    expect(result.categoryId).toBe('rent');
+    expect(result.confidence).toBe('medium');
   });
 
-  it('65 врач → categoryId=doctors, medium', () => {
-    const r = parseMessage('65 врач', noLearned);
-    expect(r.amount).toBe(65);
-    expect(r.categoryId).toBe('doctors');
-    expect(r.confidence).toBe('medium');
+  it('supports amount-first doctor input', () => {
+    const result = parseMessage('65 врач', noLearned);
+    expect(result.amount).toBe(65);
+    expect(result.categoryId).toBe('doctors');
+    expect(result.confidence).toBe('medium');
   });
 
-  it('50,5 хлеб → amount 50.5 (запятая как разделитель)', () => {
-    const r = parseMessage('50,5 хлеб', noLearned);
-    expect(r.amount).toBe(50.5);
-    expect(r.categoryId).toBe('bakery');
+  it('accepts comma decimal separators', () => {
+    const result = parseMessage('50,5 хлеб', noLearned);
+    expect(result.amount).toBe(50.5);
+    expect(result.categoryId).toBe('bakery');
   });
 
-  it('learned keyword совпадает → confidence low, learnedCategoryId передаётся', () => {
-    const ctx = { learned: { 'хлеп': { categoryId: 'supermarket' } } };
-    const r = parseMessage('хлеп 30', ctx);
-    expect(r.amount).toBe(30);
-    expect(r.confidence).toBe('low');
-    expect(r.learnedCategoryId).toBe('supermarket');
-    expect(r.matchedKeyword).toBe('хлеп');
+  it('surfaces learned keyword hits as low-confidence clarifications', () => {
+    const ctx = { learned: { хлеб: { categoryId: 'supermarket' } } };
+    const result = parseMessage('хлеб 30', ctx);
+    expect(result.amount).toBe(30);
+    expect(result.confidence).toBe('low');
+    expect(result.learnedCategoryId).toBe('supermarket');
+    expect(result.matchedKeyword).toBe('хлеб');
   });
 
-  it('неизвестное слово → failed', () => {
-    const r = parseMessage('бла-бла 99', noLearned);
-    expect(r.amount).toBe(99);
-    expect(r.categoryId).toBeNull();
-    expect(r.confidence).toBe('failed');
+  it('routes unknown text with amount into unknown-store clarify flow', () => {
+    const result = parseMessage('бла-бла 99', noLearned);
+    expect(result.amount).toBe(99);
+    expect(result.categoryId).toBeNull();
+    expect(result.confidence).toBe('low');
+    expect(result.storeId).toContain('unknown_');
   });
 
-  it('ParseResult не содержит parentId', () => {
-    const r = parseMessage('кофе 65', noLearned);
-    expect(r).not.toHaveProperty('parentId');
+  it('does not expose legacy parentId in ParseResult', () => {
+    const result = parseMessage('кофе 65', noLearned);
+    expect(result).not.toHaveProperty('parentId');
   });
 
-  it('+15000 зарплата → isIncome=true, amount=15000', () => {
-    const r = parseMessage('+15000 зарплата', noLearned);
-    expect(r.isIncome).toBe(true);
-    expect(r.amount).toBe(15000);
-    expect(r.categoryId).toBeNull();
-    expect(r.confidence).toBe('failed');
+  it('marks income prefixed input and keeps category unresolved', () => {
+    const result = parseMessage('+15000 зарплата', noLearned);
+    expect(result.isIncome).toBe(true);
+    expect(result.amount).toBe(15000);
+    expect(result.categoryId).toBeNull();
+    expect(result.confidence).toBe('failed');
   });
 
-  it('стор + айтем → high confidence, categoryId от item (более специфичен)', () => {
-    // шуферсал (известный магазин, needsContext=true) + хлеб (items dict)
-    const r = parseMessage('шуферсал хлеб 45', noLearned);
-    expect(r.amount).toBe(45);
-    expect(r.confidence).toBe('high');
-    expect(r.storeId).toBeDefined();
-    expect(r.categoryId).toBe('bakery');
+  it('prefers item category over ambiguous store category', () => {
+    const result = parseMessage('шуферсал хлеб 45', noLearned);
+    expect(result.amount).toBe(45);
+    expect(result.confidence).toBe('high');
+    expect(result.storeId).toBeDefined();
+    expect(result.categoryId).toBe('bakery');
   });
 
-  it('шуферсал без айтема → low (needsContext=true)', () => {
-    const r = parseMessage('шуферсал 120', noLearned);
-    expect(r.confidence).toBe('low');
-    expect(r.categoryId).toBeNull();
-    expect(r.storeId).toBe('shufersal');
+  it('keeps ambiguous stores in low-confidence state without item context', () => {
+    const result = parseMessage('шуферсал 120', noLearned);
+    expect(result.confidence).toBe('low');
+    expect(result.categoryId).toBeNull();
+    expect(result.storeId).toBe('shufersal');
   });
 
-  it('дата в прошлом парсится корректно', () => {
-    const r = parseMessage('кофе 65 вчера', noLearned);
-    expect(r.amount).toBe(65);
-    expect(r.date).toBeDefined();
-    expect(r.categoryId).toBe('coffee');
+  it('parses past-date suffixes and keeps the category', () => {
+    const result = parseMessage('кофе 65 вчера', noLearned);
+    expect(result.amount).toBe(65);
+    expect(result.date).toBeDefined();
+    expect(result.categoryId).toBe('coffee');
   });
 
-  it('note содержит нераспознанное слово', () => {
-    const r = parseMessage('бла-бла 99', noLearned);
-    expect(r.note).toBeTruthy();
+  it('preserves the unknown note for later clarify/save steps', () => {
+    const result = parseMessage('бла-бла 99', noLearned);
+    expect(result.note).toBeTruthy();
   });
 });

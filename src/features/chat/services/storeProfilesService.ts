@@ -1,6 +1,7 @@
 import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import type { StoreProfile } from '@/shared/types';
+import { toLocalDateKey } from '@/shared/utils/dateKey';
 
 export async function fetchStoreProfiles(userId: string): Promise<Record<string, StoreProfile>> {
   const col = collection(getDb(), 'storeProfiles', userId, 'profiles');
@@ -19,7 +20,7 @@ export async function updateStoreProfile(
 ): Promise<void> {
   const ref = doc(getDb(), 'storeProfiles', userId, 'profiles', storeId);
   const snap = await getDoc(ref);
-  const now = new Date().toISOString().slice(0, 10);
+  const now = toLocalDateKey(new Date());
 
   if (!snap.exists()) {
     const profile: StoreProfile = {

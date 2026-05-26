@@ -76,6 +76,13 @@ function makeCtx(overrides: Partial<BotContext> = {}): BotContext {
     topIncomeCategoryIds: ['salary'],
     todaySpent: 0,
     storeProfiles: {},
+    suggestionMemory: {
+      merchants: {},
+      recents: [],
+      splitCombos: [],
+      tagAssociations: [],
+      merchantContextStats: {},
+    },
     ...overrides,
   };
 }
@@ -193,7 +200,7 @@ describe('respondToUserMessage', () => {
 
   it('«бла-бла 99» → clarify card (есть сумма, нет категории)', async () => {
     const parsed = parseMessage('бла-бла 99', { learned: {} });
-    expect(parsed.confidence).toBe('failed');
+    expect(parsed.confidence).toBe('low');
     const reply = await respondToUserMessage(makeUserMsg('бла-бла 99'), parsed, makeCtx());
     expect(reply.messages[0].card?.kind).toBe('clarify');
   });

@@ -21,7 +21,6 @@ const NAV_SECTIONS = [
       { href: '/home', icon: MessageCircle, labelKey: 'nav.chat' },
       { href: '/expenses', icon: List, labelKey: 'nav.transactions' },
       { href: '/analytics', icon: BarChart2, labelKey: 'nav.analytics' },
-      { href: '/categories', icon: null, labelKey: 'nav.categories' },
     ],
   },
   {

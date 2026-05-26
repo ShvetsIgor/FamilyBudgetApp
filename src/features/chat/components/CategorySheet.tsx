@@ -24,6 +24,8 @@ interface CategorySheetProps {
   categories?: Category[];
 }
 
+const EMPTY_FOLDERS: never[] = [];
+
 export function CategorySheet({ onSelect, onClose, categories: categoriesOverride }: CategorySheetProps) {
   const C = useChatTokens();
   const t = useT();
@@ -31,7 +33,7 @@ export function CategorySheet({ onSelect, onClose, categories: categoriesOverrid
   const expenseCats = useAppSelector((s) => s.categories.expense);
   const expenseFolders = useAppSelector((s) => s.categories.folders.expense);
   const allCats = categoriesOverride ?? expenseCats;
-  const folders = categoriesOverride ? [] : expenseFolders;
+  const folders = categoriesOverride ? EMPTY_FOLDERS : expenseFolders;
 
   const activeCats = useMemo(() => allCats.filter(isActiveCategory), [allCats]);
 

@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { StoreProfile } from '@/shared/types';
+import { toLocalDateKey } from '@/shared/utils/dateKey';
 
 interface StoreProfilesState {
   profiles: Record<string, StoreProfile>;
@@ -27,7 +28,7 @@ const storeProfilesSlice = createSlice({
       }>
     ) {
       const { storeId, storeName, storeGroup, categoryId } = action.payload;
-      const now = new Date().toISOString().slice(0, 10);
+      const now = toLocalDateKey(new Date());
       const existing = state.profiles[storeId];
 
       if (!existing) {

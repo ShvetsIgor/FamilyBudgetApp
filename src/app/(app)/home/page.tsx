@@ -10,6 +10,7 @@ import { setTyping, removeMessage } from '@/features/chat/store/chatSlice';
 import { addFolder as addFolderAction } from '@/features/categories/store/categoriesSlice';
 import { addFolder } from '@/features/categories/services/categoryFoldersService';
 import { prependExpense, removeExpense, mergeExpenses } from '@/features/expenses/store/expensesSlice';
+import { recordExpense } from '@/features/expenses/store/suggestionMemorySlice';
 import { prependIncome } from '@/features/income/store/incomeSlice';
 
 import { useChatMessages } from '@/features/chat/hooks/useChatMessages';
@@ -58,6 +59,7 @@ import type { MorningCardData } from '@/features/chat/components/BotCard/Morning
 import type { WeeklyCardData } from '@/features/chat/components/BotCard/WeeklyCard';
 import type { EnvelopesCardData } from '@/features/chat/components/BotCard/EnvelopesCard';
 import type { Currency } from '@/shared/types';
+import { toLocalDateKey } from '@/shared/utils/dateKey';
 
 import type { SerializableChatMessage } from '@/shared/types/message';
 
@@ -66,8 +68,7 @@ function msgTime(iso: string): string {
 }
 
 function localDateKey(iso: string): string {
-  const d = new Date(iso);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return toLocalDateKey(iso);
 }
 
 function groupByDay(messages: SerializableChatMessage[]): { day: string; items: SerializableChatMessage[] }[] {
@@ -176,7 +177,7 @@ export default function HomePage() {
     const ctx = collectBotContext(state);
     if (!ctx) return;
 
-    const yesterdayStr = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+    const yesterdayStr = toLocalDateKey(new Date(Date.now() - 86_400_000));
     const yesterdayExpenses = allExpenses.filter((e) => e.date.startsWith(yesterdayStr));
     const firstGoalName = savingsGoals.find((g) => !g.name?.toLowerCase().includes('savings'))?.name;
 
@@ -204,7 +205,17 @@ export default function HomePage() {
 
   const sendingRef = useRef(false);
 
-  type ClarifyContext = { amount: number; parsedDate?: string; parsedDateLabel?: string; parsedNote?: string; isIncome?: boolean };
+  type ClarifyContext = {
+    amount: number;
+    parsedDate?: string;
+    parsedDateLabel?: string;
+    parsedNote?: string;
+    isIncome?: boolean;
+    storeId?: string;
+    storeName?: string;
+    storeGroup?: string;
+    isTagLearning?: boolean;
+  };
   const [categorySheet, setCategorySheet] = useState<ClarifyContext | null>(null);
 
   const buildEnrichedCtx = useCallback(() => {
@@ -219,6 +230,16 @@ export default function HomePage() {
       firstGoalName: savingsGoals.find((g) => !g.name?.toLowerCase().includes('savings'))?.name,
     };
   }, [state, allExpenses, monthBudget, budgetLimits, dailyBudget, savingsGoals]);
+
+  const syncChatExpenseMemory = useCallback((expense: { categoryId: string; store?: string; date: string }) => {
+    const category = allExpenseCats.find((c) => c.id === expense.categoryId);
+    dispatch(recordExpense({
+      merchant: expense.store,
+      categoryId: expense.categoryId,
+      folderId: category?.folderId ?? undefined,
+      date: toLocalDateKey(expense.date),
+    }));
+  }, [allExpenseCats, dispatch]);
 
   const handleSend = useCallback(async (text: string) => {
     if (!userId || sendingRef.current) return;
@@ -255,13 +276,24 @@ export default function HomePage() {
       for (const botMsg of reply.messages) {
         await addMessage(botMsg);
       }
-      if (reply.expense) dispatch(prependExpense(reply.expense));
+      if (reply.expense) {
+        dispatch(prependExpense(reply.expense));
+        syncChatExpenseMemory(reply.expense);
+        if (reply.expense.storeId && reply.expense.store) {
+          dispatch(upsertProfile({
+            storeId: reply.expense.storeId,
+            storeName: reply.expense.store,
+            storeGroup: reply.expense.storeGroup,
+            categoryId: reply.expense.categoryId,
+          }));
+        }
+      }
       if (reply.income) dispatch(prependIncome(reply.income));
     } finally {
       dispatch(setTyping(false));
       sendingRef.current = false;
     }
-  }, [userId, buildEnrichedCtx, learned, dispatch]);
+  }, [userId, buildEnrichedCtx, learned, dispatch, syncChatExpenseMemory]);
 
   const handleClarifyChip = useCallback(async (
     amount: number,
@@ -288,8 +320,6 @@ export default function HomePage() {
     }
 
     sendingRef.current = true;
-
-    const chipCat = allExpenseCats.find((c) => c.id === chip.id);
 
     if (storeId) {
       // Update store purchase history (store ≠ category — probabilistic memory)
@@ -337,13 +367,16 @@ export default function HomePage() {
       for (const botMsg of reply.messages) {
         await addMessage(botMsg);
       }
-      if (reply.expense) dispatch(prependExpense(reply.expense));
+      if (reply.expense) {
+        dispatch(prependExpense(reply.expense));
+        syncChatExpenseMemory(reply.expense);
+      }
       if (reply.income) dispatch(prependIncome(reply.income));
     } finally {
       dispatch(setTyping(false));
       sendingRef.current = false;
     }
-  }, [userId, buildEnrichedCtx, dispatch]);
+  }, [userId, allExpenseFolders, buildEnrichedCtx, dispatch, router, addLearned, t, syncChatExpenseMemory]);
 
   const handleIncomeClarifyChip = useCallback(async (
     amount: number,
@@ -452,12 +485,13 @@ export default function HomePage() {
       }
       if (reply.expense) {
         dispatch(prependExpense(reply.expense));
+        syncChatExpenseMemory(reply.expense);
       }
     } finally {
       dispatch(setTyping(false));
       sendingRef.current = false;
     }
-  }, [userId, buildEnrichedCtx, dispatch]);
+  }, [userId, buildEnrichedCtx, dispatch, syncChatExpenseMemory]);
 
   const handleFutureCancel = useCallback(async (botMsgId: string, userMsgId: string) => {
     if (!userId) return;
@@ -622,6 +656,10 @@ export default function HomePage() {
                       parsedDateLabel: d.parsedDateLabel as string | undefined,
                       parsedNote: d.parsedNote as string | undefined,
                       isIncome: cardIsIncome,
+                      storeId: d.storeId as string | undefined,
+                      storeName: d.storeName as string | undefined,
+                      storeGroup: d.storeGroup as string | undefined,
+                      isTagLearning: (d.isTagLearning as boolean | undefined) ?? false,
                     })}
                     onSplit={cardIsIncome ? undefined : () => {
                       const params = new URLSearchParams({
@@ -660,6 +698,10 @@ export default function HomePage() {
                         parsedDate: d.parsedDate as string | undefined,
                         parsedDateLabel: d.parsedDateLabel as string | undefined,
                         parsedNote: text,
+                        storeId: d.storeId as string | undefined,
+                        storeName: d.storeName as string | undefined,
+                        storeGroup: d.storeGroup as string | undefined,
+                        isTagLearning: (d.isTagLearning as boolean | undefined) ?? false,
                       });
                     }}
                   />
@@ -698,6 +740,10 @@ export default function HomePage() {
               categorySheet.parsedDate,
               categorySheet.parsedDateLabel,
               categorySheet.parsedNote,
+              categorySheet.storeId,
+              categorySheet.storeName,
+              categorySheet.storeGroup,
+              categorySheet.isTagLearning,
             );
           }
           setCategorySheet(null);

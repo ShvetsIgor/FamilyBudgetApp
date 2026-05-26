@@ -1,24 +1,30 @@
 import {
   collection,
   doc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
+  getDoc,
   getDocs,
   query,
   orderBy,
   limit,
   startAfter,
   where,
-  setDoc,
+  writeBatch,
   increment,
   serverTimestamp,
   Timestamp,
   type DocumentSnapshot,
 } from 'firebase/firestore';
-import { getDb } from '@/shared/lib/firebase';
-import type { Expense, SerializableExpense, SplitItem, Currency, Privacy, PaymentMethod, ExpenseItem } from '@/shared/types';
 import { format } from 'date-fns';
+import { getDb } from '@/shared/lib/firebase';
+import type {
+  Currency,
+  Expense,
+  ExpenseItem,
+  PaymentMethod,
+  Privacy,
+  SerializableExpense,
+  SplitItem,
+} from '@/shared/types';
 
 const PAGE_SIZE = 20;
 
@@ -26,15 +32,19 @@ function expCol(userId: string) {
   return collection(getDb(), 'expenses', userId, 'items');
 }
 
+function expenseDoc(userId: string, expenseId?: string) {
+  return expenseId
+    ? doc(getDb(), 'expenses', userId, 'items', expenseId)
+    : doc(expCol(userId));
+}
+
 function statsDoc(userId: string, month: string) {
   return doc(getDb(), 'monthlyStats', userId, 'months', month);
 }
 
-// ─── Converter: Firestore doc → Redux-safe object ─────────────────────────────
-
 function toSerializable(id: string, data: Record<string, unknown>): SerializableExpense {
-  const toISO = (v: unknown) =>
-    v instanceof Timestamp ? v.toDate().toISOString() : (v as string) ?? new Date().toISOString();
+  const toISO = (value: unknown) =>
+    value instanceof Timestamp ? value.toDate().toISOString() : (value as string) ?? new Date().toISOString();
 
   return {
     id,
@@ -61,11 +71,9 @@ function toSerializable(id: string, data: Record<string, unknown>): Serializable
   };
 }
 
-// ─── Fetch ────────────────────────────────────────────────────────────────────
-
 export async function fetchExpenses(
   userId: string,
-  cursor?: DocumentSnapshot
+  cursor?: DocumentSnapshot,
 ): Promise<{ expenses: SerializableExpense[]; cursor: DocumentSnapshot | null }> {
   const q = cursor
     ? query(expCol(userId), orderBy('date', 'desc'), limit(PAGE_SIZE), startAfter(cursor))
@@ -83,12 +91,10 @@ export async function fetchMonthExpenses(userId: string, month: string): Promise
   const to = Timestamp.fromDate(new Date(year, m, 1));
 
   const snap = await getDocs(
-    query(expCol(userId), where('date', '>=', from), where('date', '<', to), orderBy('date', 'desc'))
+    query(expCol(userId), where('date', '>=', from), where('date', '<', to), orderBy('date', 'desc')),
   );
   return snap.docs.map((d) => toSerializable(d.id, d.data()));
 }
-
-// ─── Write ────────────────────────────────────────────────────────────────────
 
 export interface AddExpenseInput {
   userId: string;
@@ -107,11 +113,12 @@ export interface AddExpenseInput {
   items?: ExpenseItem[];
   goalId?: string;
   recurringId?: string;
+  isRecurring?: boolean;
 }
 
 export async function addExpense(input: AddExpenseInput): Promise<SerializableExpense> {
   const { userId, date, store, storeId, storeGroup, comment, ...rest } = input;
-
+  const ref = expenseDoc(userId);
   const data = Object.fromEntries(
     Object.entries({
       ...rest,
@@ -121,16 +128,21 @@ export async function addExpense(input: AddExpenseInput): Promise<SerializableEx
       storeGroup,
       comment,
       date: Timestamp.fromDate(date),
-      isRecurring: false,
+      isRecurring: input.isRecurring ?? Boolean(input.recurringId),
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    }).filter(([, v]) => v !== undefined)
+    }).filter(([, value]) => value !== undefined),
   );
 
-  const ref = await addDoc(expCol(userId), data);
-
-  const month = format(date, 'yyyy-MM');
-  await updateMonthlyStats(userId, month, input.categoryId, input.amount, input.splits, 1);
+  const batch = writeBatch(getDb());
+  batch.set(ref, data);
+  queueMonthlyStatsUpdate(
+    batch,
+    userId,
+    format(date, 'yyyy-MM'),
+    buildStatsDelta(input.categoryId, input.amount, input.splits, 1),
+  );
+  await batch.commit();
 
   return toSerializable(ref.id, {
     ...data,
@@ -142,11 +154,23 @@ export async function addExpense(input: AddExpenseInput): Promise<SerializableEx
 
 export interface UpdateExpenseInput extends AddExpenseInput {
   id: string;
+  previousExpense?: SerializableExpense;
 }
 
 export async function updateExpense(input: UpdateExpenseInput): Promise<SerializableExpense> {
-  const { userId, id, date, store, storeId, storeGroup, comment, goalId, ...rest } = input;
-
+  const {
+    userId,
+    id,
+    date,
+    store,
+    storeId,
+    storeGroup,
+    comment,
+    goalId,
+    previousExpense,
+    ...rest
+  } = input;
+  const existing = previousExpense ?? await fetchExpenseById(userId, id);
   const data = Object.fromEntries(
     Object.entries({
       ...rest,
@@ -157,73 +181,136 @@ export async function updateExpense(input: UpdateExpenseInput): Promise<Serializ
       comment,
       goalId,
       date: Timestamp.fromDate(date),
+      isRecurring: input.isRecurring ?? Boolean(input.recurringId),
       updatedAt: serverTimestamp(),
-    }).filter(([, v]) => v !== undefined)
+    }).filter(([, value]) => value !== undefined),
   );
 
-  await updateDoc(doc(getDb(), 'expenses', userId, 'items', id), data);
+  const batch = writeBatch(getDb());
+  batch.update(expenseDoc(userId, id), data);
+
+  const statsByMonth = new Map<string, StatsDelta>();
+  mergeStatsDelta(
+    statsByMonth,
+    format(new Date(existing.date), 'yyyy-MM'),
+    buildStatsDelta(existing.categoryId, existing.amount, existing.splits, -1),
+  );
+  mergeStatsDelta(
+    statsByMonth,
+    format(date, 'yyyy-MM'),
+    buildStatsDelta(input.categoryId, input.amount, input.splits, 1),
+  );
+
+  for (const [month, delta] of statsByMonth) {
+    queueMonthlyStatsUpdate(batch, userId, month, delta);
+  }
+
+  await batch.commit();
 
   return toSerializable(id, {
     ...data,
     date: Timestamp.fromDate(date),
-    createdAt: Timestamp.fromDate(new Date()),
+    createdAt: isoToTimestamp(existing.createdAt),
     updatedAt: Timestamp.fromDate(new Date()),
   });
 }
 
 export async function deleteExpense(userId: string, expense: SerializableExpense): Promise<void> {
-  await deleteDoc(doc(getDb(), 'expenses', userId, 'items', expense.id));
-  const month = format(new Date(expense.date), 'yyyy-MM');
-  await updateMonthlyStats(userId, month, expense.categoryId, expense.amount, expense.splits, -1);
+  const batch = writeBatch(getDb());
+  batch.delete(expenseDoc(userId, expense.id));
+  queueMonthlyStatsUpdate(
+    batch,
+    userId,
+    format(new Date(expense.date), 'yyyy-MM'),
+    buildStatsDelta(expense.categoryId, expense.amount, expense.splits, -1),
+  );
+  await batch.commit();
 }
 
-// ─── Stats aggregation ────────────────────────────────────────────────────────
+interface StatsDelta {
+  totalExpenses: number;
+  byCategory: Record<string, number>;
+}
 
-async function updateMonthlyStats(
-  userId: string,
-  month: string,
+function buildStatsDelta(
   categoryId: string,
   amount: number,
   splits: SplitItem[],
-  sign: 1 | -1
-) {
-  const splitTotal = splits.reduce((s, sp) => s + sp.amount, 0);
+  sign: 1 | -1,
+): StatsDelta {
+  const splitTotal = splits.reduce((sum, split) => sum + split.amount, 0);
   const mainAmount = amount - splitTotal;
-  const ref = statsDoc(userId, month);
-
-  // updateDoc supports dot notation → creates proper nested map byCategory.{id}
-  // setDoc with merge:true does NOT support dot notation (creates flat fields)
-  const updates: Record<string, unknown> = {
-    totalExpenses: increment(sign * amount),
-    updatedAt: serverTimestamp(),
-    [`byCategory.${categoryId}`]: increment(sign * mainAmount),
+  const byCategory: Record<string, number> = {
+    [categoryId]: sign * mainAmount,
   };
-  for (const sp of splits) {
-    if (sp.categoryId && sp.amount > 0) {
-      updates[`byCategory.${sp.categoryId}`] = increment(sign * sp.amount);
+
+  for (const split of splits) {
+    if (split.categoryId && split.amount > 0) {
+      byCategory[split.categoryId] = (byCategory[split.categoryId] ?? 0) + sign * split.amount;
     }
   }
 
-  try {
-    await updateDoc(ref, updates);
-  } catch (e: unknown) {
-    // Document doesn't exist yet — create it with proper nested structure
-    if ((e as { code?: string }).code === 'not-found') {
-      const byCategory: Record<string, number> = { [categoryId]: sign * mainAmount };
-      for (const sp of splits) {
-        if (sp.categoryId && sp.amount > 0) {
-          byCategory[sp.categoryId] = (byCategory[sp.categoryId] ?? 0) + sign * sp.amount;
-        }
-      }
-      await setDoc(ref, {
-        userId,
-        month,
-        totalExpenses: sign * amount,
-        byCategory,
-        updatedAt: serverTimestamp(),
-      });
-    } else {
-      throw e;
-    }
-  }
+  return {
+    totalExpenses: sign * amount,
+    byCategory,
+  };
 }
+
+function mergeStatsDelta(
+  target: Map<string, StatsDelta>,
+  month: string,
+  incoming: StatsDelta,
+) {
+  const current = target.get(month) ?? { totalExpenses: 0, byCategory: {} };
+  current.totalExpenses += incoming.totalExpenses;
+
+  for (const [categoryId, delta] of Object.entries(incoming.byCategory)) {
+    current.byCategory[categoryId] = (current.byCategory[categoryId] ?? 0) + delta;
+  }
+
+  target.set(month, current);
+}
+
+function queueMonthlyStatsUpdate(
+  batch: ReturnType<typeof writeBatch>,
+  userId: string,
+  month: string,
+  delta: StatsDelta,
+) {
+  const byCategory = Object.fromEntries(
+    Object.entries(delta.byCategory)
+      .filter(([, value]) => value !== 0)
+      .map(([categoryId, value]) => [categoryId, increment(value)]),
+  );
+
+  if (delta.totalExpenses === 0 && Object.keys(byCategory).length === 0) {
+    return;
+  }
+
+  batch.set(
+    statsDoc(userId, month),
+    {
+      userId,
+      month,
+      ...(delta.totalExpenses !== 0 ? { totalExpenses: increment(delta.totalExpenses) } : {}),
+      ...(Object.keys(byCategory).length > 0 ? { byCategory } : {}),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
+}
+
+async function fetchExpenseById(userId: string, expenseId: string): Promise<SerializableExpense> {
+  const snap = await getDoc(expenseDoc(userId, expenseId));
+  if (!snap.exists()) {
+    throw new Error(`Expense ${expenseId} not found`);
+  }
+
+  return toSerializable(snap.id, snap.data());
+}
+
+function isoToTimestamp(iso: string): Timestamp {
+  return Timestamp.fromDate(new Date(iso));
+}
+
+export type { Expense };

@@ -84,6 +84,7 @@ export function ExpenseForm({ initialExpense }: Props) {
       if (isEdit && initialExpense) {
         const updated = await updateExpense({
           id: initialExpense.id,
+          previousExpense: initialExpense,
           userId: user!.id,
           amount: numAmount,
           currency,

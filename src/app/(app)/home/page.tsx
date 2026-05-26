@@ -641,7 +641,13 @@ export default function HomePage() {
                       });
                       router.push(`/expenses/new?${params.toString()}`);
                     }}
-                    onCreateFolder={cardIsIncome ? undefined : (name) => handleCreateFolder(name)}
+                    onCreateFolder={cardIsIncome ? undefined : (name) => handleCreateFolder(
+                      name,
+                      d.amount as number,
+                      d.storeId as string | undefined,
+                      d.storeName as string | undefined,
+                      d.storeGroup as string | undefined,
+                    )}
                     onOtherText={cardIsIncome ? undefined : (text) => {
                       const itemHit = matchItem(text.toLowerCase());
                       if (itemHit) {

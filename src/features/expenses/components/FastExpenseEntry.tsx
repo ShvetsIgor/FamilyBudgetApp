@@ -171,6 +171,22 @@ export function FastExpenseEntry({
     splitsSum, remainder, splitsOverflow, posCount,
   } = splitEditor;
 
+  // Auto-open split picker to initialFolderId when coming from chat tag-learning flow
+  const autoOpenedRef = useRef(false);
+  useEffect(() => {
+    if (initialFolderId && !autoOpenedRef.current && topFolders.length > 0) {
+      autoOpenedRef.current = true;
+      openPicker();
+      setPickerGroupId(initialFolderId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFolderId, topFolders.length]);
+
+  // Inline category creation state (for the split picker)
+  const [inlineCreateMode, setInlineCreateMode] = useState(false);
+  const [inlineCatName, setInlineCatName] = useState('');
+  const [inlineCreating, setInlineCreating] = useState(false);
+
   function tap(key: NumKey) {
     if (editing === 'total') {
       setTotal((cur) => applyKey(cur, String(key)));

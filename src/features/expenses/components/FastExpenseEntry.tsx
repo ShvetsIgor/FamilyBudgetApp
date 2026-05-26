@@ -702,6 +702,15 @@ export function FastExpenseEntry({
                     );
                   })}
                 </div>
+                {/* Create new section button */}
+                <button
+                  onClick={() => setShowFolderEditor(true)}
+                  className="col-span-4 flex items-center justify-center gap-1 py-1.5 rounded-[9px] text-[9px] font-extrabold border border-dashed mt-1"
+                  style={{ borderColor: catColor + '55', color: catColor }}
+                >
+                  <Plus size={10} strokeWidth={2.5} />
+                  Создать раздел
+                </button>
               </div>
             ) : (
               /* Show categories in selected folder group */

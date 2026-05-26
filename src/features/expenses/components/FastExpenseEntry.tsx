@@ -33,6 +33,10 @@ interface Props {
   initialStore?: string;
   initialStoreId?: string;
   initialStoreGroup?: string;
+  /** Pre-filter the split picker to this folder (from chat tag-learning flow) */
+  initialFolderId?: string;
+  /** Display name for the pre-selected folder */
+  initialFolderName?: string;
 }
 
 export function FastExpenseEntry({

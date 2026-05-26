@@ -1157,7 +1157,7 @@ export function CategoriesHub() {
                   cursor: 'pointer',
                 }}
               >
-                ＋ Новая папка
+                ＋ Новый раздел
               </button>
             )}
           </div>

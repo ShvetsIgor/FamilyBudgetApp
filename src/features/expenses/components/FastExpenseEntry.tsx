@@ -200,6 +200,32 @@ export function FastExpenseEntry({
     setEditing('total');
   }
 
+  async function handleInlineCreateCategory() {
+    if (!user || !inlineCatName.trim() || inlineCreating) return;
+    setInlineCreating(true);
+    const folderId = pickerGroupId ?? initialFolderId;
+    try {
+      const newCat = await addCategoryFirestore(user.id, {
+        name: inlineCatName.trim(),
+        icon: 'box',
+        color: '#94A3B8',
+        type: 'expense',
+        order: 99,
+        isPrivate: false,
+        archived: false,
+        ...(folderId ? { folderId } : {}),
+      });
+      dispatch(addCategoryAction(newCat));
+      addSplit(newCat);
+      setInlineCatName('');
+      setInlineCreateMode(false);
+    } catch {
+      // ignore
+    } finally {
+      setInlineCreating(false);
+    }
+  }
+
   async function handleSave() {
     if (!user || totalNum <= 0 || saving) return;
 

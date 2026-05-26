@@ -621,6 +621,7 @@ export default function HomePage() {
                           d.storeId as string | undefined,
                           d.storeName as string | undefined,
                           d.storeGroup as string | undefined,
+                          (d.isTagLearning as boolean | undefined) ?? false,
                         )
                     }
                     onAllCategories={() => setCategorySheet({

@@ -2,15 +2,13 @@
 
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, MessageSquare, Calendar, ChevronLeft, Scissors, ChevronRight, FolderPlus } from 'lucide-react';
+import { X, MessageSquare, Calendar, ChevronLeft, Scissors, ChevronRight, Plus } from 'lucide-react';
 import { format, parseISO, isToday, isYesterday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import { prependExpense, updateExpense as updateExpenseAction } from '@/features/expenses/store/expensesSlice';
 import { addExpense, updateExpense } from '@/features/expenses/services/expensesService';
-import { addCategory as addCategoryFirestore } from '@/features/categories/services/categoriesService';
-import { addCategory as addCategoryAction } from '@/features/categories/store/categoriesSlice';
 import { CategoryIcon, StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { cn } from '@/shared/utils/cn';
@@ -20,6 +18,8 @@ import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups
 import { recordExpense, recordSplitExpense, recordTagAssociation, extractTags } from '@/features/expenses/store/suggestionMemorySlice';
 import { buildExpenseDraft } from '@/features/expenses/engine/buildExpenseDraft';
 import { useSplitEditor, applyKey, type SplitRow } from '@/features/expenses/hooks/useSplitEditor';
+import { addCategory as addCategoryFirestore } from '@/features/categories/services/categoriesService';
+import { addCategory as addCategoryAction } from '@/features/categories/store/categoriesSlice';
 
 const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫'] as const;
 type NumKey = (typeof NUMPAD_KEYS)[number];
@@ -33,9 +33,8 @@ interface Props {
   initialStore?: string;
   initialStoreId?: string;
   initialStoreGroup?: string;
-  /** Pre-filter the split picker to this folder (from chat tag-learning flow) */
+  /** When set: auto-open split picker filtered to this folder (from chat tag-learning flow) */
   initialFolderId?: string;
-  /** Display name for the pre-selected folder */
   initialFolderName?: string;
 }
 
@@ -141,6 +140,11 @@ export function FastExpenseEntry({
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Inline category creation state (used inside split picker)
+  const [inlineCreateMode, setInlineCreateMode] = useState(false);
+  const [inlineCatName, setInlineCatName] = useState('');
+  const [inlineCreating, setInlineCreating] = useState(false);
+
   const selectedCat = allCats.find((c) => c.id === selectedCatId);
 
   /** Unified expense draft — single source of truth for all suggestion/context decisions. */
@@ -171,21 +175,8 @@ export function FastExpenseEntry({
     splitsSum, remainder, splitsOverflow, posCount,
   } = splitEditor;
 
-  // Auto-open split picker to initialFolderId when coming from chat tag-learning flow
-  const autoOpenedRef = useRef(false);
-  useEffect(() => {
-    if (initialFolderId && !autoOpenedRef.current && topFolders.length > 0) {
-      autoOpenedRef.current = true;
-      openPicker();
-      setPickerGroupId(initialFolderId);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialFolderId, topFolders.length]);
-
-  // Inline category creation state (for the split picker)
-  const [inlineCreateMode, setInlineCreateMode] = useState(false);
-  const [inlineCatName, setInlineCatName] = useState('');
-  const [inlineCreating, setInlineCreating] = useState(false);
+  // Track selected folder for the chat tag-learning flow
+  const [activeFolderId, setActiveFolderId] = useState<string | null>(initialFolderId ?? null);
 
   function tap(key: NumKey) {
     if (editing === 'total') {
@@ -198,32 +189,6 @@ export function FastExpenseEntry({
   function changeCategory(id: string) {
     setSelectedCatId(id);
     setEditing('total');
-  }
-
-  async function handleInlineCreateCategory() {
-    if (!user || !inlineCatName.trim() || inlineCreating) return;
-    setInlineCreating(true);
-    const folderId = pickerGroupId ?? initialFolderId;
-    try {
-      const newCat = await addCategoryFirestore(user.id, {
-        name: inlineCatName.trim(),
-        icon: 'box',
-        color: '#94A3B8',
-        type: 'expense',
-        order: 99,
-        isPrivate: false,
-        archived: false,
-        ...(folderId ? { folderId } : {}),
-      });
-      dispatch(addCategoryAction(newCat));
-      addSplit(newCat);
-      setInlineCatName('');
-      setInlineCreateMode(false);
-    } catch {
-      // ignore
-    } finally {
-      setInlineCreating(false);
-    }
   }
 
   async function handleSave() {
@@ -690,69 +655,77 @@ export function FastExpenseEntry({
               </div>
             ) : (
               /* Show categories in selected folder group */
-              <div>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {pickerGroupCats.length > 0 ? pickerGroupCats.map((s) => {
-                    const selected = !!splits.find((x) => x.categoryId === s.id);
-                    return (
-                      <button
-                        key={s.id}
-                        onClick={() =>
-                          selected
-                            ? removeSplit(splits.findIndex((x) => x.categoryId === s.id))
-                            : addSplit(s)
-                        }
-                        className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
-                        style={{
-                          background: selected ? (pickerGroupFolder?.color ?? catColor) + '30' : (pickerGroupFolder?.color ?? catColor) + '14',
-                          borderColor: selected ? (pickerGroupFolder?.color ?? catColor) : 'transparent',
-                        }}
-                      >
-                        <StickerIcon icon={s.icon} color={pickerGroupFolder?.color ?? catColor} className="h-3.5 w-3.5" />
-                        <span className="leading-tight text-center line-clamp-1">{t.cat(s.name)}</span>
-                        {selected && <span className="text-[8px]" style={{ color: pickerGroupFolder?.color ?? catColor }}>✓</span>}
-                      </button>
-                    );
-                  }) : (
-                    <div className="col-span-4 flex flex-col items-center gap-1 py-2">
-                      <p className="text-center text-xs text-muted-foreground">Нет категорий в разделе</p>
-                    </div>
-                  )}
-                </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {pickerGroupCats.map((s) => {
+                  const selected = !!splits.find((x) => x.categoryId === s.id);
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() =>
+                        selected
+                          ? removeSplit(splits.findIndex((x) => x.categoryId === s.id))
+                          : addSplit(s)
+                      }
+                      className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
+                      style={{
+                        background: selected ? (pickerGroupFolder?.color ?? catColor) + '30' : (pickerGroupFolder?.color ?? catColor) + '14',
+                        borderColor: selected ? (pickerGroupFolder?.color ?? catColor) : 'transparent',
+                      }}
+                    >
+                      <StickerIcon icon={s.icon} color={pickerGroupFolder?.color ?? catColor} className="h-3.5 w-3.5" />
+                      <span className="leading-tight text-center line-clamp-1">{t.cat(s.name)}</span>
+                      {selected && <span className="text-[8px]" style={{ color: pickerGroupFolder?.color ?? catColor }}>✓</span>}
+                    </button>
+                  );
+                })}
                 {/* Inline category creation */}
                 {inlineCreateMode ? (
-                  <div className="mt-2 flex items-center gap-2">
+                  <div className="col-span-4 flex items-center gap-1.5 mt-1">
                     <input
                       autoFocus
                       value={inlineCatName}
                       onChange={(e) => setInlineCatName(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') handleInlineCreateCategory(); if (e.key === 'Escape') { setInlineCreateMode(false); setInlineCatName(''); } }}
-                      placeholder="Название категории…"
+                      onKeyDown={async (e) => {
+                        if (e.key === 'Escape') { setInlineCreateMode(false); setInlineCatName(''); }
+                        if (e.key === 'Enter') {
+                          const name = inlineCatName.trim();
+                          if (!name || !user || !pickerGroupId || inlineCreating) return;
+                          setInlineCreating(true);
+                          try {
+                            const newCat = await addCategoryFirestore(user.id, { name, icon: 'box', color: pickerGroupFolder?.color ?? '#94A3B8', folderId: pickerGroupId, isPrivate: false, order: 99, type: 'expense' });
+                            dispatch(addCategoryAction(newCat));
+                            addSplit(newCat);
+                          } finally { setInlineCreating(false); setInlineCreateMode(false); setInlineCatName(''); }
+                        }
+                      }}
+                      placeholder="Название категории"
                       className="flex-1 text-[11px] font-bold outline-none bg-transparent border-b border-border pb-0.5"
-                      style={{ color: 'hsl(var(--foreground))' }}
                     />
                     <button
-                      onClick={handleInlineCreateCategory}
                       disabled={!inlineCatName.trim() || inlineCreating}
-                      className="text-[10px] font-black px-2 py-1 rounded-lg disabled:opacity-40 transition-opacity"
-                      style={{ background: (pickerGroupFolder?.color ?? catColor) + '22', color: pickerGroupFolder?.color ?? catColor }}
+                      onClick={async () => {
+                        const name = inlineCatName.trim();
+                        if (!name || !user || !pickerGroupId || inlineCreating) return;
+                        setInlineCreating(true);
+                        try {
+                          const newCat = await addCategoryFirestore(user.id, { name, icon: 'box', color: pickerGroupFolder?.color ?? '#94A3B8', folderId: pickerGroupId, isPrivate: false, order: 99, type: 'expense' });
+                          dispatch(addCategoryAction(newCat));
+                          addSplit(newCat);
+                        } finally { setInlineCreating(false); setInlineCreateMode(false); setInlineCatName(''); }
+                      }}
+                      className="text-[9px] font-bold px-2 py-1 rounded-md disabled:opacity-40"
+                      style={{ background: pickerGroupFolder?.color ?? catColor, color: '#fff' }}
                     >
-                      {inlineCreating ? '…' : 'Создать'}
-                    </button>
-                    <button
-                      onClick={() => { setInlineCreateMode(false); setInlineCatName(''); }}
-                      className="text-muted-foreground text-[10px]"
-                    >
-                      <X size={12} />
+                      {inlineCreating ? '…' : '✓'}
                     </button>
                   </div>
                 ) : (
                   <button
                     onClick={() => setInlineCreateMode(true)}
-                    className="mt-2 w-full flex items-center justify-center gap-1 py-1.5 rounded-[9px] text-[9px] font-extrabold border-2 border-dashed transition-all"
-                    style={{ borderColor: (pickerGroupFolder?.color ?? catColor) + '55', color: pickerGroupFolder?.color ?? catColor, background: 'transparent' }}
+                    className="col-span-4 flex items-center justify-center gap-1 py-1.5 rounded-[9px] text-[9px] font-extrabold border border-dashed mt-0.5"
+                    style={{ borderColor: (pickerGroupFolder?.color ?? catColor) + '55', color: pickerGroupFolder?.color ?? catColor }}
                   >
-                    <FolderPlus size={11} strokeWidth={2.5} />
+                    <Plus size={10} strokeWidth={2.5} />
                     Создать категорию
                   </button>
                 )}

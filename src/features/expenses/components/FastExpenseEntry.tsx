@@ -690,33 +690,71 @@ export function FastExpenseEntry({
               </div>
             ) : (
               /* Show categories in selected folder group */
-              <div className="grid grid-cols-4 gap-1.5">
-                {pickerGroupCats.length > 0 ? pickerGroupCats.map((s) => {
-                  const selected = !!splits.find((x) => x.categoryId === s.id);
-                  return (
+              <div>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {pickerGroupCats.length > 0 ? pickerGroupCats.map((s) => {
+                    const selected = !!splits.find((x) => x.categoryId === s.id);
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() =>
+                          selected
+                            ? removeSplit(splits.findIndex((x) => x.categoryId === s.id))
+                            : addSplit(s)
+                        }
+                        className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
+                        style={{
+                          background: selected ? (pickerGroupFolder?.color ?? catColor) + '30' : (pickerGroupFolder?.color ?? catColor) + '14',
+                          borderColor: selected ? (pickerGroupFolder?.color ?? catColor) : 'transparent',
+                        }}
+                      >
+                        <StickerIcon icon={s.icon} color={pickerGroupFolder?.color ?? catColor} className="h-3.5 w-3.5" />
+                        <span className="leading-tight text-center line-clamp-1">{t.cat(s.name)}</span>
+                        {selected && <span className="text-[8px]" style={{ color: pickerGroupFolder?.color ?? catColor }}>✓</span>}
+                      </button>
+                    );
+                  }) : (
+                    <div className="col-span-4 flex flex-col items-center gap-1 py-2">
+                      <p className="text-center text-xs text-muted-foreground">Нет категорий в разделе</p>
+                    </div>
+                  )}
+                </div>
+                {/* Inline category creation */}
+                {inlineCreateMode ? (
+                  <div className="mt-2 flex items-center gap-2">
+                    <input
+                      autoFocus
+                      value={inlineCatName}
+                      onChange={(e) => setInlineCatName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleInlineCreateCategory(); if (e.key === 'Escape') { setInlineCreateMode(false); setInlineCatName(''); } }}
+                      placeholder="Название категории…"
+                      className="flex-1 text-[11px] font-bold outline-none bg-transparent border-b border-border pb-0.5"
+                      style={{ color: 'hsl(var(--foreground))' }}
+                    />
                     <button
-                      key={s.id}
-                      onClick={() =>
-                        selected
-                          ? removeSplit(splits.findIndex((x) => x.categoryId === s.id))
-                          : addSplit(s)
-                      }
-                      className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
-                      style={{
-                        background: selected ? (pickerGroupFolder?.color ?? catColor) + '30' : (pickerGroupFolder?.color ?? catColor) + '14',
-                        borderColor: selected ? (pickerGroupFolder?.color ?? catColor) : 'transparent',
-                      }}
+                      onClick={handleInlineCreateCategory}
+                      disabled={!inlineCatName.trim() || inlineCreating}
+                      className="text-[10px] font-black px-2 py-1 rounded-lg disabled:opacity-40 transition-opacity"
+                      style={{ background: (pickerGroupFolder?.color ?? catColor) + '22', color: pickerGroupFolder?.color ?? catColor }}
                     >
-                      <StickerIcon icon={s.icon} color={pickerGroupFolder?.color ?? catColor} className="h-3.5 w-3.5" />
-                      <span className="leading-tight text-center line-clamp-1">{t.cat(s.name)}</span>
-                      {selected && <span className="text-[8px]" style={{ color: pickerGroupFolder?.color ?? catColor }}>✓</span>}
+                      {inlineCreating ? '…' : 'Создать'}
                     </button>
-                  );
-                }) : (
-                  <div className="col-span-4 flex flex-col items-center gap-1 py-3">
-                    <p className="text-center text-xs text-muted-foreground">Нет категорий в группе</p>
-                    <button onClick={() => setPickerGroupId(null)} className="text-[10px] text-primary font-semibold">← Назад</button>
+                    <button
+                      onClick={() => { setInlineCreateMode(false); setInlineCatName(''); }}
+                      className="text-muted-foreground text-[10px]"
+                    >
+                      <X size={12} />
+                    </button>
                   </div>
+                ) : (
+                  <button
+                    onClick={() => setInlineCreateMode(true)}
+                    className="mt-2 w-full flex items-center justify-center gap-1 py-1.5 rounded-[9px] text-[9px] font-extrabold border-2 border-dashed transition-all"
+                    style={{ borderColor: (pickerGroupFolder?.color ?? catColor) + '55', color: pickerGroupFolder?.color ?? catColor, background: 'transparent' }}
+                  >
+                    <FolderPlus size={11} strokeWidth={2.5} />
+                    Создать категорию
+                  </button>
                 )}
               </div>
             )}

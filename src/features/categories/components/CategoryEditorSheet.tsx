@@ -189,6 +189,39 @@ export function CategoryEditorSheet({
             </div>
           )}
 
+          {/* Extra folders multi-select — only show when a primary folder is set */}
+          {availableFolders.length > 1 && selectedFolderId && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-[#8E7A66] uppercase tracking-wide">
+                Также в разделах <span className="normal-case font-normal text-[#B6A48E]">(необязательно)</span>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {availableFolders.filter((f) => f.id !== selectedFolderId).map((f) => {
+                  const checked = extraFolderIds.includes(f.id);
+                  return (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() =>
+                        setExtraFolderIds((prev) =>
+                          checked ? prev.filter((id) => id !== f.id) : [...prev, f.id]
+                        )
+                      }
+                      className="rounded-full px-3 py-1.5 text-xs font-semibold transition-all"
+                      style={
+                        checked
+                          ? { backgroundColor: f.color ?? CC.primary, color: '#fff' }
+                          : { backgroundColor: '#F4ECDE', color: '#8E7A66' }
+                      }
+                    >
+                      {checked ? '✓ ' : ''}{f.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Tags */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-[#8E7A66] uppercase tracking-wide">

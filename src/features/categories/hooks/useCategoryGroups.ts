@@ -44,7 +44,9 @@ export function useCategoryGroups(type: CategoryType) {
 
   /** Active categories in the given folder. */
   function getCatsInGroup(folderId: string): Category[] {
-    return allCats.filter((c) => c.folderId === folderId && isActiveCategory(c));
+    return allCats.filter((c) =>
+      (c.folderId === folderId || c.extraFolderIds?.includes(folderId)) && isActiveCategory(c)
+    );
   }
 
   /** Returns the folder ID the category belongs to, or empty string if ungrouped. */

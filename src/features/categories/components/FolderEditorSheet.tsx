@@ -171,7 +171,7 @@ export function FolderEditorSheet({ open, onClose, initial, type, onSave, onDele
                 onClick={() => setConfirmDelete(true)}
                 className="w-full rounded-2xl py-2.5 text-sm font-semibold text-red-500 border border-red-100"
               >
-                Удалить папку
+                Удалить раздел
               </button>
             )
           )}

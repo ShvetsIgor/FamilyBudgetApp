@@ -46,6 +46,8 @@ export function FastExpenseEntry({
   initialStore,
   initialStoreId,
   initialStoreGroup,
+  initialFolderId,
+  initialFolderName,
 }: Props) {
   const router = useRouter();
   const dispatch = useAppDispatch();

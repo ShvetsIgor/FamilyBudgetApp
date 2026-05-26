@@ -433,6 +433,16 @@ export function CategoriesHub() {
   const handleFolderSave = async (data: Omit<CategoryFolder, 'id' | 'userId'> & { id?: string }) => {
     if (!user) return;
     const { id, ...rest } = data;
+
+    // Check for duplicate name when creating new folder
+    if (!id) {
+      const duplicate = folders.find(f => f.type === rest.type && f.name.toLowerCase() === rest.name.toLowerCase());
+      if (duplicate) {
+        alert(`Раздел "${rest.name}" уже существует`);
+        return;
+      }
+    }
+
     if (id) {
       const updated: CategoryFolder = { ...rest, id, userId: user.id };
       await updateFolderInDb(user.id, updated);
@@ -441,6 +451,7 @@ export function CategoriesHub() {
       const created = await addFolderToDb(user.id, rest);
       dispatch(addFolder(created));
     }
+    setFolderEditor({ open: false });
   };
 
   const handleFolderDelete = async (folder: CategoryFolder) => {

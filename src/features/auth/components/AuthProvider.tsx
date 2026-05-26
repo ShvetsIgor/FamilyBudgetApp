@@ -54,6 +54,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dispatch(setFolders({ type: 'expense', folders: expenseFolders }));
         dispatch(setFolders({ type: 'income', folders: incomeFolders }));
 
+        // Load store→category learning profiles
+        try {
+          const profiles = await fetchStoreProfiles(firebaseUser.uid);
+          dispatch(setProfiles(profiles));
+        } catch { /* non-critical */ }
+
       } catch (err) {
         console.error('[AuthProvider] error:', err);
         dispatch(setLoading(false));

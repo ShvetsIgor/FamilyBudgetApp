@@ -19,7 +19,11 @@ import { recordExpense, recordSplitExpense, recordTagAssociation, extractTags } 
 import { buildExpenseDraft } from '@/features/expenses/engine/buildExpenseDraft';
 import { useSplitEditor, applyKey, type SplitRow } from '@/features/expenses/hooks/useSplitEditor';
 import { addCategory as addCategoryFirestore } from '@/features/categories/services/categoriesService';
-import { addCategory as addCategoryAction } from '@/features/categories/store/categoriesSlice';
+import { addCategory as addCategoryAction, addFolder as addFolderAction } from '@/features/categories/store/categoriesSlice';
+import { addFolder as addFolderToDb } from '@/features/categories/services/categoryFoldersService';
+import { FolderEditorSheet } from '@/features/categories/components/FolderEditorSheet';
+import { CategoryEditorSheet } from '@/features/categories/components/CategoryEditorSheet';
+import type { CategoryFolder } from '@/shared/types';
 
 const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫'] as const;
 type NumKey = (typeof NUMPAD_KEYS)[number];

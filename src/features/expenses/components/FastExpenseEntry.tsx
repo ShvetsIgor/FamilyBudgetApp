@@ -140,7 +140,11 @@ export function FastExpenseEntry({
   const [comment, setComment] = useState(initialExpense?.comment ?? '');
   const [showComment, setShowComment] = useState(!!initialExpense?.comment);
   const [dateStr, setDateStr] = useState(
-    toDateInput(initialExpense ? new Date(initialExpense.date) : new Date())
+    toDateInput(
+      initialExpense ? new Date(initialExpense.date) :
+      initialDate ? new Date(initialDate + 'T12:00:00') :
+      new Date()
+    )
   );
   const [showDate, setShowDate] = useState(false);
   const [saving, setSaving] = useState(false);

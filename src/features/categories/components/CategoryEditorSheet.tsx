@@ -74,6 +74,7 @@ export function CategoryEditorSheet({
       color,
       isPrivate,
       folderId: selectedFolderId ?? undefined,
+      extraFolderIds: extraFolderIds.filter((id) => id !== selectedFolderId), // exclude primary
       type,
       order: initial?.order ?? 0,
       tags,

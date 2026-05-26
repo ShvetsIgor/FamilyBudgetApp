@@ -414,7 +414,13 @@ export default function HomePage() {
     } catch { /* ignore */ }
   }, [userId, allExpenses, dispatch]);
 
-  const handleCreateFolder = useCallback(async (name: string) => {
+  const handleCreateFolder = useCallback(async (
+    name: string,
+    amount: number,
+    storeId?: string,
+    storeName?: string,
+    storeGroup?: string,
+  ) => {
     if (!userId) return;
     const trimmed = name.trim();
     if (!trimmed) return;
@@ -428,15 +434,18 @@ export default function HomePage() {
     });
     dispatch(addFolderAction(newFolder));
 
-    const botMsg = await addMessage({
-      userId,
-      senderId: 'bot' as const,
-      kind: 'bot' as const,
-      text: `Папка «${trimmed}» создана. Добавь категории в разделе категорий — потом запиши трату заново.`,
-      status: 'saved' as const,
+    // Navigate to split UI with the new folder pre-selected
+    const params = new URLSearchParams({
+      fromChat: 'true',
+      amount: String(amount),
+      folderId: newFolder.id,
+      folderName: newFolder.name,
+      ...(storeId ? { storeId } : {}),
+      ...(storeName ? { storeName } : {}),
+      ...(storeGroup ? { storeGroup } : {}),
     });
-    void botMsg;
-  }, [userId, dispatch]);
+    router.push(`/expenses/new?${params.toString()}`);
+  }, [userId, dispatch, router]);
 
   const handleFutureConfirm = useCallback(async (botMsgId: string, data: FutureCardData) => {
     if (!userId || sendingRef.current) return;

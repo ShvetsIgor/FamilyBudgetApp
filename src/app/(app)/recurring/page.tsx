@@ -113,6 +113,7 @@ export default function RecurringPage() {
                 categoryId: data.categoryId, date: data.startDate,
                 paymentMethod: 'card', splits: [], tags: ['recurring'], privacy: 'regular',
                 store: data.name, comment: data.comment || undefined,
+                recurringId: added.id,
               });
               dispatch(prependExpense(exp));
             } catch { /* non-critical — recurring still saved */ }

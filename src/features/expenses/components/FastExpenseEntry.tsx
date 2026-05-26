@@ -40,6 +40,8 @@ interface Props {
   /** When set: auto-open split picker filtered to this folder (from chat tag-learning flow) */
   initialFolderId?: string;
   initialFolderName?: string;
+  /** ISO date string from chat parser (e.g. "вчера", "15 мая") — pre-fills the date field */
+  initialDate?: string;
 }
 
 export function FastExpenseEntry({
@@ -51,6 +53,7 @@ export function FastExpenseEntry({
   initialStoreGroup,
   initialFolderId,
   initialFolderName,
+  initialDate,
 }: Props) {
   const router = useRouter();
   const dispatch = useAppDispatch();

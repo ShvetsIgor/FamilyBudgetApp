@@ -968,7 +968,7 @@ export function CategoriesHub() {
                 whiteSpace: 'nowrap',
               }}
             >
-              + Папка
+              + Раздел
             </button>
             <button
               onClick={() => setEditor({ open: true })}

@@ -486,7 +486,7 @@ export function CategoriesHub() {
 
   const handleReset = async () => {
     if (!user) return;
-    if (!confirm('Сбросить все категории к стандартным? Ваши кастомные категории и папки будут удалены.')) return;
+    if (!confirm('Сбросить все категории к стандартным? Ваши кастомные категории и разделы будут удалены.')) return;
     const idMap = await resetCategoriesToDefaults(user.id);
     dispatch(setCategories({ type: 'expense', categories: [] }));
     dispatch(setFolders({ type: 'expense', folders: [] }));

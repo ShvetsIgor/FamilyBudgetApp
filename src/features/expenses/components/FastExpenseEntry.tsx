@@ -927,5 +927,6 @@ export function FastExpenseEntry({
         }
       }}
     />
+    </>
   );
 }

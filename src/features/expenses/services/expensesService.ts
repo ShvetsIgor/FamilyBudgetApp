@@ -106,6 +106,7 @@ export interface AddExpenseInput {
   splits: SplitItem[];
   items?: ExpenseItem[];
   goalId?: string;
+  recurringId?: string;
 }
 
 export async function addExpense(input: AddExpenseInput): Promise<SerializableExpense> {

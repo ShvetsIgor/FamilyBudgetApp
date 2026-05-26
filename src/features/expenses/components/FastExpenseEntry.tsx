@@ -538,14 +538,19 @@ export function FastExpenseEntry({
         {/* Add split button row */}
         <div className="flex gap-2 flex-shrink-0">
           <button
-            onClick={openPicker}
+            onClick={() => {
+              if (activeFolderId) setPickerGroupId(activeFolderId);
+              openPicker();
+            }}
             className="flex-1 rounded-[14px] py-2.5 flex items-center justify-center gap-1.5 text-sm font-extrabold transition-all border-2 border-dashed"
             style={{ borderColor: catColor + '77', color: catColor, background: 'transparent' }}
           >
             <span className="text-lg leading-none">＋</span>
-            {shouldSuggestSplit && splits.length === 0
-              ? 'Разбить на позиции'
-              : 'Уточнить позицию'}
+            {initialFolderId
+              ? 'Уточнить позицию'
+              : shouldSuggestSplit && splits.length === 0
+                ? 'Разбить на позиции'
+                : 'Уточнить позицию'}
           </button>
           {splits.length >= 1 && totalNum > 0 && (
             <button

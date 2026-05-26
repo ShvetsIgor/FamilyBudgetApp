@@ -1321,7 +1321,7 @@ export function CategoriesHub() {
         onSave={handleFolderSave}
         onDelete={folderEditor.folder ? async () => {
           if (!folderEditor.folder) return;
-          if (!confirm('Удалить папку? Категории останутся, но потеряют группу.')) return;
+          if (!confirm('Удалить раздел? Категории останутся, но потеряют группу.')) return;
           await handleFolderDelete(folderEditor.folder);
           setFolderEditor({ open: false });
         } : undefined}

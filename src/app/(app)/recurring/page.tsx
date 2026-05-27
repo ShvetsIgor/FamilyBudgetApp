@@ -514,7 +514,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
   }
 
   async function handleSubmit() {
-    if (!name.trim()) { setError('Введите название'); return; }
+    if (!name.trim()) { setError(t('recurring.nameRequired')); return; }
     if (amountNum <= 0 || saving) return;
 
     setError(''); setSaving(true);

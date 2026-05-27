@@ -177,6 +177,15 @@ export function FastExpenseEntry({
     () => (isEdit ? [] : draft.suggestedCategories.slice(0, 4).map((s) => s.categoryId)),
     [isEdit, draft.suggestedCategories],
   );
+  // Only categories that were the MAIN category for this merchant (not split-only items).
+  // Used for initial selectedCatId — prevents split-history categories from silently
+  // becoming the leftover row when the user opens a new expense for a known merchant.
+  const mainCatSuggestion = useMemo(
+    () => draft.suggestedCategories.find((s) =>
+      s.reasons.some((r) => r.kind === 'merchant_history' || r.kind === 'habit')
+    ),
+    [draft.suggestedCategories],
+  );
   const historyCategoryIds = useMemo(() => {
     const ids = new Set<string>();
     for (const id of suggestedCatIds) ids.add(id);

@@ -33,6 +33,7 @@ Conversational family budget tracker built around fast natural-language expense 
 - **Recurring section-first UX**: recurring payment setup labels the first picker as a section picker, blocks save when the chosen section has no categories, and offers inline category creation.
 - **History-ranked split picker**: split row clarification keeps category choice inside the row picker; previous split combos only boost section/category ordering and no longer add whole historical bundles in one click.
 - **Explicit split remainder**: partial split saves require a user-selected category for the remaining amount; historical merchant/category memory never becomes the hidden remainder category.
+- **Expense input validation**: expense writes reject invalid amount/date/category data and any split whose total exceeds the purchase amount; desktop quick-add uses real categories, not folder ids.
 - **Store split context**: opening split from chat uses the known store group to materialize/pass the matching section context, so known tags like `Даббах` continue as supermarket split flows instead of category guesses.
 - **Expanded icon colors**: category/folder icon color palette includes a broader 28-color set for more visual separation.
 

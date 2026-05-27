@@ -41,6 +41,7 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
 
   const [amount, setAmount] = useState('');
   const [selectedGroupId, setSelectedGroupId] = useState(groups[0]?.id ?? '');
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [splits, setSplits] = useState<SplitRow[]>([]);
   const [activeField, setActiveField] = useState<'total' | number>('total');
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -72,8 +73,14 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
   const totalNum = parseFloat(amount) || 0;
   const splitsSum = splits.reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
   const remainder = Math.max(0, totalNum - splitsSum);
+  const splitsOverflow = splits.length > 0 && splitsSum > totalNum + 0.01;
   const posCount = splits.filter((s) => parseFloat(s.amount) > 0).length + (remainder > 0 ? 1 : 0);
   const catColor = selectedGroup?.color ?? accent;
+  const selectedCategory = catsInGroup.find((cat) => cat.id === selectedCategoryId);
+  const needsRemainderCategory = splits.length > 0 && remainder > 0.01 && !selectedCategory;
+  const canSave = totalNum > 0 && !splitsOverflow && (
+    selectedCategoryId !== '' || (splits.length > 0 && remainder <= 0.01)
+  );
 
   function addSplit(sub: Category) {
     if (splits.find((s) => s.categoryId === sub.id)) return;
@@ -92,6 +99,7 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
 
   function changeGroup(id: string) {
     setSelectedGroupId(id);
+    setSelectedCategoryId('');
     setSplits([]);
     setActiveField('total');
     setPickerOpen(false);
@@ -99,16 +107,20 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
 
   async function handleSave() {
     if (!user || totalNum <= 0 || saving) return;
-    setSaving(true);
     const splitItems: SplitItem[] = splits
       .filter((sp) => parseFloat(sp.amount) > 0)
       .map((sp) => ({ categoryId: sp.categoryId, amount: parseFloat(sp.amount) }));
+    const splitFullyCoversTotal = splitItems.length > 0 && remainder <= 0.01;
+    const effectiveCategoryId = selectedCategoryId || (splitFullyCoversTotal ? splitItems[0]?.categoryId ?? '' : '');
+    if (!effectiveCategoryId || splitsOverflow || needsRemainderCategory) return;
+
+    setSaving(true);
     try {
       const exp = await addExpense({
         userId: user.id, currency, date: new Date(dateStr),
         paymentMethod, tags: [], privacy: 'regular',
         comment: comment.trim() || undefined,
-        amount: totalNum, categoryId: selectedGroupId, splits: splitItems,
+        amount: totalNum, categoryId: effectiveCategoryId, splits: splitItems,
       });
       dispatch(prependExpense(exp));
       dispatch(closeQuickAdd());
@@ -155,6 +167,38 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
           </div>
         </div>
 
+        {catsInGroup.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-1.5 px-0.5">
+              <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">{t('expense.category')}</span>
+              {needsRemainderCategory && (
+                <span className="text-[10px] font-bold text-destructive">{t('expense.selectRemainderCategory')}</span>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {catsInGroup.map((cat) => {
+                const sel = selectedCategoryId === cat.id;
+                const c = cat.color ?? catColor;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedCategoryId(sel ? '' : cat.id)}
+                    className="h-[34px] rounded-[10px] px-3 flex items-center gap-1.5 text-[10px] font-extrabold transition-all border-0"
+                    style={{
+                      background: sel ? c : c + '18',
+                      color: sel ? '#fff' : 'hsl(var(--foreground))',
+                    }}
+                  >
+                    <StickerIcon icon={cat.icon ?? 'box'} color={sel ? '#fff' : c} className="h-3.5 w-3.5" />
+                    {t.cat(cat.name)}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* ── Amount input ── */}
         <div
           className="bg-card rounded-[14px] px-4 py-3 flex items-center gap-3 border-2 transition-all"
@@ -187,7 +231,14 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
                 {selectedGroup ? t.cat(selectedGroup.name) : ''}
                 {splits.length > 0 && <span className="text-xs font-semibold text-muted-foreground ml-1">· общее</span>}
               </div>
-              {splits.length > 0 && <div className="text-[10px] text-muted-foreground">остаток после уточнений</div>}
+              {needsRemainderCategory ? (
+                <div className="text-[10px] text-destructive">{t('expense.selectRemainderCategory')}</div>
+              ) : splits.length > 0 && (
+                <div className="text-[10px] text-muted-foreground">остаток после уточнений</div>
+              )}
+              {splitsOverflow && (
+                <div className="text-[10px] text-destructive">{t('expense.splitExceedsTotal')}</div>
+              )}
             </div>
             <span className="text-base font-black tabular-nums" style={{ color: catColor }}>
               {symbol}{splits.length > 0 ? remainder.toFixed(2).replace(/\.00$/, '') : (amount || '0')}
@@ -214,6 +265,8 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
                       autoFocus
                       type="number"
                       inputMode="decimal"
+                      min="0"
+                      step="0.01"
                       value={sp.amount}
                       onChange={(e) => setSplits((prev) => prev.map((s, j) => j === i ? { ...s, amount: e.target.value } : s))}
                       className="w-24 text-right bg-transparent text-sm font-black text-foreground outline-none tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
@@ -331,11 +384,11 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
         </button>
         <button
           onClick={handleSave}
-          disabled={saving || totalNum <= 0}
+          disabled={saving || !canSave}
           className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-black text-white transition-all disabled:opacity-50"
           style={{ background: catColor, boxShadow: `0 8px 20px ${catColor}55` }}
         >
-          <StickerIcon icon={selectedGroup?.icon ?? 'box'} color="#fff" className="h-4 w-4" />
+          <StickerIcon icon={selectedCategory?.icon ?? selectedGroup?.icon ?? 'box'} color="#fff" className="h-4 w-4" />
           <span>{saving ? t('expense.numpadSaving') : t('expense.numpadSave', { symbol, total: amount || '0' })}</span>
           {posCount > 0 && <span className="opacity-70 text-xs">· {t('expense.numpadPos', { count: posCount })}</span>}
           <kbd className="ml-1 px-1.5 py-0.5 rounded bg-white/20 text-[9px] font-mono">⌘↵</kbd>

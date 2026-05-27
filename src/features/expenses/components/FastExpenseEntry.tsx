@@ -306,6 +306,10 @@ export function FastExpenseEntry({
 
   async function handleSave() {
     if (!user || totalNum <= 0 || saving) return;
+    if (splitsOverflow) {
+      window.alert(t('expense.splitExceedsTotal'));
+      return;
+    }
 
     const splitItems: SplitItem[] = splits
       .filter((sp) => parseFloat(sp.amount) > 0)

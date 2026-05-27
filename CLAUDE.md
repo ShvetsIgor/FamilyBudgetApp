@@ -191,6 +191,8 @@ Implemented:
 - recurring payment setup is section-first in the UI: empty sections block saving and offer inline category creation instead of silently falling back to a random category
 - split row clarification no longer exposes whole historical split combos as one-click inserts; split memory only raises previously used sections/categories higher in the normal picker
 - partial split saves must not use merchant history as an implicit remainder category; if remainder > 0, the user must choose a real category for that leftover amount
+- expense persistence validates amount/date/category and rejects split totals above the purchase amount; UI validation must not be the only guard
+- desktop quick-add must save real category ids only, never folder ids
 - split opened from chat should carry the known store-group section context when possible, materializing the library folder if needed
 - category and folder icon color choices now use an expanded 28-color palette
 

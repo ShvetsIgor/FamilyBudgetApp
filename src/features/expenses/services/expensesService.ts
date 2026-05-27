@@ -29,6 +29,7 @@ import type {
 } from '@/shared/types';
 
 const PAGE_SIZE = 20;
+const MONEY_EPSILON = 0.01;
 
 function expCol(userId: string) {
   return collection(getDb(), 'expenses', userId, 'items');
@@ -119,6 +120,7 @@ export interface AddExpenseInput {
 }
 
 export async function addExpense(input: AddExpenseInput): Promise<SerializableExpense> {
+  validateExpenseInput(input);
   const { userId, date, store, storeId, storeGroup, comment, ...rest } = input;
   const ref = expenseDoc(userId);
   const data = Object.fromEntries(
@@ -160,6 +162,7 @@ export interface UpdateExpenseInput extends AddExpenseInput {
 }
 
 export async function updateExpense(input: UpdateExpenseInput): Promise<SerializableExpense> {
+  validateExpenseInput(input);
   const {
     userId,
     id,
@@ -215,6 +218,34 @@ export async function updateExpense(input: UpdateExpenseInput): Promise<Serializ
     createdAt: isoToTimestamp(existing.createdAt),
     updatedAt: Timestamp.fromDate(new Date()),
   });
+}
+
+function validateExpenseInput(input: AddExpenseInput) {
+  if (!Number.isFinite(input.amount) || input.amount <= 0) {
+    throw new Error('Expense amount must be greater than zero');
+  }
+
+  if (!input.categoryId || input.categoryId.trim().length === 0) {
+    throw new Error('Expense categoryId is required');
+  }
+
+  if (!(input.date instanceof Date) || Number.isNaN(input.date.getTime())) {
+    throw new Error('Expense date is invalid');
+  }
+
+  const splitTotal = input.splits.reduce((total, split) => {
+    if (!split.categoryId || split.categoryId.trim().length === 0) {
+      throw new Error('Split categoryId is required');
+    }
+    if (!Number.isFinite(split.amount) || split.amount < 0) {
+      throw new Error('Split amount must be zero or greater');
+    }
+    return total + split.amount;
+  }, 0);
+
+  if (splitTotal > input.amount + MONEY_EPSILON) {
+    throw new Error('Split total cannot exceed expense amount');
+  }
 }
 
 export async function deleteExpense(userId: string, expense: SerializableExpense) {

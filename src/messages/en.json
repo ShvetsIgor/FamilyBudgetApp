@@ -83,6 +83,7 @@
     "addSplit": "Add Split",
     "remaining": "Remaining",
     "selectRemainderCategory": "Choose a category for the remaining amount",
+    "splitExceedsTotal": "Split total cannot exceed the purchase amount",
     "save": "Save Expense",
     "saveChanges": "Save Changes",
     "saving": "Saving…",

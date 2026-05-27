@@ -47,7 +47,7 @@ export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
   const mainPortion = expense.amount - splitSum;
   const effectiveParts =
     expense.splits.filter((s) => s.amount > 0).length + (mainPortion > 0.01 ? 1 : 0);
-  const hasSplit = hasMeaningfulSplit(expense);
+  const hasSplit = effectiveParts > 1;
   const isRecurring = expense.tags?.includes('recurring') ?? false;
   const isSavings = expense.tags?.includes('savings') ?? false;
 

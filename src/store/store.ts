@@ -1,5 +1,5 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
-import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
+import { TypedUseSelectorHook, useDispatch, useSelector, useStore } from 'react-redux';
 import authReducer, { clearAuth, setUser } from '@/features/auth/store/authSlice';
 import uiReducer from '@/features/ui/store/uiSlice';
 import categoriesReducer from '@/features/categories/store/categoriesSlice';

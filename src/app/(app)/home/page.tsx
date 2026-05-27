@@ -62,6 +62,7 @@ import type { EnvelopesCardData } from '@/features/chat/components/BotCard/Envel
 import type { Currency } from '@/shared/types';
 import { toLocalDateKey, toLocalMonthKey } from '@/shared/utils/dateKey';
 import { findFolderBlueprint } from '@/features/categories/utils/libraryLookup';
+import { getStoreGroupFolderId } from '@/features/categories/utils/storeGroupFolders';
 
 import type { SerializableChatMessage } from '@/shared/types/message';
 
@@ -521,6 +522,50 @@ export default function HomePage() {
     }
   }, [userId, dispatch, router, allExpenseFolders]);
 
+  const ensureStoreGroupFolder = useCallback(async (storeGroup?: string) => {
+    if (!userId) return undefined;
+    const preferredFolderId = getStoreGroupFolderId(storeGroup);
+    if (!preferredFolderId) return undefined;
+
+    const preset = findFolderBlueprint('expense', { id: preferredFolderId });
+    const existingFolder = allExpenseFolders.find((folder) => (
+      folder.id === preferredFolderId ||
+      (preset && normalizeLabel(folder.name) === normalizeLabel(preset.ru ?? preset.name))
+    ));
+    if (existingFolder) return existingFolder;
+    if (!preset) return undefined;
+
+    const folder = await addFolderWithId(userId, preset.id, {
+      name: preset.ru ?? preset.name,
+      icon: preset.icon,
+      color: preset.color,
+      order: allExpenseFolders.length,
+      type: 'expense',
+    });
+    dispatch(addFolderAction(folder));
+    return folder;
+  }, [userId, allExpenseFolders, dispatch]);
+
+  const handleSplitFromClarify = useCallback(async (
+    amount: number,
+    storeId?: string,
+    storeName?: string,
+    storeGroup?: string,
+    parsedDate?: string,
+  ) => {
+    const params = new URLSearchParams({ fromChat: 'true', amount: String(amount) });
+    const folder = await ensureStoreGroupFolder(storeGroup);
+    if (folder) {
+      params.set('folderId', folder.id);
+      params.set('folderName', folder.name);
+    }
+    if (storeId) params.set('storeId', storeId);
+    if (storeName) params.set('storeName', storeName);
+    if (storeGroup) params.set('storeGroup', storeGroup);
+    if (parsedDate) params.set('date', parsedDate);
+    router.push(`/expenses/new?${params.toString()}`);
+  }, [ensureStoreGroupFolder, router]);
+
   const handleFutureConfirm = useCallback(async (botMsgId: string, data: FutureCardData) => {
     if (!userId || sendingRef.current) return;
     sendingRef.current = true;
@@ -710,17 +755,13 @@ export default function HomePage() {
                       storeGroup: d.storeGroup as string | undefined,
                       isTagLearning: (d.isTagLearning as boolean | undefined) ?? false,
                     })}
-                    onSplit={cardIsIncome ? undefined : () => {
-                      const params = new URLSearchParams({
-                        fromChat: 'true',
-                        amount: String(d.amount as number),
-                        ...(d.storeId ? { storeId: d.storeId as string } : {}),
-                        ...(d.storeName ? { storeName: d.storeName as string } : {}),
-                        ...(d.storeGroup ? { storeGroup: d.storeGroup as string } : {}),
-                        ...(d.parsedDate ? { date: d.parsedDate as string } : {}),
-                      });
-                      router.push(`/expenses/new?${params.toString()}`);
-                    }}
+                    onSplit={cardIsIncome ? undefined : () => handleSplitFromClarify(
+                      d.amount as number,
+                      d.storeId as string | undefined,
+                      d.storeName as string | undefined,
+                      d.storeGroup as string | undefined,
+                      d.parsedDate as string | undefined,
+                    )}
                     onCreateFolder={cardIsIncome ? undefined : (name) => handleCreateFolder(name, d.amount as number, d.storeId as string | undefined, d.storeName as string | undefined, d.storeGroup as string | undefined, d.parsedDate as string | undefined)}
                     onOtherText={cardIsIncome ? undefined : (text) => {
                       const itemHit = matchItem(text.toLowerCase());

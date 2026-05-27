@@ -190,6 +190,8 @@ Implemented:
 - empty folders created from chat no longer send `FastExpenseEntry` into a broken state; the flow opens with folder context intact and supports immediate inline category creation
 - recurring payment setup is section-first in the UI: empty sections block saving and offer inline category creation instead of silently falling back to a random category
 - split row clarification no longer exposes whole historical split combos as one-click inserts; split memory only raises previously used sections/categories higher in the normal picker
+- partial split saves must not use merchant history as an implicit remainder category; if remainder > 0, the user must choose a real category for that leftover amount
+- split opened from chat should carry the known store-group section context when possible, materializing the library folder if needed
 - category and folder icon color choices now use an expanded 28-color palette
 
 ## Known Gaps

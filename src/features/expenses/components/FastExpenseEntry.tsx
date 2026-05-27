@@ -273,9 +273,14 @@ export function FastExpenseEntry({
       return;
     }
 
+    if (fromChat && initialStore) {
+      setSelectedCatId('');
+      return;
+    }
+
     const suggestedCategoryId = suggestedCatIds.find((id) => activeExpCats.some((cat) => cat.id === id)) ?? '';
     setSelectedCatId(suggestedCategoryId || activeExpCats[0]?.id || '');
-  }, [initialExpense, initialStore, initialFolderId, suggestedCatIds, activeExpCats, getCatsInGroup, openPicker, setPickerGroupId]);
+  }, [initialExpense, initialStore, initialFolderId, fromChat, suggestedCatIds, activeExpCats, getCatsInGroup, openPicker, setPickerGroupId]);
 
   const handleFolderSwitch = useCallback((folderId: string) => {
     setActiveFolderId(folderId);
@@ -313,15 +318,18 @@ export function FastExpenseEntry({
       ? activeFolderCats.some((cat) => cat.id === selectedCatId)
       : true;
     const needsExplicitCategoryForRemainder =
-      !!activeFolderId && remainder > 0 && (!selectedCatValid || !selectedCatInActiveFolder);
+      splits.length > 0 && remainder > 0.01 && (!selectedCatValid || !selectedCatInActiveFolder);
 
     if (needsExplicitCategoryForRemainder) {
-      window.alert(t('categories.selectCategory'));
+      window.alert(t('expense.selectRemainderCategory'));
       return;
     }
 
+    const splitFullyCoversTotal = splitItems.length > 0 && remainder <= 0.01;
     const effectiveCatId = (
-      activeFolderId
+      splitFullyCoversTotal && (!selectedCatValid || !selectedCatInActiveFolder)
+        ? (splitItems[0]?.categoryId ?? '')
+        : activeFolderId
         ? (
             selectedCatValid && selectedCatInActiveFolder
               ? selectedCatId
@@ -423,8 +431,13 @@ export function FastExpenseEntry({
   if (!user) return null;
 
   const displayIcon = selectedCat?.icon ?? activeFolder?.icon ?? 'box';
-  const displayName = selectedCat ? t.cat(selectedCat.name) : activeFolder ? t.cat(activeFolder.name) : '';
+  const displayName = selectedCat ? t.cat(selectedCat.name) : activeFolder ? t.cat(activeFolder.name) : initialStore ?? t('expense.category');
   const catColor = selectedCat?.color ?? activeFolder?.color ?? '#E07A5F';
+  const selectedCatInActiveFolderForUi = activeFolderId
+    ? activeFolderCats.some((cat) => cat.id === selectedCatId)
+    : true;
+  const missingRemainderCategory =
+    splits.length > 0 && remainder > 0.01 && (!selectedCat || !selectedCatInActiveFolderForUi);
 
   // Picker: folder → real categories in that folder
   // pickerGroupId is a folder ID — look up in topFolders, NOT allCats
@@ -563,7 +576,9 @@ export function FastExpenseEntry({
             {activeFolderId && !selectedCat && splits.length === 0 && (
               <div className="text-[11px] text-muted-foreground font-semibold mt-0.5">{t('categories.selectCategory')}</div>
             )}
-            {splits.length > 0 && (
+            {missingRemainderCategory ? (
+              <div className="text-[11px] text-destructive font-semibold mt-0.5">{t('expense.selectRemainderCategory')}</div>
+            ) : splits.length > 0 && (
               <div className="text-[11px] text-muted-foreground font-semibold mt-0.5">остаток после уточнений</div>
             )}
             {splitsOverflow && (

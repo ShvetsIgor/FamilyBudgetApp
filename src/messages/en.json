@@ -82,6 +82,7 @@
     "split": "Split Expense",
     "addSplit": "Add Split",
     "remaining": "Remaining",
+    "selectRemainderCategory": "Choose a category for the remaining amount",
     "save": "Save Expense",
     "saveChanges": "Save Changes",
     "saving": "Saving…",

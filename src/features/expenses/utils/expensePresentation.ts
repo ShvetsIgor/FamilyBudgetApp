@@ -110,9 +110,5 @@ export function matchesExpenseListFilter(
     );
   }
 
-  if (filterKey.startsWith('folder:')) {
-    return false;
-  }
-
   return false;
 }

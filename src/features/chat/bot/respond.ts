@@ -456,7 +456,7 @@ export async function respondToUserMessage(
     });
   } catch {
     return {
-      messages: [makeBotMsg(userId, { text: 'Не удалось сохранить 😔 Попробуй ещё раз' })],
+      messages: [makeBotMsg(userId, { text: saveErrorPhrase(ctx.language) })],
     };
   }
 

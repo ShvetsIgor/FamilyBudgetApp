@@ -207,7 +207,7 @@ export async function respondToUserMessage(
         comment: parsed.note || undefined,
       });
     } catch {
-      return { messages: [makeBotMsg(userId, { text: 'Не удалось сохранить 😔 Попробуй ещё раз' })] };
+      return { messages: [makeBotMsg(userId, { text: saveErrorPhrase(ctx.language) })] };
     }
 
     await updateMessage(userId, userMsg.id, { status: 'saved' });

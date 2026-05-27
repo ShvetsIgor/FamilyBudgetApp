@@ -89,13 +89,13 @@ function normalizeLabel(value: string): string {
 
 export default function HomePage() {
   const dispatch = useAppDispatch();
+  const appStore = useAppStore();
   const router = useRouter();
   const t = useT();
   const userId = useAppSelector((s) => s.auth.user?.id);
   const currency = useAppSelector((s) => s.ui.currency) as Currency;
   const messages = useAppSelector((s) => s.chat.messages);
   const typing = useAppSelector((s) => s.chat.typing);
-  const state = useAppSelector((s) => s);
   const language = useAppSelector((s) => s.ui.language);
 
   const dateFnsLocale = language === 'ru' ? ru : undefined;

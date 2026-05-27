@@ -526,7 +526,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
         reminderDays, comment: comment.trim() || undefined,
       });
     } catch {
-      setError('Ошибка сохранения. Попробуйте ещё раз.');
+      setError(t('recurring.saveError'));
     } finally {
       setSaving(false);
     }

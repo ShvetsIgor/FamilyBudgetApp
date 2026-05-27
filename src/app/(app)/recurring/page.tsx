@@ -616,7 +616,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
                 <MessageSquare className="h-4 w-4" style={{ color: catColor }} />
               </div>
               <span className="flex-1 text-left text-[13px] font-bold" style={{ color: comment ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
-                {comment || 'Заметка…'}
+                {comment || t('expense.commentPlaceholder')}
               </span>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </button>

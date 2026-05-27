@@ -61,6 +61,7 @@ export default function ExpensesPage() {
   const { list: reduxExpenses, status: expStatus } = useAppSelector((s) => s.expenses);
   const categories = useAppSelector((s) => s.categories.expense);
   const folders = useAppSelector((s) => s.categories.folders.expense);
+  const language = useAppSelector((s) => s.ui.language);
 
   const currentMonth = format(new Date(), 'yyyy-MM');
   const yearMonths = getYearMonths();

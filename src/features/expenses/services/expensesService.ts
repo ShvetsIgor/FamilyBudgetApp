@@ -194,7 +194,7 @@ export async function updateExpense(input: UpdateExpenseInput): Promise<Serializ
   const statsByMonth = new Map<string, StatsDelta>();
   mergeStatsDelta(
     statsByMonth,
-    format(new Date(existing.date), 'yyyy-MM'),
+    toLocalMonthKey(existing.date),
     buildStatsDelta(existing.categoryId, existing.amount, existing.splits, -1),
   );
   mergeStatsDelta(

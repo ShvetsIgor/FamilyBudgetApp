@@ -269,6 +269,8 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "confirmDelete": "Delete this payment?",
+    "nameRequired": "Enter name",
+    "saveError": "Save failed. Please try again.",
     "selectToEdit": "Click an item to edit or add a new one",
     "markPaid": "Mark paid",
     "upcomingBills": "Upcoming bills",

@@ -58,6 +58,7 @@ export function getExpenseListMeta(
   expense: SerializableExpense,
   categories: Category[],
   folders: CategoryFolder[],
+  language = 'en',
 ): ExpenseListMeta | null {
   const category = categories.find((entry) => entry.id === expense.categoryId);
   const folder =
@@ -67,7 +68,7 @@ export function getExpenseListMeta(
 
   if (hasMeaningfulSplit(expense) && expense.storeGroup) {
     const groupFolder = getStoreGroupFolder(expense.storeGroup, folders);
-    const groupLabel = getStoreGroupLabelSource(expense.storeGroup, folders);
+    const groupLabel = getStoreGroupLabelSource(expense.storeGroup, folders, language);
     if (groupLabel) {
       return {
         key: `store-group:${expense.storeGroup}`,

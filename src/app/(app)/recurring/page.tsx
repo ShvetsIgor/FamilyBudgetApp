@@ -626,7 +626,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
                   type="text"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  placeholder="Заметка…"
+                  placeholder={t('expense.commentPlaceholder')}
                   autoFocus
                   className="mt-2 block w-full px-3 py-2 rounded-xl text-sm bg-background border border-border outline-none focus:border-primary transition-colors"
                 />

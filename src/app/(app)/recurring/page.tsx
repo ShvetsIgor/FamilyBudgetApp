@@ -521,7 +521,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
     setError(''); setSaving(true);
     try {
       await onSave({
-        name: name.trim(), amount: amountNum, currency: currency as never,
+        name: name.trim(), amount: amountNum, currency: currency as Currency,
         categoryId, frequency, startDate: parseLocalDate(startDate),
         type, typeLabel: type === 'custom' ? typeLabel.trim() || undefined : undefined,
         reminderDays, comment: comment.trim() || undefined,

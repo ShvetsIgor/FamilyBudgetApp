@@ -56,7 +56,7 @@ export async function restoreRecurringDueFromDeletedExpense(
   const deletedDueDate = toLocalDateKey(expense.date);
   const currentNextDue =
     data.nextDueDate instanceof Timestamp
-      ? format(data.nextDueDate.toDate(), 'yyyy-MM-dd')
+      ? toLocalDateKey(data.nextDueDate.toDate())
       : (data.nextDueDate as string | undefined) ?? deletedDueDate;
 
   if (deletedDueDate >= currentNextDue) {

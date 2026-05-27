@@ -403,7 +403,7 @@ export async function respondToUserMessage(
   // ── Case 2.5: future date → ask confirmation
   if (parsed.date) {
     const _now = new Date();
-    const todayStr = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-${String(_now.getDate()).padStart(2, '0')}`;
+    const todayStr = toLocalDateKey(_now);
     if (parsed.date > todayStr) {
       return {
         messages: [

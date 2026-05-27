@@ -90,16 +90,6 @@ export function getExpenseListMeta(
     };
   }
 
-  if (folder) {
-    return {
-      key: `folder:${folder.id}`,
-      labelSource: folder.name,
-      icon: folder.icon ?? 'box',
-      color: folder.color ?? '#94A3B8',
-      kind: 'category',
-    };
-  }
-
   return null;
 }
 

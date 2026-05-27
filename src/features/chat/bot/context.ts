@@ -6,6 +6,7 @@ import type { RootState } from '@/store/store';
 export interface BotContext {
   userId: string;
   currency: Currency;
+  language: string;
   categoriesById: Map<string, Category>;
   foldersById: Map<string, CategoryFolder>;
   topCategoryIds: string[];

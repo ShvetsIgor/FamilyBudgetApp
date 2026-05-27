@@ -16,6 +16,7 @@ import {
 } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { getDb } from '@/shared/lib/firebase';
+import { toLocalMonthKey } from '@/shared/utils/dateKey';
 import { restoreRecurringDueFromDeletedExpense } from '@/features/recurring/services/recurringExpenseSync';
 import type {
   Currency,

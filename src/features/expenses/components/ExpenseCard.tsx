@@ -3,10 +3,7 @@
 import { useState } from 'react';
 import { useAppSelector } from '@/store/store';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
-import {
-  getExpenseListMeta,
-  hasMeaningfulSplit,
-} from '@/features/expenses/utils/expensePresentation';
+import { getExpenseListMeta } from '@/features/expenses/utils/expensePresentation';
 import { localizeSavingsExpenseComment } from '@/features/savings/utils/savingsExpenseComment';
 import { formatAmount } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';

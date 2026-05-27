@@ -225,7 +225,7 @@ export default function HomePage() {
   const [categorySheet, setCategorySheet] = useState<ClarifyContext | null>(null);
 
   const buildEnrichedCtx = useCallback(() => {
-    const ctx = collectBotContext(state);
+    const ctx = collectBotContext(appStore.getState());
     if (!ctx) return null;
     return {
       ...ctx,
@@ -235,7 +235,7 @@ export default function HomePage() {
       dailyBudget,
       firstGoalName: savingsGoals.find((g) => !g.name?.toLowerCase().includes('savings'))?.name,
     };
-  }, [state, allExpenses, monthBudget, budgetLimits, dailyBudget, savingsGoals]);
+  }, [appStore, allExpenses, monthBudget, budgetLimits, dailyBudget, savingsGoals]);
 
   const syncChatExpenseMemory = useCallback((expense: { categoryId: string; store?: string; date: string }) => {
     const category = allExpenseCats.find((c) => c.id === expense.categoryId);

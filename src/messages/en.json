@@ -256,7 +256,7 @@
     "namePlaceholder": "Netflix, Rent…",
     "amount": "Amount",
     "type": "Type",
-    "category": "Category (optional)",
+    "category": "Category",
     "frequency": "Frequency",
     "nextDue": "Next due date",
     "remind": "Remind me before",

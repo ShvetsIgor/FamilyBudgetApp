@@ -258,7 +258,7 @@
     "namePlaceholder": "Netflix, Аренда…",
     "amount": "Сумма",
     "type": "Тип",
-    "category": "Категория (необязательно)",
+    "category": "Категория",
     "frequency": "Периодичность",
     "nextDue": "Следующая дата",
     "remind": "Напомнить за",

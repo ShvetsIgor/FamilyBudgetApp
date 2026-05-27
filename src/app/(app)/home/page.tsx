@@ -484,37 +484,41 @@ export default function HomePage() {
     if (!userId) return;
     const trimmed = name.trim();
     if (!trimmed) return;
-    const existingFolder = allExpenseFolders.find((folder) => normalizeLabel(folder.name) === normalizeLabel(trimmed));
-    const preset = findFolderBlueprint('expense', { name: trimmed });
+    try {
+      const existingFolder = allExpenseFolders.find((folder) => normalizeLabel(folder.name) === normalizeLabel(trimmed));
+      const preset = findFolderBlueprint('expense', { name: trimmed });
 
-    const newFolder = existingFolder ?? (
-      preset
-        ? await addFolderWithId(userId, preset.id, {
-            name: preset.ru ?? preset.name,
-            icon: preset.icon,
-            color: preset.color,
-            order: allExpenseFolders.length,
-            type: 'expense',
-          })
-        : await addFolder(userId, {
-            name: trimmed,
-            icon: 'box',
-            color: '#94A3B8',
-            order: allExpenseFolders.length,
-            type: 'expense',
-          })
-    );
-    if (!existingFolder) {
-      dispatch(addFolderAction(newFolder));
+      const newFolder = existingFolder ?? (
+        preset
+          ? await addFolderWithId(userId, preset.id, {
+              name: preset.ru ?? preset.name,
+              icon: preset.icon,
+              color: preset.color,
+              order: allExpenseFolders.length,
+              type: 'expense',
+            })
+          : await addFolder(userId, {
+              name: trimmed,
+              icon: 'box',
+              color: '#94A3B8',
+              order: allExpenseFolders.length,
+              type: 'expense',
+            })
+      );
+      if (!existingFolder) {
+        dispatch(addFolderAction(newFolder));
+      }
+
+      // Navigate directly to split UI — no bot message, flow continues unbroken
+      const params = new URLSearchParams({ fromChat: 'true', amount: String(amount ?? 0), folderId: newFolder.id, folderName: newFolder.name });
+      if (storeId) params.set('storeId', storeId);
+      if (storeName) params.set('storeName', storeName);
+      if (storeGroup) params.set('storeGroup', storeGroup);
+      if (parsedDate) params.set('date', parsedDate);
+      router.push(`/expenses/new?${params.toString()}`);
+    } catch (error) {
+      console.error('handleCreateFolder error:', error);
     }
-
-    // Navigate directly to split UI — no bot message, flow continues unbroken
-    const params = new URLSearchParams({ fromChat: 'true', amount: String(amount ?? 0), folderId: newFolder.id, folderName: newFolder.name });
-    if (storeId) params.set('storeId', storeId);
-    if (storeName) params.set('storeName', storeName);
-    if (storeGroup) params.set('storeGroup', storeGroup);
-    if (parsedDate) params.set('date', parsedDate);
-    router.push(`/expenses/new?${params.toString()}`);
   }, [userId, dispatch, router, allExpenseFolders]);
 
   const handleFutureConfirm = useCallback(async (botMsgId: string, data: FutureCardData) => {

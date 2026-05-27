@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useMemo, useEffect } from 'react';
+import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, MessageSquare, Calendar, ChevronLeft, Scissors, ChevronRight, Plus } from 'lucide-react';
 import { format, parseISO, isToday, isYesterday } from 'date-fns';
@@ -143,15 +143,8 @@ export function FastExpenseEntry({
   const [showDate, setShowDate] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Reset category selection if component is reused by the router for a different store
-  useEffect(() => {
-    if (!initialExpense) {
-      setSelectedCatId(activeExpCats[0]?.id ?? '');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialStore]);
-
   const scrollRef = useRef<HTMLDivElement>(null);
+  const entryContextRef = useRef('');
 
   // Folder/category editor state (used inside split picker)
   const [showFolderEditor, setShowFolderEditor] = useState(false);
@@ -167,7 +160,10 @@ export function FastExpenseEntry({
   );
 
   const { suggestedContext: predictedContext, hasMerchantHistory, shouldSuggestSplit, splitPresets } = draft;
-  const suggestedCatIds = isEdit ? [] : draft.suggestedCategories.slice(0, 4).map((s) => s.categoryId);
+  const suggestedCatIds = useMemo(
+    () => (isEdit ? [] : draft.suggestedCategories.slice(0, 4).map((s) => s.categoryId)),
+    [isEdit, draft.suggestedCategories],
+  );
 
   const totalNum = parseFloat(total) || 0;
 
@@ -190,6 +186,45 @@ export function FastExpenseEntry({
 
   // Track selected folder for the chat tag-learning flow
   const [activeFolderId, setActiveFolderId] = useState<string | null>(initialFolderId ?? null);
+  const activeFolder = useMemo(
+    () => (activeFolderId ? topFolders.find((folder) => folder.id === activeFolderId) ?? null : null),
+    [activeFolderId, topFolders],
+  );
+  const activeFolderCats = useMemo(
+    () => (activeFolderId ? getCatsInGroup(activeFolderId) : []),
+    [activeFolderId, getCatsInGroup],
+  );
+
+  useEffect(() => {
+    if (initialExpense) return;
+
+    const entryContextKey = `${initialStore ?? ''}|${initialFolderId ?? ''}`;
+    if (entryContextRef.current === entryContextKey) return;
+    entryContextRef.current = entryContextKey;
+
+    setActiveFolderId(initialFolderId ?? null);
+
+    if (initialFolderId) {
+      setSelectedCatId('');
+      if (getCatsInGroup(initialFolderId).length === 0) {
+        openPicker();
+        setPickerGroupId(initialFolderId);
+      }
+      return;
+    }
+
+    const suggestedCategoryId = suggestedCatIds.find((id) => activeExpCats.some((cat) => cat.id === id)) ?? '';
+    setSelectedCatId(suggestedCategoryId || activeExpCats[0]?.id || '');
+  }, [initialExpense, initialStore, initialFolderId, suggestedCatIds, activeExpCats, getCatsInGroup, openPicker, setPickerGroupId]);
+
+  const handleFolderSwitch = useCallback((folderId: string) => {
+    setActiveFolderId(folderId);
+    setSelectedCatId('');
+    if (getCatsInGroup(folderId).length === 0) {
+      openPicker();
+      setPickerGroupId(folderId);
+    }
+  }, [getCatsInGroup, openPicker, setPickerGroupId]);
 
   function tap(key: NumKey) {
     if (editing === 'total') {
@@ -207,19 +242,40 @@ export function FastExpenseEntry({
   async function handleSave() {
     if (!user || totalNum <= 0 || saving) return;
 
-    // Safety guard: selectedCatId must be a real active category, never a folder ID
-    const effectiveCatId = activeExpCats.some((c) => c.id === selectedCatId)
-      ? selectedCatId
-      : activeExpCats[0]?.id ?? '';
-    if (!effectiveCatId) return; // no valid categories at all
-
-    setSaving(true);
-
     const splitItems: SplitItem[] = splits
       .filter((sp) => parseFloat(sp.amount) > 0)
       // Guard: only include splits whose categoryId is a real active category
       .filter((sp) => activeExpCats.some((c) => c.id === sp.categoryId))
       .map((sp) => ({ categoryId: sp.categoryId, amount: parseFloat(sp.amount) }));
+
+    const selectedCatValid = activeExpCats.some((c) => c.id === selectedCatId);
+    const selectedCatInActiveFolder = activeFolderId
+      ? activeFolderCats.some((cat) => cat.id === selectedCatId)
+      : true;
+    const needsExplicitCategoryForRemainder =
+      !!activeFolderId && remainder > 0 && (!selectedCatValid || !selectedCatInActiveFolder);
+
+    if (needsExplicitCategoryForRemainder) {
+      window.alert(t('categories.selectCategory'));
+      return;
+    }
+
+    const effectiveCatId = (
+      activeFolderId
+        ? (
+            selectedCatValid && selectedCatInActiveFolder
+              ? selectedCatId
+              : (splitItems[0]?.categoryId ?? '')
+          )
+        : (
+            selectedCatValid
+              ? selectedCatId
+              : (suggestedCatIds[0] || activeExpCats[0]?.id || '')
+          )
+    );
+    if (!effectiveCatId) return;
+
+    setSaving(true);
 
     const base = {
       userId: user.id,
@@ -253,7 +309,7 @@ export function FastExpenseEntry({
           date: dateStr,
         }));
         if (splitItems.length > 0) {
-          const allSplitCatIds = [effectiveCatId, ...splitItems.map((s) => s.categoryId)];
+          const allSplitCatIds = Array.from(new Set([effectiveCatId, ...splitItems.map((s) => s.categoryId)]));
           dispatch(recordSplitExpense({
             merchant: initialStore,
             categoryIds: allSplitCatIds,
@@ -282,9 +338,9 @@ export function FastExpenseEntry({
             card: {
               kind: 'saved',
               data: {
-                icon: selectedCat?.icon ?? 'box',
-                color: selectedCat?.color ?? '#E07A5F',
-                title: initialStore ?? t.cat(selectedCat?.name ?? ''),
+                icon: effectiveCat?.icon ?? activeFolder?.icon ?? 'box',
+                color: effectiveCat?.color ?? activeFolder?.color ?? '#E07A5F',
+                title: initialStore ?? t.cat(effectiveCat?.name ?? selectedCat?.name ?? activeFolder?.name ?? ''),
                 catName: null,
                 groupName: null,
                 hint: `сплит · ${posCount} поз.`,
@@ -306,7 +362,9 @@ export function FastExpenseEntry({
 
   if (!user) return null;
 
-  const catColor = selectedCat?.color ?? '#E07A5F';
+  const displayIcon = selectedCat?.icon ?? activeFolder?.icon ?? 'box';
+  const displayName = selectedCat ? t.cat(selectedCat.name) : activeFolder ? t.cat(activeFolder.name) : '';
+  const catColor = selectedCat?.color ?? activeFolder?.color ?? '#E07A5F';
 
   // Picker: folder → real categories in that folder
   // pickerGroupId is a folder ID — look up in topFolders, NOT allCats
@@ -429,7 +487,7 @@ export function FastExpenseEntry({
                 return (
                   <button
                     key={f.id}
-                    onClick={() => setActiveFolderId(f.id)}
+                    onClick={() => handleFolderSwitch(f.id)}
                     className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-extrabold transition-all"
                     style={{
                       background: sel ? fc : fc + '18',
@@ -442,6 +500,62 @@ export function FastExpenseEntry({
                   </button>
                 );
               })}
+            </div>
+          )}
+
+          {activeFolderId && (
+            <div>
+              <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[.08em] mb-1.5">
+                {activeFolder ? t.cat(activeFolder.name) : t('expense.category')}
+              </div>
+              {activeFolderCats.length > 0 ? (
+                <div className="grid grid-rows-2 grid-flow-col gap-1.5 overflow-x-auto [scrollbar-width:none]" style={{ gridAutoColumns: '64px' }}>
+                  {activeFolderCats.map((cat) => {
+                    const sel = cat.id === selectedCatId;
+                    const cc = cat.color ?? activeFolder?.color ?? '#E07A5F';
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => changeCategory(cat.id)}
+                        className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
+                        style={{
+                          background: sel ? cc : 'hsl(var(--card))',
+                          boxShadow: sel ? `0 3px 8px ${cc}55` : '0 1px 3px rgba(61,44,31,.06)',
+                        }}
+                      >
+                        <StickerIcon icon={cat.icon ?? 'box'} color={sel ? '#fff' : cc} className="h-4 w-4" />
+                        <span
+                          className="text-[9px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
+                          style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}
+                        >
+                          {t.cat(cat.name)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div
+                  className="rounded-[14px] px-3 py-3 flex items-center justify-between gap-2 border-2 border-dashed"
+                  style={{ borderColor: catColor + '55', background: catColor + '0a' }}
+                >
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-extrabold text-foreground">{t('categories.selectCategory')}</div>
+                    <div className="text-[10px] text-muted-foreground font-semibold">{t('categories.newCategory')}</div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (activeFolderId) setPickerGroupId(activeFolderId);
+                      setShowCategoryEditor(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-[11px] font-extrabold border-0 text-white"
+                    style={{ background: catColor }}
+                  >
+                    <Plus size={12} strokeWidth={2.5} />
+                    {t('categories.newCategory')}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -489,14 +603,17 @@ export function FastExpenseEntry({
             border: splitsOverflow ? '1.5px solid hsl(var(--destructive))' : '1.5px solid transparent',
           }}
         >
-          <CategoryIcon icon={selectedCat?.icon ?? 'box'} color={catColor} size="md" />
+          <CategoryIcon icon={displayIcon} color={catColor} size="md" />
           <div className="flex-1 min-w-0">
             <div className="text-sm font-extrabold text-foreground">
-              {t.cat(selectedCat?.name ?? '')}
+              {displayName}
               {splits.length > 0 && (
                 <span className="text-xs font-semibold text-muted-foreground ml-1">· общее</span>
               )}
             </div>
+            {activeFolderId && !selectedCat && splits.length === 0 && (
+              <div className="text-[11px] text-muted-foreground font-semibold mt-0.5">{t('categories.selectCategory')}</div>
+            )}
             {splits.length > 0 && (
               <div className="text-[11px] text-muted-foreground font-semibold mt-0.5">остаток после уточнений</div>
             )}
@@ -873,7 +990,7 @@ export function FastExpenseEntry({
             boxShadow: `0 12px 24px ${catColor}60`,
           }}
         >
-          <StickerIcon icon={selectedCat?.icon ?? 'box'} color="#fff" className="h-5 w-5" />
+          <StickerIcon icon={displayIcon} color="#fff" className="h-5 w-5" />
           <span>{saving ? t('expense.numpadSaving') : isEdit ? t('expense.numpadSaveEdit', { symbol, total }) : t('expense.numpadSave', { symbol, total })}</span>
           {!isEdit && <span className="opacity-75 font-bold text-[13px]">· {fmtCount(posCount)}</span>}
         </button>
@@ -893,6 +1010,8 @@ export function FastExpenseEntry({
         dispatch(addFolderAction(newFolder));
         setPickerGroupId(newFolder.id);
         setActiveFolderId(newFolder.id);
+        setSelectedCatId('');
+        setShowCategoryEditor(true);
         setShowFolderEditor(false);
       }}
     />

@@ -97,6 +97,13 @@ describe('expensePresentation', () => {
     expect(meta?.kind).toBe('storeGroup');
   });
 
+  it('uses the requested language for preset store-group fallback labels', () => {
+    const meta = getExpenseListMeta(makeExpense(), categories, [], 'ru');
+
+    expect(meta?.labelSource).toBe('Супермаркет');
+    expect(meta?.kind).toBe('storeGroup');
+  });
+
   it('keeps regular expenses category-based', () => {
     const meta = getExpenseListMeta(
       makeExpense({

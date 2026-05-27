@@ -22,8 +22,14 @@ Conversational family budget tracker built around fast natural-language expense 
 - **Guided creation**: folder/category editors now suggest matching library entities before creating new ones, so preset sections like `Супермаркет` can be reused instead of duplicated.
 - **Date consistency**: chat weekly summaries, recurring notifications, and chat context use local date keys instead of mixed UTC day boundaries.
 - **Split list presentation**: split expenses in `/expenses` render and filter by merchant context (`storeGroup`, for example `Supermarket`) instead of leaking the first split category into the list header.
+- **Split save guardrails**: chat-driven split entry now keeps the remainder inside the selected folder context and refuses to fall back into an unrelated global first category.
 - **Localized savings labels**: savings contribution expenses render with the current UI label (`Накопления`, `Savings`) instead of a hard-coded English prefix.
 - **Recurring income badge**: recurring income entries persist the `recurring` tag and show a recurring marker in the income list.
+- **Recurring category validation**: recurring templates resolve to a real category before save, so new or paid recurring items cannot silently stop generating expenses because of an empty `categoryId`.
+- **Recurring backfill**: a newly created recurring payment with a start date on or before today now creates its initial expense occurrence immediately; if that expense cannot be written, the template is rolled back instead of being saved in a broken state.
+- **Localized store-group filters**: `/expenses` filter chips use the active UI language even when the label comes from preset `storeGroup` fallback metadata.
+- **Explicit folder-mode category choice**: in chat clarify split flow, choosing a section no longer auto-picks a random first category from that section; the user must choose a real leftover category or fully cover the amount with split rows.
+- **Safer folder creation handoff**: creating a new section from chat now routes into split mode without crashing on empty folders and immediately supports category creation inside that new section.
 
 ## Main Features
 
@@ -83,9 +89,9 @@ npm test
 
 Current baseline after the 2026-05-27 alignment pass:
 
-- `npm run lint` - green
+- `npm run lint` - green (one existing hook warning in `FastExpenseEntry`)
 - `npm run build` - green
-- `npm test` - `487/487` green
+- `npm test` - `489/489` green
 
 ## Reference
 

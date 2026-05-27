@@ -85,6 +85,10 @@ interface RankingContext {
   now: number;
 }
 
+function roundScore(score: number): number {
+  return Math.round(score * 1_000_000) / 1_000_000;
+}
+
 // ── Stage 2: Collect signals ──────────────────────────────────────────────────
 
 function collectSignals(item: RankableItem, ctx: RankingContext): SignalSet {
@@ -189,7 +193,7 @@ function calculateScore(signals: SignalSet): number {
       Math.min(1, signals.splitHistory.comboCount / policy.splitHistory.saturationAt);
   }
 
-  return score;
+  return roundScore(score);
 }
 
 // ── Stage 4: Build reasons ────────────────────────────────────────────────────

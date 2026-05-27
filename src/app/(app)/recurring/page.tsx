@@ -73,6 +73,20 @@ function daysUntil(dateStr: string): number {
   return differenceInDays(parseISO(dateStr), new Date());
 }
 
+function startOfDay(date: Date): Date {
+  const value = new Date(date);
+  value.setHours(0, 0, 0, 0);
+  return value;
+}
+
+function occursOnOrBeforeToday(date: Date): boolean {
+  return startOfDay(date) <= startOfDay(new Date());
+}
+
+function toLocalNoon(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0, 0);
+}
+
 function normalizeLabel(value: string): string {
   return value.trim().toLowerCase();
 }
@@ -139,19 +153,21 @@ export default function RecurringPage() {
         }));
       } else {
         const added = await addRecurring({ ...data, userId: user.id });
-        const isPast = data.startDate < new Date();
-        if (isPast) {
-          if (data.categoryId) {
-            try {
-              const exp = await addExpense({
-                userId: user.id, amount: data.amount, currency: data.currency,
-                categoryId: data.categoryId, date: data.startDate,
-                paymentMethod: 'card', splits: [], tags: ['recurring'], privacy: 'regular',
-                store: data.name, comment: data.comment || undefined,
-                recurringId: added.id,
-              });
-              dispatch(prependExpense(exp));
-            } catch { /* non-critical — recurring still saved */ }
+        const shouldCreateInitialOccurrence = occursOnOrBeforeToday(data.startDate);
+        if (shouldCreateInitialOccurrence) {
+          try {
+            const exp = await addExpense({
+              userId: user.id, amount: data.amount, currency: data.currency,
+              categoryId: data.categoryId, date: toLocalNoon(data.startDate),
+              paymentMethod: 'card', splits: [], tags: ['recurring'], privacy: 'regular',
+              store: data.name, comment: data.comment || undefined,
+              recurringId: added.id,
+              isRecurring: true,
+            });
+            dispatch(prependExpense(exp));
+          } catch (expenseError) {
+            await deleteRecurring(user.id, added.id).catch(() => {});
+            throw expenseError;
           }
           try {
             dispatch(addRecurringItem(await advanceToNextFutureDue(user.id, added)));
@@ -518,11 +534,17 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
     if (!name.trim()) { setError(t('recurring.nameRequired')); return; }
     if (amountNum <= 0 || saving) return;
 
+    const effectiveCategoryId = categoryId || (selectedGroupId ? getCatsInGroup(selectedGroupId)[0]?.id ?? '' : '');
+    if (!effectiveCategoryId) {
+      setError(t('categories.selectCategory'));
+      return;
+    }
+
     setError(''); setSaving(true);
     try {
       await onSave({
         name: name.trim(), amount: amountNum, currency: currency as Currency,
-        categoryId, frequency, startDate: parseLocalDate(startDate),
+        categoryId: effectiveCategoryId, frequency, startDate: parseLocalDate(startDate),
         type, typeLabel: type === 'custom' ? typeLabel.trim() || undefined : undefined,
         reminderDays, comment: comment.trim() || undefined,
       });

@@ -50,9 +50,9 @@ npm test
 
 Current verified baseline after the 2026-05-27 alignment pass:
 
-- `npm run lint` - green
+- `npm run lint` - green (one existing hook warning in `FastExpenseEntry`)
 - `npm run build` - green
-- `npm test` - `487/487` green
+- `npm test` - `489/489` green
 
 ## Project Structure
 
@@ -175,13 +175,19 @@ Implemented:
 - local-day helper introduced and applied to weekly/recurring/store-profile paths
 - `Categories` removed from primary desktop sidebar navigation
 - split expenses in `/expenses` now show and filter by merchant context instead of the first split category
+- chat split saves keep fallback category selection inside the chosen folder context instead of falling through to an unrelated global first category
 - test baseline updated and back to green
 - category reset now clears remote `storeProfiles` and learned keywords, not only local Redux memory
 - expense reset switches the expense side into library-first mode, so preset expense folders do not silently re-seed on the next auth load
 - chat clarify fallback can offer library folders even when no expense folders are active, and selecting one materializes that folder before continuing to split UI
 - folder/category editors now suggest preset library matches before creating new entities, reducing duplicate sections like `Супермаркет`
 - recurring form can create or reuse sections and categories inline, and recurring-generated expense deletion restores the linked template due date instead of leaving it advanced
+- recurring templates now resolve a real category before save, so mark-paid and first-run generation do not silently stop on empty `categoryId`
+- newly created recurring templates backfill their initial occurrence when the start date is today or earlier; if that occurrence cannot be written, the template is rolled back instead of persisting half-broken
+- `/expenses` context filter chips pass the active locale through preset `storeGroup` fallback labels instead of defaulting those chips to English
 - savings contribution comments are localized at render/save time, and recurring incomes persist a `recurring` tag for list presentation
+- chat folder-clarify flow no longer auto-selects the first category inside the chosen folder; leftover category choice is explicit, while fully covered split rows can still save without a fake fallback
+- empty folders created from chat no longer send `FastExpenseEntry` into a broken state; the flow opens with folder context intact and supports immediate inline category creation
 
 ## Known Gaps
 

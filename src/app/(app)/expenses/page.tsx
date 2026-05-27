@@ -136,14 +136,14 @@ export default function ExpensesPage() {
 
   const filterOptions = expenses.reduce<Array<{ key: string; icon: string; color: string; label: string }>>(
     (acc, expense) => {
-      const meta = getExpenseListMeta(expense, categories, folders);
-      if (!meta) return acc;
-      if (acc.some((option) => option.key === meta.key)) return acc;
+      const localizedMeta = getExpenseListMeta(expense, categories, folders, language);
+      if (!localizedMeta) return acc;
+      if (acc.some((option) => option.key === localizedMeta.key)) return acc;
       acc.push({
-        key: meta.key,
-        icon: meta.icon,
-        color: meta.color,
-        label: t.cat(meta.labelSource),
+        key: localizedMeta.key,
+        icon: localizedMeta.icon,
+        color: localizedMeta.color,
+        label: t.cat(localizedMeta.labelSource),
       });
       return acc;
     },

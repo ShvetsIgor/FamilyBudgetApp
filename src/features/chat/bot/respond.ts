@@ -17,6 +17,12 @@ function nowTimestamp(): string {
   return new Date().toISOString();
 }
 
+function saveErrorPhrase(language: string): string {
+  return language === 'ru'
+    ? 'Не удалось сохранить 😔 Попробуй ещё раз'
+    : "Couldn't save 😔 Please try again";
+}
+
 function makeBotMsg(
   userId: string,
   overrides: Partial<Omit<SerializableChatMessage, 'id' | 'userId' | 'senderId' | 'kind' | 'createdAt'>>

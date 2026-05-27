@@ -60,7 +60,7 @@ import type { MorningCardData } from '@/features/chat/components/BotCard/Morning
 import type { WeeklyCardData } from '@/features/chat/components/BotCard/WeeklyCard';
 import type { EnvelopesCardData } from '@/features/chat/components/BotCard/EnvelopesCard';
 import type { Currency } from '@/shared/types';
-import { toLocalDateKey } from '@/shared/utils/dateKey';
+import { toLocalDateKey, toLocalMonthKey } from '@/shared/utils/dateKey';
 import { findFolderBlueprint } from '@/features/categories/utils/libraryLookup';
 
 import type { SerializableChatMessage } from '@/shared/types/message';

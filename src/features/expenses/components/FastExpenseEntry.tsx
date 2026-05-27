@@ -143,6 +143,14 @@ export function FastExpenseEntry({
   const [showDate, setShowDate] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Reset category selection if component is reused by the router for a different store
+  useEffect(() => {
+    if (!initialExpense) {
+      setSelectedCatId(activeExpCats[0]?.id ?? '');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialStore]);
+
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Folder/category editor state (used inside split picker)

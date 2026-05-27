@@ -591,8 +591,8 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
               <span className="flex-1 text-left text-[13px] font-bold text-foreground">
                 {(() => {
                   const d = parseISO(startDate);
-                  if (isToday(d)) return 'Сегодня';
-                  if (isYesterday(d)) return 'Вчера';
+                  if (isToday(d)) return t('common.today');
+                  if (isYesterday(d)) return t('common.yesterday');
                   return format(d, 'd MMMM yyyy', { locale: ru });
                 })()}
               </span>

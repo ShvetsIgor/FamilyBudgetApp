@@ -313,97 +313,99 @@ export default function HomePage() {
     isTagLearning?: boolean,
   ) => {
     if (!userId || sendingRef.current) return;
-
-    // isTagLearning + folder chip → ensure folder exists, then navigate to split UI
-    if (isTagLearning) {
-      const existingFolder = allExpenseFolders.find((folder) => (
-        folder.id === chip.id || normalizeLabel(folder.name) === normalizeLabel(chip.name)
-      ));
-      const preset = findFolderBlueprint('expense', { id: chip.id, name: chip.name });
-
-      let folder = existingFolder;
-      if (!folder && preset) {
-        folder = await addFolderWithId(userId, preset.id, {
-          name: preset.ru ?? preset.name,
-          icon: preset.icon,
-          color: preset.color,
-          type: 'expense',
-          order: allExpenseFolders.length,
-        });
-        dispatch(addFolderAction(folder));
-      }
-
-      if (folder) {
-        const params = new URLSearchParams({
-          fromChat: 'true',
-          amount: String(amount),
-          folderId: folder.id,
-          folderName: folder.name,
-        });
-        if (storeId) params.set('storeId', storeId);
-        if (storeName) params.set('storeName', storeName);
-        if (storeGroup) params.set('storeGroup', storeGroup);
-        if (parsedDate) params.set('date', parsedDate);
-        router.push(`/expenses/new?${params.toString()}`);
-        return;
-      }
-    }
-
     sendingRef.current = true;
 
-    if (storeId) {
-      // Update store purchase history (store ≠ category — probabilistic memory)
-      dispatch(upsertProfile({ storeId, storeName: storeName!, storeGroup, categoryId: chip.id }));
-      updateStoreProfile(userId, storeId, storeName!, chip.id, storeGroup).catch(() => {});
-    } else {
-      // Teach learned keyword for non-store inputs
-      const keyword = parsedNote?.trim() || chip.name.toLowerCase();
-      const hit = { categoryId: chip.id };
-      await saveLearnedKeyword(userId, keyword.toLowerCase(), hit);
-      addLearned(keyword.toLowerCase(), hit); // optimistic update so next parse uses it immediately
-    }
-
-    dispatch(setTyping(true));
     try {
-      const enrichedCtx = buildEnrichedCtx();
-      if (!enrichedCtx) return;
+      // isTagLearning + folder chip → ensure folder exists, then navigate to split UI
+      if (isTagLearning) {
+        const existingFolder = allExpenseFolders.find((folder) => (
+          folder.id === chip.id || normalizeLabel(folder.name) === normalizeLabel(chip.name)
+        ));
+        const preset = findFolderBlueprint('expense', { id: chip.id, name: chip.name });
 
-      // Add visible user message
-      const storeLabel = storeName ? ` · ${storeName}` : '';
-      const userMsg = await addMessage({
-        userId,
-        senderId: userId,
-        kind: 'user',
-        text: `${amount} ${t.cat(chip.name).toLowerCase()}${storeLabel}${parsedDateLabel ? ` · ${parsedDateLabel}` : ''}`,
-        status: 'saved',
-      });
+        let folder = existingFolder;
+        if (!folder && preset) {
+          folder = await addFolderWithId(userId, preset.id, {
+            name: preset.ru ?? preset.name,
+            icon: preset.icon,
+            color: preset.color,
+            type: 'expense',
+            order: allExpenseFolders.length,
+          });
+          dispatch(addFolderAction(folder));
+        }
 
-      await new Promise((r) => setTimeout(r, 150));
-
-      // Bypass re-parse — we already know the category and date
-      const parsed: import('@/shared/types/message').ParseResult = {
-        amount,
-        categoryId: chip.id,
-        confidence: 'high',
-        date: parsedDate,
-        dateLabel: parsedDateLabel,
-        note: parsedNote,
-        storeId,
-        storeName,
-        storeGroup,
-      };
-
-      const reply = await respondToUserMessage(userMsg, parsed, enrichedCtx);
-      for (const botMsg of reply.messages) {
-        await addMessage(botMsg);
+        if (folder) {
+          const params = new URLSearchParams({
+            fromChat: 'true',
+            amount: String(amount),
+            folderId: folder.id,
+            folderName: folder.name,
+          });
+          if (storeId) params.set('storeId', storeId);
+          if (storeName) params.set('storeName', storeName);
+          if (storeGroup) params.set('storeGroup', storeGroup);
+          if (parsedDate) params.set('date', parsedDate);
+          router.push(`/expenses/new?${params.toString()}`);
+          return;
+        }
       }
-      if (reply.expense) {
-        dispatch(prependExpense(reply.expense));
-        syncChatExpenseMemory(reply.expense);
+
+      if (storeId) {
+        // Update store purchase history (store ≠ category — probabilistic memory)
+        dispatch(upsertProfile({ storeId, storeName: storeName!, storeGroup, categoryId: chip.id }));
+        updateStoreProfile(userId, storeId, storeName!, chip.id, storeGroup).catch(() => {});
+      } else {
+        // Teach learned keyword for non-store inputs
+        const keyword = parsedNote?.trim() || chip.name.toLowerCase();
+        const hit = { categoryId: chip.id };
+        await saveLearnedKeyword(userId, keyword.toLowerCase(), hit);
+        addLearned(keyword.toLowerCase(), hit); // optimistic update so next parse uses it immediately
       }
-      if (reply.income) dispatch(prependIncome(reply.income));
+
+      dispatch(setTyping(true));
+      try {
+        const enrichedCtx = buildEnrichedCtx();
+        if (!enrichedCtx) return;
+
+        // Add visible user message
+        const storeLabel = storeName ? ` · ${storeName}` : '';
+        const userMsg = await addMessage({
+          userId,
+          senderId: userId,
+          kind: 'user',
+          text: `${amount} ${t.cat(chip.name).toLowerCase()}${storeLabel}${parsedDateLabel ? ` · ${parsedDateLabel}` : ''}`,
+          status: 'saved',
+        });
+
+        await new Promise((r) => setTimeout(r, 150));
+
+        // Bypass re-parse — we already know the category and date
+        const parsed: import('@/shared/types/message').ParseResult = {
+          amount,
+          categoryId: chip.id,
+          confidence: 'high',
+          date: parsedDate,
+          dateLabel: parsedDateLabel,
+          note: parsedNote,
+          storeId,
+          storeName,
+          storeGroup,
+        };
+
+        const reply = await respondToUserMessage(userMsg, parsed, enrichedCtx);
+        for (const botMsg of reply.messages) {
+          await addMessage(botMsg);
+        }
+        if (reply.expense) {
+          dispatch(prependExpense(reply.expense));
+          syncChatExpenseMemory(reply.expense);
+        }
+        if (reply.income) dispatch(prependIncome(reply.income));
+      } finally {
+        dispatch(setTyping(false));
+      }
     } finally {
-      dispatch(setTyping(false));
       sendingRef.current = false;
     }
   }, [userId, allExpenseFolders, buildEnrichedCtx, dispatch, router, addLearned, t, syncChatExpenseMemory]);

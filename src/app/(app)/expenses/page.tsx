@@ -126,7 +126,7 @@ export default function ExpensesPage() {
   }, [selectedMonth]);
 
   const filteredExpenses = expenses.filter((e) => {
-    const listMeta = getExpenseListMeta(e, categories, folders);
+    const listMeta = getExpenseListMeta(e, categories, folders, language);
     const q = search.toLowerCase();
     const matchesSearch = !q || [e.store, e.comment, categories.find((c) => c.id === e.categoryId)?.name, listMeta?.labelSource]
       .some((v) => v?.toLowerCase().includes(q));

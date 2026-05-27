@@ -42,6 +42,7 @@ import {
   getFolderLibraryBlueprints,
 } from '@/features/categories/utils/libraryLookup';
 import { formatAmount, parseLocalDate } from '@/shared/utils/currency';
+import type { Currency } from '@/shared/types';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { MiniCalendar } from '@/shared/components/MiniCalendar';
 import { cn } from '@/shared/utils/cn';

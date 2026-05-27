@@ -223,7 +223,7 @@ export async function deleteExpense(userId: string, expense: SerializableExpense
   queueMonthlyStatsUpdate(
     batch,
     userId,
-    format(new Date(expense.date), 'yyyy-MM'),
+    toLocalMonthKey(expense.date),
     buildStatsDelta(expense.categoryId, expense.amount, expense.splits, -1),
   );
   await batch.commit();

@@ -1,6 +1,6 @@
 # family.budget
 
-Conversational family budget tracker built around fast natural-language expense entry, split purchases, and history-based learning.
+Conversational family budget tracker built around fast natural-language expense entry, split purchases, and deterministic history-based learning.
 
 ## Product Principles
 
@@ -13,11 +13,12 @@ Conversational family budget tracker built around fast natural-language expense 
 ## Current Architecture
 
 - **Primary expense flow**: chat input on `/home` -> parser -> bot clarify/save flow -> optional split route to `/expenses/new`.
-- **Shared memory layer**: chat saves and manual saves now both feed `suggestionMemory` plus store profiles, so merchant history is no longer isolated to the numpad path.
-- **Atomic expense writes**: create, edit, and delete now update the expense document and `monthlyStats` in a single batched Firestore write.
+- **Shared memory layer**: chat saves and manual saves both feed `suggestionMemory` plus store profiles, so merchant history is no longer isolated to the numpad path.
+- **Atomic expense writes**: create, edit, and delete update the expense document and `monthlyStats` in a single batched Firestore write.
 - **Session isolation**: Redux state resets when auth becomes `null`, preventing cross-user stale slices after logout/login switches.
-- **Recurring expense model**: generated expenses now keep `recurringId` and `isRecurring` aligned.
+- **Recurring expense model**: generated expenses keep `recurringId` and `isRecurring` aligned.
 - **Date consistency**: chat weekly summaries, recurring notifications, and chat context use local date keys instead of mixed UTC day boundaries.
+- **Split list presentation**: split expenses in `/expenses` render and filter by merchant context (`storeGroup`, for example `Supermarket`) instead of leaking the first split category into the list header.
 
 ## Main Features
 
@@ -76,9 +77,9 @@ npm test
 
 Current baseline after the 2026-05-27 alignment pass:
 
-- `npm run lint` — green
-- `npm run build` — green
-- `npm test` — `483/483` green
+- `npm run lint` - green
+- `npm run build` - green
+- `npm test` - `487/487` green
 
 ## Reference
 

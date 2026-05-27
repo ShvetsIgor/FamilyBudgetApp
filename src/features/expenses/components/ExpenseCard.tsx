@@ -3,9 +3,12 @@
 import { useState } from 'react';
 import { useAppSelector } from '@/store/store';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
+import {
+  getExpenseListMeta,
+  hasMeaningfulSplit,
+} from '@/features/expenses/utils/expensePresentation';
 import { formatAmount } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
-import { cn } from '@/shared/utils/cn';
 import type { SerializableExpense } from '@/shared/types';
 
 interface Props {
@@ -23,17 +26,18 @@ const PAYMENT_ICONS: Record<string, string> = {
 
 export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
   const allCategories = useAppSelector((s) => s.categories.expense);
+  const folders = useAppSelector((s) => s.categories.folders.expense);
   const currency = useAppSelector((s) => s.ui.currency);
   const t = useT();
   const [expanded, setExpanded] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const category = allCategories.find((c) => c.id === expense.categoryId);
-  const folders = useAppSelector((s) => s.categories.folders.expense);
   const folderCat = category?.folderId ? folders.find((f) => f.id === category.folderId) : null;
+  const listMeta = getExpenseListMeta(expense, allCategories, folders);
   const categoryLabel = category ? t.cat(category.name) : '';
   const folderLabel = folderCat ? t.cat(folderCat.name) : '';
-  const subtitleLabel = categoryLabel || folderLabel || '';
+  const subtitleLabel = listMeta ? t.cat(listMeta.labelSource) : categoryLabel || folderLabel || '';
 
   // Top line: comment or store name; if neither — category name
   const topLine = expense.comment || expense.store || categoryLabel;
@@ -42,7 +46,7 @@ export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
   const mainPortion = expense.amount - splitSum;
   const effectiveParts =
     expense.splits.filter((s) => s.amount > 0).length + (mainPortion > 0.01 ? 1 : 0);
-  const hasSplit = effectiveParts > 1;
+  const hasSplit = hasMeaningfulSplit(expense);
   const isRecurring = expense.tags?.includes('recurring') ?? false;
   const isSavings = expense.tags?.includes('savings') ?? false;
 
@@ -51,8 +55,8 @@ export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
       <div className="flex w-full items-center gap-3 px-4 py-3">
         {/* Icon — clickable to open detail */}
         <button onClick={onClick} className="shrink-0 active:opacity-70 transition-opacity">
-          {category ? (
-            <CategoryIcon icon={category.icon} color={category.color} size="md" />
+          {listMeta ? (
+            <CategoryIcon icon={listMeta.icon} color={listMeta.color} size="md" />
           ) : (
             <div className="h-10 w-10 rounded-xl bg-muted" />
           )}

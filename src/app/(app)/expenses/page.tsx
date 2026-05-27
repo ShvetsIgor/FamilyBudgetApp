@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { format, parseISO, isToday, isYesterday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Plus } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
-import { setExpenses, mergeExpenses, removeExpense, prependExpense } from '@/features/expenses/store/expensesSlice';
+import { mergeExpenses, removeExpense, prependExpense } from '@/features/expenses/store/expensesSlice';
 import { fetchMonthExpenses, deleteExpense } from '@/features/expenses/services/expensesService';
 import { ExpenseCard } from '@/features/expenses/components/ExpenseCard';
 import { UpcomingBills } from '@/features/recurring/components/UpcomingBills';
@@ -16,7 +16,10 @@ import type { SerializableExpense } from '@/shared/types';
 import { setExpensesSearch } from '@/features/ui/store/uiSlice';
 import { useT } from '@/shared/hooks/useT';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
-import { isActiveCategory } from '@/features/categories/policy/categoryPolicy';
+import {
+  getExpenseListMeta,
+  matchesExpenseListFilter,
+} from '@/features/expenses/utils/expensePresentation';
 
 function groupByDate<T extends { date: string }>(items: T[]): [string, T[]][] {
   const map = new Map<string, T[]>();
@@ -56,7 +59,7 @@ export default function ExpensesPage() {
   const currency = useAppSelector((s) => s.ui.currency);
   const { list: reduxExpenses, status: expStatus } = useAppSelector((s) => s.expenses);
   const categories = useAppSelector((s) => s.categories.expense);
-  const searchParams = useSearchParams();
+  const folders = useAppSelector((s) => s.categories.folders.expense);
 
   const currentMonth = format(new Date(), 'yyyy-MM');
   const yearMonths = getYearMonths();
@@ -117,12 +120,29 @@ export default function ExpensesPage() {
   }, [selectedMonth]);
 
   const filteredExpenses = expenses.filter((e) => {
+    const listMeta = getExpenseListMeta(e, categories, folders);
     const q = search.toLowerCase();
-    const matchesSearch = !q || [e.store, e.comment, categories.find((c) => c.id === e.categoryId)?.name]
+    const matchesSearch = !q || [e.store, e.comment, categories.find((c) => c.id === e.categoryId)?.name, listMeta?.labelSource]
       .some((v) => v?.toLowerCase().includes(q));
-    const matchesCat = !filterCatId || e.categoryId === filterCatId;
+    const matchesCat = !filterCatId || matchesExpenseListFilter(e, filterCatId);
     return matchesSearch && matchesCat;
   });
+
+  const filterOptions = expenses.reduce<Array<{ key: string; icon: string; color: string; label: string }>>(
+    (acc, expense) => {
+      const meta = getExpenseListMeta(expense, categories, folders);
+      if (!meta) return acc;
+      if (acc.some((option) => option.key === meta.key)) return acc;
+      acc.push({
+        key: meta.key,
+        icon: meta.icon,
+        color: meta.color,
+        label: t.cat(meta.labelSource),
+      });
+      return acc;
+    },
+    [],
+  );
 
   const monthTotal = expenses.reduce((s, e) => s + e.amount, 0);
   const expenseGroups = groupByDate(filteredExpenses).sort(([a], [b]) => b.localeCompare(a));
@@ -194,15 +214,14 @@ export default function ExpensesPage() {
               >
                 {t('expenses.all')}
               </button>
-              {categories
-                .filter((c) => isActiveCategory(c) && expenses.some((e) => e.categoryId === c.id))
-                .map((c) => (
+              {filterOptions.map((option) => (
                   <button
-                    key={c.id}
-                    onClick={() => setFilterCatId(filterCatId === c.id ? '' : c.id)}
-                    className={`shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${filterCatId === c.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
+                    key={option.key}
+                    onClick={() => setFilterCatId(filterCatId === option.key ? '' : option.key)}
+                    className={`shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${filterCatId === option.key ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
                   >
-                    <StickerIcon icon={c.icon} color={c.color} className="h-3.5 w-3.5" /><span>{t.cat(c.name)}</span>
+                    <StickerIcon icon={option.icon} color={option.color} className="h-3.5 w-3.5" />
+                    <span>{option.label}</span>
                   </button>
                 ))}
             </div>

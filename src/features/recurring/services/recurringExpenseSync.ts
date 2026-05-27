@@ -1,5 +1,4 @@
 import { doc, getDoc, Timestamp, updateDoc } from 'firebase/firestore';
-import { format } from 'date-fns';
 import { getDb } from '@/shared/lib/firebase';
 import { toLocalDateKey } from '@/shared/utils/dateKey';
 import type { SerializableExpense, SerializableRecurringPayment, RecurringType, RecurringFrequency, Currency } from '@/shared/types';

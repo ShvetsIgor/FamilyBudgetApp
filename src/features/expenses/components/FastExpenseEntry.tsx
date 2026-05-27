@@ -287,9 +287,11 @@ export function FastExpenseEntry({
       return;
     }
 
-    const suggestedCategoryId = suggestedCatIds.find((id) => activeExpCats.some((cat) => cat.id === id)) ?? '';
-    setSelectedCatId(suggestedCategoryId || activeExpCats[0]?.id || '');
-  }, [initialExpense, initialStore, initialFolderId, fromChat, suggestedCatIds, activeExpCats, getCatsInGroup, openPicker, setPickerGroupId]);
+    const mainId = mainCatSuggestion && activeExpCats.some((c) => c.id === mainCatSuggestion.categoryId)
+      ? mainCatSuggestion.categoryId
+      : '';
+    setSelectedCatId(mainId || activeExpCats[0]?.id || '');
+  }, [initialExpense, initialStore, initialFolderId, fromChat, mainCatSuggestion, activeExpCats, getCatsInGroup, openPicker, setPickerGroupId]);
 
   const handleFolderSwitch = useCallback((folderId: string) => {
     setActiveFolderId(folderId);

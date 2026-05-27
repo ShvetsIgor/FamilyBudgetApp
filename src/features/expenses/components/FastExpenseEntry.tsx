@@ -92,12 +92,6 @@ export function FastExpenseEntry({
 
   function initSelectedCatId() {
     if (!initialExpense) {
-      // Use buildExpenseDraft to pick best real category from merchant history
-      if (initialStore && activeExpCats.length > 0) {
-        const init = buildExpenseDraft({ merchant: initialStore }, activeExpCats, memory);
-        const topId = init.suggestedCategories[0]?.categoryId;
-        if (topId) return topId;
-      }
       return activeExpCats[0]?.id ?? '';
     }
     // Edit mode: use existing real category ID if it's still active

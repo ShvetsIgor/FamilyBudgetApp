@@ -353,7 +353,7 @@ export function FastExpenseEntry({
         : (
             selectedCatValid
               ? selectedCatId
-              : (suggestedCatIds[0] || activeExpCats[0]?.id || '')
+              : (mainCatSuggestion?.categoryId || activeExpCats[0]?.id || '')
           )
     );
     if (!effectiveCatId) return;

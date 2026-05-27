@@ -1,4 +1,4 @@
-import { doc, getDoc, Timestamp, updateDoc } from 'firebase/firestore';
+import { doc, runTransaction, Timestamp } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import { toLocalDateKey } from '@/shared/utils/dateKey';
 import type { SerializableExpense, SerializableRecurringPayment, RecurringType, RecurringFrequency, Currency } from '@/shared/types';

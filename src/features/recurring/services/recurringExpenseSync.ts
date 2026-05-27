@@ -38,31 +38,29 @@ export async function restoreRecurringDueFromDeletedExpense(
   userId: string,
   expense: SerializableExpense,
 ): Promise<SerializableRecurringPayment | null> {
-  if (!expense.recurringId || !expense.isRecurring) {
-    return null;
-  }
+  if (!expense.recurringId || !expense.isRecurring) return null;
 
   const ref = recurringDoc(userId, expense.recurringId);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) {
-    return null;
-  }
-
-  const data = snap.data() as Record<string, unknown>;
-  if ((data.isActive as boolean) === false) {
-    return null;
-  }
-
   const deletedDueDate = toLocalDateKey(expense.date);
-  const currentNextDue =
-    data.nextDueDate instanceof Timestamp
-      ? toLocalDateKey(data.nextDueDate.toDate())
-      : (data.nextDueDate as string | undefined) ?? deletedDueDate;
+  let result: SerializableRecurringPayment | null = null;
 
-  if (deletedDueDate >= currentNextDue) {
-    return null;
-  }
+  await runTransaction(getDb(), async (transaction) => {
+    const snap = await transaction.get(ref);
+    if (!snap.exists()) return;
 
-  await updateDoc(ref, { nextDueDate: deletedDueDate });
-  return toSerializableRecurring(snap.id, data, deletedDueDate);
+    const data = snap.data() as Record<string, unknown>;
+    if ((data.isActive as boolean) === false) return;
+
+    const currentNextDue =
+      data.nextDueDate instanceof Timestamp
+        ? toLocalDateKey(data.nextDueDate.toDate())
+        : (data.nextDueDate as string | undefined) ?? deletedDueDate;
+
+    if (deletedDueDate >= currentNextDue) return;
+
+    transaction.update(ref, { nextDueDate: deletedDueDate });
+    result = toSerializableRecurring(snap.id, data, deletedDueDate);
+  });
+
+  return result;
 }

@@ -180,7 +180,7 @@ export default function HomePage() {
     if (!userId || autoSentRef.current) return;
     autoSentRef.current = true;
 
-    const ctx = collectBotContext(state);
+    const ctx = collectBotContext(appStore.getState());
     if (!ctx) return;
 
     const yesterdayStr = toLocalDateKey(new Date(Date.now() - 86_400_000));

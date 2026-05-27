@@ -170,18 +170,22 @@ export default function RecurringPage() {
 
   async function handleMarkPaid(item: SerializableRecurringPayment) {
     if (!user) return;
-    if (item.categoryId) {
-      const exp = await addExpense({
-        userId: user.id, amount: item.amount, currency: item.currency,
-        categoryId: item.categoryId, date: parseISO(item.nextDueDate),
-        paymentMethod: 'card', splits: [], tags: ['recurring'], privacy: 'regular',
-        store: item.name,
-        comment: item.comment || undefined,
-        recurringId: item.id,
-      });
-      dispatch(prependExpense(exp));
+    try {
+      if (item.categoryId) {
+        const exp = await addExpense({
+          userId: user.id, amount: item.amount, currency: item.currency,
+          categoryId: item.categoryId, date: parseISO(item.nextDueDate),
+          paymentMethod: 'card', splits: [], tags: ['recurring'], privacy: 'regular',
+          store: item.name,
+          comment: item.comment || undefined,
+          recurringId: item.id,
+        });
+        dispatch(prependExpense(exp));
+      }
+      dispatch(updateRecurringItem(await markAsPaid(user.id, item)));
+    } catch (e) {
+      console.error('handleMarkPaid error:', e);
     }
-    dispatch(updateRecurringItem(await markAsPaid(user.id, item)));
   }
 
   async function handleDelete(item: SerializableRecurringPayment) {

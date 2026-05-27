@@ -165,9 +165,7 @@ export default function HomePage() {
   // Load current month expenses on home mount so todaySpent is accurate
   useEffect(() => {
     if (!userId) return;
-    const now = new Date();
-    const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    fetchMonthExpenses(userId, month)
+    fetchMonthExpenses(userId, toLocalMonthKey(new Date()))
       .then((list) => dispatch(mergeExpenses(list)))
       .catch(() => {});
   }, [userId, dispatch]);

@@ -48,9 +48,9 @@ npm run build
 npm test
 ```
 
-Current verified baseline after the 2026-05-27 alignment pass:
+Current verified baseline after the 2026-05-28 alignment pass:
 
-- `npm run lint` - green (one existing hook warning in `FastExpenseEntry`)
+- `npm run lint` - green
 - `npm run build` - green
 - `npm test` - `489/489` green
 
@@ -180,7 +180,7 @@ Implemented:
 - category reset now clears remote `storeProfiles` and learned keywords, not only local Redux memory
 - expense reset switches the expense side into library-first mode, so preset expense folders do not silently re-seed on the next auth load
 - chat clarify fallback can offer library folders even when no expense folders are active, and selecting one materializes that folder before continuing to split UI
-- folder/category editors now suggest preset library matches before creating new entities, reducing duplicate sections like `Супермаркет`
+- folder/category editors now show name-only preset library suggestions while typing; selecting a suggestion fills the label and preset metadata without activating hidden entities
 - recurring form can create or reuse sections and categories inline, and recurring-generated expense deletion restores the linked template due date instead of leaving it advanced
 - recurring templates now resolve a real category before save, so mark-paid and first-run generation do not silently stop on empty `categoryId`
 - newly created recurring templates backfill their initial occurrence when the start date is today or earlier; if that occurrence cannot be written, the template is rolled back instead of persisting half-broken
@@ -188,6 +188,9 @@ Implemented:
 - savings contribution comments are localized at render/save time, and recurring incomes persist a `recurring` tag for list presentation
 - chat folder-clarify flow no longer auto-selects the first category inside the chosen folder; leftover category choice is explicit, while fully covered split rows can still save without a fake fallback
 - empty folders created from chat no longer send `FastExpenseEntry` into a broken state; the flow opens with folder context intact and supports immediate inline category creation
+- recurring payment setup is section-first in the UI: empty sections block saving and offer inline category creation instead of silently falling back to a random category
+- split row clarification no longer exposes whole historical split combos as one-click inserts; split memory only raises previously used sections/categories higher in the normal picker
+- category and folder icon color choices now use an expanded 28-color palette
 
 ## Known Gaps
 

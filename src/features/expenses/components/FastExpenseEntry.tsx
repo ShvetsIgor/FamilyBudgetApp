@@ -24,6 +24,12 @@ import { addFolder as addFolderToDb } from '@/features/categories/services/categ
 import { FolderEditorSheet } from '@/features/categories/components/FolderEditorSheet';
 import { CategoryEditorSheet } from '@/features/categories/components/CategoryEditorSheet';
 import type { CategoryFolder } from '@/shared/types';
+import {
+  categoryBlueprintToSuggestion,
+  folderBlueprintToSuggestion,
+  getCategoryLibraryBlueprints,
+  getFolderLibraryBlueprints,
+} from '@/features/categories/utils/libraryLookup';
 
 const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫'] as const;
 type NumKey = (typeof NUMPAD_KEYS)[number];
@@ -78,9 +84,9 @@ export function FastExpenseEntry({
   };
 
   // Folders for split picker first level (UI grouping only — never saved as categoryId)
-  const topFolders = useMemo(
+  const baseTopFolders = useMemo(
     () => folderGroups.filter((g) => g.name !== 'Savings'),
-    [folderGroups]
+    [folderGroups],
   );
 
   // Real active expense categories — used for main selector, suggestions, and save
@@ -88,7 +94,14 @@ export function FastExpenseEntry({
     () => allCats.filter((c) => !c.archived && c.name !== 'Savings'),
     [allCats]
   );
-  const noFolders = topFolders.length === 0;
+  const folderSuggestions = useMemo(
+    () => getFolderLibraryBlueprints('expense').map(folderBlueprintToSuggestion),
+    [],
+  );
+  const categorySuggestions = useMemo(
+    () => getCategoryLibraryBlueprints('expense').map(categoryBlueprintToSuggestion),
+    [],
+  );
 
   function initSelectedCatId() {
     if (!initialExpense) {
@@ -110,7 +123,7 @@ export function FastExpenseEntry({
         const cat = allCats.find((c) => c.id === sp.categoryId);
         if (!cat) return null;
         // Look up the folder for display purposes (folder ID is never saved as categoryId)
-        const folder = topFolders.find((f) => f.id === cat.folderId);
+        const folder = baseTopFolders.find((f) => f.id === cat.folderId);
         return {
           categoryId: sp.categoryId,
           groupCatId: folder?.id ?? cat.id,
@@ -159,11 +172,58 @@ export function FastExpenseEntry({
     [initialStore, activeExpCats, memory],
   );
 
-  const { suggestedContext: predictedContext, hasMerchantHistory, shouldSuggestSplit, splitPresets } = draft;
+  const { shouldSuggestSplit, splitPresets } = draft;
   const suggestedCatIds = useMemo(
     () => (isEdit ? [] : draft.suggestedCategories.slice(0, 4).map((s) => s.categoryId)),
     [isEdit, draft.suggestedCategories],
   );
+  const historyCategoryIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const id of suggestedCatIds) ids.add(id);
+    for (const preset of splitPresets) {
+      for (const id of preset.categoryIds) ids.add(id);
+    }
+    return ids;
+  }, [suggestedCatIds, splitPresets]);
+
+  const getCategoryHistoryRank = useCallback((categoryId: string) => {
+    if (!historyCategoryIds.has(categoryId)) return 0;
+    const suggestionIndex = suggestedCatIds.indexOf(categoryId);
+    const suggestionBoost = suggestionIndex >= 0 ? 100 - suggestionIndex : 0;
+    const splitBoost = splitPresets.reduce(
+      (score, preset, index) => (
+        preset.categoryIds.includes(categoryId)
+          ? Math.max(score, 70 + preset.count * 5 - index)
+          : score
+      ),
+      0,
+    );
+    return Math.max(suggestionBoost, splitBoost);
+  }, [historyCategoryIds, suggestedCatIds, splitPresets]);
+
+  const sortCategoriesByHistory = useCallback(
+    (categories: Category[]) =>
+      [...categories].sort((a, b) =>
+        getCategoryHistoryRank(b.id) - getCategoryHistoryRank(a.id) ||
+        a.name.localeCompare(b.name),
+      ),
+    [getCategoryHistoryRank],
+  );
+
+  const topFolders = useMemo(
+    () =>
+      [...baseTopFolders].sort((a, b) => {
+        const aRank = Math.max(0, ...activeExpCats
+          .filter((cat) => cat.folderId === a.id || cat.extraFolderIds?.includes(a.id))
+          .map((cat) => getCategoryHistoryRank(cat.id)));
+        const bRank = Math.max(0, ...activeExpCats
+          .filter((cat) => cat.folderId === b.id || cat.extraFolderIds?.includes(b.id))
+          .map((cat) => getCategoryHistoryRank(cat.id)));
+        return bRank - aRank || a.name.localeCompare(b.name);
+      }),
+    [baseTopFolders, activeExpCats, getCategoryHistoryRank],
+  );
+  const noFolders = topFolders.length === 0;
 
   const totalNum = parseFloat(total) || 0;
 
@@ -180,7 +240,7 @@ export function FastExpenseEntry({
   });
   const {
     splits, editing, setEditing, pickerOpen, pickerGroupId, setPickerGroupId,
-    addSplit, addSplitBatch, removeSplit, openPicker, closePicker, tapOnSplit, splitEven,
+    addSplit, removeSplit, openPicker, closePicker, tapOnSplit, splitEven,
     splitsSum, remainder, splitsOverflow, posCount,
   } = splitEditor;
 
@@ -191,8 +251,8 @@ export function FastExpenseEntry({
     [activeFolderId, topFolders],
   );
   const activeFolderCats = useMemo(
-    () => (activeFolderId ? getCatsInGroup(activeFolderId) : []),
-    [activeFolderId, getCatsInGroup],
+    () => (activeFolderId ? sortCategoriesByHistory(getCatsInGroup(activeFolderId)) : []),
+    [activeFolderId, getCatsInGroup, sortCategoriesByHistory],
   );
 
   useEffect(() => {
@@ -369,7 +429,7 @@ export function FastExpenseEntry({
   // Picker: folder → real categories in that folder
   // pickerGroupId is a folder ID — look up in topFolders, NOT allCats
   const pickerGroupFolder = pickerGroupId ? topFolders.find((f) => f.id === pickerGroupId) : null;
-  const pickerGroupCats = pickerGroupId ? getCatsInGroup(pickerGroupId) : [];
+  const pickerGroupCats = pickerGroupId ? sortCategoriesByHistory(getCatsInGroup(pickerGroupId)) : [];
 
   return (
     <>
@@ -407,62 +467,6 @@ export function FastExpenseEntry({
           </span>
         </div>
       </div>
-
-      {/* ── Suggestion chips (merchant history — shown only when real history exists) ── */}
-      {suggestedCatIds.length > 0 && initialStore && !isEdit && (
-        <div className="px-3.5 pb-2 flex-shrink-0">
-          <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[.08em] mb-1.5">
-            {initialStore} · история
-          </div>
-          <div className="flex gap-2 overflow-x-auto [scrollbar-width:none]">
-            {suggestedCatIds.map((id) => {
-              const cat = activeExpCats.find((c) => c.id === id);
-              if (!cat) return null;
-              const sel = id === selectedCatId;
-              const c = cat.color ?? '#E07A5F';
-              return (
-                <button
-                  key={id}
-                  onClick={() => changeCategory(id)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap flex-shrink-0 transition-all"
-                  style={{
-                    background: sel ? c : c + '18',
-                    color: sel ? '#fff' : c,
-                    border: `1.5px solid ${sel ? c : c + '44'}`,
-                  }}
-                >
-                  <StickerIcon icon={cat.icon ?? 'box'} color={sel ? '#fff' : c} className="h-3 w-3" />
-                  {t.cat(cat.name)}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Context prediction badge — shown only when merchant has enough history */}
-      {predictedContext && (() => {
-        const folder = topFolders.find((f) => f.id === predictedContext.folderId);
-        if (!folder) return null;
-        const folderColor = folder.color ?? '#E07A5F';
-        return (
-          <div className="px-3.5 pb-1 flex-shrink-0">
-            <button
-              onClick={() => { openPicker(); setPickerGroupId(predictedContext.folderId); }}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all"
-              style={{
-                background: folderColor + '18',
-                color: folderColor,
-                border: `1px solid ${folderColor}33`,
-              }}
-            >
-              <StickerIcon icon={folder.icon ?? 'box'} color={folderColor} className="h-2.5 w-2.5" />
-              {t.cat(folder.name)}
-              <span style={{ opacity: 0.45, fontWeight: 400 }}>· {predictedContext.count}×</span>
-            </button>
-          </div>
-        );
-      })()}
 
       {initialFolderId ? (
         /* ── Разделы chips (chat tag-learning flow) ── */
@@ -503,67 +507,12 @@ export function FastExpenseEntry({
             </div>
           )}
 
-          {activeFolderId && (
-            <div>
-              <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[.08em] mb-1.5">
-                {activeFolder ? t.cat(activeFolder.name) : t('expense.category')}
-              </div>
-              {activeFolderCats.length > 0 ? (
-                <div className="grid grid-rows-2 grid-flow-col gap-1.5 overflow-x-auto [scrollbar-width:none]" style={{ gridAutoColumns: '64px' }}>
-                  {activeFolderCats.map((cat) => {
-                    const sel = cat.id === selectedCatId;
-                    const cc = cat.color ?? activeFolder?.color ?? '#E07A5F';
-                    return (
-                      <button
-                        key={cat.id}
-                        onClick={() => changeCategory(cat.id)}
-                        className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
-                        style={{
-                          background: sel ? cc : 'hsl(var(--card))',
-                          boxShadow: sel ? `0 3px 8px ${cc}55` : '0 1px 3px rgba(61,44,31,.06)',
-                        }}
-                      >
-                        <StickerIcon icon={cat.icon ?? 'box'} color={sel ? '#fff' : cc} className="h-4 w-4" />
-                        <span
-                          className="text-[9px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
-                          style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}
-                        >
-                          {t.cat(cat.name)}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div
-                  className="rounded-[14px] px-3 py-3 flex items-center justify-between gap-2 border-2 border-dashed"
-                  style={{ borderColor: catColor + '55', background: catColor + '0a' }}
-                >
-                  <div className="min-w-0">
-                    <div className="text-[11px] font-extrabold text-foreground">{t('categories.selectCategory')}</div>
-                    <div className="text-[10px] text-muted-foreground font-semibold">{t('categories.newCategory')}</div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      if (activeFolderId) setPickerGroupId(activeFolderId);
-                      setShowCategoryEditor(true);
-                    }}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-[11px] font-extrabold border-0 text-white"
-                    style={{ background: catColor }}
-                  >
-                    <Plus size={12} strokeWidth={2.5} />
-                    {t('categories.newCategory')}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       ) : (
         /* ── Category grid (main category for leftover) — real categories, never folder IDs ── */
         <div className="overflow-x-auto px-3.5 py-2 flex-shrink-0 [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
           <div className="grid grid-rows-2 grid-flow-col gap-1.5" style={{ gridAutoColumns: '64px' }}>
-            {activeExpCats.map((cat) => {
+            {sortCategoriesByHistory(activeExpCats).map((cat) => {
               const sel = cat.id === selectedCatId;
               const cc = cat.color ?? '#E07A5F';
               return (
@@ -750,68 +699,6 @@ export function FastExpenseEntry({
             ) : pickerGroupId === null ? (
               /* Show folders — tap a folder to see real categories inside */
               <div>
-                {/* Split presets — one-tap combo reuse from learned history */}
-                {splitPresets.length > 0 && !isEdit && (
-                  <div className="mb-2.5">
-                    <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[.08em] mb-1.5 px-0.5">
-                      Как обычно · {splitPresets[0].count}×
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      {splitPresets.map((preset) => {
-                        const presetCats = preset.categoryIds
-                          .map((id) => activeExpCats.find((c) => c.id === id))
-                          .filter(Boolean) as typeof activeExpCats;
-                        if (presetCats.length < 2) return null;
-                        return (
-                          <button
-                            key={preset.id}
-                            onClick={() => {
-                              addSplitBatch(presetCats);
-                            }}
-                            className="flex items-center gap-1.5 px-2.5 py-2 rounded-[10px] text-[10px] font-bold text-left transition-all"
-                            style={{ background: catColor + '12', border: `1px solid ${catColor}33` }}
-                          >
-                            <span style={{ color: catColor }}>↩</span>
-                            <span className="flex-1 text-foreground">
-                              {presetCats.map((c) => t.cat(c.name)).join(' + ')}
-                            </span>
-                            <span className="text-muted-foreground font-normal">{preset.count}×</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div className="h-px bg-border mt-2.5 mb-2" />
-                  </div>
-                )}
-                {/* Category shortcuts from merchant history */}
-                {suggestedCatIds.length > 0 && initialStore && !isEdit && (
-                  <div className="mb-2.5">
-                    <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[.08em] mb-1.5 px-0.5">
-                      {initialStore} · история
-                    </div>
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {suggestedCatIds.map((id) => {
-                        const cat = activeExpCats.find((c) => c.id === id);
-                        if (!cat) return null;
-                        const selected = !!splits.find((x) => x.categoryId === cat.id);
-                        const c = cat.color ?? '#E07A5F';
-                        return (
-                          <button
-                            key={id}
-                            onClick={() => selected ? removeSplit(splits.findIndex((x) => x.categoryId === cat.id)) : addSplit(cat)}
-                            className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
-                            style={{ background: selected ? c + '30' : c + '14', borderColor: selected ? c : 'transparent' }}
-                          >
-                            <StickerIcon icon={cat.icon ?? 'box'} color={c} className="h-3.5 w-3.5" />
-                            <span className="leading-tight text-center line-clamp-1">{t.cat(cat.name)}</span>
-                            {selected && <span className="text-[8px]" style={{ color: c }}>✓</span>}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div className="h-px bg-border mt-2.5 mb-2" />
-                  </div>
-                )}
                 {/* Folder tiles */}
                 <div className="grid grid-cols-4 gap-1.5">
                   {topFolders.map((folder) => {
@@ -1003,6 +890,7 @@ export function FastExpenseEntry({
       open={showFolderEditor}
       onClose={() => setShowFolderEditor(false)}
       type="expense"
+      suggestions={folderSuggestions}
       onSave={async (data: Omit<CategoryFolder, 'id' | 'userId'> & { id?: string }) => {
         if (!user) return;
         const { id: _id, ...rest } = data;
@@ -1024,6 +912,7 @@ export function FastExpenseEntry({
       folderId={pickerGroupId ?? undefined}
       initial={{ folderId: pickerGroupId ?? undefined }}
       availableFolders={topFolders as unknown as CategoryFolder[]}
+      suggestions={categorySuggestions}
       onSave={async (catData) => {
         const name = catData.name?.trim();
         if (!name || !user || inlineCreating) return;

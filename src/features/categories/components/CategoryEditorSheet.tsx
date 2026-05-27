@@ -73,6 +73,12 @@ export function CategoryEditorSheet({
     if (!query) return [];
     return suggestions
       .filter((suggestion) => suggestion.label.toLowerCase().includes(query))
+      .sort((a, b) => {
+        const aStarts = a.label.toLowerCase().startsWith(query);
+        const bStarts = b.label.toLowerCase().startsWith(query);
+        if (aStarts !== bStarts) return aStarts ? -1 : 1;
+        return a.label.localeCompare(b.label);
+      })
       .slice(0, 6);
   }, [name, suggestions]);
 
@@ -138,7 +144,7 @@ export function CategoryEditorSheet({
               className="w-full rounded-xl border border-[#EDE0CC] bg-white px-3 py-2.5 text-sm text-[#3D2C1F] outline-none placeholder:text-[#B6A48E] focus:border-[#E07A5F]"
             />
             {matchedSuggestions.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-2">
+              <div className="mt-1 overflow-hidden rounded-xl border border-[#EDE0CC] bg-white shadow-sm">
                 {matchedSuggestions.map((suggestion) => (
                   <button
                     key={suggestion.id}
@@ -149,9 +155,8 @@ export function CategoryEditorSheet({
                       setColor(suggestion.color);
                       setSelectedPresetId(suggestion.id);
                     }}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-[#EDE0CC] bg-[#F4ECDE] px-3 py-1.5 text-xs font-semibold text-[#3D2C1F]"
+                    className="block w-full px-3 py-2 text-left text-sm font-semibold text-[#3D2C1F] transition-colors hover:bg-[#F4ECDE]"
                   >
-                    <StickerIcon icon={suggestion.icon} color={suggestion.color} className="h-4 w-4" />
                     {suggestion.label}
                   </button>
                 ))}

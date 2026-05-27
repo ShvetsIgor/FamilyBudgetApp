@@ -534,8 +534,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
     if (!name.trim()) { setError(t('recurring.nameRequired')); return; }
     if (amountNum <= 0 || saving) return;
 
-    const effectiveCategoryId = categoryId || (selectedGroupId ? getCatsInGroup(selectedGroupId)[0]?.id ?? '' : '');
-    if (!effectiveCategoryId) {
+    if (!categoryId) {
       setError(t('categories.selectCategory'));
       return;
     }
@@ -544,7 +543,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
     try {
       await onSave({
         name: name.trim(), amount: amountNum, currency: currency as Currency,
-        categoryId: effectiveCategoryId, frequency, startDate: parseLocalDate(startDate),
+        categoryId, frequency, startDate: parseLocalDate(startDate),
         type, typeLabel: type === 'custom' ? typeLabel.trim() || undefined : undefined,
         reminderDays, comment: comment.trim() || undefined,
       });
@@ -686,7 +685,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
           {/* Category grid — two-level */}
           <div>
             <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider mb-1.5 px-0.5">
-              {t('recurring.category')}
+              {t('recurring.section')}
             </p>
             {/* Parent row */}
             <div className="flex flex-wrap gap-1.5">
@@ -735,6 +734,22 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
                     </button>
                   );
                 })}
+              </div>
+            )}
+            {selectedGroupId && catsInGroup.length === 0 && (
+              <div
+                className="mt-1.5 rounded-[14px] border border-dashed border-border bg-card px-3 py-3"
+                style={{ borderColor: `${catColor}55` }}
+              >
+                <p className="text-[11px] font-bold text-foreground">{t('recurring.noCategoriesInSection')}</p>
+                <button
+                  type="button"
+                  onClick={() => setShowCategoryEditor(true)}
+                  className="mt-2 rounded-xl px-3 py-2 text-xs font-semibold text-white"
+                  style={{ backgroundColor: catColor }}
+                >
+                  + {t('recurring.addCategoryToSection')}
+                </button>
               </div>
             )}
             <div className="mt-2 flex gap-2">

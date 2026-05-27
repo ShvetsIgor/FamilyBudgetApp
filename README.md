@@ -19,7 +19,7 @@ Conversational family budget tracker built around fast natural-language expense 
 - **Recurring expense model**: generated expenses keep `recurringId` and `isRecurring` aligned.
 - **Recurring recovery**: deleting a recurring-generated expense rolls the linked template back to the deleted due date instead of leaving the recurring item stranded in the future.
 - **Library-first expense reset**: resetting categories clears learned merchant/tag memory and leaves expense folders empty until the user explicitly adds a section or picks one through chat.
-- **Guided creation**: folder/category editors now suggest matching library entities before creating new ones, so preset sections like `Супермаркет` can be reused instead of duplicated.
+- **Guided creation**: folder/category editors show name-only library suggestions while the user types; selecting a suggestion fills the name and reuses preset icon/color metadata without activating hidden library entities.
 - **Date consistency**: chat weekly summaries, recurring notifications, and chat context use local date keys instead of mixed UTC day boundaries.
 - **Split list presentation**: split expenses in `/expenses` render and filter by merchant context (`storeGroup`, for example `Supermarket`) instead of leaking the first split category into the list header.
 - **Split save guardrails**: chat-driven split entry now keeps the remainder inside the selected folder context and refuses to fall back into an unrelated global first category.
@@ -30,6 +30,9 @@ Conversational family budget tracker built around fast natural-language expense 
 - **Localized store-group filters**: `/expenses` filter chips use the active UI language even when the label comes from preset `storeGroup` fallback metadata.
 - **Explicit folder-mode category choice**: in chat clarify split flow, choosing a section no longer auto-picks a random first category from that section; the user must choose a real leftover category or fully cover the amount with split rows.
 - **Safer folder creation handoff**: creating a new section from chat now routes into split mode without crashing on empty folders and immediately supports category creation inside that new section.
+- **Recurring section-first UX**: recurring payment setup labels the first picker as a section picker, blocks save when the chosen section has no categories, and offers inline category creation.
+- **History-ranked split picker**: split row clarification keeps category choice inside the row picker; previous split combos only boost section/category ordering and no longer add whole historical bundles in one click.
+- **Expanded icon colors**: category/folder icon color palette includes a broader 28-color set for more visual separation.
 
 ## Main Features
 
@@ -87,9 +90,9 @@ npm run build
 npm test
 ```
 
-Current baseline after the 2026-05-27 alignment pass:
+Current baseline after the 2026-05-28 alignment pass:
 
-- `npm run lint` - green (one existing hook warning in `FastExpenseEntry`)
+- `npm run lint` - green
 - `npm run build` - green
 - `npm test` - `489/489` green
 

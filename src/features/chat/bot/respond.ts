@@ -471,7 +471,7 @@ export async function respondToUserMessage(
 
   // Show date hint if it's not today (use local date to avoid UTC offset issues)
   const _now = new Date();
-  const todayStr = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-${String(_now.getDate()).padStart(2, '0')}`;
+  const todayStr = toLocalDateKey(_now);
   const isToday = (parsed.date ?? todayStr) === todayStr;
   const dateHint = !isToday && parsed.date
     ? format(parseISO(parsed.date), 'd MMMM', { locale: ru })

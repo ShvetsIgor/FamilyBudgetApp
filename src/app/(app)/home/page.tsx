@@ -126,11 +126,9 @@ export default function HomePage() {
   const remainingDays = daysInMonth - now.getDate() + 1;
 
   const todaySpent = useAppSelector((s) =>
-    s.expenses.list.filter((e) => {
-      const d = new Date(e.date);
-      const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      return ds === todayStr;
-    }).reduce((acc, e) => acc + e.amount, 0)
+    s.expenses.list
+      .filter((e) => toLocalDateKey(e.date) === todayStr)
+      .reduce((acc, e) => acc + e.amount, 0)
   );
   const monthSpent = useAppSelector((s) =>
     s.expenses.list.filter((e) => e.date.startsWith(monthStr)).reduce((acc, e) => acc + e.amount, 0)

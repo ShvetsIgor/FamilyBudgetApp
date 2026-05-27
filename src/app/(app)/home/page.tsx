@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { format, isToday, isYesterday, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
-import { useAppSelector, useAppDispatch } from '@/store/store';
+import { useAppSelector, useAppDispatch, useAppStore } from '@/store/store';
 import { setTyping, removeMessage } from '@/features/chat/store/chatSlice';
 import { addFolder as addFolderAction } from '@/features/categories/store/categoriesSlice';
 import { addFolder, addFolderWithId } from '@/features/categories/services/categoryFoldersService';

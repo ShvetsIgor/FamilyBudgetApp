@@ -66,6 +66,7 @@ export function collectBotContext(state: RootState): BotContext | null {
   return {
     userId,
     currency,
+    language: (state.ui as { language?: string }).language ?? 'ru',
     categoriesById,
     foldersById,
     topCategoryIds,

@@ -64,6 +64,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
           userId: user.id, id: initialIncome.id, amount: amountNum, currency,
           categoryId, date, method, privacy: initialIncome.privacy,
           comment: comment.trim() || undefined,
+          tags: initialIncome.tags,
         });
         dispatch(updateIncome(updated));
         window.history.length > 1 ? router.back() : router.replace('/income');
@@ -98,6 +99,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
       const income = await addIncome({
         userId: user.id, amount: amountNum, currency, categoryId, date,
         method, privacy: 'regular', comment: comment.trim() || undefined,
+        tags: isRecurring ? ['recurring'] : [],
       });
       dispatch(prependIncome(income));
       window.history.length > 1 ? router.back() : router.replace('/income');

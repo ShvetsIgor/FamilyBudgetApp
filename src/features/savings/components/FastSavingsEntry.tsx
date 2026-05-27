@@ -14,6 +14,7 @@ import { addContribution, fetchGoals } from '@/features/savings/services/savings
 import { addExpense } from '@/features/expenses/services/expensesService';
 import { addCategory } from '@/features/categories/services/categoriesService';
 import { getCurrencySymbol, formatAmount } from '@/shared/utils/currency';
+import { buildSavingsExpenseComment } from '@/features/savings/utils/savingsExpenseComment';
 
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
@@ -92,7 +93,7 @@ export function FastSavingsEntry() {
       dispatch(prependExpense(await addExpense({
         userId: user.id, amount: amountNum, currency: selectedGoal.currency,
         categoryId: catId, date: new Date(dateStr), paymentMethod: 'other',
-        comment: comment.trim() ? `Savings: ${selectedGoal.name} · ${comment.trim()}` : `Savings: ${selectedGoal.name}`, tags: ['savings'],
+        comment: buildSavingsExpenseComment(t('savings.expenseLabel'), selectedGoal.name, comment.trim() || undefined), tags: ['savings'],
         privacy: 'regular', splits: [], goalId: selectedGoal.id,
       })));
 

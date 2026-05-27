@@ -66,6 +66,7 @@ export interface AddIncomeInput {
   date: Date;
   method: IncomeMethod;
   comment?: string;
+  tags?: string[];
   privacy: Privacy;
 }
 
@@ -77,7 +78,7 @@ export async function addIncome(input: AddIncomeInput): Promise<SerializableInco
       ...rest,
       userId,
       comment,
-      tags: [],
+      tags: input.tags ?? [],
       date: Timestamp.fromDate(date),
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),

@@ -37,6 +37,7 @@ Core principle:
 - `/home` is the main expense-entry path
 - `/categories` is an advanced cleanup/library screen, not a primary navigation flow
 - `/expenses` should present split purchases by merchant context when that context exists, while analytics still stay category-based
+- Category reset is allowed to leave expense folders empty; expense-side library entities should only appear after explicit activation or explicit chat choice
 
 ## Dev Workflow
 
@@ -175,6 +176,12 @@ Implemented:
 - `Categories` removed from primary desktop sidebar navigation
 - split expenses in `/expenses` now show and filter by merchant context instead of the first split category
 - test baseline updated and back to green
+- category reset now clears remote `storeProfiles` and learned keywords, not only local Redux memory
+- expense reset switches the expense side into library-first mode, so preset expense folders do not silently re-seed on the next auth load
+- chat clarify fallback can offer library folders even when no expense folders are active, and selecting one materializes that folder before continuing to split UI
+- folder/category editors now suggest preset library matches before creating new entities, reducing duplicate sections like `Супермаркет`
+- recurring form can create or reuse sections and categories inline, and recurring-generated expense deletion restores the linked template due date instead of leaving it advanced
+- savings contribution comments are localized at render/save time, and recurring incomes persist a `recurring` tag for list presentation
 
 ## Known Gaps
 
@@ -185,6 +192,7 @@ Implemented:
 - Inline category/folder creation inside split flow is still separate from the final expense write.
   The expense/stat write path is atomic now; category/folder creation is not yet folded into one transaction boundary.
 - Category presets and library are still larger than the ideal minimalist product vision.
+- Recurring-expense deletion restores schedule state but does not delete the recurring template; if future UX should offer "delete occurrence vs delete template", that is still a separate product decision.
 - Browser-based verification against local `localhost` may be blocked by Codex browser policy, so UI validation may need production/manual verification when that happens.
 
 ## Safe Guidance For Future Changes

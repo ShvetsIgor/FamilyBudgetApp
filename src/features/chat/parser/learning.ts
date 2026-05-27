@@ -1,4 +1,4 @@
-import { doc, setDoc } from 'firebase/firestore';
+import { collection, deleteDoc, doc, getDocs, setDoc } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import type { KeywordHit } from './dictionary';
 
@@ -14,7 +14,6 @@ export async function saveLearnedKeyword(
 export async function fetchLearnedKeywords(
   userId: string
 ): Promise<Record<string, KeywordHit>> {
-  const { collection, getDocs } = await import('firebase/firestore');
   const snap = await getDocs(collection(getDb(), 'users', userId, 'learnedKeywords'));
   const result: Record<string, KeywordHit> = {};
   snap.docs.forEach((d) => {
@@ -22,4 +21,9 @@ export async function fetchLearnedKeywords(
     result[d.id] = { categoryId: data.categoryId };
   });
   return result;
+}
+
+export async function clearLearnedKeywords(userId: string): Promise<void> {
+  const snap = await getDocs(collection(getDb(), 'users', userId, 'learnedKeywords'));
+  await Promise.all(snap.docs.map((keyword) => deleteDoc(keyword.ref)));
 }

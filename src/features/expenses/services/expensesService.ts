@@ -16,6 +16,7 @@ import {
 } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { getDb } from '@/shared/lib/firebase';
+import { restoreRecurringDueFromDeletedExpense } from '@/features/recurring/services/recurringExpenseSync';
 import type {
   Currency,
   Expense,
@@ -215,7 +216,7 @@ export async function updateExpense(input: UpdateExpenseInput): Promise<Serializ
   });
 }
 
-export async function deleteExpense(userId: string, expense: SerializableExpense): Promise<void> {
+export async function deleteExpense(userId: string, expense: SerializableExpense) {
   const batch = writeBatch(getDb());
   batch.delete(expenseDoc(userId, expense.id));
   queueMonthlyStatsUpdate(
@@ -225,6 +226,7 @@ export async function deleteExpense(userId: string, expense: SerializableExpense
     buildStatsDelta(expense.categoryId, expense.amount, expense.splits, -1),
   );
   await batch.commit();
+  return restoreRecurringDueFromDeletedExpense(userId, expense);
 }
 
 interface StatsDelta {

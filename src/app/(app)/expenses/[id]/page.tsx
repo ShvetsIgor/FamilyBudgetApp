@@ -7,8 +7,10 @@ import { ru } from 'date-fns/locale';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { removeExpense } from '@/features/expenses/store/expensesSlice';
 import { deleteExpense } from '@/features/expenses/services/expensesService';
+import { updateRecurringItem } from '@/features/recurring/store/recurringSlice';
 import { reverseContribution } from '@/features/savings/services/savingsService';
 import { updateGoalItem } from '@/features/savings/store/savingsSlice';
+import { localizeSavingsExpenseComment } from '@/features/savings/utils/savingsExpenseComment';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { formatAmount } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
@@ -43,12 +45,20 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
   }
 
   const category = categories.find((c) => c.id === expense.categoryId);
+  const detailComment = expense.comment
+    ? (
+        expense.tags.includes('savings')
+          ? localizeSavingsExpenseComment(expense.comment, t('savings.expenseLabel'))
+          : expense.comment
+      )
+    : undefined;
 
   async function handleDelete() {
     if (!user) return;
     if (!confirm(t('expense.confirmDelete'))) return;
-    await deleteExpense(user.id, expense!);
+    const restored = await deleteExpense(user.id, expense!);
     dispatch(removeExpense(expense!.id));
+    if (restored) dispatch(updateRecurringItem(restored));
 
     if (expense!.goalId) {
       const goal = goals.find((g) => g.id === expense!.goalId);
@@ -93,7 +103,7 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
 {expense.store && <Row label={t('expense.store')} value={expense.store} />}
         <Row label={t('expense.payment')} value={PAYMENT_LABELS[expense.paymentMethod] ?? expense.paymentMethod} />
         <Row label={t('expense.privacy2')} value={expense.privacy === 'secret' ? `🔒 ${t('expense.secret')}` : t('expense.regular')} />
-        {expense.comment && <Row label={t('expense.comment')} value={expense.comment} />}
+        {detailComment && <Row label={t('expense.comment')} value={detailComment} />}
         {expense.tags.length > 0 && <Row label={t('expense.tags')} value={expense.tags.map((tag) => tag === 'recurring' ? t('expense.tagRecurring') : tag).join(', ')} />}
       </div>
 

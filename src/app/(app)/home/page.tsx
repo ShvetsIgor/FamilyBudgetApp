@@ -8,10 +8,11 @@ import { ru } from 'date-fns/locale';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setTyping, removeMessage } from '@/features/chat/store/chatSlice';
 import { addFolder as addFolderAction } from '@/features/categories/store/categoriesSlice';
-import { addFolder } from '@/features/categories/services/categoryFoldersService';
+import { addFolder, addFolderWithId } from '@/features/categories/services/categoryFoldersService';
 import { prependExpense, removeExpense, mergeExpenses } from '@/features/expenses/store/expensesSlice';
 import { recordExpense } from '@/features/expenses/store/suggestionMemorySlice';
 import { prependIncome } from '@/features/income/store/incomeSlice';
+import { updateRecurringItem } from '@/features/recurring/store/recurringSlice';
 
 import { useChatMessages } from '@/features/chat/hooks/useChatMessages';
 import { useLearnedKeywords } from '@/features/chat/hooks/useLearnedKeywords';
@@ -60,6 +61,7 @@ import type { WeeklyCardData } from '@/features/chat/components/BotCard/WeeklyCa
 import type { EnvelopesCardData } from '@/features/chat/components/BotCard/EnvelopesCard';
 import type { Currency } from '@/shared/types';
 import { toLocalDateKey } from '@/shared/utils/dateKey';
+import { findFolderBlueprint } from '@/features/categories/utils/libraryLookup';
 
 import type { SerializableChatMessage } from '@/shared/types/message';
 
@@ -79,6 +81,10 @@ function groupByDay(messages: SerializableChatMessage[]): { day: string; items: 
     map.get(key)!.push(m);
   }
   return Array.from(map.entries()).map(([day, items]) => ({ day, items }));
+}
+
+function normalizeLabel(value: string): string {
+  return value.trim().toLowerCase();
 }
 
 export default function HomePage() {
@@ -308,15 +314,39 @@ export default function HomePage() {
   ) => {
     if (!userId || sendingRef.current) return;
 
-    // isTagLearning + folder chip → navigate to split UI, do not save expense yet
-    if (isTagLearning && allExpenseFolders.some(f => f.id === chip.id)) {
-      const params = new URLSearchParams({ fromChat: 'true', amount: String(amount), folderId: chip.id, folderName: chip.name });
-      if (storeId) params.set('storeId', storeId);
-      if (storeName) params.set('storeName', storeName);
-      if (storeGroup) params.set('storeGroup', storeGroup);
-      if (parsedDate) params.set('date', parsedDate);
-      router.push(`/expenses/new?${params.toString()}`);
-      return;
+    // isTagLearning + folder chip → ensure folder exists, then navigate to split UI
+    if (isTagLearning) {
+      const existingFolder = allExpenseFolders.find((folder) => (
+        folder.id === chip.id || normalizeLabel(folder.name) === normalizeLabel(chip.name)
+      ));
+      const preset = findFolderBlueprint('expense', { id: chip.id, name: chip.name });
+
+      let folder = existingFolder;
+      if (!folder && preset) {
+        folder = await addFolderWithId(userId, preset.id, {
+          name: preset.ru ?? preset.name,
+          icon: preset.icon,
+          color: preset.color,
+          type: 'expense',
+          order: allExpenseFolders.length,
+        });
+        dispatch(addFolderAction(folder));
+      }
+
+      if (folder) {
+        const params = new URLSearchParams({
+          fromChat: 'true',
+          amount: String(amount),
+          folderId: folder.id,
+          folderName: folder.name,
+        });
+        if (storeId) params.set('storeId', storeId);
+        if (storeName) params.set('storeName', storeName);
+        if (storeGroup) params.set('storeGroup', storeGroup);
+        if (parsedDate) params.set('date', parsedDate);
+        router.push(`/expenses/new?${params.toString()}`);
+        return;
+      }
     }
 
     sendingRef.current = true;
@@ -438,7 +468,10 @@ export default function HomePage() {
     try {
       await deleteMessageAndExpense(userId, botMsgId);
       await deleteMessageAndExpense(userId, userMsgId);
-      if (expense) await deleteExpense(userId, expense);
+      if (expense) {
+        const restored = await deleteExpense(userId, expense);
+        if (restored) dispatch(updateRecurringItem(restored));
+      }
     } catch { /* ignore */ }
   }, [userId, allExpenses, dispatch]);
 
@@ -453,15 +486,29 @@ export default function HomePage() {
     if (!userId) return;
     const trimmed = name.trim();
     if (!trimmed) return;
+    const existingFolder = allExpenseFolders.find((folder) => normalizeLabel(folder.name) === normalizeLabel(trimmed));
+    const preset = findFolderBlueprint('expense', { name: trimmed });
 
-    const newFolder = await addFolder(userId, {
-      name: trimmed,
-      icon: 'box',
-      color: '#94A3B8',
-      order: 99,
-      type: 'expense',
-    });
-    dispatch(addFolderAction(newFolder));
+    const newFolder = existingFolder ?? (
+      preset
+        ? await addFolderWithId(userId, preset.id, {
+            name: preset.ru ?? preset.name,
+            icon: preset.icon,
+            color: preset.color,
+            order: allExpenseFolders.length,
+            type: 'expense',
+          })
+        : await addFolder(userId, {
+            name: trimmed,
+            icon: 'box',
+            color: '#94A3B8',
+            order: allExpenseFolders.length,
+            type: 'expense',
+          })
+    );
+    if (!existingFolder) {
+      dispatch(addFolderAction(newFolder));
+    }
 
     // Navigate directly to split UI — no bot message, flow continues unbroken
     const params = new URLSearchParams({ fromChat: 'true', amount: String(amount ?? 0), folderId: newFolder.id, folderName: newFolder.name });
@@ -470,7 +517,7 @@ export default function HomePage() {
     if (storeGroup) params.set('storeGroup', storeGroup);
     if (parsedDate) params.set('date', parsedDate);
     router.push(`/expenses/new?${params.toString()}`);
-  }, [userId, dispatch, router]);
+  }, [userId, dispatch, router, allExpenseFolders]);
 
   const handleFutureConfirm = useCallback(async (botMsgId: string, data: FutureCardData) => {
     if (!userId || sendingRef.current) return;

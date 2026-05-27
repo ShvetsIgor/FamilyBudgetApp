@@ -278,6 +278,7 @@
   },
   "savings": {
     "title": "Savings Goals",
+    "expenseLabel": "Savings",
     "newGoal": "New Goal",
     "back": "← Back",
     "addContribution": "Add Contribution",

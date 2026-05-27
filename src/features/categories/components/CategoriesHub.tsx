@@ -17,14 +17,15 @@ import {
 import { remapExpenseCategories } from '@/features/expenses/store/expensesSlice';
 import { clearMemory } from '@/features/expenses/store/suggestionMemorySlice';
 import { clearProfiles } from '@/features/chat/store/storeProfilesSlice';
+import { clearStoreProfiles } from '@/features/chat/services/storeProfilesService';
+import { clearLearnedKeywords } from '@/features/chat/parser/learning';
 import {
-  DEFAULT_EXPENSE_CATEGORIES,
   DEFAULT_INCOME_CATEGORIES,
-  DEFAULT_EXPENSE_FOLDER_SEEDS,
   DEFAULT_INCOME_FOLDER_SEEDS,
 } from '@/features/categories/services/defaultCategories';
 import {
   addFolder as addFolderToDb,
+  addFolderWithId,
   updateFolder as updateFolderInDb,
   deleteFolder as deleteFolderFromDb,
 } from '@/features/categories/services/categoryFoldersService';
@@ -34,7 +35,6 @@ import { CategoryEditorSheet } from './CategoryEditorSheet';
 import { FolderEditorSheet } from './FolderEditorSheet';
 import { ConstructorWizard } from './constructor/ConstructorWizard';
 import { StickerIcon } from './CategoryIcon';
-import { getPresetCategoriesForFolder } from '../preset/categoryPresets';
 import { selectAvailableLibrary } from '../store/librarySelectors';
 import {
   selectFolders,
@@ -47,6 +47,14 @@ import {
 import { filterCategoriesByQuery } from '../utils/tagUtils';
 import { CATEGORY_ALIAS_MAP } from '../config/categoryLabels';
 import { useT } from '@/shared/hooks/useT';
+import {
+  categoryBlueprintToSuggestion,
+  findCategoryBlueprint,
+  findFolderBlueprint,
+  folderBlueprintToSuggestion,
+  getCategoryLibraryBlueprints,
+  getFolderLibraryBlueprints,
+} from '../utils/libraryLookup';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {
@@ -334,9 +342,27 @@ export function CategoriesHub() {
   const allActiveCats = useAppSelector((s) => selectAllActiveCategories(s, tab));
   const searchResults = filterCategoriesByQuery(searchQuery, allActiveCats, CATEGORY_ALIAS_MAP);
   const t = useT();
+  const categorySuggestions = getCategoryLibraryBlueprints(tab).map(categoryBlueprintToSuggestion);
+  const folderSuggestions = getFolderLibraryBlueprints(tab).map(folderBlueprintToSuggestion);
 
   const existingCategoryIds = new Set(allCategories.map((c) => c.id));
   const existingFolderIds = new Set(folders.map((f) => f.id));
+
+  const normalizeLabel = (value: string) => value.trim().toLowerCase();
+  const namesMatch = (left: string, right: string) => normalizeLabel(left) === normalizeLabel(right);
+
+  const attachCategoryToFolder = (category: Category, folderId?: string) => {
+    if (!folderId || category.folderId === folderId || category.extraFolderIds?.includes(folderId)) {
+      return category;
+    }
+    if (!category.folderId) {
+      return { ...category, folderId };
+    }
+    return {
+      ...category,
+      extraFolderIds: [...new Set([...(category.extraFolderIds ?? []), folderId])],
+    };
+  };
 
   if (!user) return null;
 
@@ -361,16 +387,41 @@ export function CategoriesHub() {
     setEditor({ open: true, folderId });
   };
 
-  const handleSave = async (catData: Omit<Category, 'id' | 'userId'> & { id?: string }) => {
+  const handleSave = async (catData: Omit<Category, 'id' | 'userId'> & { id?: string; presetId?: string }) => {
     if (!user) return;
-    const { id, ...data } = catData;
+    const { id, presetId, ...data } = catData;
     if (id) {
       const updated: Category = { ...data, id, userId: user.id };
       await updateCategoryInDb(user.id, updated);
       dispatch(updateCategory(updated));
     } else {
-      const created = await addCategoryToDb(user.id, data);
-      dispatch(addCategory(created));
+      const preset = findCategoryBlueprint(tab, { id: presetId, name: data.name });
+      const existing = allCategories.find((category) =>
+        category.type === tab && !category.archived && (
+          (preset && category.id === preset.id) ||
+          namesMatch(category.name, data.name)
+        )
+      );
+
+      if (existing) {
+        const attached = attachCategoryToFolder(existing, data.folderId ?? undefined);
+        if (
+          attached.folderId !== existing.folderId ||
+          JSON.stringify(attached.extraFolderIds ?? []) !== JSON.stringify(existing.extraFolderIds ?? [])
+        ) {
+          await updateCategoryInDb(user.id, attached);
+          dispatch(updateCategory(attached));
+        }
+        return;
+      }
+
+      if (preset) {
+        const created = await addCategoryWithId(user.id, preset.id, data);
+        dispatch(addCategory(created));
+      } else {
+        const created = await addCategoryToDb(user.id, data);
+        dispatch(addCategory(created));
+      }
     }
   };
 
@@ -430,15 +481,27 @@ export function CategoriesHub() {
 
   // ── Folder CRUD ────────────────────────────────────────────────────────────
 
-  const handleFolderSave = async (data: Omit<CategoryFolder, 'id' | 'userId'> & { id?: string }) => {
+  const handleFolderSave = async (data: Omit<CategoryFolder, 'id' | 'userId'> & { id?: string; presetId?: string }) => {
     if (!user) return;
-    const { id, ...rest } = data;
+    const { id, presetId, ...rest } = data;
 
     // Check for duplicate name when creating new folder
     if (!id) {
-      const duplicate = folders.find(f => f.type === rest.type && f.name.toLowerCase() === rest.name.toLowerCase());
+      const preset = findFolderBlueprint(tab, { id: presetId, name: rest.name });
+      const duplicate = folders.find((folder) =>
+        folder.type === rest.type && (
+          (preset && folder.id === preset.id) ||
+          namesMatch(folder.name, rest.name)
+        )
+      );
       if (duplicate) {
         alert(`Раздел "${rest.name}" уже существует`);
+        return;
+      }
+      if (preset) {
+        const created = await addFolderWithId(user.id, preset.id, rest);
+        dispatch(addFolder(created));
+        setFolderEditor({ open: false });
         return;
       }
     }
@@ -471,26 +534,15 @@ export function CategoriesHub() {
 
   const handleActivateFromLibrary = async (libraryParent: ReturnType<typeof selectAvailableLibrary>[number]) => {
     if (!user) return;
-    const folder = await addFolderToDb(user.id, {
-      name: libraryParent.name,
+    if (existingFolderIds.has(libraryParent.id)) return;
+    const folder = await addFolderWithId(user.id, libraryParent.id, {
+      name: libraryParent.ru ?? libraryParent.name,
       icon: libraryParent.icon,
       color: libraryParent.color,
       type: tab,
       order: folders.length,
     });
     dispatch(addFolder(folder));
-    for (const sub of getPresetCategoriesForFolder(libraryParent.id)) {
-      const s = await addCategoryWithId(user.id, sub.id, {
-        name: sub.name,
-        icon: sub.icon,
-        color: libraryParent.color,
-        type: tab,
-        folderId: folder.id,
-        order: 0,
-        isPrivate: false,
-      });
-      dispatch(addCategory(s));
-    }
   };
 
   // ── Reset to defaults ─────────────────────────────────────────────────────
@@ -499,6 +551,10 @@ export function CategoriesHub() {
     if (!user) return;
     if (!confirm('Сбросить все категории к стандартным? Ваши кастомные категории и разделы будут удалены.')) return;
     const idMap = await resetCategoriesToDefaults(user.id);
+    await Promise.all([
+      clearStoreProfiles(user.id),
+      clearLearnedKeywords(user.id),
+    ]);
     dispatch(setCategories({ type: 'expense', categories: [] }));
     dispatch(setFolders({ type: 'expense', folders: [] }));
     dispatch(setCategories({ type: 'income', categories: DEFAULT_INCOME_CATEGORIES.map((c) => ({ ...c, userId: user.id })) }));
@@ -723,7 +779,7 @@ export function CategoriesHub() {
               />
             ) : (
               <button
-                onClick={() => setInlineEdit({ kind: 'cat-new', id: folder.id })}
+                onClick={() => openNewCategoryInFolder(folder.id)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -1151,7 +1207,7 @@ export function CategoriesHub() {
               </div>
             ) : (
               <button
-                onClick={() => setInlineEdit({ kind: 'folder-new', id: '' })}
+                onClick={() => setFolderEditor({ open: true })}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -1316,6 +1372,7 @@ export function CategoriesHub() {
           dispatch(setBudgetLimit({ categoryId: editor.category.id, limit }));
         }}
         onSave={handleSave}
+        suggestions={categorySuggestions}
         onDelete={editor.category ? async () => {
           if (!editor.category || !user) return;
           await archiveCategoryInFirestore(user.id, editor.category.id, editor.category.type);
@@ -1337,6 +1394,7 @@ export function CategoriesHub() {
           setFolderEditor({ open: false });
         } : undefined}
         availableFolders={rootFolders.filter((f) => f.id !== folderEditor.folder?.id)}
+        suggestions={folderSuggestions}
       />
 
       <ConstructorWizard

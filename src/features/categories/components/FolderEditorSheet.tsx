@@ -1,37 +1,58 @@
 'use client';
-import { useState, useEffect } from 'react';
+
+import { useEffect, useMemo, useState } from 'react';
 import type { CategoryFolder, CategoryType } from '@/shared/types';
 import { StickerIcon } from './CategoryIcon';
 import { ColorPaletteRow } from './ColorPaletteRow';
 import { IconPickerGrid } from './IconPickerGrid';
 import { CC } from '../styles/tokens';
+import type { LibrarySuggestion } from '../utils/libraryLookup';
 
 interface Props {
   open: boolean;
   onClose: () => void;
   initial?: Partial<CategoryFolder>;
   type: CategoryType;
-  onSave: (folder: Omit<CategoryFolder, 'id' | 'userId'> & { id?: string }) => void;
+  onSave: (folder: Omit<CategoryFolder, 'id' | 'userId'> & { id?: string; presetId?: string }) => void;
   onDelete?: () => void;
-  availableFolders?: import('@/shared/types').CategoryFolder[];  // root folders for parent selection
+  availableFolders?: import('@/shared/types').CategoryFolder[];
+  suggestions?: LibrarySuggestion[];
 }
 
-export function FolderEditorSheet({ open, onClose, initial, type, onSave, onDelete, availableFolders }: Props) {
+export function FolderEditorSheet({
+  open,
+  onClose,
+  initial,
+  type,
+  onSave,
+  onDelete,
+  availableFolders,
+  suggestions = [],
+}: Props) {
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('box');
   const [color, setColor] = useState<string>(CC.primary);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [parentFolderId, setParentFolderId] = useState<string | undefined>(undefined);
+  const [selectedPresetId, setSelectedPresetId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    if (open) {
-      setName(initial?.name ?? '');
-      setIcon(initial?.icon ?? 'box');
-      setColor(initial?.color ?? CC.primary);
-      setConfirmDelete(false);
-      setParentFolderId(initial?.parentFolderId);
-    }
+    if (!open) return;
+    setName(initial?.name ?? '');
+    setIcon(initial?.icon ?? 'box');
+    setColor(initial?.color ?? CC.primary);
+    setConfirmDelete(false);
+    setParentFolderId(initial?.parentFolderId);
+    setSelectedPresetId(undefined);
   }, [open, initial]);
+
+  const matchedSuggestions = useMemo(() => {
+    const query = name.trim().toLowerCase();
+    if (!query) return [];
+    return suggestions
+      .filter((suggestion) => suggestion.label.toLowerCase().includes(query))
+      .slice(0, 5);
+  }, [name, suggestions]);
 
   if (!open) return null;
 
@@ -45,6 +66,7 @@ export function FolderEditorSheet({ open, onClose, initial, type, onSave, onDele
       type,
       order: initial?.order ?? 0,
       parentFolderId,
+      presetId: selectedPresetId,
     });
     onClose();
   };
@@ -52,48 +74,67 @@ export function FolderEditorSheet({ open, onClose, initial, type, onSave, onDele
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose} />
-      <div className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl bg-white dark:bg-neutral-900 shadow-2xl max-h-[88vh] overflow-y-auto">
+      <div className="fixed inset-x-0 bottom-0 z-50 max-h-[88vh] overflow-y-auto rounded-t-3xl bg-white shadow-2xl dark:bg-neutral-900">
         <div className="flex justify-center pt-3 pb-1">
           <div className="h-1 w-10 rounded-full bg-[#EDE0CC]" />
         </div>
 
-        <div className="px-5 pb-8 space-y-5">
-          {/* Header */}
+        <div className="space-y-5 px-5 pb-8">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-[#3D2C1F]">
               {initial?.id ? 'Редактировать раздел' : 'Новый раздел'}
             </h2>
-            <button onClick={onClose} className="text-[#8E7A66] hover:text-[#3D2C1F] text-xl leading-none">✕</button>
+            <button onClick={onClose} className="text-xl leading-none text-[#8E7A66] hover:text-[#3D2C1F]">✕</button>
           </div>
 
-          {/* Live Preview */}
           <div className="flex items-center gap-3 rounded-2xl p-4" style={{ backgroundColor: `${color}15` }}>
-            <div className="h-12 w-12 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${color}25` }}>
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: `${color}25` }}>
               <StickerIcon icon={icon} color={color} className="h-8 w-8" />
             </div>
             <div>
-              <p className="font-semibold text-[#3D2C1F] text-sm">{name || 'Название раздела'}</p>
+              <p className="text-sm font-semibold text-[#3D2C1F]">{name || 'Название раздела'}</p>
               <p className="text-xs text-[#8E7A66]">{type === 'expense' ? 'Группа расходов' : 'Группа доходов'}</p>
             </div>
           </div>
 
-          {/* Name */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-[#8E7A66] uppercase tracking-wide">Название</label>
+            <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">Название</label>
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                setSelectedPresetId(undefined);
+              }}
               placeholder="Название раздела"
-              className="w-full rounded-xl border border-[#EDE0CC] bg-white px-3 py-2.5 text-sm text-[#3D2C1F] outline-none focus:border-[#E07A5F] placeholder:text-[#B6A48E]"
+              className="w-full rounded-xl border border-[#EDE0CC] bg-white px-3 py-2.5 text-sm text-[#3D2C1F] outline-none placeholder:text-[#B6A48E] focus:border-[#E07A5F]"
             />
+            {matchedSuggestions.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-2">
+                {matchedSuggestions.map((suggestion) => (
+                  <button
+                    key={suggestion.id}
+                    type="button"
+                    onClick={() => {
+                      setName(suggestion.label);
+                      setIcon(suggestion.icon);
+                      setColor(suggestion.color);
+                      setSelectedPresetId(suggestion.id);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[#EDE0CC] bg-[#F4ECDE] px-3 py-1.5 text-xs font-semibold text-[#3D2C1F]"
+                  >
+                    <StickerIcon icon={suggestion.icon} color={suggestion.color} className="h-4 w-4" />
+                    {suggestion.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Parent folder (optional) */}
           {availableFolders && availableFolders.length > 0 && (
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-[#8E7A66] uppercase tracking-wide">
-                Родительский раздел <span className="normal-case font-normal text-[#B6A48E]">(необязательно)</span>
+              <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">
+                Родительский раздел <span className="font-normal normal-case text-[#B6A48E]">(необязательно)</span>
               </label>
               <div className="flex flex-wrap gap-2">
                 <button
@@ -108,38 +149,35 @@ export function FolderEditorSheet({ open, onClose, initial, type, onSave, onDele
                 >
                   Без родителя
                 </button>
-                {availableFolders.map((f) => (
+                {availableFolders.map((folder) => (
                   <button
-                    key={f.id}
+                    key={folder.id}
                     type="button"
-                    onClick={() => setParentFolderId(f.id)}
+                    onClick={() => setParentFolderId(folder.id)}
                     className="rounded-full px-3 py-1.5 text-xs font-semibold transition-all"
                     style={
-                      parentFolderId === f.id
-                        ? { backgroundColor: f.color ?? '#E07A5F', color: '#fff' }
+                      parentFolderId === folder.id
+                        ? { backgroundColor: folder.color ?? '#E07A5F', color: '#fff' }
                         : { backgroundColor: '#F4ECDE', color: '#8E7A66' }
                     }
                   >
-                    {f.name}
+                    {folder.name}
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Icon */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-[#8E7A66] uppercase tracking-wide">Иконка</label>
+            <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">Иконка</label>
             <IconPickerGrid selected={icon} color={color} onSelect={setIcon} />
           </div>
 
-          {/* Color */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-[#8E7A66] uppercase tracking-wide">Цвет</label>
+            <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">Цвет</label>
             <ColorPaletteRow value={color} onChange={setColor} />
           </div>
 
-          {/* Save */}
           <button
             onClick={handleSave}
             disabled={!name.trim()}
@@ -149,19 +187,18 @@ export function FolderEditorSheet({ open, onClose, initial, type, onSave, onDele
             Сохранить
           </button>
 
-          {/* Delete */}
           {onDelete && (
             confirmDelete ? (
               <div className="flex gap-2">
                 <button
                   onClick={() => { onDelete(); onClose(); }}
-                  className="flex-1 rounded-2xl py-2.5 text-sm font-semibold text-white bg-red-500"
+                  className="flex-1 rounded-2xl bg-red-500 py-2.5 text-sm font-semibold text-white"
                 >
                   Удалить
                 </button>
                 <button
                   onClick={() => setConfirmDelete(false)}
-                  className="flex-1 rounded-2xl py-2.5 text-sm font-semibold text-[#8E7A66] border border-[#EDE0CC]"
+                  className="flex-1 rounded-2xl border border-[#EDE0CC] py-2.5 text-sm font-semibold text-[#8E7A66]"
                 >
                   Отмена
                 </button>
@@ -169,7 +206,7 @@ export function FolderEditorSheet({ open, onClose, initial, type, onSave, onDele
             ) : (
               <button
                 onClick={() => setConfirmDelete(true)}
-                className="w-full rounded-2xl py-2.5 text-sm font-semibold text-red-500 border border-red-100"
+                className="w-full rounded-2xl border border-red-100 py-2.5 text-sm font-semibold text-red-500"
               >
                 Удалить раздел
               </button>

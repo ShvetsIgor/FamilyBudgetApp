@@ -3,6 +3,7 @@ import {
   doc,
   getDocs,
   addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   query,
@@ -28,6 +29,18 @@ export async function addFolder(userId: string, data: Omit<CategoryFolder, 'id' 
   );
   const ref = await addDoc(foldersRef(userId, data.type), clean);
   return { id: ref.id, userId, ...data };
+}
+
+export async function addFolderWithId(
+  userId: string,
+  id: string,
+  data: Omit<CategoryFolder, 'id' | 'userId'>,
+): Promise<CategoryFolder> {
+  const clean = Object.fromEntries(
+    Object.entries({ ...data, userId }).filter(([, v]) => v !== undefined),
+  );
+  await setDoc(doc(getDb(), 'categoryFolders', userId, data.type, id), clean);
+  return { id, userId, ...data };
 }
 
 export async function updateFolder(userId: string, folder: CategoryFolder): Promise<void> {

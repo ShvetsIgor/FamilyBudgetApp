@@ -13,6 +13,7 @@ import { addExpense } from '@/features/expenses/services/expensesService';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
 import { addCategory } from '@/features/categories/services/categoriesService';
 import { addCategory as addCategoryRedux } from '@/features/categories/store/categoriesSlice';
+import { buildSavingsExpenseComment } from '@/features/savings/utils/savingsExpenseComment';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
 import type { SavingsGoal } from '@/shared/types';
@@ -51,7 +52,7 @@ export default function SavingsPage() {
       dispatch(prependExpense(await addExpense({
         userId: user.id, amount, currency: goal.currency, categoryId: catId,
         date: new Date(), paymentMethod: 'card',
-        comment: `${goal.name}${note ? ' · ' + note : ''}`,
+        comment: buildSavingsExpenseComment(t('savings.expenseLabel'), goal.name, note || undefined),
         tags: ['savings'], privacy: 'regular', splits: [], goalId: goal.id,
       })));
     }

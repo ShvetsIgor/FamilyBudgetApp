@@ -90,6 +90,7 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false, embe
           paymentMethod: 'card', splits: [], tags: ['recurring'], privacy: 'regular',
           store: item.name,
           comment: item.comment || undefined,
+          recurringId: item.id,
         });
         dispatch(prependExpense(exp));
       }

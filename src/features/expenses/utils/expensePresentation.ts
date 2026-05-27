@@ -1,27 +1,6 @@
 import { getPresetDisplayName } from '@/features/categories/config/categoryLabels';
+import { getStoreGroupFolderId } from '@/features/categories/utils/storeGroupFolders';
 import type { Category, CategoryFolder, SerializableExpense } from '@/shared/types';
-
-const STORE_GROUP_TO_FOLDER_ID: Record<string, string> = {
-  supermarket: 'food',
-  fast_food: 'dining',
-  coffee: 'dining',
-  delivery: 'dining',
-  pharmacy: 'health',
-  taxi: 'transport',
-  fuel_station: 'car',
-  fashion: 'shopping',
-  online_retail: 'shopping',
-  electronics_store: 'technology',
-  furniture_store: 'home',
-  home_improvement: 'home',
-  streaming: 'subscriptions',
-  cloud: 'subscriptions',
-  software: 'technology',
-  internet_provider: 'home',
-  mobile_carrier: 'home',
-  accommodation: 'travel',
-  airline: 'travel',
-};
 
 export interface ExpenseListMeta {
   key: string;
@@ -43,7 +22,7 @@ function getStoreGroupFolder(
   storeGroup: string | undefined,
   folders: CategoryFolder[],
 ): CategoryFolder | undefined {
-  const folderId = storeGroup ? STORE_GROUP_TO_FOLDER_ID[storeGroup] : undefined;
+  const folderId = getStoreGroupFolderId(storeGroup);
   return folderId ? folders.find((folder) => folder.id === folderId) : undefined;
 }
 
@@ -56,7 +35,7 @@ function getStoreGroupLabelSource(
   const folder = getStoreGroupFolder(storeGroup, folders);
   if (folder) return folder.name;
 
-  const folderId = STORE_GROUP_TO_FOLDER_ID[storeGroup];
+  const folderId = getStoreGroupFolderId(storeGroup);
   if (folderId) {
     const presetLabel = getPresetDisplayName(folderId, 'en');
     if (presetLabel) return presetLabel;

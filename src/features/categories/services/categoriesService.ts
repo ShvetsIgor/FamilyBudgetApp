@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   addDoc,
   setDoc,
@@ -24,6 +25,10 @@ import { CATEGORY_BLUEPRINTS } from '../preset/categoryPresets';
 
 function colRef(userId: string, type: CategoryType) {
   return collection(getDb(), 'categories', userId, type);
+}
+
+function userDoc(userId: string) {
+  return doc(getDb(), 'users', userId);
 }
 
 export async function fetchCategories(userId: string, type: CategoryType): Promise<Category[]> {
@@ -125,6 +130,9 @@ export async function resetCategoriesToDefaults(userId: string): Promise<Record<
   // Recreate ONLY income folder
   await bulkCreateFolders(userId, DEFAULT_INCOME_FOLDER_SEEDS);
 
+  // Keep expense setup manual after reset; do not auto-seed presets on next login.
+  await setDoc(userDoc(userId), { expenseLibraryMode: true }, { merge: true });
+
   // Build oldId→newId map: match by name, then apply legacyCategoryMap for unmapped old IDs
   const oldIdToNewId: Record<string, string> = {};
   for (const [oldId, name] of Object.entries(oldNames)) {
@@ -139,6 +147,9 @@ export async function resetCategoriesToDefaults(userId: string): Promise<Record<
 }
 
 export async function seedDefaultCategories(userId: string): Promise<void> {
+  const userSnap = await getDoc(userDoc(userId));
+  const expenseLibraryMode =
+    (userSnap.data() as { expenseLibraryMode?: boolean } | undefined)?.expenseLibraryMode === true;
   const [existingExpense, existingIncome, existingExpFolders, existingIncFolders] = await Promise.all([
     fetchCategories(userId, 'expense'),
     fetchCategories(userId, 'income'),
@@ -149,7 +160,7 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
   const db = getDb();
 
   // ── Seed missing categories ──────────────────────────────────────────────────
-  if (existingExpense.length === 0) {
+  if (!expenseLibraryMode && existingExpense.length === 0) {
     for (const cat of DEFAULT_EXPENSE_CATEGORIES) {
       const { id, ...rest } = cat;
       const clean = Object.fromEntries(Object.entries({ ...rest, userId }).filter(([, v]) => v !== undefined));
@@ -165,13 +176,15 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
   }
 
   // ── Seed missing folders (checked independently — folders may be missing even if cats exist) ──
-  if (existingExpFolders.length === 0) {
-    await bulkCreateFolders(userId, DEFAULT_EXPENSE_FOLDER_SEEDS);
-  } else {
-    // Ensure individual missing default folders are created (partial migration)
-    const existingFolderIds = new Set(existingExpFolders.map((f) => f.id));
-    const missingFolders = DEFAULT_EXPENSE_FOLDER_SEEDS.filter((f) => !existingFolderIds.has(f.id));
-    if (missingFolders.length > 0) await bulkCreateFolders(userId, missingFolders);
+  if (!expenseLibraryMode) {
+    if (existingExpFolders.length === 0) {
+      await bulkCreateFolders(userId, DEFAULT_EXPENSE_FOLDER_SEEDS);
+    } else {
+      // Ensure individual missing default folders are created (partial migration)
+      const existingFolderIds = new Set(existingExpFolders.map((f) => f.id));
+      const missingFolders = DEFAULT_EXPENSE_FOLDER_SEEDS.filter((f) => !existingFolderIds.has(f.id));
+      if (missingFolders.length > 0) await bulkCreateFolders(userId, missingFolders);
+    }
   }
 
   if (existingIncFolders.length === 0) {
@@ -188,16 +201,18 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
     CATEGORY_BLUEPRINTS.map((b) => [b.id, b.folderId]),
   );
 
-  const catsToMigrate = existingExpense.filter(
-    (c) => !c.folderId && blueprintFolderMap.has(c.id),
-  );
-  if (catsToMigrate.length > 0) {
-    const batch = writeBatch(db);
-    for (const cat of catsToMigrate) {
-      const folderId = blueprintFolderMap.get(cat.id)!;
-      batch.update(doc(colRef(userId, 'expense'), cat.id), { folderId });
+  if (!expenseLibraryMode) {
+    const catsToMigrate = existingExpense.filter(
+      (c) => !c.folderId && blueprintFolderMap.has(c.id),
+    );
+    if (catsToMigrate.length > 0) {
+      const batch = writeBatch(db);
+      for (const cat of catsToMigrate) {
+        const folderId = blueprintFolderMap.get(cat.id)!;
+        batch.update(doc(colRef(userId, 'expense'), cat.id), { folderId });
+      }
+      await batch.commit();
     }
-    await batch.commit();
   }
 }
 

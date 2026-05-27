@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, deleteDoc } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import type { StoreProfile } from '@/shared/types';
 import { toLocalDateKey } from '@/shared/utils/dateKey';
@@ -44,4 +44,10 @@ export async function updateStoreProfile(
   }
 
   await setDoc(ref, { ...existing, probableCategories: cats }, { merge: true });
+}
+
+export async function clearStoreProfiles(userId: string): Promise<void> {
+  const col = collection(getDb(), 'storeProfiles', userId, 'profiles');
+  const snap = await getDocs(col);
+  await Promise.all(snap.docs.map((profile) => deleteDoc(profile.ref)));
 }

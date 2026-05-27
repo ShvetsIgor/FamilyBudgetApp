@@ -16,13 +16,43 @@ import {
 import { addExpense } from '@/features/expenses/services/expensesService';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
 import { CategoryPicker } from '@/features/categories/components/CategoryPicker';
+import { CategoryEditorSheet } from '@/features/categories/components/CategoryEditorSheet';
+import { FolderEditorSheet } from '@/features/categories/components/FolderEditorSheet';
 import { CategoryIcon, StickerIcon } from '@/features/categories/components/CategoryIcon';
+import {
+  addCategory as addCategoryAction,
+  addFolder as addFolderAction,
+  updateCategory as updateCategoryAction,
+} from '@/features/categories/store/categoriesSlice';
+import {
+  addCategory as addCategoryToDb,
+  addCategoryWithId,
+  updateCategory as updateCategoryInDb,
+} from '@/features/categories/services/categoriesService';
+import {
+  addFolder as addFolderToDb,
+  addFolderWithId,
+} from '@/features/categories/services/categoryFoldersService';
+import {
+  categoryBlueprintToSuggestion,
+  findCategoryBlueprint,
+  findFolderBlueprint,
+  folderBlueprintToSuggestion,
+  getCategoryLibraryBlueprints,
+  getFolderLibraryBlueprints,
+} from '@/features/categories/utils/libraryLookup';
 import { formatAmount, parseLocalDate } from '@/shared/utils/currency';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { MiniCalendar } from '@/shared/components/MiniCalendar';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
-import type { RecurringFrequency, RecurringType, SerializableRecurringPayment } from '@/shared/types';
+import type {
+  Category,
+  CategoryFolder,
+  RecurringFrequency,
+  RecurringType,
+  SerializableRecurringPayment,
+} from '@/shared/types';
 import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
 
 const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫'] as const;
@@ -40,6 +70,10 @@ function applyKey(cur: string, key: NumKey): string {
 
 function daysUntil(dateStr: string): number {
   return differenceInDays(parseISO(dateStr), new Date());
+}
+
+function normalizeLabel(value: string): string {
+  return value.trim().toLowerCase();
 }
 
 type FormMode = { mode: 'add' } | { mode: 'edit'; item: SerializableRecurringPayment };
@@ -343,9 +377,14 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
   freq: { value: RecurringFrequency; label: string }[];
 }) {
   const t = useT();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((s) => s.auth.user);
   const allExpCats = useAppSelector((s) => s.categories.expense);
+  const expenseFolders = useAppSelector((s) => s.categories.folders.expense ?? []);
   const { groups: expenseCatGroups, getCatsInGroup, getGroupOf } = useCategoryGroups('expense');
   const symbol = getCurrencySymbol(currency as Parameters<typeof getCurrencySymbol>[0]);
+  const folderSuggestions = getFolderLibraryBlueprints('expense').map(folderBlueprintToSuggestion);
+  const categorySuggestions = getCategoryLibraryBlueprints('expense').map(categoryBlueprintToSuggestion);
 
   const [name, setName] = useState(initial?.name ?? '');
   const [amount, setAmount] = useState(initial ? String(initial.amount) : '0');
@@ -367,6 +406,8 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
   const [showDate, setShowDate] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [showFolderEditor, setShowFolderEditor] = useState(false);
+  const [showCategoryEditor, setShowCategoryEditor] = useState(false);
 
   const amountNum = parseFloat(amount) || 0;
   const category = allExpCats.find((c) => c.id === categoryId);
@@ -376,22 +417,107 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
 
   function tap(key: NumKey) { setAmount((cur) => applyKey(cur, key)); }
 
+  const attachCategoryToFolder = (current: Category, folderId?: string) => {
+    if (!folderId || current.folderId === folderId || current.extraFolderIds?.includes(folderId)) {
+      return current;
+    }
+    if (!current.folderId) {
+      return { ...current, folderId };
+    }
+    return {
+      ...current,
+      extraFolderIds: [...new Set([...(current.extraFolderIds ?? []), folderId])],
+    };
+  };
+
+  async function handleSaveFolder(
+    data: Omit<CategoryFolder, 'id' | 'userId'> & { id?: string; presetId?: string },
+  ) {
+    if (!user) return;
+    const { presetId, ...rest } = data;
+    const preset = findFolderBlueprint('expense', { id: presetId, name: rest.name });
+    const existing = expenseFolders.find((folder) => (
+      folder.id === preset?.id || normalizeLabel(folder.name) === normalizeLabel(rest.name)
+    ));
+    if (existing) {
+      setSelectedGroupId(existing.id);
+      setCategoryId('');
+      setShowFolderEditor(false);
+      return;
+    }
+
+    const created = preset
+      ? await addFolderWithId(user.id, preset.id, {
+          ...rest,
+          name: preset.ru ?? preset.name,
+          icon: preset.icon,
+          color: preset.color,
+        })
+      : await addFolderToDb(user.id, rest);
+
+    dispatch(addFolderAction(created));
+    setSelectedGroupId(created.id);
+    setCategoryId('');
+    setShowFolderEditor(false);
+  }
+
+  async function handleSaveCategory(
+    data: Omit<Category, 'id' | 'userId'> & { id?: string; presetId?: string },
+  ) {
+    if (!user) return;
+    const { presetId, ...rest } = data;
+    const preset = findCategoryBlueprint('expense', { id: presetId, name: rest.name });
+    const existing = allExpCats.find((entry) => !entry.archived && (
+      entry.id === preset?.id || normalizeLabel(entry.name) === normalizeLabel(rest.name)
+    ));
+
+    if (existing) {
+      const attached = attachCategoryToFolder(existing, rest.folderId ?? undefined);
+      if (
+        attached.folderId !== existing.folderId ||
+        JSON.stringify(attached.extraFolderIds ?? []) !== JSON.stringify(existing.extraFolderIds ?? [])
+      ) {
+        await updateCategoryInDb(user.id, attached);
+        dispatch(updateCategoryAction(attached));
+      }
+      setSelectedGroupId(rest.folderId ?? attached.folderId ?? '');
+      setCategoryId(attached.id);
+      setShowCategoryEditor(false);
+      return;
+    }
+
+    const order = rest.folderId
+      ? allExpCats.filter((entry) => entry.folderId === rest.folderId).length
+      : allExpCats.length;
+
+    const created = preset
+      ? await addCategoryWithId(user.id, preset.id, {
+          ...rest,
+          name: preset.ru ?? preset.name,
+          icon: preset.icon,
+          color: preset.color,
+          order,
+        })
+      : await addCategoryToDb(user.id, {
+          ...rest,
+          order,
+        });
+
+    dispatch(addCategoryAction(created));
+    setSelectedGroupId(created.folderId ?? '');
+    setCategoryId(created.id);
+    setShowCategoryEditor(false);
+  }
+
   async function handleSubmit() {
     if (!name.trim()) { setError('Введите название'); return; }
     if (amountNum <= 0 || saving) return;
-
-    // If only group is selected (no specific category), pick first in group
-    let effectiveCategoryId = categoryId;
-    if (!effectiveCategoryId && selectedGroupId) {
-      const firstInGroup = getCatsInGroup(selectedGroupId)[0];
-      effectiveCategoryId = firstInGroup?.id ?? '';
-    }
 
     setError(''); setSaving(true);
     try {
       await onSave({
         name: name.trim(), amount: amountNum, currency: currency as never,
-        categoryId: effectiveCategoryId, frequency, startDate: parseLocalDate(startDate),
+        categoryId, frequency, startDate: parseLocalDate(startDate),
         type, typeLabel: type === 'custom' ? typeLabel.trim() || undefined : undefined,
         reminderDays, comment: comment.trim() || undefined,
       });
@@ -569,7 +695,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
                   return (
                     <button
                       key={sub.id}
-                      onClick={() => setCategoryId(sel ? selectedGroupId : sub.id)}
+                      onClick={() => setCategoryId(sel ? '' : sub.id)}
                       className="h-[36px] px-3 rounded-[10px] flex items-center gap-1.5 transition-all border-0 text-[10px] font-extrabold"
                       style={{
                         background: sel ? catColor : catColor + '18',
@@ -584,6 +710,22 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
                 })}
               </div>
             )}
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowFolderEditor(true)}
+                className="flex-1 rounded-xl border border-dashed border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"
+              >
+                + {t('chat.clarify.newFolder')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowCategoryEditor(true)}
+                className="flex-1 rounded-xl border border-dashed border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"
+              >
+                + {t('categories.newCategory')}
+              </button>
+            </div>
           </div>
 
           {/* Reminder */}
@@ -678,7 +820,31 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
         </div>
         <div className="rounded-2xl border border-border bg-card p-4">
           <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.category')}</label>
-          <CategoryPicker type="expense" value={categoryId} onChange={setCategoryId} />
+          <CategoryPicker
+            type="expense"
+            value={categoryId}
+            onChange={(nextId) => {
+              setCategoryId(nextId);
+              const nextCat = allExpCats.find((entry) => entry.id === nextId);
+              setSelectedGroupId(nextCat?.folderId ?? getGroupOf(nextCat) ?? '');
+            }}
+          />
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFolderEditor(true)}
+              className="flex-1 rounded-xl border border-dashed border-border px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+            >
+              + {t('chat.clarify.newFolder')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowCategoryEditor(true)}
+              className="flex-1 rounded-xl border border-dashed border-border px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+            >
+              + {t('categories.newCategory')}
+            </button>
+          </div>
         </div>
         <div className="rounded-2xl border border-border bg-card p-4">
           <label className="text-xs text-muted-foreground mb-1 block">{t('recurring.nextDue')}</label>
@@ -710,6 +876,26 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
           </button>
         </div>
       </form>
+
+      <FolderEditorSheet
+        open={showFolderEditor}
+        onClose={() => setShowFolderEditor(false)}
+        type="expense"
+        onSave={handleSaveFolder}
+        availableFolders={expenseFolders}
+        suggestions={folderSuggestions}
+      />
+
+      <CategoryEditorSheet
+        open={showCategoryEditor}
+        onClose={() => setShowCategoryEditor(false)}
+        type="expense"
+        folderId={selectedGroupId || undefined}
+        initial={{ folderId: selectedGroupId || undefined }}
+        availableFolders={expenseFolders}
+        onSave={handleSaveCategory}
+        suggestions={categorySuggestions}
+      />
     </>
   );
 }

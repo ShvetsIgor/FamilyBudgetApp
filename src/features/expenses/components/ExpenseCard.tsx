@@ -7,6 +7,7 @@ import {
   getExpenseListMeta,
   hasMeaningfulSplit,
 } from '@/features/expenses/utils/expensePresentation';
+import { localizeSavingsExpenseComment } from '@/features/savings/utils/savingsExpenseComment';
 import { formatAmount } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
 import type { SerializableExpense } from '@/shared/types';
@@ -40,7 +41,10 @@ export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
   const subtitleLabel = listMeta ? t.cat(listMeta.labelSource) : categoryLabel || folderLabel || '';
 
   // Top line: comment or store name; if neither — category name
-  const topLine = expense.comment || expense.store || categoryLabel;
+  const rawTopLine = expense.comment || expense.store || categoryLabel;
+  const topLine = expense.tags?.includes('savings')
+    ? localizeSavingsExpenseComment(rawTopLine, t('savings.expenseLabel'))
+    : rawTopLine;
 
   const splitSum = expense.splits.reduce((s, x) => s + x.amount, 0);
   const mainPortion = expense.amount - splitSum;

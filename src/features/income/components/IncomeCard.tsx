@@ -23,6 +23,7 @@ export function IncomeCard({ income, onDelete, onEdit }: Props) {
   const categories = useAppSelector((s) => s.categories.income);
   const category = categories.find((c) => c.id === income.categoryId);
   const t = useT();
+  const isRecurring = income.tags?.includes('recurring') ?? false;
 
   return (
     <div className="flex w-full items-center gap-3 px-4 py-3">
@@ -39,7 +40,7 @@ export function IncomeCard({ income, onDelete, onEdit }: Props) {
         <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
           <span>{category ? t.cat(category.name) : ''}</span>
           <span>·</span>
-          <span>{METHOD_ICONS[income.method] ?? '🔄'}</span>
+          <span>{isRecurring ? '🔄' : (METHOD_ICONS[income.method] ?? '🔄')}</span>
           {income.privacy === 'secret' && <span>🔒</span>}
         </p>
       </div>

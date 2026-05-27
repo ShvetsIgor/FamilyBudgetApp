@@ -8,6 +8,7 @@ import { Plus } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { mergeExpenses, removeExpense, prependExpense } from '@/features/expenses/store/expensesSlice';
 import { fetchMonthExpenses, deleteExpense } from '@/features/expenses/services/expensesService';
+import { updateRecurringItem } from '@/features/recurring/store/recurringSlice';
 import { ExpenseCard } from '@/features/expenses/components/ExpenseCard';
 import { UpcomingBills } from '@/features/recurring/components/UpcomingBills';
 import { formatAmount } from '@/shared/utils/currency';
@@ -86,10 +87,14 @@ export default function ExpensesPage() {
       const currentUser = userRef.current;
       if (u && currentUser) {
         clearTimeout(u.timerId);
-        deleteExpense(currentUser.id, u.expense).catch(() => {});
+        deleteExpense(currentUser.id, u.expense)
+          .then((restored) => {
+            if (restored) dispatch(updateRecurringItem(restored));
+          })
+          .catch(() => {});
       }
     };
-  }, []); // empty deps — cleanup on unmount only
+  }, [dispatch]); // empty deps — cleanup on unmount only
 
   const isCurrentMonth = selectedMonth === currentMonth;
   const expenses = isCurrentMonth ? reduxExpenses : (localExpenses ?? []);
@@ -279,12 +284,19 @@ export default function ExpensesPage() {
                           // Cancel any previous pending delete
                           if (undoItem) {
                             clearTimeout(undoItem.timerId);
-                            deleteExpense(user.id, undoItem.expense).catch(() => {});
+                            deleteExpense(user.id, undoItem.expense)
+                              .then((restored) => {
+                                if (restored) dispatch(updateRecurringItem(restored));
+                              })
+                              .catch(() => {});
                           }
                           // Optimistic remove
                           dispatch(removeExpense(e.id));
                           const timerId = setTimeout(async () => {
-                            try { await deleteExpense(user.id, e); } catch { /* ignore */ }
+                            try {
+                              const restored = await deleteExpense(user.id, e);
+                              if (restored) dispatch(updateRecurringItem(restored));
+                            } catch { /* ignore */ }
                             setUndoItem(null);
                           }, 5000);
                           setUndoItem({ expense: e, timerId });

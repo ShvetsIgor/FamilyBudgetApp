@@ -88,6 +88,7 @@ export default function IncomePage() {
           categoryId: item.categoryId,
           date: new Date(y, m - 1, d, 12, 0, 0),
           method: 'bank',
+          tags: ['recurring'],
           privacy: 'regular',
           comment: item.name,
         });
@@ -123,7 +124,7 @@ export default function IncomePage() {
 
   async function handleEdit(data: Omit<AddIncomeInput, 'userId'>) {
     if (!user || !editingIncome) return;
-    dispatch(updateIncomeAction(await updateIncome({ ...data, userId: user.id, id: editingIncome.id })));
+    dispatch(updateIncomeAction(await updateIncome({ ...data, tags: editingIncome.tags, userId: user.id, id: editingIncome.id })));
     setEditingIncome(null);
   }
 

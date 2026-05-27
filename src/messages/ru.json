@@ -280,6 +280,7 @@
   },
   "savings": {
     "title": "Цели накоплений",
+    "expenseLabel": "Накопления",
     "newGoal": "Новая цель",
     "back": "← Назад",
     "addContribution": "Пополнить",

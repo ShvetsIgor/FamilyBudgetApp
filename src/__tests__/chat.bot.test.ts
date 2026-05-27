@@ -69,6 +69,7 @@ function makeCtx(overrides: Partial<BotContext> = {}): BotContext {
   return {
     userId: 'u1',
     currency: 'ILS',
+    language: 'ru',
     categoriesById: map,
     foldersById,
     topCategoryIds: ['dining', 'groceries'],

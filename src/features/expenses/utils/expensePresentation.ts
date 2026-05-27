@@ -29,6 +29,7 @@ function getStoreGroupFolder(
 function getStoreGroupLabelSource(
   storeGroup: string | undefined,
   folders: CategoryFolder[],
+  language = 'en',
 ): string | undefined {
   if (!storeGroup) return undefined;
 
@@ -37,7 +38,7 @@ function getStoreGroupLabelSource(
 
   const folderId = getStoreGroupFolderId(storeGroup);
   if (folderId) {
-    const presetLabel = getPresetDisplayName(folderId, 'en');
+    const presetLabel = getPresetDisplayName(folderId, language);
     if (presetLabel) return presetLabel;
   }
 

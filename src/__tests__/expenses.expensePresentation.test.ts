@@ -116,6 +116,15 @@ describe('expensePresentation', () => {
     });
   });
 
+  it('returns null when category is not found', () => {
+    const meta = getExpenseListMeta(
+      makeExpense({ splits: [], storeGroup: undefined, categoryId: 'nonexistent' }),
+      categories,
+      folders,
+    );
+    expect(meta).toBeNull();
+  });
+
   it('matches store-group filters only for real split expenses', () => {
     const splitExpense = makeExpense();
     const regularExpense = makeExpense({

@@ -60,7 +60,11 @@ const uiSlice = createSlice({
     hydrateThemePreferences(state) {
       const storedTheme = ls('ui.theme');
       const storedDarkMode = ls('ui.darkMode');
-      if (storedTheme === 'mist' || storedTheme === 'paper') state.theme = storedTheme;
+      if (storedTheme === 'mist' || storedTheme === 'press') state.theme = storedTheme;
+      if (storedTheme === 'paper') {
+        state.theme = 'press';
+        if (typeof window !== 'undefined') localStorage.setItem('ui.theme', 'press');
+      }
       if (storedTheme === 'dark') {
         state.theme = 'mist';
         state.isDarkMode = true;

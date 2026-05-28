@@ -43,6 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const resolvedTheme = profileTheme === 'press' || profileTheme === 'paper' ? 'press' : 'mist';
         dispatch(setTheme(resolvedTheme));
         dispatch(setDarkMode(profile.darkMode ?? profileTheme === 'dark'));
+        void resolvedTheme;
         if (profile.weekStart) dispatch(setWeekStart(profile.weekStart));
 
         // Seed categories/folders if first login, then load all

@@ -25,15 +25,15 @@ import { fetchMonthIncome } from '@/features/income/services/incomeService';
 import { expensesToCsv, incomeTocsv, downloadCsv } from '@/shared/utils/exportCsv';
 
 const CURRENCIES: { value: Currency; label: string }[] = [
-  { value: 'ILS', label: 'в‚Є ILS' },
+  { value: 'ILS', label: '₪ ILS' },
   { value: 'USD', label: '$ USD' },
   { value: 'CAD', label: 'CA$ CAD' },
-  { value: 'RUB', label: 'в‚Ѕ RUB' },
+  { value: 'RUB', label: '₽ RUB' },
 ];
 
 const LANGUAGES: { value: Language; label: string }[] = [
-  { value: 'en', label: 'рџ‡єрџ‡ё English' },
-  { value: 'ru', label: 'рџ‡·рџ‡є Р СѓСЃСЃРєРёР№' },
+  { value: 'en', label: '🇺🇸 English' },
+  { value: 'ru', label: '🇷🇺 Русский' },
 ];
 
 export default function AccountPage() {
@@ -166,7 +166,7 @@ export default function AccountPage() {
     } catch { setFamilyError('Failed to leave family. Try again.'); } finally { setFamilyLoading(false); }
   }
 
-  // в”Ђв”Ђ Reusable section blocks в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+  // ── Reusable section blocks ──────────────────────────────────────────────────
 
   const profileCard = (
     <div className="rounded-2xl border border-border bg-card p-5 flex items-center gap-4">
@@ -182,14 +182,14 @@ export default function AccountPage() {
               className="flex-1 rounded-lg border border-border bg-background px-2 py-1 text-sm font-semibold outline-none focus:border-primary"
             />
             <button onClick={handleSaveName} disabled={nameSaving} className="text-xs font-medium text-primary disabled:opacity-50">
-              {nameSaving ? 'вЂ¦' : t('account.save')}
+              {nameSaving ? '…' : t('account.save')}
             </button>
             <button onClick={() => setEditingName(false)} className="text-xs text-muted-foreground">{t('account.cancel')}</button>
           </div>
         ) : (
           <div className="flex items-center gap-2">
             <p className="font-semibold truncate">{user.name}</p>
-            <button onClick={() => { setNameInput(user.name); setEditingName(true); }} className="text-muted-foreground hover:text-primary transition-colors text-xs shrink-0">вњЋ</button>
+            <button onClick={() => { setNameInput(user.name); setEditingName(true); }} className="text-muted-foreground hover:text-primary transition-colors text-xs shrink-0">✎</button>
           </div>
         )}
         <p className="text-sm text-muted-foreground truncate">{user.email}</p>
@@ -204,7 +204,7 @@ export default function AccountPage() {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs text-muted-foreground">{t('account.family')}</p>
-          <p className="font-semibold mt-0.5">рџ‘ЁвЂЌрџ‘©вЂЌрџ‘§ {family.name}</p>
+          <p className="font-semibold mt-0.5">👨‍👩‍👧 {family.name}</p>
         </div>
         {isOwner && <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{t('account.owner')}</span>}
       </div>
@@ -233,7 +233,7 @@ export default function AccountPage() {
               <div className="flex gap-2">
                 <button onClick={handleSendInvite} disabled={!inviteEmail.trim() || familyLoading}
                   className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-                  {familyLoading ? 'вЂ¦' : t('account.sendInvite')}
+                  {familyLoading ? '…' : t('account.sendInvite')}
                 </button>
                 <button onClick={() => { setShowInvite(false); setInviteEmail(''); }}
                   className="rounded-xl border border-border px-4 py-2.5 text-sm text-muted-foreground">
@@ -263,7 +263,7 @@ export default function AccountPage() {
       <div className="flex gap-2">
         <button onClick={handleAcceptInvite} disabled={familyLoading}
           className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-          {familyLoading ? 'вЂ¦' : t('account.accept')}
+          {familyLoading ? '…' : t('account.accept')}
         </button>
         <button onClick={handleRejectInvite} disabled={familyLoading}
           className="rounded-xl border border-border px-4 py-2.5 text-sm text-muted-foreground disabled:opacity-50">
@@ -282,7 +282,7 @@ export default function AccountPage() {
           <div className="flex gap-2">
             <button onClick={handleCreateFamily} disabled={!familyName.trim() || familyLoading}
               className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-              {familyLoading ? 'вЂ¦' : t('account.createFamily')}
+              {familyLoading ? '…' : t('account.createFamily')}
             </button>
             <button onClick={() => { setShowCreateFamily(false); setFamilyName(''); }}
               className="rounded-xl border border-border px-4 py-2.5 text-sm text-muted-foreground">
@@ -373,7 +373,7 @@ export default function AccountPage() {
             <button key={l.value} onClick={() => handleLanguage(l.value)}
               className={cn('flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-medium transition-colors border', language === l.value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground')}>
               <span>{l.label}</span>
-              {language === l.value && <span className="text-primary">вњ“</span>}
+              {language === l.value && <span className="text-primary">✓</span>}
             </button>
           ))}
         </div>
@@ -385,15 +385,15 @@ export default function AccountPage() {
     <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
       <Link href="/savings" className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/50 transition-colors">
         <span className="text-sm font-medium">{t('account.savingsGoals')}</span>
-        <span className="text-muted-foreground text-sm">в†’</span>
+        <span className="text-muted-foreground text-sm">→</span>
       </Link>
       <Link href="/recurring" className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/50 transition-colors">
         <span className="text-sm font-medium">{t('account.recurringPayments')}</span>
-        <span className="text-muted-foreground text-sm">в†’</span>
+        <span className="text-muted-foreground text-sm">→</span>
       </Link>
       <Link href="/categories" className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/50 transition-colors">
         <span className="text-sm font-medium">{t('account.categories')}</span>
-        <span className="text-muted-foreground text-sm">в†’</span>
+        <span className="text-muted-foreground text-sm">→</span>
       </Link>
     </div>
   );
@@ -456,7 +456,7 @@ export default function AccountPage() {
   const signOutBtn = (
     <button onClick={handleSignOut} disabled={signingOut}
       className="rounded-2xl border border-destructive/40 bg-destructive/5 py-3.5 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50">
-      {signingOut ? 'вЂ¦' : t('account.signOut')}
+      {signingOut ? '…' : t('account.signOut')}
     </button>
   );
 
@@ -467,7 +467,7 @@ export default function AccountPage() {
         <p className="text-sm font-bold text-foreground">{title}</p>
         {sub && <p className="text-xs font-semibold text-muted-foreground mt-0.5">{sub}</p>}
       </div>
-      {right ?? <span className="text-muted-foreground text-lg leading-none">вЂє</span>}
+      {right ?? <span className="text-muted-foreground text-lg leading-none">›</span>}
     </div>
   );
 
@@ -483,7 +483,7 @@ export default function AccountPage() {
 
   return (
     <>
-      {/* в”Ђв”Ђ MOBILE layout в”Ђв”Ђ */}
+      {/* ── MOBILE layout ── */}
       <div className="lg:hidden flex flex-col gap-4 px-[22px] pt-4 pb-28">
         {/* Profile card */}
         {profileCard}
@@ -493,22 +493,22 @@ export default function AccountPage() {
         {familyBlock}
 
         {/* Budget section */}
-        {mobileLabel('Р‘СЋРґР¶РµС‚')}
+        {mobileLabel('Бюджет')}
         {mobileCard(<>
-          <Link href="/categories">{mobileRow('рџ—‚', '#F2CC8F22', t('account.categories').replace('рџЏ·пёЏ ', ''))}</Link>
-          <Link href="/recurring">{mobileRow('рџ”Ѓ', '#8AA9D622', t('account.recurringPayments').replace('рџ”„ ', ''))}</Link>
-          <Link href="/savings">{mobileRow('рџђ·', '#81B29A22', t('account.savingsGoals').replace('рџЋЇ ', ''))}</Link>
+          <Link href="/categories">{mobileRow('🗂', '#F2CC8F22', t('account.categories').replace('🏷️ ', ''))}</Link>
+          <Link href="/recurring">{mobileRow('🔁', '#8AA9D622', t('account.recurringPayments').replace('🔄 ', ''))}</Link>
+          <Link href="/savings">{mobileRow('🐷', '#81B29A22', t('account.savingsGoals').replace('🎯 ', ''))}</Link>
         </>)}
 
         {mobileLabel(t('account.appearance'))}
         {appearanceBlock}
 
         {/* App section */}
-        {mobileLabel('РџСЂРёР»РѕР¶РµРЅРёРµ')}
+        {mobileLabel('Приложение')}
         {mobileCard(<>
           {/* Language */}
           <div className="flex items-center gap-3 px-4 py-3.5">
-            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#F2CC8F22' }}>рџЊђ</div>
+            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#F2CC8F22' }}>🌐</div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-foreground">{t('account.language')}</p>
             </div>
@@ -538,7 +538,7 @@ export default function AccountPage() {
           </div>
           {/* Week start */}
           <div className="flex items-center gap-3 px-4 py-3.5">
-            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#8AA9D622' }}>рџ“…</div>
+            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#8AA9D622' }}>📅</div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-foreground">{t('account.weekStart')}</p>
             </div>
@@ -553,7 +553,7 @@ export default function AccountPage() {
           </div>
           {/* Notifications */}
           <div className="flex items-center gap-3 px-4 py-3.5">
-            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#C97B8422' }}>рџ””</div>
+            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#C97B8422' }}>🔔</div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-foreground">{t('notifications.title')}</p>
               <p className="text-xs font-semibold text-muted-foreground mt-0.5">
@@ -571,7 +571,7 @@ export default function AccountPage() {
           </div>
           {/* Export */}
           <div className="flex items-center gap-3 px-4 py-3.5">
-            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#A8B89C22' }}>рџ“¤</div>
+            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#A8B89C22' }}>📤</div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-foreground">{t('export.title')}</p>
               <p className="text-xs font-semibold text-muted-foreground mt-0.5">{exportMonth}</p>
@@ -586,7 +586,7 @@ export default function AccountPage() {
         {signOutBtn}
       </div>
 
-      {/* в”Ђв”Ђ DESKTOP layout вЂ” 2 columns в”Ђв”Ђ */}
+      {/* ── DESKTOP layout — 2 columns ── */}
       <div className="hidden lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start pb-8">
         {/* Left: profile + family */}
         <div className="flex flex-col gap-4">

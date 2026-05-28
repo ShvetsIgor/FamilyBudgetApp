@@ -38,7 +38,7 @@ export function TopBar() {
   const firstName = user?.name?.split(' ')[0] || '';
 
   const title = isHome && firstName
-    ? `${t('topbar.greeting').replace('{name}', firstName)} вњЁ`
+    ? `${t('topbar.greeting').replace('{name}', firstName)} ✨`
     : t(getPageTitleKey(pathname));
 
   return (
@@ -46,7 +46,7 @@ export function TopBar() {
       {/* Title */}
       <h1 className="text-lg font-bold text-foreground shrink-0 min-w-[160px]">{title}</h1>
 
-      {/* Search вЂ” only on expenses page */}
+      {/* Search - only on expenses page */}
       {isExpenses && (
         <div className="flex-1 max-w-[360px]">
           <div className="relative">

@@ -11,9 +11,9 @@ import { IncomeDrawerForm } from './IncomeDrawerForm';
 import { SavingsDrawerForm } from './SavingsDrawerForm';
 
 const TABS = [
-  { key: 'expense' as const, label: 'Р Р°СЃС…РѕРґ',     accent: 'hsl(var(--primary))' },
-  { key: 'income'  as const, label: 'Р”РѕС…РѕРґ',      accent: 'hsl(var(--success))' },
-  { key: 'savings' as const, label: 'Р’ РєРѕРїРёР»РєСѓ',  accent: 'hsl(var(--primary))' },
+  { key: 'expense' as const, label: 'Расход',     accent: 'hsl(var(--primary))' },
+  { key: 'income'  as const, label: 'Доход',      accent: 'hsl(var(--success))' },
+  { key: 'savings' as const, label: 'В копилку',  accent: 'hsl(var(--primary))' },
 ];
 
 export function AddDrawer() {

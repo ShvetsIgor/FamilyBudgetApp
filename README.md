@@ -38,6 +38,7 @@ Conversational family budget tracker built around fast natural-language expense 
 - **Expanded icon colors**: category/folder icon color palette includes a broader 28-color set for more visual separation.
 - **Mist/Paper theme model**: visual skin is now `theme: mist | paper`, while dark mode is stored separately as `isDarkMode`; `<html>` receives `data-theme` and the `dark` class independently.
 - **Outline visual system**: global CSS tokens, helper classes, Inter/Manrope fonts, and category outline icons are wired from the Mist/Paper design package without changing expense/parser persistence.
+- **UX hotfix baseline**: source-level UTF-8 mojibake introduced during redesign was removed; account/settings icons use valid Unicode/component rendering; category/folder library suggestions select on pointer-down for mobile Safari; chat suggestions no longer expose preset/library folders unless the user explicitly opens the library flow.
 
 ## Main Features
 
@@ -101,6 +102,11 @@ Current baseline after the 2026-05-28 alignment pass:
 - `npm run lint` - green
 - `npm run build` - green
 - `npm test` - `489/489` green
+
+Additional 2026-05-29 UX hotfix checks:
+
+- source mojibake scanner over tracked `src`, `public`, `README.md`, `CLAUDE.md`, and `tailwind.config.ts` - no bad UTF-8 tokens found
+- local mobile viewport smoke at `390x844` - `document.characterSet` is `UTF-8`, meta charset is `utf-8`, and rendered app text has no mojibake tokens
 
 ## Reference
 

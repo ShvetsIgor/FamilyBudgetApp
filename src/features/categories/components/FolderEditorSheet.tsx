@@ -121,13 +121,15 @@ export function FolderEditorSheet({
                   <button
                     key={suggestion.id}
                     type="button"
-                    onClick={() => {
+                    aria-label={`Выбрать подсказку ${suggestion.label}`}
+                    onPointerDown={(event) => {
+                      event.preventDefault();
                       setName(suggestion.label);
                       setIcon(suggestion.icon);
                       setColor(suggestion.color);
                       setSelectedPresetId(suggestion.id);
                     }}
-                    className="block w-full px-3 py-2 text-left text-sm font-semibold text-[#3D2C1F] transition-colors hover:bg-[#F4ECDE]"
+                    className="block min-h-11 w-full px-3 py-2 text-left text-sm font-semibold text-[#3D2C1F] transition-colors hover:bg-[#F4ECDE]"
                   >
                     {suggestion.label}
                   </button>

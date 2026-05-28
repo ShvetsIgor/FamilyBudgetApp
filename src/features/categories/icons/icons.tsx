@@ -1,26 +1,9 @@
 import React from 'react';
 
 /**
- * Family Budget вЂ” Outline icon set (v2 В· Mist + Paper compatible)
- *
- * Drop-in replacement for the sticker-style `icons.tsx`. Same exports
- * (`I`, `IconKey`, `IconProps`) and same icon names so any existing
- * `<CategoryIcon icon="cart" .../>` keeps working вЂ” only the rendering
- * changes from playful stickers to clean outline glyphs.
- *
- * Strokes use `currentColor`-style approach via the `c` prop. Each icon
- * is a single monochrome outline rendered at 32Г—32 (matches v1 viewBox
- * so chip/tile sizes don't need to change). `id` is kept in the props
- * signature for API compatibility but unused (no gradient).
- *
- * Usage stays identical:
- *
- *   const Icon = I[catKey] ?? I.box;
- *   <Icon c={category.color} id={catKey} />
- *
- * Theme-aware tinting happens at the wrapper level (the `.fb-cat-chip`
- * background uses the category --cat-*-tint var, while the icon stroke
- * uses the matching --cat-* solid). Both come from the active theme.
+ * Family Budget - Outline icon set (v2, Mist + Paper compatible).
+ * Public API is preserved: I, IconKey, IconProps.
+ * CategoryIcon icon="cart" keeps working; only the rendering style changed.
  */
 
 interface IconProps { c: string; id: string }

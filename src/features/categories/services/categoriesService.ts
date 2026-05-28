@@ -16,7 +16,6 @@ import type { Category, CategoryType } from '@/shared/types';
 import {
   DEFAULT_EXPENSE_CATEGORIES,
   DEFAULT_INCOME_CATEGORIES,
-  DEFAULT_EXPENSE_FOLDER_SEEDS,
   DEFAULT_INCOME_FOLDER_SEEDS,
 } from './defaultCategories';
 import { bulkCreateFolders, fetchFolders } from './categoryFoldersService';
@@ -159,14 +158,11 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
 
   const db = getDb();
 
-  // ── Seed missing categories ──────────────────────────────────────────────────
-  if (!expenseLibraryMode && existingExpense.length === 0) {
-    for (const cat of DEFAULT_EXPENSE_CATEGORIES) {
-      const { id, ...rest } = cat;
-      const clean = Object.fromEntries(Object.entries({ ...rest, userId }).filter(([, v]) => v !== undefined));
-      await setDoc(doc(colRef(userId, 'expense'), id), clean);
-    }
+  // Expense presets are library-only. Do not auto-activate them for chat/split suggestions.
+  if (!expenseLibraryMode && existingExpense.length === 0 && existingExpFolders.length === 0) {
+    await setDoc(userDoc(userId), { expenseLibraryMode: true }, { merge: true });
   }
+
   if (existingIncome.length === 0) {
     for (const cat of DEFAULT_INCOME_CATEGORIES) {
       const { id, ...rest } = cat;
@@ -175,17 +171,7 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
     }
   }
 
-  // ── Seed missing folders (checked independently — folders may be missing even if cats exist) ──
-  if (!expenseLibraryMode) {
-    if (existingExpFolders.length === 0) {
-      await bulkCreateFolders(userId, DEFAULT_EXPENSE_FOLDER_SEEDS);
-    } else {
-      // Ensure individual missing default folders are created (partial migration)
-      const existingFolderIds = new Set(existingExpFolders.map((f) => f.id));
-      const missingFolders = DEFAULT_EXPENSE_FOLDER_SEEDS.filter((f) => !existingFolderIds.has(f.id));
-      if (missingFolders.length > 0) await bulkCreateFolders(userId, missingFolders);
-    }
-  }
+  // Expense folders are also library-only. Existing user-created folders stay untouched.
 
   if (existingIncFolders.length === 0) {
     await bulkCreateFolders(userId, DEFAULT_INCOME_FOLDER_SEEDS);

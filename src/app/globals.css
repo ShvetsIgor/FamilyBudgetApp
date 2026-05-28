@@ -10,18 +10,6 @@
   }
 }
 
-/* ============================================================
- * Family Budget вЂ” Colors & Type v2 (Mist + Paper themes)
- *
- * Two themes selectable via [data-theme="mist"] / [data-theme="paper"]
- * on <html> or <body>. All values in Tailwind HSL form so existing
- * hsl(var(--background)) usages keep working.
- *
- * Mist  = С…РѕР»РѕРґРЅС‹Р№ СЃР»РµР№С‚ + РёРЅРґРёРіРѕ Р°РєС†РµРЅС‚, С…РµР№СЂР»Р°Р№РЅС‹ 1px, РјСЏРіРєРёРµ СЂР°РґРёСѓСЃС‹
- * Paper = РјРѕРЅРѕ + РіРѕСЂСЏС‡РёР№ Р°РїРµР»СЊСЃРёРЅ, 1px С‡С‘СЂРЅС‹Рµ РѕР±РІРѕРґРєРё РІРјРµСЃС‚Рѕ С‚РµРЅРµР№,
- *         РїР»РѕС‰Рµ СЂР°РґРёСѓСЃС‹, Manrope
- * ============================================================ */
-
 
 /* в”Ђв”Ђ Base + default theme (Mist) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
 :root,
@@ -59,7 +47,6 @@
   --input: 225 17% 94%;
   --ring: 232 100% 68%;
 
-  /* Radius вЂ” friendly, but flatter than v1 */
   --radius: 1rem;                      /* 16px base */
   --radius-sm: 0.625rem;               /* 10px chips */
   --radius-md: 0.875rem;               /* 14px buttons */
@@ -72,18 +59,14 @@
   --font-display: var(--font-inter, Inter), system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* Shadows вЂ” very light, almost none. Mist is hairline-driven. */
   --shadow-sm:  0 1px 1px rgba(20, 22, 30, .04);
   --shadow-md:  0 1px 2px rgba(20, 22, 30, .04), 0 4px 12px rgba(20, 22, 30, .05);
   --shadow-lg:  0 2px 4px rgba(20, 22, 30, .06), 0 12px 24px rgba(20, 22, 30, .08);
   --shadow-primary:    0 8px 18px hsl(var(--primary) / 0.35);
   --shadow-primary-sm: 0 4px 10px hsl(var(--primary) / 0.25);
 
-  /* Card border вЂ” used everywhere a "card" needs separation */
   --card-border: 1px solid hsl(var(--border));
 
-  /* Category accents вЂ” re-tuned for cool palette. Used by category color picker.
-   * The tints (-tint) are pre-mixed soft backgrounds for icon chips. */
   --cat-food:          #0F8559;
   --cat-food-tint:     #E2F4EB;
   --cat-home:          #5B6CFF;
@@ -130,9 +113,9 @@
   --accent: 13 100% 58%;
   --accent-foreground: 0 0% 100%;
 
-  --success: 137 64% 33%;              /* #1E8E3E вЂ” slightly muted in Paper */
+  --success: 137 64% 33%;
   --warn: 38 100% 50%;
-  --destructive: 13 100% 58%;          /* same as primary вЂ” only one hot color */
+  --destructive: 13 100% 58%;
   --destructive-foreground: 0 0% 100%;
 
   /* Paper's signature: black hairlines (= "outline" UI) */
@@ -150,7 +133,6 @@
   --font-sans: var(--font-manrope, Manrope), system-ui, -apple-system, sans-serif;
   --font-display: var(--font-manrope, Manrope), system-ui, sans-serif;
 
-  /* No shadows in Paper вЂ” surfaces stand out via 1px border instead */
   --shadow-sm: none;
   --shadow-md: none;
   --shadow-lg: none;
@@ -159,10 +141,6 @@
 
   --card-border: 1px solid hsl(var(--border));
 
-  /* Category accents вЂ” Paper uses high-contrast mono palette
-   * with hot orange reserved for ONLY 1-2 special categories
-   * (savings + the spotlight one of the month). All others go
-   * through a neutral tint. */
   --cat-food:          #0A0A0A;
   --cat-food-tint:     #F2F2F2;
   --cat-home:          #0A0A0A;
@@ -179,7 +157,7 @@
   --cat-education-tint:#F2F2F2;
   --cat-kids:          #FF4F2B;        /* highlight */
   --cat-kids-tint:     #FFE5DC;
-  --cat-savings:       #FF4F2B;        /* highlight вЂ” positive money */
+  --cat-savings:       #FF4F2B;
   --cat-savings-tint:  #FFE5DC;
   --cat-bills:         #0A0A0A;
   --cat-bills-tint:    #F2F2F2;
@@ -211,10 +189,6 @@
   --input: 0 0% 96%;
 }
 
-/* в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
- * Type primitives (theme-agnostic вЂ” use vars where appropriate)
- * в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
-
 .fb-bg-page  { background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: var(--font-sans); }
 .fb-card     { background: hsl(var(--card)); color: hsl(var(--card-foreground)); border-radius: var(--radius-lg); border: var(--card-border); box-shadow: var(--shadow-md); }
 .fb-pill     { border-radius: var(--radius-pill); }
@@ -223,7 +197,6 @@
 .fb-h1 { font-family: var(--font-display); font-size: 1.375rem; font-weight: 700; line-height: 1.15; color: hsl(var(--foreground)); letter-spacing: -0.015em; }
 .fb-h2 { font-family: var(--font-display); font-size: 0.875rem; font-weight: 700; color: hsl(var(--muted-foreground)); letter-spacing: 0.06em; text-transform: uppercase; }
 
-/* Money amounts вЂ” fonts differ by theme via --font-display */
 .fb-amount-hero  { font-family: var(--font-display); font-size: 2.5rem;   font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: -0.03em; }
 .fb-amount-large { font-family: var(--font-display); font-size: 1.5rem;   font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.025em; }
 .fb-amount-input { font-family: var(--font-display); font-size: 1.875rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
@@ -235,16 +208,8 @@
 .fb-caption      { font-family: var(--font-sans); font-size: 0.75rem;  font-weight: 500; color: hsl(var(--muted-foreground)); }
 .fb-tabular      { font-variant-numeric: tabular-nums; }
 
-/* Paper-specific tweak: numbers a touch heavier so they read as
- * "editorial display" вЂ” Manrope at 800 is already very strong. */
 :root[data-theme="paper"] .fb-amount-hero { font-weight: 800; letter-spacing: -0.035em; }
 
-/* в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
- * Component helpers вЂ” reusable shells the React side can hang on
- * в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
-
-/* Category icon chip вЂ” the squircle behind every category sticker.
- * Use with the new outline icon set: chip = tint, icon stroke = solid. */
 .fb-cat-chip {
   display: grid; place-items: center;
   border-radius: var(--radius-md);
@@ -308,7 +273,6 @@
   box-shadow: none;
 }
 
-/* Soft/ghost button вЂ” used for "Cancel", "Later", etc. */
 .fb-btn-soft {
   background: hsl(var(--muted));
   color: hsl(var(--foreground));
@@ -321,8 +285,6 @@
   background: hsl(var(--card));
 }
 
-/* Outline icon defaults вЂ” works because every icon SVG uses
- * stroke="currentColor". Just set color on the wrapper. */
 .fb-icon { stroke-width: 2px; stroke-linecap: round; stroke-linejoin: round; fill: none; }
 
 

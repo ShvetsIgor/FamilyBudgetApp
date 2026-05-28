@@ -219,6 +219,23 @@ Implemented:
 - core chat/category token files now read CSS variables instead of old warm constants
 - parser, split, recurring, savings, Firestore write, and category/folder domain logic were intentionally left out of the redesign scope
 
+## UX Hotfix Pass (2026-05-29)
+
+Implemented:
+
+- restored corrupted UTF-8 source literals from the redesign pass in account/settings, category hub, quick-add, top bar, and related comments
+- removed remaining source-level mojibake tokens from tracked app/documentation files; PowerShell may still print valid UTF-8 as mojibake, so use Node/UTF-8 reads for verification
+- account/settings menu icons now use valid Unicode emoji or existing visual components, not corrupted string literals
+- folder/category name library suggestions select on `pointerdown` with `preventDefault`, so mobile Safari blur cannot close the dropdown before the tap is handled
+- chat clarify suggestions use active user-created/activated expense folders only; library/preset folders stay hidden until the explicit library/add-from-library flow
+- expense category seeding no longer auto-materializes every preset folder/category as active user data; income defaults are unchanged
+
+Runtime contract:
+
+- Ordinary chat, quick suggestions, and split pickers must use active user categories/folders only.
+- Preset/library names are search suggestions or explicit library choices, not active entities until the user selects/activates them.
+- Do not auto-clean user-entered corrupted strings from Firestore/localStorage without a targeted migration decision; source literals and app-owned seed/cache text are safe to fix.
+
 ## Known Gaps
 
 - Split persistence is still one `Expense` document with `splits[]`.

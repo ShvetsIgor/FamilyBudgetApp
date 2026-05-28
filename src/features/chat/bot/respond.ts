@@ -8,7 +8,6 @@ import type { SerializableChatMessage, ParseResult } from '@/shared/types/messag
 import type { Category } from '@/shared/types';
 import type { BotContext } from './context';
 import { resolveCategoryByAlias } from '@/features/categories/utils/resolveCategory';
-import { folderBlueprintToSuggestion, getFolderLibraryBlueprints } from '@/features/categories/utils/libraryLookup';
 import { getStoreGroupFolderId } from '@/features/categories/utils/storeGroupFolders';
 import { savedPhrase, clarifyPhrase, clarifyStorePhrase, UNKNOWN_PHRASE } from './templates';
 
@@ -282,32 +281,20 @@ export async function respondToUserMessage(
 
       chips = [...profileChips, ...fillChips];
     } else {
-      // No history → show active expense folders first; if none exist, fall back to library folders.
+      // No history: show only folders the user explicitly created/activated.
+      // Library folders stay hidden until the user opens the library flow.
       const activeFolderChips = Array.from(ctx.foldersById.values())
         .filter((f) => f.type === 'expense')
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
         .slice(0, 8)
         .map((f) => ({ id: f.id, name: f.name, icon: f.icon ?? 'box', color: f.color ?? '#E07A5F' }));
 
-      if (activeFolderChips.length > 0) {
-        const preferredFolderId = getStoreGroupFolderId(parsed.storeGroup);
-        chips = activeFolderChips.sort((left, right) => {
-          if (left.id === preferredFolderId) return -1;
-          if (right.id === preferredFolderId) return 1;
-          return 0;
-        });
-      } else {
-        const preferredFolderId = getStoreGroupFolderId(parsed.storeGroup);
-        const blueprints = getFolderLibraryBlueprints('expense');
-        const ordered = [
-          ...blueprints.filter((folder) => folder.id === preferredFolderId),
-          ...blueprints.filter((folder) => folder.id !== preferredFolderId),
-        ];
-        chips = ordered
-          .slice(0, 8)
-          .map((folder) => folderBlueprintToSuggestion(folder))
-          .map((folder) => ({ id: folder.id, name: folder.label, icon: folder.icon, color: folder.color }));
-      }
+      const preferredFolderId = getStoreGroupFolderId(parsed.storeGroup);
+      chips = activeFolderChips.sort((left, right) => {
+        if (left.id === preferredFolderId) return -1;
+        if (right.id === preferredFolderId) return 1;
+        return 0;
+      });
     }
 
     const isTagLearning = !profile || (profile.probableCategories ?? []).length === 0;

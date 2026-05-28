@@ -11,7 +11,7 @@
 }
 
 
-/* в”Ђв”Ђ Base + default theme (Mist) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+/* ── Base + default theme (Mist) ─────────────────────────────── */
 :root,
 :root[data-theme="mist"] {
   /* Surfaces */
@@ -91,81 +91,82 @@
   --cat-other-tint:    #ECEEF3;
 }
 
-/* в”Ђв”Ђ Paper theme в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
-:root[data-theme="paper"] {
-  --background: 0 0% 100%;             /* pure white */
-  --foreground: 0 0% 4%;               /* #0A0A0A */
+/* ── Press theme (warm paper, beige hairlines, hot red) ──────── */
+:root[data-theme="press"] {
+  --background: 40 33% 95%;            /* #F7F4EE warm paper */
+  --foreground: 30 19% 12%;            /* #211C16 ink */
   --card: 0 0% 100%;
-  --card-foreground: 0 0% 4%;
+  --card-foreground: 30 19% 12%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 4%;
+  --popover-foreground: 30 19% 12%;
 
-  --primary: 13 100% 58%;              /* #FF4F2B orange */
+  --primary: 8 81% 54%;                /* #E8442A hot red */
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 0 0% 95%;               /* #F2F2F2 */
-  --secondary-foreground: 0 0% 4%;
+  --secondary: 42 30% 90%;             /* warm sand */
+  --secondary-foreground: 30 19% 12%;
 
-  --muted: 0 0% 95%;
-  --muted-foreground: 0 0% 46%;        /* #767676 */
+  --muted: 41 30% 90%;                 /* #F0E9DC */
+  --muted-foreground: 36 12% 53%;      /* #948B7C */
 
-  --accent: 13 100% 58%;
+  --accent: 8 81% 54%;
   --accent-foreground: 0 0% 100%;
 
-  --success: 137 64% 33%;
-  --warn: 38 100% 50%;
-  --destructive: 13 100% 58%;
+  --success: 92 47% 33%;               /* #4C7A2C olive */
+  --warn: 38 80% 45%;
+  --destructive: 8 81% 54%;            /* same hot red */
   --destructive-foreground: 0 0% 100%;
 
-  /* Paper's signature: black hairlines (= "outline" UI) */
-  --border: 0 0% 4%;                   /* #0A0A0A */
-  --input: 0 0% 4%;
-  --ring: 13 100% 58%;
+  /* Press signature: warm BEIGE hairlines (not black) + soft shadow */
+  --border: 38 33% 88%;                /* #ECE5D8 */
+  --input: 36 33% 86%;                 /* #E7E0D4 */
+  --ring: 8 81% 54%;
 
-  /* Tighter, flatter radii */
-  --radius: 0.75rem;                   /* 12px base */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.625rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 0.875rem;
+  /* Soft, friendly radii — 15px base */
+  --radius: 0.9375rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 0.9375rem;
+  --radius-xl: 1rem;
 
-  --font-sans: var(--font-manrope, Manrope), system-ui, -apple-system, sans-serif;
-  --font-display: var(--font-manrope, Manrope), system-ui, sans-serif;
+  --font-sans: var(--font-instrument-sans, 'Instrument Sans'), system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-instrument-sans, 'Instrument Sans'), system-ui, sans-serif;
 
-  --shadow-sm: none;
-  --shadow-md: none;
-  --shadow-lg: none;
-  --shadow-primary: none;
-  --shadow-primary-sm: none;
+  /* Press keeps a gentle warm shadow (unlike the old paper flat borders) */
+  --shadow-sm: 0 1px 2px rgba(60, 50, 30, .04);
+  --shadow-md: 0 1px 2px rgba(60, 50, 30, .04), 0 4px 12px rgba(60, 50, 30, .05);
+  --shadow-lg: 0 2px 4px rgba(60, 50, 30, .06), 0 14px 28px rgba(60, 50, 30, .08);
+  --shadow-primary:    0 8px 18px hsl(var(--primary) / 0.28);
+  --shadow-primary-sm: 0 4px 10px hsl(var(--primary) / 0.20);
 
   --card-border: 1px solid hsl(var(--border));
 
-  --cat-food:          #0A0A0A;
-  --cat-food-tint:     #F2F2F2;
-  --cat-home:          #0A0A0A;
-  --cat-home-tint:     #F2F2F2;
-  --cat-transport:     #0A0A0A;
-  --cat-transport-tint:#F2F2F2;
-  --cat-health:        #FF4F2B;        /* highlight */
-  --cat-health-tint:   #FFE5DC;
-  --cat-shopping:      #0A0A0A;
-  --cat-shopping-tint: #F2F2F2;
-  --cat-entertainment: #0A0A0A;
-  --cat-entertainment-tint: #F2F2F2;
-  --cat-education:     #0A0A0A;
-  --cat-education-tint:#F2F2F2;
-  --cat-kids:          #FF4F2B;        /* highlight */
-  --cat-kids-tint:     #FFE5DC;
-  --cat-savings:       #FF4F2B;
-  --cat-savings-tint:  #FFE5DC;
-  --cat-bills:         #0A0A0A;
-  --cat-bills-tint:    #F2F2F2;
-  --cat-other:         #0A0A0A;
-  --cat-other-tint:    #F2F2F2;
+  --cat-food:          #4C7A2C;
+  --cat-food-tint:     #E9F1E4;
+  --cat-home:          #2E6488;
+  --cat-home-tint:     #E2ECF2;
+  --cat-transport:     #2E6488;
+  --cat-transport-tint:#E2ECF2;
+  --cat-health:        #C23A24;
+  --cat-health-tint:   #FBE2DC;
+  --cat-shopping:      #6A52A0;
+  --cat-shopping-tint: #EDE7F2;
+  --cat-entertainment: #C2641C;
+  --cat-entertainment-tint: #FBE7D6;
+  --cat-education:     #2E6488;
+  --cat-education-tint:#E2ECF2;
+  --cat-kids:          #C23A24;
+  --cat-kids-tint:     #FBE2DC;
+  --cat-savings:       #E8442A;        /* highlight — positive money */
+  --cat-savings-tint:  #FBE2DC;
+  --cat-bills:         #A07A12;
+  --cat-bills-tint:    #FBF0D2;
+  --cat-other:         #6B6356;
+  --cat-other-tint:    #F0E9DC;
 }
 
-/* в”Ђв”Ђ Dark schemes (optional, per theme) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+/* ── Dark schemes (per theme) ────────────────────────────────── */
 :root[data-theme="mist"].dark,
 .dark[data-theme="mist"] {
   --background: 225 30% 9%;
@@ -177,16 +178,16 @@
   --border: 225 18% 20%;
   --input: 225 18% 20%;
 }
-:root[data-theme="paper"].dark,
-.dark[data-theme="paper"] {
-  --background: 0 0% 6%;
-  --foreground: 0 0% 96%;
-  --card: 0 0% 9%;
-  --card-foreground: 0 0% 96%;
-  --muted: 0 0% 15%;
-  --muted-foreground: 0 0% 60%;
-  --border: 0 0% 96%;                  /* white outlines in dark-paper */
-  --input: 0 0% 96%;
+:root[data-theme="press"].dark,
+.dark[data-theme="press"] {
+  --background: 30 12% 9%;             /* warm dark paper */
+  --foreground: 40 20% 92%;
+  --card: 30 10% 13%;
+  --card-foreground: 40 20% 92%;
+  --muted: 30 8% 20%;
+  --muted-foreground: 36 10% 60%;
+  --border: 30 8% 22%;                 /* soft warm line, NOT white */
+  --input: 30 8% 24%;
 }
 
 .fb-bg-page  { background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: var(--font-sans); }
@@ -208,7 +209,7 @@
 .fb-caption      { font-family: var(--font-sans); font-size: 0.75rem;  font-weight: 500; color: hsl(var(--muted-foreground)); }
 .fb-tabular      { font-variant-numeric: tabular-nums; }
 
-:root[data-theme="paper"] .fb-amount-hero { font-weight: 800; letter-spacing: -0.035em; }
+:root[data-theme="press"] .fb-amount-hero { font-weight: 700; letter-spacing: -0.03em; }
 
 .fb-cat-chip {
   display: grid; place-items: center;
@@ -219,47 +220,41 @@
 .fb-cat-chip[data-size="lg"] { width: 44px; height: 44px; }
 .fb-cat-chip[data-size="xl"] { width: 56px; height: 56px; border-radius: var(--radius-lg); }
 
-/* Pinned-today hero. Mist = white card; Paper = black block. */
+/* Pinned-today hero. Both themes lean on hairline + soft shadow. */
 .fb-pin {
   background: hsl(var(--card));
   color: hsl(var(--card-foreground));
   border-radius: var(--radius-lg);
   border: var(--card-border);
   padding: 12px 14px;
-}
-:root[data-theme="paper"] .fb-pin {
-  background: hsl(var(--foreground));
-  color: hsl(var(--background));
-  border: none;
-  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
 }
 
-/* User chat bubble. Mist = indigo fill; Paper = black fill. */
+/* User chat bubble. Mist = indigo fill; Press = ink fill. */
 .fb-bub-user {
   background: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
   border-radius: 16px 16px 4px 16px;
 }
-:root[data-theme="paper"] .fb-bub-user {
+:root[data-theme="press"] .fb-bub-user {
   background: hsl(var(--foreground));
-  border-radius: 14px 14px 4px 14px;
+  border-radius: 15px 15px 4px 15px;
 }
 
-/* Bot chat bubble & cards. Both themes: white surface. Mist = hairline,
- * Paper = 1px black border. */
+/* Bot chat bubble & cards. Both themes: white surface on a hairline. */
 .fb-bub-bot, .fb-bot-card {
   background: hsl(var(--card));
   color: hsl(var(--card-foreground));
   border: var(--card-border);
   border-radius: 16px 16px 16px 4px;
+  box-shadow: var(--shadow-sm);
 }
-:root[data-theme="paper"] .fb-bub-bot,
-:root[data-theme="paper"] .fb-bot-card {
-  border-radius: 14px 14px 14px 4px;
+:root[data-theme="press"] .fb-bub-bot,
+:root[data-theme="press"] .fb-bot-card {
+  border-radius: 15px 15px 15px 4px;
 }
 
-/* Primary action button (Save / Confirm / Send). Same in both themes
- * (accent color), but Mist gets a coloured shadow; Paper stays flat. */
+/* Primary action button. Both themes: accent fill + soft coloured shadow. */
 .fb-btn-primary {
   background: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
@@ -268,10 +263,6 @@
   box-shadow: var(--shadow-primary-sm);
   border: none;
 }
-:root[data-theme="paper"] .fb-btn-primary {
-  border-radius: var(--radius-sm);
-  box-shadow: none;
-}
 
 .fb-btn-soft {
   background: hsl(var(--muted));
@@ -279,7 +270,7 @@
   border-radius: var(--radius-md);
   border: none;
 }
-:root[data-theme="paper"] .fb-btn-soft {
+:root[data-theme="press"] .fb-btn-soft {
   border-radius: var(--radius-sm);
   border: 1px solid hsl(var(--border));
   background: hsl(var(--card));

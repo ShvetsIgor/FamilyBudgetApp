@@ -38,8 +38,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dispatch(setUser(profile));
         dispatch(setCurrency(profile.currency));
         dispatch(setLanguage(profile.language));
-        const profileTheme = profile.theme as typeof profile.theme | 'light' | 'dark' | undefined;
-        dispatch(setTheme(profileTheme === 'paper' ? 'paper' : 'mist'));
+        const profileTheme = profile.theme as typeof profile.theme | 'light' | 'dark' | 'paper' | undefined;
+        // Existing 'paper' profiles migrate to the new 'press' editorial theme.
+        const resolvedTheme = profileTheme === 'press' || profileTheme === 'paper' ? 'press' : 'mist';
+        dispatch(setTheme(resolvedTheme));
         dispatch(setDarkMode(profile.darkMode ?? profileTheme === 'dark'));
         if (profile.weekStart) dispatch(setWeekStart(profile.weekStart));
 

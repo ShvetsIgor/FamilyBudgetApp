@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Manrope } from 'next/font/google';
+import { Inter, Instrument_Sans } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 
@@ -9,10 +9,10 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
-const manrope = Manrope({
-  subsets: ['latin', 'cyrillic'],
+const instrumentSans = Instrument_Sans({
+  subsets: ['latin'],
   display: 'swap',
-  variable: '--font-manrope',
+  variable: '--font-instrument-sans',
 });
 
 export const metadata: Metadata = {

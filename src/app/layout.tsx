@@ -43,7 +43,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" data-theme="mist" suppressHydrationWarning>
-      <body className={`${inter.variable} ${manrope.variable}`}>
+      <body className={`${inter.variable} ${instrumentSans.variable}`}>
         <Providers>{children}</Providers>
       </body>
     </html>

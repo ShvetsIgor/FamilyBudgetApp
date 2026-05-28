@@ -25,9 +25,13 @@ interface UIState {
 
 const storedTheme = ls('ui.theme');
 const storedDarkMode = ls('ui.darkMode');
+// Migrate legacy 'paper' → 'press' so previously saved preferences map to the
+// new warm-paper editorial theme rather than silently falling back to mist.
+const normalizedTheme: 'mist' | 'press' =
+  storedTheme === 'press' || storedTheme === 'paper' ? 'press' : 'mist';
 
 const initialState: UIState = {
-  theme: storedTheme === 'paper' ? 'paper' : 'mist',
+  theme: normalizedTheme,
   isDarkMode: storedDarkMode === 'true' || storedTheme === 'dark',
   language: 'en',
   currency: 'ILS',

@@ -36,7 +36,7 @@ export function RegisterForm() {
       dispatch(setUser(profile));
       dispatch(setCurrency(profile.currency));
       dispatch(setLanguage(profile.language));
-      dispatch(setTheme(profile.theme === 'paper' ? 'paper' : 'mist'));
+      dispatch(setTheme(profile.theme === 'press' ? 'press' : 'mist'));
       router.replace('/home');
     } catch (e: unknown) {
       const code = (e as { code?: string }).code;

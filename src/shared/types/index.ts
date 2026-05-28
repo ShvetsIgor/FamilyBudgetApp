@@ -3,7 +3,7 @@ import { Timestamp } from 'firebase/firestore';
 export type Currency = 'ILS' | 'USD' | 'CAD' | 'RUB';
 export type Privacy = 'regular' | 'secret';
 export type PaymentMethod = 'cash' | 'card' | 'other';
-export type Theme = 'mist' | 'paper';
+export type Theme = 'mist' | 'press';
 export type Language = 'en' | 'ru';
 export type AccountType = 'personal' | 'family';
 export type RecurringFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';

@@ -257,6 +257,19 @@ const suggestionMemorySlice = createSlice({
       saveToStorage(state);
     },
 
+    /** Record merchant -> folder context when the user classifies a store before split details. */
+    recordMerchantContext(
+      state,
+      action: PayloadAction<{ merchant?: string; folderId: string; date: string }>,
+    ) {
+      const { merchant, folderId } = action.payload;
+      const key = normalizeTag(merchant ?? '');
+      if (!key || !folderId) return;
+      if (!state.merchantContextStats[key]) state.merchantContextStats[key] = {};
+      state.merchantContextStats[key][folderId] = (state.merchantContextStats[key][folderId] ?? 0) + 1;
+      saveToStorage(state);
+    },
+
     clearMemory(state) {
       state.merchants = {};
       state.recents = [];
@@ -272,6 +285,7 @@ export const {
   recordExpense,
   recordSplitExpense,
   recordTagAssociation,
+  recordMerchantContext,
   clearMemory,
 } = suggestionMemorySlice.actions;
 export default suggestionMemorySlice.reducer;

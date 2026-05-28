@@ -317,6 +317,7 @@ export function CategoriesHub() {
   const [folderEditor, setFolderEditor] = useState<FolderEditorState>({ open: false });
   const [searchQuery, setSearchQuery] = useState('');
   const [collapsedFolderIds, setCollapsedFolderIds] = useState<Set<string>>(new Set());
+  const initializedCollapseTabs = useRef<Set<CategoryType>>(new Set());
   const [contextMenu, setContextMenu] = useState<ContextMenuTarget | null>(null);
   const [inlineEdit, setInlineEdit] = useState<InlineEditState | null>(null);
   const [confirmDeleteFolderId, setConfirmDeleteFolderId] = useState<string | null>(null);
@@ -350,6 +351,26 @@ export function CategoriesHub() {
 
   const normalizeLabel = (value: string) => value.trim().toLowerCase();
   const namesMatch = (left: string, right: string) => normalizeLabel(left) === normalizeLabel(right);
+  const dedupeFoldersByName = (items: CategoryFolder[]) => {
+    const seen = new Set<string>();
+    return items.filter((folder) => {
+      const key = normalizeLabel(folder.name);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+  const visibleRootFolders = dedupeFoldersByName(rootFolders);
+
+  useEffect(() => {
+    if (initializedCollapseTabs.current.has(tab) || folders.length === 0) return;
+    initializedCollapseTabs.current.add(tab);
+    setCollapsedFolderIds((prev) => {
+      const next = new Set(prev);
+      for (const folder of folders) next.add(folder.id);
+      return next;
+    });
+  }, [tab, folders]);
 
   const attachCategoryToFolder = (category: Category, folderId?: string) => {
     if (!folderId || category.folderId === folderId || category.extraFolderIds?.includes(folderId)) {
@@ -464,6 +485,11 @@ export function CategoriesHub() {
     });
     dispatch(addCategory(created));
     setInlineEdit(null);
+    setCollapsedFolderIds((prev) => {
+      const next = new Set(prev);
+      next.delete(folderId);
+      return next;
+    });
   };
 
   const handleInlineCreateFolder = async (name: string) => {
@@ -477,6 +503,11 @@ export function CategoriesHub() {
     });
     dispatch(addFolder(created));
     setInlineEdit(null);
+    setCollapsedFolderIds((prev) => {
+      const next = new Set(prev);
+      next.delete(created.id);
+      return next;
+    });
   };
 
   // ── Folder CRUD ────────────────────────────────────────────────────────────
@@ -501,6 +532,11 @@ export function CategoriesHub() {
       if (preset) {
         const created = await addFolderWithId(user.id, preset.id, rest);
         dispatch(addFolder(created));
+        setCollapsedFolderIds((prev) => {
+          const next = new Set(prev);
+          next.delete(created.id);
+          return next;
+        });
         setFolderEditor({ open: false });
         return;
       }
@@ -513,6 +549,11 @@ export function CategoriesHub() {
     } else {
       const created = await addFolderToDb(user.id, rest);
       dispatch(addFolder(created));
+      setCollapsedFolderIds((prev) => {
+        const next = new Set(prev);
+        next.delete(created.id);
+        return next;
+      });
     }
     setFolderEditor({ open: false });
   };
@@ -543,6 +584,11 @@ export function CategoriesHub() {
       order: folders.length,
     });
     dispatch(addFolder(folder));
+    setCollapsedFolderIds((prev) => {
+      const next = new Set(prev);
+      next.delete(folder.id);
+      return next;
+    });
   };
 
   // ── Reset to defaults ─────────────────────────────────────────────────────
@@ -568,7 +614,7 @@ export function CategoriesHub() {
 
   const renderFolderRow = (folder: CategoryFolder, indent = 0) => {
     const cats = categoriesInFolderMap[folder.id] ?? [];
-    const isCollapsed = collapsedFolderIds.has(folder.id);
+    const isCollapsed = !initializedCollapseTabs.current.has(tab) || collapsedFolderIds.has(folder.id);
     const isRenamingThis = inlineEdit?.kind === 'folder-rename' && inlineEdit.id === folder.id;
     const isMenuOpen = contextMenu?.kind === 'folder' && contextMenu.id === folder.id;
     const isConfirmDelete = confirmDeleteFolderId === folder.id;
@@ -1182,11 +1228,11 @@ export function CategoriesHub() {
               padding: '4px 0',
             }}
           >
-            {rootFolders.map((folder) => (
+            {visibleRootFolders.map((folder) => (
               <div key={folder.id}>
                 {renderFolderRow(folder)}
                 {/* Child folders */}
-                {(childFoldersMap[folder.id] ?? []).map((child) =>
+                {dedupeFoldersByName(childFoldersMap[folder.id] ?? []).map((child) =>
                   renderFolderRow(child, 1)
                 )}
               </div>
@@ -1393,7 +1439,7 @@ export function CategoriesHub() {
           await handleFolderDelete(folderEditor.folder);
           setFolderEditor({ open: false });
         } : undefined}
-        availableFolders={rootFolders.filter((f) => f.id !== folderEditor.folder?.id)}
+        availableFolders={visibleRootFolders.filter((f) => f.id !== folderEditor.folder?.id)}
         suggestions={folderSuggestions}
       />
 

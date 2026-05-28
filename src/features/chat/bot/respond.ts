@@ -7,6 +7,7 @@ import { addMessage, updateMessage } from '@/features/chat/services/messagesServ
 import type { SerializableChatMessage, ParseResult } from '@/shared/types/message';
 import type { Category } from '@/shared/types';
 import type { BotContext } from './context';
+import { normalizeTag } from '@/features/expenses/store/suggestionMemorySlice';
 import { resolveCategoryByAlias } from '@/features/categories/utils/resolveCategory';
 import { getStoreGroupFolderId } from '@/features/categories/utils/storeGroupFolders';
 import { savedPhrase, clarifyPhrase, clarifyStorePhrase, UNKNOWN_PHRASE } from './templates';
@@ -289,8 +290,13 @@ export async function respondToUserMessage(
         .slice(0, 8)
         .map((f) => ({ id: f.id, name: f.name, icon: f.icon ?? 'box', color: f.color ?? '#E07A5F' }));
 
+      const merchantContext = ctx.suggestionMemory.merchantContextStats[
+        normalizeTag(parsed.storeName ?? parsed.storeId ?? '')
+      ] ?? {};
       const preferredFolderId = getStoreGroupFolderId(parsed.storeGroup);
       chips = activeFolderChips.sort((left, right) => {
+        const contextDelta = (merchantContext[right.id] ?? 0) - (merchantContext[left.id] ?? 0);
+        if (contextDelta !== 0) return contextDelta;
         if (left.id === preferredFolderId) return -1;
         if (right.id === preferredFolderId) return 1;
         return 0;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAppSelector } from '@/store/store';
 import type { Category, CategoryType } from '@/shared/types';
 import { StickerIcon } from './CategoryIcon';
@@ -52,6 +52,8 @@ export function CategoryEditorSheet({
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [selectedPresetId, setSelectedPresetId] = useState<string | undefined>(undefined);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -66,6 +68,7 @@ export function CategoryEditorSheet({
     setTags(initial?.tags ?? []);
     setTagInput('');
     setSelectedPresetId(undefined);
+    setSuggestionsOpen(false);
   }, [open, initial, budget, folderIdProp]);
 
   const matchedSuggestions = useMemo(() => {
@@ -135,15 +138,20 @@ export function CategoryEditorSheet({
             <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">Название</label>
             <input
               type="text"
+              ref={nameInputRef}
               value={name}
+              onFocus={() => {
+                if (name.trim()) setSuggestionsOpen(true);
+              }}
               onChange={(e) => {
                 setName(e.target.value);
                 setSelectedPresetId(undefined);
+                setSuggestionsOpen(true);
               }}
               placeholder="Название категории"
               className="w-full rounded-xl border border-[#EDE0CC] bg-white px-3 py-2.5 text-sm text-[#3D2C1F] outline-none placeholder:text-[#B6A48E] focus:border-[#E07A5F]"
             />
-            {matchedSuggestions.length > 0 && (
+            {suggestionsOpen && matchedSuggestions.length > 0 && (
               <div className="mt-1 overflow-hidden rounded-xl border border-[#EDE0CC] bg-white shadow-sm">
                 {matchedSuggestions.map((suggestion) => (
                   <button
@@ -156,6 +164,8 @@ export function CategoryEditorSheet({
                       setIcon(suggestion.icon);
                       setColor(suggestion.color);
                       setSelectedPresetId(suggestion.id);
+                      setSuggestionsOpen(false);
+                      nameInputRef.current?.blur();
                     }}
                     className="block min-h-11 w-full px-3 py-2 text-left text-sm font-semibold text-[#3D2C1F] transition-colors hover:bg-[#F4ECDE]"
                   >

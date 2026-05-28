@@ -15,7 +15,7 @@ import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
 import type { Category, SerializableExpense, SplitItem } from '@/shared/types';
 import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
-import { recordExpense, recordSplitExpense, recordTagAssociation, extractTags } from '@/features/expenses/store/suggestionMemorySlice';
+import { recordExpense, recordSplitExpense, recordTagAssociation, recordMerchantContext, extractTags } from '@/features/expenses/store/suggestionMemorySlice';
 import { buildExpenseDraft } from '@/features/expenses/engine/buildExpenseDraft';
 import { useSplitEditor, applyKey, type SplitRow } from '@/features/expenses/hooks/useSplitEditor';
 import { addCategory as addCategoryFirestore } from '@/features/categories/services/categoriesService';
@@ -249,7 +249,7 @@ export function FastExpenseEntry({
   });
   const {
     splits, editing, setEditing, pickerOpen, pickerGroupId, setPickerGroupId,
-    addSplit, removeSplit, openPicker, closePicker, tapOnSplit, splitEven,
+    addSplit, removeSplit, openPicker, closePicker, tapOnSplit,
     splitsSum, remainder, splitsOverflow, posCount,
   } = splitEditor;
 
@@ -405,6 +405,9 @@ export function FastExpenseEntry({
               dispatch(recordTagAssociation({ tags, categoryId: catId, date: dateStr, source: 'split' }));
             }
           }
+        }
+        if (initialStore && initialFolderId) {
+          dispatch(recordMerchantContext({ merchant: initialStore, folderId: initialFolderId, date: dateStr }));
         }
         if (fromChat) {
           // Add bot "split saved" message to chat
@@ -662,15 +665,6 @@ export function FastExpenseEntry({
                 ? 'Разбить на позиции'
                 : 'Уточнить позицию'}
           </button>
-          {splits.length >= 1 && totalNum > 0 && (
-            <button
-              onClick={splitEven}
-              className="rounded-[14px] px-3 py-2.5 text-[11px] font-black transition-all border-2 border-dashed flex-shrink-0"
-              style={{ borderColor: catColor + '55', color: catColor, background: catColor + '0a' }}
-            >
-              ÷{splits.length + 1}
-            </button>
-          )}
         </div>
 
         {/* Group category picker */}

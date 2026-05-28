@@ -10,7 +10,7 @@ import { setTyping, removeMessage } from '@/features/chat/store/chatSlice';
 import { addFolder as addFolderAction } from '@/features/categories/store/categoriesSlice';
 import { addFolder, addFolderWithId } from '@/features/categories/services/categoryFoldersService';
 import { prependExpense, removeExpense, mergeExpenses } from '@/features/expenses/store/expensesSlice';
-import { recordExpense } from '@/features/expenses/store/suggestionMemorySlice';
+import { recordExpense, recordMerchantContext } from '@/features/expenses/store/suggestionMemorySlice';
 import { prependIncome } from '@/features/income/store/incomeSlice';
 import { updateRecurringItem } from '@/features/recurring/store/recurringSlice';
 
@@ -333,6 +333,13 @@ export default function HomePage() {
         }
 
         if (folder) {
+          if (storeName) {
+            dispatch(recordMerchantContext({
+              merchant: storeName,
+              folderId: folder.id,
+              date: toLocalDateKey(parsedDate ? parseISO(parsedDate) : new Date()),
+            }));
+          }
           const params = new URLSearchParams({
             fromChat: 'true',
             amount: String(amount),

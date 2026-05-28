@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
 import suggestionMemoryReducer, {
   recordTagAssociation,
+  recordMerchantContext,
   normalizeTag,
   extractTags,
   type SuggestionMemoryState,
@@ -14,6 +15,7 @@ function makeStore(initial?: Partial<SuggestionMemoryState>) {
     recents: [],
     splitCombos: [],
     tagAssociations: [],
+    merchantContextStats: {},
     ...initial,
   };
   return configureStore({
@@ -107,6 +109,18 @@ describe('recordTagAssociation — upsert behavior', () => {
     const store = makeStore();
     store.dispatch(recordTagAssociation({ tags: ['  DABBAH  '], categoryId: 'groceries', date: today, source: 'split' }));
     expect(store.getState().suggestionMemory.tagAssociations[0].tag).toBe('dabbah');
+  });
+});
+
+describe('recordMerchantContext — folder memory', () => {
+  it('stores merchant folder context case-insensitively', () => {
+    const store = makeStore();
+    store.dispatch(recordMerchantContext({ merchant: 'Кешет', folderId: 'supermarket', date: today }));
+    store.dispatch(recordMerchantContext({ merchant: 'кешет', folderId: 'supermarket', date: today }));
+
+    expect(store.getState().suggestionMemory.merchantContextStats).toMatchObject({
+      'кешет': { supermarket: 2 },
+    });
   });
 });
 

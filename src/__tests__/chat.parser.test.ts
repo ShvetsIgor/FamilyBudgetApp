@@ -89,6 +89,12 @@ describe('parseMessage', () => {
     expect(result.storeId).toContain('unknown_');
   });
 
+  it('preserves unknown store display casing while keeping normalized id', () => {
+    const result = parseMessage('Кешет 500', noLearned);
+    expect(result.storeName).toBe('Кешет');
+    expect(result.storeId).toBe('unknown_кешет');
+  });
+
   it('does not expose legacy parentId in ParseResult', () => {
     const result = parseMessage('кофе 65', noLearned);
     expect(result).not.toHaveProperty('parentId');

@@ -80,6 +80,16 @@ export function getExpenseListMeta(
     }
   }
 
+  if (hasMeaningfulSplit(expense) && category && folder) {
+    return {
+      key: `category:${category.id}`,
+      labelSource: folder.name,
+      icon: folder.icon ?? category?.icon ?? 'box',
+      color: folder.color ?? category?.color ?? '#94A3B8',
+      kind: 'storeGroup',
+    };
+  }
+
   if (category) {
     return {
       key: `category:${category.id}`,

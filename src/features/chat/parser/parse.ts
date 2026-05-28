@@ -17,13 +17,14 @@ export interface ParserContext {
 
 export function parseMessage(text: string, ctx: ParserContext): ParseResult {
   // ── Stage 1: tokenize ────────────────────────────────────────────────────
-  const { lower, isIncome, isSlashCommand } = tokenizeInput(text);
+  const { normalized, lower, isIncome, isSlashCommand } = tokenizeInput(text);
 
   if (isSlashCommand) {
     return { amount: 0, categoryId: null, confidence: 'failed' };
   }
 
   let t = isIncome ? lower.slice(1).trimStart() : lower;
+  const displayText = isIncome ? normalized.slice(1).trimStart() : normalized;
   if (isIncome && !t) {
     return { amount: 0, categoryId: null, confidence: 'failed', isIncome: true };
   }
@@ -43,6 +44,7 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
     return { amount: 0, categoryId: null, confidence: 'failed', ...df, ...inc };
   }
   const { amount, rest } = amounts;
+  const displayRest = extractAmounts(displayText)?.rest ?? rest;
 
   // Income: skip expense store/item pipeline
   if (isIncome) {
@@ -108,7 +110,7 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
 
   // Unrecognized text with amount → treat as unknown store name for folder-first clarification
   if (rest.trim()) {
-    const storeName = rest.trim().replace(/\b\p{L}/gu, (c) => c.toUpperCase());
+    const storeName = displayRest.trim();
     const storeId = `unknown_${rest.trim().toLowerCase().replace(/\s+/g, '_')}`;
     return { amount, categoryId: null, confidence: 'low', storeId, storeName, note: storeName, ...df };
   }

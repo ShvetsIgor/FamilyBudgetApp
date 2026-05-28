@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CategoryFolder, CategoryType } from '@/shared/types';
 import { StickerIcon } from './CategoryIcon';
 import { ColorPaletteRow } from './ColorPaletteRow';
@@ -35,6 +35,8 @@ export function FolderEditorSheet({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [parentFolderId, setParentFolderId] = useState<string | undefined>(undefined);
   const [selectedPresetId, setSelectedPresetId] = useState<string | undefined>(undefined);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -44,6 +46,7 @@ export function FolderEditorSheet({
     setConfirmDelete(false);
     setParentFolderId(initial?.parentFolderId);
     setSelectedPresetId(undefined);
+    setSuggestionsOpen(false);
   }, [open, initial]);
 
   const matchedSuggestions = useMemo(() => {
@@ -107,15 +110,20 @@ export function FolderEditorSheet({
             <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">Название</label>
             <input
               type="text"
+              ref={nameInputRef}
               value={name}
+              onFocus={() => {
+                if (name.trim()) setSuggestionsOpen(true);
+              }}
               onChange={(e) => {
                 setName(e.target.value);
                 setSelectedPresetId(undefined);
+                setSuggestionsOpen(true);
               }}
               placeholder="Название раздела"
               className="w-full rounded-xl border border-[#EDE0CC] bg-white px-3 py-2.5 text-sm text-[#3D2C1F] outline-none placeholder:text-[#B6A48E] focus:border-[#E07A5F]"
             />
-            {matchedSuggestions.length > 0 && (
+            {suggestionsOpen && matchedSuggestions.length > 0 && (
               <div className="mt-1 overflow-hidden rounded-xl border border-[#EDE0CC] bg-white shadow-sm">
                 {matchedSuggestions.map((suggestion) => (
                   <button
@@ -128,6 +136,8 @@ export function FolderEditorSheet({
                       setIcon(suggestion.icon);
                       setColor(suggestion.color);
                       setSelectedPresetId(suggestion.id);
+                      setSuggestionsOpen(false);
+                      nameInputRef.current?.blur();
                     }}
                     className="block min-h-11 w-full px-3 py-2 text-left text-sm font-semibold text-[#3D2C1F] transition-colors hover:bg-[#F4ECDE]"
                   >

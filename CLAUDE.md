@@ -229,12 +229,22 @@ Implemented:
 - folder/category name library suggestions select on `pointerdown` with `preventDefault`, so mobile Safari blur cannot close the dropdown before the tap is handled
 - chat clarify suggestions use active user-created/activated expense folders only; library/preset folders stay hidden until the explicit library/add-from-library flow
 - expense category seeding no longer auto-materializes every preset folder/category as active user data; income defaults are unchanged
+- category/folder suggestion overlays use explicit `suggestionsOpen` state and close/blur after pointer selection, avoiding stuck dropdowns on desktop and mobile Safari
+- recurring payment section creation immediately opens category creation when the selected section has no categories, preventing dead-end saves
+- recurring due labels use calendar-day differences, so "today" is shown only for the actual local calendar day
+- category constructor sections initialize collapsed; newly created/activated sections are the only ones opened automatically
+- merchant-to-section learning is stored in `suggestionMemory_v2.merchantContextStats` via `recordMerchantContext` and used to rank future chat folder suggestions
+- split presentation falls back to the expense category folder label when no `storeGroup` exists, so split receipts show the section instead of the first split category
+- unknown store parsing preserves the user's display casing (`storeName`) while keeping `storeId`/matching normalized
+- the cryptic split `÷N` action was removed from the primary split UI
 
 Runtime contract:
 
 - Ordinary chat, quick suggestions, and split pickers must use active user categories/folders only.
 - Preset/library names are search suggestions or explicit library choices, not active entities until the user selects/activates them.
 - Do not auto-clean user-entered corrupted strings from Firestore/localStorage without a targeted migration decision; source literals and app-owned seed/cache text are safe to fix.
+- Store/tag learning keeps display and matching separate: UI uses `storeName`, while history lookup uses normalized merchant/tag keys.
+- Split receipt display should use section/folder context as the primary label; split line categories are secondary breakdown data.
 
 ## Known Gaps
 

@@ -123,6 +123,22 @@ describe('expensePresentation', () => {
     });
   });
 
+  it('uses the folder label for split expenses without a storeGroup', () => {
+    const meta = getExpenseListMeta(
+      makeExpense({ storeGroup: undefined }),
+      categories,
+      folders,
+    );
+
+    expect(meta).toMatchObject({
+      key: 'category:alcohol',
+      labelSource: 'Supermarket',
+      icon: 'cart',
+      color: '#E07A5F',
+      kind: 'storeGroup',
+    });
+  });
+
   it('returns null when category is not found', () => {
     const meta = getExpenseListMeta(
       makeExpense({ splits: [], storeGroup: undefined, categoryId: 'nonexistent' }),

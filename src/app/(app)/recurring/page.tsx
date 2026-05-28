@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { format, parseISO, differenceInDays, isToday, isYesterday } from 'date-fns';
+import { format, parseISO, differenceInCalendarDays, isToday, isYesterday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { X, Calendar, MessageSquare, Plus, ChevronRight } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
@@ -70,7 +70,7 @@ function applyKey(cur: string, key: NumKey): string {
 }
 
 function daysUntil(dateStr: string): number {
-  return differenceInDays(parseISO(dateStr), new Date());
+  return differenceInCalendarDays(parseISO(dateStr), new Date());
 }
 
 function startOfDay(date: Date): Date {
@@ -464,6 +464,9 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
       setSelectedGroupId(existing.id);
       setCategoryId('');
       setShowFolderEditor(false);
+      if (getCatsInGroup(existing.id).length === 0) {
+        requestAnimationFrame(() => setShowCategoryEditor(true));
+      }
       return;
     }
 
@@ -480,6 +483,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
     setSelectedGroupId(created.id);
     setCategoryId('');
     setShowFolderEditor(false);
+    requestAnimationFrame(() => setShowCategoryEditor(true));
   }
 
   async function handleSaveCategory(

@@ -322,7 +322,7 @@ export default function AccountPage() {
       <div className="grid grid-cols-2 gap-2">
         {([
           { value: 'mist' as const, title: t('account.themeMist'), desc: t('account.themeMistDesc'), swatch: '#5B6CFF' },
-          { value: 'paper' as const, title: t('account.themePaper'), desc: t('account.themePaperDesc'), swatch: '#FF4F2B' },
+          { value: 'press' as const, title: t('account.themePress'), desc: t('account.themePressDesc'), swatch: '#E8442A' },
         ]).map((option) => {
           const active = theme === option.value;
           return (

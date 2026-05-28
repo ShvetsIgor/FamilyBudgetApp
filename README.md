@@ -36,6 +36,8 @@ Conversational family budget tracker built around fast natural-language expense 
 - **Expense input validation**: expense writes reject invalid amount/date/category data and any split whose total exceeds the purchase amount; desktop quick-add uses real categories, not folder ids.
 - **Store split context**: opening split from chat uses the known store group to materialize/pass the matching section context, so known tags like `Даббах` continue as supermarket split flows instead of category guesses.
 - **Expanded icon colors**: category/folder icon color palette includes a broader 28-color set for more visual separation.
+- **Mist/Paper theme model**: visual skin is now `theme: mist | paper`, while dark mode is stored separately as `isDarkMode`; `<html>` receives `data-theme` and the `dark` class independently.
+- **Outline visual system**: global CSS tokens, helper classes, Inter/Manrope fonts, and category outline icons are wired from the Mist/Paper design package without changing expense/parser persistence.
 
 ## Main Features
 
@@ -48,6 +50,7 @@ Conversational family budget tracker built around fast natural-language expense 
 - Savings goals
 - Family account model
 - PWA support
+- Mist/Paper appearance themes with independent dark mode
 - English and Russian UI
 
 ## Current Limits

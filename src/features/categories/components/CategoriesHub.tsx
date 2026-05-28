@@ -56,19 +56,19 @@ import {
   getFolderLibraryBlueprints,
 } from '../utils/libraryLookup';
 
-// ─── Design tokens ────────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ Design tokens в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const T = {
-  bg: '#FBF6EE',
-  bgSoft: '#F4ECDE',
-  card: '#FFFFFF',
-  fg: '#3D2C1F',
-  sub: '#8E7A66',
-  subLight: '#B6A48E',
-  hairline: '#EDE0CC',
-  primary: '#E07A5F',
+  bg: 'hsl(var(--background))',
+  bgSoft: 'hsl(var(--muted))',
+  card: 'hsl(var(--card))',
+  fg: 'hsl(var(--foreground))',
+  sub: 'hsl(var(--muted-foreground))',
+  subLight: 'hsl(var(--muted-foreground) / 0.72)',
+  hairline: 'hsl(var(--border))',
+  primary: 'hsl(var(--primary))',
 };
 
-// ─── Interfaces ───────────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ Interfaces в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 interface EditorState {
   open: boolean;
@@ -90,7 +90,7 @@ interface InlineEditState {
   id: string; // folder id for cat-new; target id for renames; '' for folder-new
 }
 
-// ─── Small chevron icons ──────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ Small chevron icons в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 function ChevronRight() {
   return (
@@ -118,7 +118,7 @@ function DotsIcon() {
   );
 }
 
-// ─── Inline input row ─────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ Inline input row в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 interface InlineInputRowProps {
   placeholder: string;
@@ -185,12 +185,12 @@ function InlineInputRow({ placeholder, indent, onSave, onCancel }: InlineInputRo
           padding: '2px 0',
         }}
       />
-      <span style={{ fontSize: 11, color: T.subLight, flexShrink: 0 }}>Enter ↵</span>
+      <span style={{ fontSize: 11, color: T.subLight, flexShrink: 0 }}>Enter в†µ</span>
     </div>
   );
 }
 
-// ─── Inline rename span/input ─────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ Inline rename span/input в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 interface InlineRenameProps {
   value: string;
@@ -240,7 +240,7 @@ function InlineRename({ value: initial, onSave, onCancel, style }: InlineRenameP
   );
 }
 
-// ─── Context menu dropdown ────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ Context menu dropdown в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 interface MenuOption {
   label: string;
@@ -305,7 +305,7 @@ function ContextMenu({ options, onClose }: ContextMenuProps) {
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ Main component в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 export function CategoriesHub() {
   const dispatch = useAppDispatch();
@@ -377,7 +377,7 @@ export function CategoriesHub() {
     });
   };
 
-  // ── Category CRUD ──────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Category CRUD в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
   const openEditor = (cat: Category) => {
     setEditor({ open: true, category: cat, folderId: cat.folderId ?? undefined });
@@ -427,12 +427,12 @@ export function CategoriesHub() {
 
   const handleDeleteCategory = async (cat: Category) => {
     if (!user) return;
-    if (!confirm('Архивировать эту категорию?')) return;
+    if (!confirm('РђСЂС…РёРІРёСЂРѕРІР°С‚СЊ СЌС‚Сѓ РєР°С‚РµРіРѕСЂРёСЋ?')) return;
     await archiveCategoryInFirestore(user.id, cat.id, cat.type);
     dispatch(archiveCategory({ id: cat.id, type: cat.type }));
   };
 
-  // ── Inline rename handlers ─────────────────────────────────────────────────
+  // в”Ђв”Ђ Inline rename handlers в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
   const handleFolderRename = async (folder: CategoryFolder, newName: string) => {
     if (!user) return;
@@ -479,7 +479,7 @@ export function CategoriesHub() {
     setInlineEdit(null);
   };
 
-  // ── Folder CRUD ────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Folder CRUD в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
   const handleFolderSave = async (data: Omit<CategoryFolder, 'id' | 'userId'> & { id?: string; presetId?: string }) => {
     if (!user) return;
@@ -495,7 +495,7 @@ export function CategoriesHub() {
         )
       );
       if (duplicate) {
-        alert(`Раздел "${rest.name}" уже существует`);
+        alert(`Р Р°Р·РґРµР» "${rest.name}" СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚`);
         return;
       }
       if (preset) {
@@ -530,7 +530,7 @@ export function CategoriesHub() {
     setConfirmDeleteFolderId(null);
   };
 
-  // ── Library activation ─────────────────────────────────────────────────────
+  // в”Ђв”Ђ Library activation в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
   const handleActivateFromLibrary = async (libraryParent: ReturnType<typeof selectAvailableLibrary>[number]) => {
     if (!user) return;
@@ -545,11 +545,11 @@ export function CategoriesHub() {
     dispatch(addFolder(folder));
   };
 
-  // ── Reset to defaults ─────────────────────────────────────────────────────
+  // в”Ђв”Ђ Reset to defaults в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
   const handleReset = async () => {
     if (!user) return;
-    if (!confirm('Сбросить все категории к стандартным? Ваши кастомные категории и разделы будут удалены.')) return;
+    if (!confirm('РЎР±СЂРѕСЃРёС‚СЊ РІСЃРµ РєР°С‚РµРіРѕСЂРёРё Рє СЃС‚Р°РЅРґР°СЂС‚РЅС‹Рј? Р’Р°С€Рё РєР°СЃС‚РѕРјРЅС‹Рµ РєР°С‚РµРіРѕСЂРёРё Рё СЂР°Р·РґРµР»С‹ Р±СѓРґСѓС‚ СѓРґР°Р»РµРЅС‹.')) return;
     const idMap = await resetCategoriesToDefaults(user.id);
     await Promise.all([
       clearStoreProfiles(user.id),
@@ -564,7 +564,7 @@ export function CategoriesHub() {
     dispatch(clearProfiles());
   };
 
-  // ── Render helpers ─────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Render helpers в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
   const renderFolderRow = (folder: CategoryFolder, indent = 0) => {
     const cats = categoriesInFolderMap[folder.id] ?? [];
@@ -590,7 +590,7 @@ export function CategoriesHub() {
             position: 'relative',
           }}
         >
-          {/* Chevron — tap to collapse */}
+          {/* Chevron вЂ” tap to collapse */}
           <button
             onClick={() => toggleFolder(folder.id)}
             style={{
@@ -666,7 +666,7 @@ export function CategoriesHub() {
             {cats.length}
           </span>
 
-          {/* ··· button */}
+          {/* В·В·В· button */}
           <div style={{ position: 'relative', flexShrink: 0 }}>
             <button
               onClick={(e) => {
@@ -693,15 +693,15 @@ export function CategoriesHub() {
               <ContextMenu
                 options={[
                   {
-                    label: 'Изменить',
+                    label: 'РР·РјРµРЅРёС‚СЊ',
                     onClick: () => setFolderEditor({ open: true, folder }),
                   },
                   {
-                    label: isCollapsed ? 'Развернуть' : 'Свернуть',
+                    label: isCollapsed ? 'Р Р°Р·РІРµСЂРЅСѓС‚СЊ' : 'РЎРІРµСЂРЅСѓС‚СЊ',
                     onClick: () => toggleFolder(folder.id),
                   },
                   {
-                    label: 'Удалить раздел',
+                    label: 'РЈРґР°Р»РёС‚СЊ СЂР°Р·РґРµР»',
                     danger: true,
                     onClick: () => setConfirmDeleteFolderId(folder.id),
                   },
@@ -729,7 +729,7 @@ export function CategoriesHub() {
             }}
           >
             <span style={{ flex: 1, fontSize: 12, color: '#E05050' }}>
-              Удалить «{t.cat(folder.name)}»? Категории потеряют группу.
+              РЈРґР°Р»РёС‚СЊ В«{t.cat(folder.name)}В»? РљР°С‚РµРіРѕСЂРёРё РїРѕС‚РµСЂСЏСЋС‚ РіСЂСѓРїРїСѓ.
             </span>
             <button
               onClick={() => handleFolderDelete(folder)}
@@ -744,7 +744,7 @@ export function CategoriesHub() {
                 cursor: 'pointer',
               }}
             >
-              Удалить
+              РЈРґР°Р»РёС‚СЊ
             </button>
             <button
               onClick={() => setConfirmDeleteFolderId(null)}
@@ -759,7 +759,7 @@ export function CategoriesHub() {
                 cursor: 'pointer',
               }}
             >
-              Отмена
+              РћС‚РјРµРЅР°
             </button>
           </div>
         )}
@@ -772,7 +772,7 @@ export function CategoriesHub() {
             {/* Inline new category input */}
             {inlineEdit?.kind === 'cat-new' && inlineEdit.id === folder.id ? (
               <InlineInputRow
-                placeholder="Название категории"
+                placeholder="РќР°Р·РІР°РЅРёРµ РєР°С‚РµРіРѕСЂРёРё"
                 indent
                 onSave={(name) => handleInlineCreateCategory(folder.id, name, folder)}
                 onCancel={() => setInlineEdit(null)}
@@ -796,7 +796,7 @@ export function CategoriesHub() {
                   textAlign: 'left',
                 }}
               >
-                + Добавить категорию
+                + Р”РѕР±Р°РІРёС‚СЊ РєР°С‚РµРіРѕСЂРёСЋ
               </button>
             )}
 
@@ -873,7 +873,7 @@ export function CategoriesHub() {
           </span>
         )}
 
-        {/* ··· button */}
+        {/* В·В·В· button */}
         <div style={{ position: 'relative', flexShrink: 0 }}>
           <button
             onClick={(e) => {
@@ -900,15 +900,15 @@ export function CategoriesHub() {
             <ContextMenu
               options={[
                 {
-                  label: 'Изменить',
+                  label: 'РР·РјРµРЅРёС‚СЊ',
                   onClick: () => openEditor(cat),
                 },
                 {
-                  label: 'Переместить',
+                  label: 'РџРµСЂРµРјРµСЃС‚РёС‚СЊ',
                   onClick: () => openEditor(cat),
                 },
                 {
-                  label: 'Архивировать',
+                  label: 'РђСЂС…РёРІРёСЂРѕРІР°С‚СЊ',
                   danger: true,
                   onClick: () => handleDeleteCategory(cat),
                 },
@@ -921,7 +921,7 @@ export function CategoriesHub() {
     );
   };
 
-  // ─────────────────────────────────────────────────────────────────────────────
+  // в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
   return (
     <div
@@ -961,7 +961,7 @@ export function CategoriesHub() {
                 boxShadow: tab === tp ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
               }}
             >
-              {tp === 'expense' ? 'Расходы' : 'Доходы'}
+              {tp === 'expense' ? 'Р Р°СЃС…РѕРґС‹' : 'Р”РѕС…РѕРґС‹'}
             </button>
           ))}
         </div>
@@ -980,7 +980,7 @@ export function CategoriesHub() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Поиск…"
+              placeholder="РџРѕРёСЃРєвЂ¦"
               style={{
                 width: '100%',
                 paddingLeft: 30,
@@ -1035,7 +1035,7 @@ export function CategoriesHub() {
                 whiteSpace: 'nowrap',
               }}
             >
-              + Раздел
+              + Р Р°Р·РґРµР»
             </button>
             <button
               onClick={() => setEditor({ open: true })}
@@ -1051,12 +1051,12 @@ export function CategoriesHub() {
                 whiteSpace: 'nowrap',
               }}
             >
-              + Категория
+              + РљР°С‚РµРіРѕСЂРёСЏ
             </button>
           </div>
         </div>
 
-        {/* ── Content area ────────────────────────────────────────────────── */}
+        {/* в”Ђв”Ђ Content area в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
 
         {searchQuery ? (
           /* Search results */
@@ -1071,7 +1071,7 @@ export function CategoriesHub() {
               }}
             >
               <div style={{ padding: '8px 12px 4px', fontSize: 11, color: T.sub, fontWeight: 600 }}>
-                {searchResults.length} результатов
+                {searchResults.length} СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ
               </div>
               {searchResults.map((cat) => renderCategoryRow(cat))}
             </div>
@@ -1089,8 +1089,8 @@ export function CategoriesHub() {
                 gap: 6,
               }}
             >
-              <p style={{ fontSize: 14, fontWeight: 600, color: T.fg }}>Ничего не найдено</p>
-              <p style={{ fontSize: 12, color: T.sub }}>Попробуйте другой запрос</p>
+              <p style={{ fontSize: 14, fontWeight: 600, color: T.fg }}>РќРёС‡РµРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ</p>
+              <p style={{ fontSize: 12, color: T.sub }}>РџРѕРїСЂРѕР±СѓР№С‚Рµ РґСЂСѓРіРѕР№ Р·Р°РїСЂРѕСЃ</p>
             </div>
           )
         ) : isEmpty ? (
@@ -1122,14 +1122,14 @@ export function CategoriesHub() {
             </div>
             <div>
               <p style={{ fontSize: 15, fontWeight: 700, color: T.fg, marginBottom: 6 }}>
-                Категории растут сами
+                РљР°С‚РµРіРѕСЂРёРё СЂР°СЃС‚СѓС‚ СЃР°РјРё
               </p>
               <p style={{ fontSize: 13, color: T.sub, lineHeight: 1.5, maxWidth: 280, margin: '0 auto' }}>
-                Просто пишите в чат: <span style={{ color: T.fg, fontWeight: 600 }}>«Дабах 1000»</span> — система научится и предложит контексты автоматически.
+                РџСЂРѕСЃС‚Рѕ РїРёС€РёС‚Рµ РІ С‡Р°С‚: <span style={{ color: T.fg, fontWeight: 600 }}>В«Р”Р°Р±Р°С… 1000В»</span> вЂ” СЃРёСЃС‚РµРјР° РЅР°СѓС‡РёС‚СЃСЏ Рё РїСЂРµРґР»РѕР¶РёС‚ РєРѕРЅС‚РµРєСЃС‚С‹ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё.
               </p>
             </div>
             <p style={{ fontSize: 12, color: T.subLight, marginTop: -4 }}>
-              Или добавьте несколько контекстов для старта:
+              РР»Рё РґРѕР±Р°РІСЊС‚Рµ РЅРµСЃРєРѕР»СЊРєРѕ РєРѕРЅС‚РµРєСЃС‚РѕРІ РґР»СЏ СЃС‚Р°СЂС‚Р°:
             </p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
               <button
@@ -1145,7 +1145,7 @@ export function CategoriesHub() {
                   cursor: 'pointer',
                 }}
               >
-                + Создать раздел
+                + РЎРѕР·РґР°С‚СЊ СЂР°Р·РґРµР»
               </button>
               {tab === 'expense' && (
                 <button
@@ -1161,16 +1161,16 @@ export function CategoriesHub() {
                     cursor: 'pointer',
                   }}
                 >
-                  Из библиотеки
+                  РР· Р±РёР±Р»РёРѕС‚РµРєРё
                 </button>
               )}
             </div>
           </div>
         ) : (
-          /* Outliner list — user's own collection */
+          /* Outliner list вЂ” user's own collection */
           <>
           <div style={{ fontSize: 11, fontWeight: 700, color: T.subLight, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6, paddingLeft: 2 }}>
-            Моя коллекция
+            РњРѕСЏ РєРѕР»Р»РµРєС†РёСЏ
           </div>
           <div
             style={{
@@ -1199,7 +1199,7 @@ export function CategoriesHub() {
             {inlineEdit?.kind === 'folder-new' ? (
               <div style={{ padding: '4px 8px' }}>
                 <InlineInputRow
-                  placeholder="Название папки"
+                  placeholder="РќР°Р·РІР°РЅРёРµ РїР°РїРєРё"
                   indent={false}
                   onSave={handleInlineCreateFolder}
                   onCancel={() => setInlineEdit(null)}
@@ -1224,14 +1224,14 @@ export function CategoriesHub() {
                   cursor: 'pointer',
                 }}
               >
-                ＋ Новый раздел
+                пј‹ РќРѕРІС‹Р№ СЂР°Р·РґРµР»
               </button>
             )}
           </div>
           </>
         )}
 
-        {/* Standard Library section — collapsed by default, available for activation */}
+        {/* Standard Library section вЂ” collapsed by default, available for activation */}
         {libraryItems.length > 0 && tab === 'expense' && !searchQuery && (
           <div style={{ marginBottom: 8 }}>
             <button
@@ -1249,14 +1249,14 @@ export function CategoriesHub() {
             >
               <div>
                 <span style={{ fontSize: 11, fontWeight: 700, color: T.sub, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  Стандартная библиотека
+                  РЎС‚Р°РЅРґР°СЂС‚РЅР°СЏ Р±РёР±Р»РёРѕС‚РµРєР°
                 </span>
                 <div style={{ fontSize: 11, color: T.subLight, marginTop: 1 }}>
-                  Готовые контексты — добавляйте при необходимости
+                  Р“РѕС‚РѕРІС‹Рµ РєРѕРЅС‚РµРєСЃС‚С‹ вЂ” РґРѕР±Р°РІР»СЏР№С‚Рµ РїСЂРё РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё
                 </div>
               </div>
               <span style={{ fontSize: 11, color: T.subLight, flexShrink: 0 }}>
-                {showLibrary ? '▴' : '▸ ' + libraryItems.length}
+                {showLibrary ? 'в–ґ' : 'в–ё ' + libraryItems.length}
               </span>
             </button>
 
@@ -1323,7 +1323,7 @@ export function CategoriesHub() {
                           cursor: 'pointer',
                         }}
                       >
-                        Добавить
+                        Р”РѕР±Р°РІРёС‚СЊ
                       </button>
                     </div>
                   );
@@ -1348,14 +1348,14 @@ export function CategoriesHub() {
                 padding: '4px 8px',
               }}
             >
-              Сбросить к умолчаниям
+              РЎР±СЂРѕСЃРёС‚СЊ Рє СѓРјРѕР»С‡Р°РЅРёСЏРј
             </button>
           </div>
         )}
 
       </div>
 
-      {/* ── Sheets ─────────────────────────────────────────────────────────── */}
+      {/* в”Ђв”Ђ Sheets в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
 
       <CategoryEditorSheet
         open={editor.open}
@@ -1389,7 +1389,7 @@ export function CategoriesHub() {
         onSave={handleFolderSave}
         onDelete={folderEditor.folder ? async () => {
           if (!folderEditor.folder) return;
-          if (!confirm('Удалить раздел? Категории останутся, но потеряют группу.')) return;
+          if (!confirm('РЈРґР°Р»РёС‚СЊ СЂР°Р·РґРµР»? РљР°С‚РµРіРѕСЂРёРё РѕСЃС‚Р°РЅСѓС‚СЃСЏ, РЅРѕ РїРѕС‚РµСЂСЏСЋС‚ РіСЂСѓРїРїСѓ.')) return;
           await handleFolderDelete(folderEditor.folder);
           setFolderEditor({ open: false });
         } : undefined}

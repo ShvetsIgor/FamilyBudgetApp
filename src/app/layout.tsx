@@ -1,13 +1,18 @@
 import type { Metadata, Viewport } from 'next';
-import { Nunito } from 'next/font/google';
+import { Inter, Manrope } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 
-const nunito = Nunito({
+const inter = Inter({
   subsets: ['latin', 'cyrillic'],
-  weight: ['400', '600', '700', '800', '900'],
   display: 'swap',
-  variable: '--font-nunito',
+  variable: '--font-inter',
+});
+
+const manrope = Manrope({
+  subsets: ['latin', 'cyrillic'],
+  display: 'swap',
+  variable: '--font-manrope',
 });
 
 export const metadata: Metadata = {
@@ -26,8 +31,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#E07A5F' },
-    { media: '(prefers-color-scheme: dark)', color: '#241B14' },
+    { media: '(prefers-color-scheme: light)', color: '#5B6CFF' },
+    { media: '(prefers-color-scheme: dark)', color: '#0E1422' },
   ],
 };
 
@@ -37,8 +42,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${nunito.className} ${nunito.variable}`}>
+    <html lang="en" data-theme="mist" suppressHydrationWarning>
+      <body className={`${inter.variable} ${manrope.variable}`}>
         <Providers>{children}</Providers>
       </body>
     </html>

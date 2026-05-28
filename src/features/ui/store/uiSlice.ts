@@ -10,6 +10,7 @@ function ls(key: string): string | null {
 
 interface UIState {
   theme: Theme;
+  isDarkMode: boolean;
   language: Language;
   currency: Currency;
   weekStart: WeekStart;
@@ -22,8 +23,12 @@ interface UIState {
   desktopRightPanelOpen: boolean;
 }
 
+const storedTheme = ls('ui.theme');
+const storedDarkMode = ls('ui.darkMode');
+
 const initialState: UIState = {
-  theme: 'light',
+  theme: storedTheme === 'paper' ? 'paper' : 'mist',
+  isDarkMode: storedDarkMode === 'true' || storedTheme === 'dark',
   language: 'en',
   currency: 'ILS',
   weekStart: 'monday',
@@ -42,6 +47,25 @@ const uiSlice = createSlice({
   reducers: {
     setTheme(state, action: PayloadAction<Theme>) {
       state.theme = action.payload;
+      if (typeof window !== 'undefined') localStorage.setItem('ui.theme', action.payload);
+    },
+    setDarkMode(state, action: PayloadAction<boolean>) {
+      state.isDarkMode = action.payload;
+      if (typeof window !== 'undefined') localStorage.setItem('ui.darkMode', String(action.payload));
+    },
+    hydrateThemePreferences(state) {
+      const storedTheme = ls('ui.theme');
+      const storedDarkMode = ls('ui.darkMode');
+      if (storedTheme === 'mist' || storedTheme === 'paper') state.theme = storedTheme;
+      if (storedTheme === 'dark') {
+        state.theme = 'mist';
+        state.isDarkMode = true;
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('ui.theme', 'mist');
+          localStorage.setItem('ui.darkMode', 'true');
+        }
+      }
+      if (storedDarkMode === 'true' || storedDarkMode === 'false') state.isDarkMode = storedDarkMode === 'true';
     },
     setLanguage(state, action: PayloadAction<Language>) {
       state.language = action.payload;
@@ -79,6 +103,6 @@ const uiSlice = createSlice({
   },
 });
 
-export const { setTheme, setLanguage, setCurrency, setWeekStart, setOffline, setSyncing, setExpensesSearch, setBudgetMode, setBudgetDailyLimit, setBudgetMonthlyLimit, setDesktopRightPanelOpen } =
+export const { setTheme, setDarkMode, hydrateThemePreferences, setLanguage, setCurrency, setWeekStart, setOffline, setSyncing, setExpensesSearch, setBudgetMode, setBudgetDailyLimit, setBudgetMonthlyLimit, setDesktopRightPanelOpen } =
   uiSlice.actions;
 export default uiSlice.reducer;

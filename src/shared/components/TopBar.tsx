@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { Sun, Moon, WifiOff, RefreshCw, Plus, Bell, Search } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
-import { setTheme, setExpensesSearch } from '@/features/ui/store/uiSlice';
+import { setDarkMode, setExpensesSearch } from '@/features/ui/store/uiSlice';
 import { openQuickAdd } from '@/features/quickadd/store/quickAddSlice';
 import { useT } from '@/shared/hooks/useT';
 
@@ -29,7 +29,7 @@ export function TopBar() {
   const dispatch = useAppDispatch();
   const pathname = usePathname();
   const router = useRouter();
-  const { theme, isOffline, isSyncing, expensesSearch } = useAppSelector((s) => s.ui);
+  const { isDarkMode, isOffline, isSyncing, expensesSearch } = useAppSelector((s) => s.ui);
   const user = useAppSelector((s) => s.auth.user);
   const t = useT();
 
@@ -38,7 +38,7 @@ export function TopBar() {
   const firstName = user?.name?.split(' ')[0] || '';
 
   const title = isHome && firstName
-    ? `${t('topbar.greeting').replace('{name}', firstName)} ✨`
+    ? `${t('topbar.greeting').replace('{name}', firstName)} вњЁ`
     : t(getPageTitleKey(pathname));
 
   return (
@@ -46,7 +46,7 @@ export function TopBar() {
       {/* Title */}
       <h1 className="text-lg font-bold text-foreground shrink-0 min-w-[160px]">{title}</h1>
 
-      {/* Search — only on expenses page */}
+      {/* Search вЂ” only on expenses page */}
       {isExpenses && (
         <div className="flex-1 max-w-[360px]">
           <div className="relative">
@@ -81,11 +81,11 @@ export function TopBar() {
         </button>
 
         <button
-          onClick={() => dispatch(setTheme(theme === 'dark' ? 'light' : 'dark'))}
+          onClick={() => dispatch(setDarkMode(!isDarkMode))}
           className="rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground"
-          aria-label="Toggle theme"
+          aria-label="Toggle dark mode"
         >
-          {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </button>
 
         <button

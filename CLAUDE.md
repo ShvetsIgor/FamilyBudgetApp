@@ -34,6 +34,8 @@ Core principle:
 
 - Active locales: `en`, `ru`
 - Hebrew / RTL is intentionally paused and is not part of the active runtime guarantee
+- Visual theme is `mist | paper`; dark mode is a separate boolean and must not be inferred from `theme`
+- `<html>` owns `data-theme="mist|paper"` and the `dark` class independently through `ThemeProvider`
 - `/home` is the main expense-entry path
 - `/categories` is an advanced cleanup/library screen, not a primary navigation flow
 - `/expenses` should present split purchases by merchant context when that context exists, while analytics still stay category-based
@@ -162,6 +164,14 @@ Rules:
 
 Do not move this concern into `expensesService` or mutate stored category ids just to satisfy list UI.
 
+### 8. Mist/Paper visual layer is presentation-only
+
+- `features/ui/store/uiSlice.ts` owns `theme: mist | paper` and `isDarkMode`.
+- `shared/components/ThemeProvider.tsx` applies `data-theme` plus `.dark`.
+- `app/globals.css` owns the Mist/Paper token bridge and `fb-*` helper classes.
+- Category icons use the outline icon registry API (`I`, `IconKey`, `IconProps`) and must not change stored category schema.
+- Do not route theme work through parser, expense write services, category policy, split persistence, or Firestore schema.
+
 ## Recent Alignment Pass (2026-05-27)
 
 Implemented:
@@ -195,6 +205,19 @@ Implemented:
 - desktop quick-add must save real category ids only, never folder ids
 - split opened from chat should carry the known store-group section context when possible, materializing the library folder if needed
 - category and folder icon color choices now use an expanded 28-color palette
+
+## Mist/Paper Redesign Pass (2026-05-28)
+
+Implemented:
+
+- theme model split into `theme: mist | paper` plus `isDarkMode`
+- `ThemeProvider` sets `data-theme` and `.dark` independently while preserving locale direction handling
+- global CSS tokens replaced with Mist/Paper design variables and Tailwind HSL compatibility variables
+- Inter/Manrope fonts wired through `next/font/google` and CSS `--font-sans` / `--font-display`
+- category sticker icon registry replaced by outline icons while preserving the `I`, `IconKey`, `IconProps` API
+- account page now exposes a dedicated appearance block for Mist/Paper and separate dark mode
+- core chat/category token files now read CSS variables instead of old warm constants
+- parser, split, recurring, savings, Firestore write, and category/folder domain logic were intentionally left out of the redesign scope
 
 ## Known Gaps
 

@@ -43,23 +43,23 @@ const config: Config = {
         },
       },
       borderRadius: {
-        // Design system tokens: 12 / 16 / 22 / 26 / 32 px
-        DEFAULT: '1rem',    // 16 px base
-        sm:    '0.75rem',   // 12 px — chips, badges
-        md:    '1rem',      // 16 px — inputs, buttons
-        lg:    '1.375rem',  // 22 px — cards
-        xl:    '1.625rem',  // 26 px — large cards
-        '2xl': '2rem',      // 32 px — hero, modals
-        '3xl': '2.5rem',    // 40 px — extra large
-        pill:  '9999px',
+        DEFAULT: 'var(--radius)',
+        sm: 'var(--radius-sm)',
+        md: 'var(--radius-md)',
+        lg: 'var(--radius-lg)',
+        xl: 'var(--radius-xl)',
+        '2xl': 'calc(var(--radius-xl) + 0.5rem)',
+        '3xl': 'calc(var(--radius-xl) + 1rem)',
+        pill: '9999px',
       },
       fontFamily: {
-        sans: ['var(--font-nunito)', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        sans: ['var(--font-sans)', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        display: ['var(--font-display)', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
       },
       boxShadow: {
-        sm: '0 1px 2px rgba(61,44,31,.04)',
-        md: '0 6px 16px rgba(61,44,31,.06)',
-        lg: '0 16px 30px rgba(61,44,31,.12)',
+        sm: 'var(--shadow-sm)',
+        md: 'var(--shadow-md)',
+        lg: 'var(--shadow-lg)',
       },
     },
   },

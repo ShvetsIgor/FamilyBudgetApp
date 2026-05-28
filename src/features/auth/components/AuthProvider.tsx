@@ -6,7 +6,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { getFirebaseAuth, getDb } from '@/shared/lib/firebase';
 import { useAppDispatch } from '@/store/store';
 import { setUser, setLoading } from '@/features/auth/store/authSlice';
-import { setCurrency, setLanguage, setTheme, setWeekStart } from '@/features/ui/store/uiSlice';
+import { setCurrency, setDarkMode, setLanguage, setTheme, setWeekStart } from '@/features/ui/store/uiSlice';
 import { setCategories, setFolders } from '@/features/categories/store/categoriesSlice';
 import { fetchCategories, seedDefaultCategories } from '@/features/categories/services/categoriesService';
 import { fetchFolders } from '@/features/categories/services/categoryFoldersService';
@@ -38,7 +38,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dispatch(setUser(profile));
         dispatch(setCurrency(profile.currency));
         dispatch(setLanguage(profile.language));
-        dispatch(setTheme(profile.theme));
+        const profileTheme = profile.theme as typeof profile.theme | 'light' | 'dark' | undefined;
+        dispatch(setTheme(profileTheme === 'paper' ? 'paper' : 'mist'));
+        dispatch(setDarkMode(profile.darkMode ?? profileTheme === 'dark'));
         if (profile.weekStart) dispatch(setWeekStart(profile.weekStart));
 
         // Seed categories/folders if first login, then load all
@@ -54,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dispatch(setFolders({ type: 'expense', folders: expenseFolders }));
         dispatch(setFolders({ type: 'income', folders: incomeFolders }));
 
-        // Load store→category learning profiles
+        // Load storeв†’category learning profiles
         try {
           const profiles = await fetchStoreProfiles(firebaseUser.uid);
           dispatch(setProfiles(profiles));

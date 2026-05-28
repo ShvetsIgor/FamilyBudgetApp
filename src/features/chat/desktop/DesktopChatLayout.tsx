@@ -31,8 +31,8 @@ export function DesktopChatLayout({ children }: Props) {
   }, []);
 
   return (
-    <div className="flex flex-1 min-w-0 overflow-hidden" style={{ background: C.bg, fontFamily: 'Nunito, sans-serif' }}>
-      {/* Center — chat column */}
+    <div className="flex flex-1 min-w-0 overflow-hidden" style={{ background: C.bg, fontFamily: 'var(--font-sans)' }}>
+      {/* Center вЂ” chat column */}
       <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
         <DesktopChatHeader />
         <div className="flex-1 overflow-hidden">

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAppSelector, useAppDispatch } from '@/store/store';
-import { setTheme, setCurrency, setLanguage, setWeekStart, type WeekStart } from '@/features/ui/store/uiSlice';
+import { setDarkMode, setTheme, setCurrency, setLanguage, setWeekStart, type WeekStart } from '@/features/ui/store/uiSlice';
 import { signOut } from '@/features/auth/services/authService';
 import { doc, updateDoc } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
@@ -25,21 +25,21 @@ import { fetchMonthIncome } from '@/features/income/services/incomeService';
 import { expensesToCsv, incomeTocsv, downloadCsv } from '@/shared/utils/exportCsv';
 
 const CURRENCIES: { value: Currency; label: string }[] = [
-  { value: 'ILS', label: '₪ ILS' },
+  { value: 'ILS', label: 'в‚Є ILS' },
   { value: 'USD', label: '$ USD' },
   { value: 'CAD', label: 'CA$ CAD' },
-  { value: 'RUB', label: '₽ RUB' },
+  { value: 'RUB', label: 'в‚Ѕ RUB' },
 ];
 
 const LANGUAGES: { value: Language; label: string }[] = [
-  { value: 'en', label: '🇺🇸 English' },
-  { value: 'ru', label: '🇷🇺 Русский' },
+  { value: 'en', label: 'рџ‡єрџ‡ё English' },
+  { value: 'ru', label: 'рџ‡·рџ‡є Р СѓСЃСЃРєРёР№' },
 ];
 
 export default function AccountPage() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
-  const { theme, currency, language, weekStart } = useAppSelector((s) => s.ui);
+  const { theme, isDarkMode, currency, language, weekStart } = useAppSelector((s) => s.ui);
   const expenseCategories = useAppSelector((s) => s.categories.expense);
   const incomeCategories = useAppSelector((s) => s.categories.income);
   const family = useAppSelector((s) => s.family.family);
@@ -71,12 +71,13 @@ export default function AccountPage() {
   const initials = user.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2);
   const isOwner = family?.ownerId === user.id;
 
-  async function savePrefs(patch: Partial<{ theme: Theme; currency: Currency; language: Language; weekStart: WeekStart }>) {
+  async function savePrefs(patch: Partial<{ theme: Theme; darkMode: boolean; currency: Currency; language: Language; weekStart: WeekStart }>) {
     setSaving(true);
     try { await updateDoc(doc(getDb(), 'users', user!.id), patch); } finally { setSaving(false); }
   }
 
   async function handleTheme(th: Theme) { dispatch(setTheme(th)); await savePrefs({ theme: th }); }
+  async function handleDarkMode(enabled: boolean) { dispatch(setDarkMode(enabled)); await savePrefs({ darkMode: enabled }); }
   async function handleCurrency(c: Currency) { dispatch(setCurrency(c)); await savePrefs({ currency: c }); }
   async function handleLanguage(l: Language) { dispatch(setLanguage(l)); await savePrefs({ language: l }); }
   async function handleWeekStart(ws: WeekStart) { dispatch(setWeekStart(ws)); await savePrefs({ weekStart: ws }); }
@@ -165,7 +166,7 @@ export default function AccountPage() {
     } catch { setFamilyError('Failed to leave family. Try again.'); } finally { setFamilyLoading(false); }
   }
 
-  // ── Reusable section blocks ──────────────────────────────────────────────────
+  // в”Ђв”Ђ Reusable section blocks в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
   const profileCard = (
     <div className="rounded-2xl border border-border bg-card p-5 flex items-center gap-4">
@@ -181,14 +182,14 @@ export default function AccountPage() {
               className="flex-1 rounded-lg border border-border bg-background px-2 py-1 text-sm font-semibold outline-none focus:border-primary"
             />
             <button onClick={handleSaveName} disabled={nameSaving} className="text-xs font-medium text-primary disabled:opacity-50">
-              {nameSaving ? '…' : t('account.save')}
+              {nameSaving ? 'вЂ¦' : t('account.save')}
             </button>
             <button onClick={() => setEditingName(false)} className="text-xs text-muted-foreground">{t('account.cancel')}</button>
           </div>
         ) : (
           <div className="flex items-center gap-2">
             <p className="font-semibold truncate">{user.name}</p>
-            <button onClick={() => { setNameInput(user.name); setEditingName(true); }} className="text-muted-foreground hover:text-primary transition-colors text-xs shrink-0">✎</button>
+            <button onClick={() => { setNameInput(user.name); setEditingName(true); }} className="text-muted-foreground hover:text-primary transition-colors text-xs shrink-0">вњЋ</button>
           </div>
         )}
         <p className="text-sm text-muted-foreground truncate">{user.email}</p>
@@ -203,7 +204,7 @@ export default function AccountPage() {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs text-muted-foreground">{t('account.family')}</p>
-          <p className="font-semibold mt-0.5">👨‍👩‍👧 {family.name}</p>
+          <p className="font-semibold mt-0.5">рџ‘ЁвЂЌрџ‘©вЂЌрџ‘§ {family.name}</p>
         </div>
         {isOwner && <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{t('account.owner')}</span>}
       </div>
@@ -232,7 +233,7 @@ export default function AccountPage() {
               <div className="flex gap-2">
                 <button onClick={handleSendInvite} disabled={!inviteEmail.trim() || familyLoading}
                   className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-                  {familyLoading ? '…' : t('account.sendInvite')}
+                  {familyLoading ? 'вЂ¦' : t('account.sendInvite')}
                 </button>
                 <button onClick={() => { setShowInvite(false); setInviteEmail(''); }}
                   className="rounded-xl border border-border px-4 py-2.5 text-sm text-muted-foreground">
@@ -262,7 +263,7 @@ export default function AccountPage() {
       <div className="flex gap-2">
         <button onClick={handleAcceptInvite} disabled={familyLoading}
           className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-          {familyLoading ? '…' : t('account.accept')}
+          {familyLoading ? 'вЂ¦' : t('account.accept')}
         </button>
         <button onClick={handleRejectInvite} disabled={familyLoading}
           className="rounded-xl border border-border px-4 py-2.5 text-sm text-muted-foreground disabled:opacity-50">
@@ -281,7 +282,7 @@ export default function AccountPage() {
           <div className="flex gap-2">
             <button onClick={handleCreateFamily} disabled={!familyName.trim() || familyLoading}
               className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-              {familyLoading ? '…' : t('account.createFamily')}
+              {familyLoading ? 'вЂ¦' : t('account.createFamily')}
             </button>
             <button onClick={() => { setShowCreateFamily(false); setFamilyName(''); }}
               className="rounded-xl border border-border px-4 py-2.5 text-sm text-muted-foreground">
@@ -298,20 +299,58 @@ export default function AccountPage() {
     </div>
   );
 
+  const appearanceBlock = (
+    <div className="fb-card p-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-extrabold uppercase tracking-[.08em] text-muted-foreground">{t('account.appearance')}</p>
+          <p className="mt-1 text-sm font-bold text-foreground">{t('account.theme')}</p>
+        </div>
+        <button
+          onClick={() => handleDarkMode(!isDarkMode)}
+          className="relative h-[28px] w-[50px] rounded-full border border-border bg-muted transition-colors"
+          style={{ background: isDarkMode ? 'hsl(var(--primary))' : 'hsl(var(--muted))' }}
+          aria-label={t('account.darkMode')}
+        >
+          <span
+            className="absolute top-[3px] h-5 w-5 rounded-full bg-card transition-all duration-200"
+            style={{ left: isDarkMode ? '25px' : '3px', boxShadow: 'var(--shadow-sm)' }}
+          />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        {([
+          { value: 'mist' as const, title: t('account.themeMist'), desc: t('account.themeMistDesc'), swatch: '#5B6CFF' },
+          { value: 'paper' as const, title: t('account.themePaper'), desc: t('account.themePaperDesc'), swatch: '#FF4F2B' },
+        ]).map((option) => {
+          const active = theme === option.value;
+          return (
+            <button
+              key={option.value}
+              onClick={() => handleTheme(option.value)}
+              className={cn(
+                'rounded-xl border p-3 text-left transition-all',
+                active ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-card text-muted-foreground',
+              )}
+            >
+              <span className="mb-3 block h-8 rounded-lg border border-border" style={{ background: option.swatch }} />
+              <span className="block text-sm font-extrabold text-foreground">{option.title}</span>
+              <span className="mt-1 block text-[11px] font-semibold leading-snug text-muted-foreground">{option.desc}</span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-3 flex items-center justify-between rounded-xl bg-muted px-3 py-2">
+        <span className="text-sm font-bold text-foreground">{t('account.darkMode')}</span>
+        <span className="text-xs font-semibold text-muted-foreground">{isDarkMode ? t('account.dark') : t('account.light')}</span>
+      </div>
+    </div>
+  );
+
   const preferencesBlock = (
     <>
-      {/* Theme */}
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <p className="text-xs text-muted-foreground mb-3">{t('account.theme')}</p>
-        <div className="flex rounded-xl bg-muted p-1 gap-1">
-          {(['light', 'dark'] as Theme[]).map((th) => (
-            <button key={th} onClick={() => handleTheme(th)}
-              className={cn('flex-1 rounded-lg py-2 text-sm font-medium capitalize transition-colors', theme === th ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground')}>
-              {th === 'light' ? t('account.light') : t('account.dark')}
-            </button>
-          ))}
-        </div>
-      </div>
+      {appearanceBlock}
 
       {/* Currency */}
       <div className="rounded-2xl border border-border bg-card p-4">
@@ -334,7 +373,7 @@ export default function AccountPage() {
             <button key={l.value} onClick={() => handleLanguage(l.value)}
               className={cn('flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-medium transition-colors border', language === l.value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground')}>
               <span>{l.label}</span>
-              {language === l.value && <span className="text-primary">✓</span>}
+              {language === l.value && <span className="text-primary">вњ“</span>}
             </button>
           ))}
         </div>
@@ -346,15 +385,15 @@ export default function AccountPage() {
     <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
       <Link href="/savings" className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/50 transition-colors">
         <span className="text-sm font-medium">{t('account.savingsGoals')}</span>
-        <span className="text-muted-foreground text-sm">→</span>
+        <span className="text-muted-foreground text-sm">в†’</span>
       </Link>
       <Link href="/recurring" className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/50 transition-colors">
         <span className="text-sm font-medium">{t('account.recurringPayments')}</span>
-        <span className="text-muted-foreground text-sm">→</span>
+        <span className="text-muted-foreground text-sm">в†’</span>
       </Link>
       <Link href="/categories" className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/50 transition-colors">
         <span className="text-sm font-medium">{t('account.categories')}</span>
-        <span className="text-muted-foreground text-sm">→</span>
+        <span className="text-muted-foreground text-sm">в†’</span>
       </Link>
     </div>
   );
@@ -417,7 +456,7 @@ export default function AccountPage() {
   const signOutBtn = (
     <button onClick={handleSignOut} disabled={signingOut}
       className="rounded-2xl border border-destructive/40 bg-destructive/5 py-3.5 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50">
-      {signingOut ? '…' : t('account.signOut')}
+      {signingOut ? 'вЂ¦' : t('account.signOut')}
     </button>
   );
 
@@ -428,7 +467,7 @@ export default function AccountPage() {
         <p className="text-sm font-bold text-foreground">{title}</p>
         {sub && <p className="text-xs font-semibold text-muted-foreground mt-0.5">{sub}</p>}
       </div>
-      {right ?? <span className="text-muted-foreground text-lg leading-none">›</span>}
+      {right ?? <span className="text-muted-foreground text-lg leading-none">вЂє</span>}
     </div>
   );
 
@@ -437,14 +476,14 @@ export default function AccountPage() {
   );
 
   const mobileCard = (children: React.ReactNode) => (
-    <div className="rounded-[22px] bg-card overflow-hidden divide-y divide-border" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
+    <div className="fb-card overflow-hidden divide-y divide-border">
       {children}
     </div>
   );
 
   return (
     <>
-      {/* ── MOBILE layout ── */}
+      {/* в”Ђв”Ђ MOBILE layout в”Ђв”Ђ */}
       <div className="lg:hidden flex flex-col gap-4 px-[22px] pt-4 pb-28">
         {/* Profile card */}
         {profileCard}
@@ -454,37 +493,22 @@ export default function AccountPage() {
         {familyBlock}
 
         {/* Budget section */}
-        {mobileLabel('Бюджет')}
+        {mobileLabel('Р‘СЋРґР¶РµС‚')}
         {mobileCard(<>
-          <Link href="/categories">{mobileRow('🗂', '#F2CC8F22', t('account.categories').replace('🏷️ ', ''))}</Link>
-          <Link href="/recurring">{mobileRow('🔁', '#8AA9D622', t('account.recurringPayments').replace('🔄 ', ''))}</Link>
-          <Link href="/savings">{mobileRow('🐷', '#81B29A22', t('account.savingsGoals').replace('🎯 ', ''))}</Link>
+          <Link href="/categories">{mobileRow('рџ—‚', '#F2CC8F22', t('account.categories').replace('рџЏ·пёЏ ', ''))}</Link>
+          <Link href="/recurring">{mobileRow('рџ”Ѓ', '#8AA9D622', t('account.recurringPayments').replace('рџ”„ ', ''))}</Link>
+          <Link href="/savings">{mobileRow('рџђ·', '#81B29A22', t('account.savingsGoals').replace('рџЋЇ ', ''))}</Link>
         </>)}
 
+        {mobileLabel(t('account.appearance'))}
+        {appearanceBlock}
+
         {/* App section */}
-        {mobileLabel('Приложение')}
+        {mobileLabel('РџСЂРёР»РѕР¶РµРЅРёРµ')}
         {mobileCard(<>
-          {/* Dark mode toggle */}
-          <div className="flex items-center gap-3 px-4 py-3.5">
-            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#8AA9D622' }}>🌙</div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-foreground">Тёмная тема</p>
-              <p className="text-xs font-semibold text-muted-foreground mt-0.5">{theme === 'dark' ? 'Включена' : 'Выключена'}</p>
-            </div>
-            <button
-              onClick={() => handleTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="relative h-[26px] w-[46px] rounded-full transition-all duration-200 shrink-0 border-0"
-              style={{ background: theme === 'dark' ? '#81B29A' : 'hsl(var(--muted))' }}
-            >
-              <span
-                className="absolute top-[3px] h-5 w-5 rounded-full bg-white transition-all duration-200"
-                style={{ left: theme === 'dark' ? '23px' : '3px', boxShadow: '0 1px 3px rgba(0,0,0,.2)' }}
-              />
-            </button>
-          </div>
           {/* Language */}
           <div className="flex items-center gap-3 px-4 py-3.5">
-            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#F2CC8F22' }}>🌐</div>
+            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#F2CC8F22' }}>рџЊђ</div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-foreground">{t('account.language')}</p>
             </div>
@@ -514,7 +538,7 @@ export default function AccountPage() {
           </div>
           {/* Week start */}
           <div className="flex items-center gap-3 px-4 py-3.5">
-            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#8AA9D622' }}>📅</div>
+            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#8AA9D622' }}>рџ“…</div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-foreground">{t('account.weekStart')}</p>
             </div>
@@ -529,7 +553,7 @@ export default function AccountPage() {
           </div>
           {/* Notifications */}
           <div className="flex items-center gap-3 px-4 py-3.5">
-            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#C97B8422' }}>🔔</div>
+            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#C97B8422' }}>рџ””</div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-foreground">{t('notifications.title')}</p>
               <p className="text-xs font-semibold text-muted-foreground mt-0.5">
@@ -547,7 +571,7 @@ export default function AccountPage() {
           </div>
           {/* Export */}
           <div className="flex items-center gap-3 px-4 py-3.5">
-            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#A8B89C22' }}>📤</div>
+            <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: '#A8B89C22' }}>рџ“¤</div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-foreground">{t('export.title')}</p>
               <p className="text-xs font-semibold text-muted-foreground mt-0.5">{exportMonth}</p>
@@ -562,7 +586,7 @@ export default function AccountPage() {
         {signOutBtn}
       </div>
 
-      {/* ── DESKTOP layout — 2 columns ── */}
+      {/* в”Ђв”Ђ DESKTOP layout вЂ” 2 columns в”Ђв”Ђ */}
       <div className="hidden lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start pb-8">
         {/* Left: profile + family */}
         <div className="flex flex-col gap-4">

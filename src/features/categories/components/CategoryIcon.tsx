@@ -11,7 +11,7 @@ export function StickerIcon({ icon, color, className = 'h-4 w-4' }: StickerProps
   const gradId = `si-${icon}-${color.replace('#', '')}`;
   if (!IconComp) return <span style={{ color }}>{icon}</span>;
   return (
-    <span className={`inline-block shrink-0 ${className}`}>
+    <span className={`inline-block shrink-0 [&>svg]:h-full [&>svg]:w-full ${className}`}>
       <IconComp c={color} id={gradId} />
     </span>
   );
@@ -24,23 +24,24 @@ interface Props {
 }
 
 const sizes = {
-  sm: { outer: 'h-8 w-8',   inner: 'h-5 w-5'  },
-  md: { outer: 'h-10 w-10', inner: 'h-6 w-6'  },
-  lg: { outer: 'h-12 w-12', inner: 'h-8 w-8'  },
+  sm: { data: 'md', inner: 'h-5 w-5' },
+  md: { data: 'lg', inner: 'h-6 w-6' },
+  lg: { data: 'xl', inner: 'h-8 w-8' },
 };
 
 export function CategoryIcon({ icon, color, size = 'md' }: Props) {
-  const { outer, inner } = sizes[size];
+  const { data, inner } = sizes[size];
   const IconComp = I[icon];
   const gradId = `cg-${icon}-${color.replace('#', '')}`;
 
   return (
     <div
-      className={`flex shrink-0 items-center justify-center rounded-xl ${outer}`}
+      className="fb-cat-chip shrink-0"
+      data-size={data}
       style={{ backgroundColor: `${color}20` }}
     >
       {IconComp ? (
-        <div className={inner}>
+        <div className={`[&>svg]:h-full [&>svg]:w-full ${inner}`}>
           <IconComp c={color} id={gradId} />
         </div>
       ) : (

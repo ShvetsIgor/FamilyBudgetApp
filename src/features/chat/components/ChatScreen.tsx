@@ -24,7 +24,7 @@ export function ChatScreen({ children, onSend, onPlus, disabled }: ChatScreenPro
   return (
     <div
       className="flex h-full flex-col overflow-hidden"
-      style={{ background: C.bg, fontFamily: 'Nunito, sans-serif', color: C.fg }}
+      style={{ background: C.bg, fontFamily: 'var(--font-sans)', color: C.fg }}
     >
       <div
         ref={scrollRef}

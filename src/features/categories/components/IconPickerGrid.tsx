@@ -68,24 +68,24 @@ export function IconPickerGrid({ selected, color, onSelect }: Props) {
           </button>
         ))}
       </div>
-      <div className="grid grid-cols-6 gap-2 max-h-48 overflow-y-auto">
+      <div className="grid grid-cols-6 gap-2 max-h-48 overflow-y-auto p-0.5">
         {icons.map((icon) => (
           <button
             key={icon}
             onClick={() => onSelect(icon)}
-            className={`flex items-center justify-center rounded-xl p-2 transition-colors ${
+            className={`box-border flex aspect-square h-10 w-10 items-center justify-center rounded-xl border p-1.5 transition-colors ${
               selected === icon
-                ? 'ring-2 ring-offset-1'
-                : 'hover:bg-[#F4ECDE]'
+                ? 'border-[#E07A5F] bg-[#F4ECDE]'
+                : 'border-transparent hover:bg-[#F4ECDE]'
             }`}
             style={
               selected === icon
-                ? { backgroundColor: `${color}20`, outline: `2px solid ${color}`, outlineOffset: '2px' }
+                ? { backgroundColor: `${color}20`, borderColor: color, boxShadow: `inset 0 0 0 1px ${color}` }
                 : {}
             }
             aria-label={icon}
           >
-            <StickerIcon icon={icon} color={selected === icon ? color : '#8E7A66'} className="h-7 w-7" />
+            <StickerIcon icon={icon} color={selected === icon ? color : '#8E7A66'} className="h-6 w-6" />
           </button>
         ))}
       </div>

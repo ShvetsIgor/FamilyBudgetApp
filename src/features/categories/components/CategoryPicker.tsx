@@ -25,7 +25,7 @@ export function CategoryPicker({
   type,
   value,
   onChange,
-  placeholder = 'Select category',
+  placeholder = 'Категория',
   ungroupedOnly = false,
   groupedOnly = false,
 }: Props) {
@@ -72,7 +72,7 @@ export function CategoryPicker({
     return sections.flatMap(({ folderId, folderName, cats }) => [
       folderId ? (
         <div key={`header-${folderId}`} className="px-2 pt-2 pb-0.5">
-          <span className="text-[10px] font-bold text-[#8E7A66] uppercase tracking-wide">{folderName}</span>
+          <span className="block break-words text-[10px] font-bold leading-tight text-[#8E7A66] uppercase tracking-wide">{folderName}</span>
         </div>
       ) : null,
       ...cats.map((cat) => (
@@ -94,7 +94,7 @@ export function CategoryPicker({
         {selected ? (
           <>
             <CategoryIcon icon={selected.icon} color={selected.color} size="sm" />
-            <span className="flex-1 font-medium">{t.cat(selected.name)}</span>
+            <span className="flex-1 min-w-0 break-words font-medium leading-tight [overflow-wrap:anywhere]">{t.cat(selected.name)}</span>
           </>
         ) : (
           <span className="flex-1 text-muted-foreground">{placeholder}</span>
@@ -109,7 +109,7 @@ export function CategoryPicker({
               autoFocus
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search..."
+              placeholder="Поиск..."
               className="w-full rounded-lg bg-muted px-3 py-2 text-sm outline-none placeholder:text-muted-foreground"
             />
           </div>
@@ -150,7 +150,7 @@ function CategoryRowItem({
       )}
     >
       <CategoryIcon icon={cat.icon} color={cat.color} size="sm" />
-      <span className="flex-1 text-left">{displayName}</span>
+      <span className="flex-1 min-w-0 text-left text-[13px] leading-tight line-clamp-2 [overflow-wrap:anywhere]">{displayName}</span>
       {selected === cat.id && <Check className="h-4 w-4 text-primary" />}
     </button>
   );

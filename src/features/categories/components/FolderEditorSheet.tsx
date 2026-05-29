@@ -13,7 +13,7 @@ interface Props {
   onClose: () => void;
   initial?: Partial<CategoryFolder>;
   type: CategoryType;
-  onSave: (folder: Omit<CategoryFolder, 'id' | 'userId'> & { id?: string; presetId?: string }) => void;
+  onSave: (folder: Omit<CategoryFolder, 'id' | 'userId'> & { id?: string; presetId?: string }) => void | Promise<void>;
   onDelete?: () => void;
   availableFolders?: import('@/shared/types').CategoryFolder[];
   suggestions?: LibrarySuggestion[];
@@ -36,6 +36,7 @@ export function FolderEditorSheet({
   const [parentFolderId, setParentFolderId] = useState<string | undefined>(undefined);
   const [selectedPresetId, setSelectedPresetId] = useState<string | undefined>(undefined);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const nameInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -47,6 +48,7 @@ export function FolderEditorSheet({
     setParentFolderId(initial?.parentFolderId);
     setSelectedPresetId(undefined);
     setSuggestionsOpen(false);
+    setSaving(false);
   }, [open, initial]);
 
   const matchedSuggestions = useMemo(() => {
@@ -65,19 +67,24 @@ export function FolderEditorSheet({
 
   if (!open) return null;
 
-  const handleSave = () => {
-    if (!name.trim()) return;
-    onSave({
-      id: initial?.id,
-      name: name.trim(),
-      icon,
-      color,
-      type,
-      order: initial?.order ?? 0,
-      parentFolderId,
-      presetId: selectedPresetId,
-    });
-    onClose();
+  const handleSave = async () => {
+    if (!name.trim() || saving) return;
+    setSaving(true);
+    try {
+      await onSave({
+        id: initial?.id,
+        name: name.trim(),
+        icon,
+        color,
+        type,
+        order: initial?.order ?? 0,
+        parentFolderId,
+        presetId: selectedPresetId,
+      });
+      onClose();
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -197,11 +204,11 @@ export function FolderEditorSheet({
 
           <button
             onClick={handleSave}
-            disabled={!name.trim()}
+            disabled={!name.trim() || saving}
             className="w-full rounded-2xl py-3 font-bold text-white transition-opacity disabled:opacity-40"
             style={{ backgroundColor: CC.primary }}
           >
-            Сохранить
+            {saving ? 'Сохранение...' : 'Сохранить'}
           </button>
 
           {onDelete && (

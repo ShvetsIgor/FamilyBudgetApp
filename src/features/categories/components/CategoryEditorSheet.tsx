@@ -17,7 +17,7 @@ interface Props {
   type: CategoryType;
   folderId?: string;
   availableFolders?: import('@/shared/types').CategoryFolder[];
-  onSave: (cat: Omit<Category, 'id' | 'userId'> & { id?: string; presetId?: string }) => void;
+  onSave: (cat: Omit<Category, 'id' | 'userId'> & { id?: string; presetId?: string }) => void | Promise<void>;
   onDelete?: () => void;
   isWizardMode?: boolean;
   budget?: number;
@@ -53,6 +53,7 @@ export function CategoryEditorSheet({
   const [tagInput, setTagInput] = useState('');
   const [selectedPresetId, setSelectedPresetId] = useState<string | undefined>(undefined);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const nameInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -69,6 +70,7 @@ export function CategoryEditorSheet({
     setTagInput('');
     setSelectedPresetId(undefined);
     setSuggestionsOpen(false);
+    setSaving(false);
   }, [open, initial, budget, folderIdProp]);
 
   const matchedSuggestions = useMemo(() => {
@@ -87,25 +89,30 @@ export function CategoryEditorSheet({
 
   if (!open) return null;
 
-  const handleSave = () => {
-    if (!name.trim()) return;
-    onSave({
-      id: initial?.id,
-      name: name.trim(),
-      icon,
-      color,
-      isPrivate,
-      folderId: selectedFolderId ?? undefined,
-      extraFolderIds: extraFolderIds.filter((id) => id !== selectedFolderId),
-      type,
-      order: initial?.order ?? 0,
-      tags,
-      presetId: selectedPresetId,
-    });
-    if (onBudgetChange && budgetVal !== null) {
-      onBudgetChange(budgetVal);
+  const handleSave = async () => {
+    if (!name.trim() || saving) return;
+    setSaving(true);
+    try {
+      await onSave({
+        id: initial?.id,
+        name: name.trim(),
+        icon,
+        color,
+        isPrivate,
+        folderId: selectedFolderId ?? undefined,
+        extraFolderIds: extraFolderIds.filter((id) => id !== selectedFolderId),
+        type,
+        order: initial?.order ?? 0,
+        tags,
+        presetId: selectedPresetId,
+      });
+      if (onBudgetChange && budgetVal !== null) {
+        await onBudgetChange(budgetVal);
+      }
+      onClose();
+    } finally {
+      setSaving(false);
     }
-    onClose();
   };
 
   return (
@@ -331,11 +338,11 @@ export function CategoryEditorSheet({
 
           <button
             onClick={handleSave}
-            disabled={!name.trim()}
+            disabled={!name.trim() || saving}
             className="w-full rounded-2xl py-3 font-bold text-white transition-opacity disabled:opacity-40"
             style={{ backgroundColor: CC.primary }}
           >
-            Сохранить
+            {saving ? 'Сохранение...' : 'Сохранить'}
           </button>
 
           {onDelete && (

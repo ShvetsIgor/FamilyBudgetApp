@@ -33,7 +33,7 @@ export function FolderSection({ folder, categories, budgetLimits, onEditFolder, 
         >
           <StickerIcon icon={folder.icon ?? 'box'} color={color} className="h-6 w-6" />
         </div>
-        <span className="flex-1 text-sm font-bold text-[#3D2C1F]">
+        <span className="min-w-0 flex-1 text-sm font-bold leading-tight text-[#3D2C1F] line-clamp-2 [overflow-wrap:anywhere]">
           {getPresetDisplayName(folder.id, lang) ?? folder.name}
         </span>
         <span className="text-[10px] text-[#B6A48E]">{categories.length}</span>
@@ -64,7 +64,7 @@ export function FolderSection({ folder, categories, budgetLimits, onEditFolder, 
               >
                 <StickerIcon icon={cat.icon} color={cat.color} className="h-5 w-5" />
               </div>
-              <span className="flex-1 text-sm font-medium text-[#3D2C1F]">
+              <span className="min-w-0 flex-1 text-sm font-medium leading-tight text-[#3D2C1F] line-clamp-2 [overflow-wrap:anywhere]">
                 {getPresetDisplayName(cat.id, lang) ?? cat.name}
               </span>
               {(budgetLimits[cat.id] ?? 0) > 0 && (

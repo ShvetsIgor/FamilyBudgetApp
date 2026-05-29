@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { format, parseISO, differenceInDays, differenceInMonths } from 'date-fns';
+import { Plus } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setGoals, addGoalItem, updateGoalItem, removeGoalItem } from '@/features/savings/store/savingsSlice';
 import {
@@ -45,7 +46,7 @@ export default function SavingsPage() {
     if (recordAsExpense) {
       let catId = expenseCategoryId;
       if (!catId) {
-        const created = await addCategory(user.id, { name: 'Savings', icon: '🐷', color: '#10b981', type: 'expense', isPrivate: false, order: 8 });
+        const created = await addCategory(user.id, { name: 'Savings', icon: 'coin', color: '#10b981', type: 'expense', isPrivate: false, order: 8 });
         dispatch(addCategoryRedux(created));
         catId = created.id;
       }
@@ -160,12 +161,6 @@ export default function SavingsPage() {
       <div className="hidden lg:flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center gap-3">
         <p className="text-3xl">🎯</p>
         <p className="text-sm text-muted-foreground">{t('savings.selectGoal')}</p>
-        <button
-          onClick={() => router.push('/savings/new')}
-          className="mt-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
-        >
-          + {t('savings.add')}
-        </button>
       </div>
     );
   }
@@ -243,11 +238,6 @@ export default function SavingsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold">{t('savings.title')}</h1>
-          {mode === 'list' && (
-            <button onClick={() => router.push('/savings/new')} className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-medium">
-              {t('savings.add')}
-            </button>
-          )}
           {mode !== 'list' && (
             <button onClick={() => setMode('list')} className="text-sm text-muted-foreground">{t('savings.back')}</button>
           )}
@@ -321,9 +311,6 @@ export default function SavingsPage() {
         <div className="col-span-2 flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold">{t('savings.title')}</h1>
-            <button onClick={() => router.push('/savings/new')} className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-medium">
-              {t('savings.add')}
-            </button>
           </div>
           {listContent}
         </div>
@@ -331,6 +318,17 @@ export default function SavingsPage() {
           <RightPanel />
         </div>
       </div>
+
+      {mode === 'list' && (
+        <button
+          onClick={() => router.push('/savings/new')}
+          className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-transform active:scale-95 lg:bottom-8 lg:right-8"
+          style={{ background: 'hsl(var(--primary))' }}
+          aria-label={t('savings.add')}
+        >
+          <Plus size={24} color="white" />
+        </button>
+      )}
     </>
   );
 }

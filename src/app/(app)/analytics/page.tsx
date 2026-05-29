@@ -189,8 +189,8 @@ export default function AnalyticsPage() {
           <XAxis dataKey="name" tick={{ fontSize: 11 }} />
           <YAxis tick={{ fontSize: 11 }} width={45} />
           <Tooltip formatter={(value) => formatAmount(value as number, currency)} contentStyle={tooltipStyle} />
-          <Bar dataKey="income" name="Income" fill="#10b981" radius={[3, 3, 0, 0]} />
-          <Bar dataKey="expenses" name="Expenses" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} />
+          <Bar dataKey="income" name={t('stats.income')} fill="#10b981" radius={[3, 3, 0, 0]} />
+          <Bar dataKey="expenses" name={t('stats.expenses')} fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

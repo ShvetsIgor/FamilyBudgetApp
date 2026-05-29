@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import {
   addCategory, updateCategory, archiveCategory,
@@ -82,8 +83,8 @@ interface FolderEditorState {
 }
 
 type ContextMenuTarget =
-  | { kind: 'folder'; id: string }
-  | { kind: 'category'; id: string };
+  | { kind: 'folder'; id: string; rect: DOMRect }
+  | { kind: 'category'; id: string; rect: DOMRect };
 
 interface InlineEditState {
   kind: 'folder-rename' | 'cat-rename' | 'cat-new' | 'folder-new';
@@ -251,9 +252,10 @@ interface MenuOption {
 interface ContextMenuProps {
   options: MenuOption[];
   onClose: () => void;
+  anchorRect: DOMRect;
 }
 
-function ContextMenu({ options, onClose }: ContextMenuProps) {
+function ContextMenu({ options, onClose, anchorRect }: ContextMenuProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -264,19 +266,26 @@ function ContextMenu({ options, onClose }: ContextMenuProps) {
     return () => document.removeEventListener('mousedown', handle);
   }, [onClose]);
 
-  return (
+  if (typeof document === 'undefined') return null;
+  const menuWidth = 176;
+  const left = Math.min(
+    Math.max(8, anchorRect.right - menuWidth),
+    window.innerWidth - menuWidth - 8,
+  );
+  const top = Math.min(anchorRect.bottom + 4, window.innerHeight - 16);
+  const menu = (
     <div
       ref={ref}
       style={{
-        position: 'absolute',
-        right: 0,
-        top: '100%',
-        zIndex: 100,
+        position: 'fixed',
+        left,
+        top,
+        zIndex: 1000,
         backgroundColor: T.card,
         border: `1px solid ${T.hairline}`,
         borderRadius: 12,
         boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
-        minWidth: 160,
+        minWidth: menuWidth,
         overflow: 'hidden',
       }}
     >
@@ -303,6 +312,7 @@ function ContextMenu({ options, onClose }: ContextMenuProps) {
       ))}
     </div>
   );
+  return createPortal(menu, document.body);
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -629,7 +639,7 @@ export function CategoriesHub() {
             gap: 8,
             paddingLeft: 8 + indent * 20,
             paddingRight: 8,
-            height: 48,
+            minHeight: 48,
             cursor: 'pointer',
             borderRadius: 14,
             backgroundColor: isMenuOpen ? T.bgSoft : 'transparent',
@@ -690,9 +700,12 @@ export function CategoriesHub() {
                 fontSize: 14,
                 fontWeight: 700,
                 color: T.fg,
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
+                overflowWrap: 'anywhere',
+                lineHeight: 1.2,
                 cursor: 'text',
               }}
             >
@@ -717,7 +730,7 @@ export function CategoriesHub() {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setContextMenu(isMenuOpen ? null : { kind: 'folder', id: folder.id });
+                setContextMenu(isMenuOpen ? null : { kind: 'folder', id: folder.id, rect: e.currentTarget.getBoundingClientRect() });
               }}
               style={{
                 width: 32,
@@ -752,6 +765,7 @@ export function CategoriesHub() {
                     onClick: () => setConfirmDeleteFolderId(folder.id),
                   },
                 ]}
+                anchorRect={contextMenu.rect}
                 onClose={() => setContextMenu(null)}
               />
             )}
@@ -867,7 +881,7 @@ export function CategoriesHub() {
           gap: 8,
           paddingLeft: 44,
           paddingRight: 8,
-          height: 40,
+          minHeight: 40,
           borderRadius: 12,
           backgroundColor: isMenuOpen ? T.bgSoft : 'transparent',
           position: 'relative',
@@ -909,9 +923,12 @@ export function CategoriesHub() {
               fontSize: 13,
               fontWeight: 500,
               color: T.fg,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+              overflowWrap: 'anywhere',
+              lineHeight: 1.2,
               cursor: 'text',
             }}
           >
@@ -924,7 +941,7 @@ export function CategoriesHub() {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setContextMenu(isMenuOpen ? null : { kind: 'category', id: cat.id });
+              setContextMenu(isMenuOpen ? null : { kind: 'category', id: cat.id, rect: e.currentTarget.getBoundingClientRect() });
             }}
             style={{
               width: 32,
@@ -959,6 +976,7 @@ export function CategoriesHub() {
                   onClick: () => handleDeleteCategory(cat),
                 },
               ]}
+              anchorRect={contextMenu.rect}
               onClose={() => setContextMenu(null)}
             />
           )}

@@ -32,8 +32,8 @@ export function CategoryRow({ category, budget, onEdit, fromLibrary, onActivate 
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-[#3D2C1F] truncate">{displayName}</span>
+        <div className="flex items-start gap-2">
+          <span className="min-w-0 flex-1 text-sm font-semibold leading-tight text-[#3D2C1F] line-clamp-2 [overflow-wrap:anywhere]">{displayName}</span>
           {fromLibrary && (
             <span className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-[#8E7A66] bg-[#F4ECDE]">
               в библиотеке

@@ -203,14 +203,6 @@ export default function IncomePage() {
           <div className="flex flex-col items-center py-16 px-8 text-center">
             <p className="text-4xl mb-3">💰</p>
             <p className="font-medium">{t('income.noIncome')}</p>
-            {isCurrentMonth && (
-              <button
-                onClick={() => router.push('/income/new')}
-                className="mt-3 text-sm font-medium text-primary hover:underline"
-              >
-                {t('income.addIncome')}
-              </button>
-            )}
           </div>
         )}
 
@@ -246,23 +238,6 @@ export default function IncomePage() {
               );
             })}
 
-            {/* Add more button */}
-            {isCurrentMonth && (
-              <div className="px-4 lg:px-0">
-                <button
-                  onClick={() => router.push('/income/new')}
-                  className="lg:hidden w-full rounded-2xl border border-dashed border-border py-3 text-sm font-medium text-muted-foreground hover:border-primary hover:text-primary transition-colors"
-                >
-                  + {t('income.addMore')}
-                </button>
-                <button
-                  onClick={() => setShowForm(true)}
-                  className="hidden lg:block w-full rounded-2xl border border-dashed border-border py-3 text-sm font-medium text-muted-foreground hover:border-primary hover:text-primary transition-colors"
-                >
-                  + {t('income.addMore')}
-                </button>
-              </div>
-            )}
           </div>
         )}
       </div>

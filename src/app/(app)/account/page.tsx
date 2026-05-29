@@ -22,7 +22,10 @@ import { fetchMonthExpenses } from '@/features/expenses/services/expensesService
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { getNotificationPermission, requestNotificationPermission } from '@/shared/hooks/useNotifications';
 import { fetchMonthIncome } from '@/features/income/services/incomeService';
-import { expensesToCsv, incomeTocsv, downloadCsv } from '@/shared/utils/exportCsv';
+import { fetchRecurring } from '@/features/recurring/services/recurringService';
+import { fetchGoals } from '@/features/savings/services/savingsService';
+import { StickerIcon } from '@/features/categories/components/CategoryIcon';
+import { budgetExportSheets, expensesToCsv, incomeTocsv, downloadCsv, downloadXlsx } from '@/shared/utils/exportCsv';
 
 const CURRENCIES: { value: Currency; label: string }[] = [
   { value: 'ILS', label: '₪ ILS' },
@@ -42,6 +45,9 @@ export default function AccountPage() {
   const { theme, isDarkMode, currency, language, weekStart } = useAppSelector((s) => s.ui);
   const expenseCategories = useAppSelector((s) => s.categories.expense);
   const incomeCategories = useAppSelector((s) => s.categories.income);
+  const expenseFolders = useAppSelector((s) => s.categories.folders.expense);
+  const recurringItems = useAppSelector((s) => s.recurring.list);
+  const savingsGoals = useAppSelector((s) => s.savings.list);
   const family = useAppSelector((s) => s.family.family);
   const members = useAppSelector((s) => s.family.members);
   const pendingInvite = useAppSelector((s) => s.family.pendingInvite);
@@ -56,6 +62,7 @@ export default function AccountPage() {
   const [notifPermission, setNotifPermission] = useState<string>(() => getNotificationPermission());
   const [exportMonth, setExportMonth] = useState(format(new Date(), 'yyyy-MM'));
   const [exportType, setExportType] = useState<'expenses' | 'income' | 'both'>('both');
+  const [exportFormat, setExportFormat] = useState<'xlsx' | 'csv'>('xlsx');
   const [exporting, setExporting] = useState(false);
 
   const [showCreateFamily, setShowCreateFamily] = useState(false);
@@ -99,19 +106,40 @@ export default function AccountPage() {
     try {
       const catNames: Record<string, string> = {};
       for (const c of [...expenseCategories, ...incomeCategories]) catNames[c.id] = c.name;
+      const [expenses, incomes] = await Promise.all([
+        fetchMonthExpenses(user.id, exportMonth),
+        fetchMonthIncome(user.id, exportMonth),
+      ]);
+      if (exportFormat === 'xlsx') {
+        const [recurring, goals] = await Promise.all([
+          recurringItems.length > 0 ? Promise.resolve(recurringItems) : fetchRecurring(user.id),
+          savingsGoals.length > 0 ? Promise.resolve(savingsGoals) : fetchGoals(user.id),
+        ]);
+        downloadXlsx(
+          budgetExportSheets({
+            expenses,
+            incomes,
+            recurring,
+            goals,
+            expenseCategories,
+            incomeCategories,
+            expenseFolders,
+          }),
+          `family-budget-${exportMonth}.xlsx`,
+        );
+        return;
+      }
       if (exportType === 'expenses' || exportType === 'both') {
-        const data = await fetchMonthExpenses(user.id, exportMonth);
-        if (data.length > 0) downloadCsv(expensesToCsv(data, catNames), `expenses-${exportMonth}.csv`);
+        if (expenses.length > 0) downloadCsv(expensesToCsv(expenses, catNames), `expenses-${exportMonth}.csv`);
       }
       if (exportType === 'income' || exportType === 'both') {
-        const data = await fetchMonthIncome(user.id, exportMonth);
-        if (data.length > 0) downloadCsv(incomeTocsv(data, catNames), `income-${exportMonth}.csv`);
+        if (incomes.length > 0) downloadCsv(incomeTocsv(incomes, catNames), `income-${exportMonth}.csv`);
       }
     } finally { setExporting(false); }
   }
 
   async function handleSignOut() {
-    if (!confirm('Sign out?')) return;
+    if (!confirm('Выйти из аккаунта?')) return;
     setSigningOut(true);
     await signOut();
   }
@@ -124,7 +152,7 @@ export default function AccountPage() {
       dispatch(setFamily(newFamily)); dispatch(setMembers([user!]));
       dispatch(setUser({ ...user!, familyId: newFamily.id, accountType: 'family' }));
       setShowCreateFamily(false); setFamilyName('');
-    } catch { setFamilyError('Failed to create family. Try again.'); } finally { setFamilyLoading(false); }
+    } catch { setFamilyError('Не удалось создать семью. Попробуйте ещё раз.'); } finally { setFamilyLoading(false); }
   }
 
   async function handleSendInvite() {
@@ -133,7 +161,7 @@ export default function AccountPage() {
     try {
       await sendInvite(family.id, user!.id, inviteEmail.trim());
       setInviteSent(true); setInviteEmail(''); setShowInvite(false);
-    } catch { setFamilyError('Failed to send invite. Try again.'); } finally { setFamilyLoading(false); }
+    } catch { setFamilyError('Не удалось отправить приглашение. Попробуйте ещё раз.'); } finally { setFamilyLoading(false); }
   }
 
   async function handleAcceptInvite() {
@@ -146,7 +174,7 @@ export default function AccountPage() {
       if (f) { dispatch(setFamily(f)); dispatch(setMembers(await fetchFamilyMembers(f.memberIds))); }
       dispatch(setUser({ ...user!, familyId: pendingInvite.familyId, accountType: 'family' }));
       dispatch(setPendingInvite(null));
-    } catch { setFamilyError('Failed to accept invite. Try again.'); } finally { setFamilyLoading(false); }
+    } catch { setFamilyError('Не удалось принять приглашение. Попробуйте ещё раз.'); } finally { setFamilyLoading(false); }
   }
 
   async function handleRejectInvite() {
@@ -157,13 +185,13 @@ export default function AccountPage() {
 
   async function handleLeaveFamily() {
     if (!family) return;
-    const msg = isOwner ? 'You are the owner. Leaving will dissolve the family for all members. Continue?' : 'Leave this family?';
+    const msg = isOwner ? 'Вы владелец. Выход расформирует семью для всех участников. Продолжить?' : 'Покинуть эту семью?';
     if (!confirm(msg)) return;
     setFamilyLoading(true); setFamilyError('');
     try {
       await leaveFamily(user!.id, family);
       dispatch(clearFamily()); dispatch(setUser({ ...user!, familyId: undefined, accountType: 'personal' }));
-    } catch { setFamilyError('Failed to leave family. Try again.'); } finally { setFamilyLoading(false); }
+    } catch { setFamilyError('Не удалось покинуть семью. Попробуйте ещё раз.'); } finally { setFamilyLoading(false); }
   }
 
   // ── Reusable section blocks ──────────────────────────────────────────────────
@@ -276,7 +304,7 @@ export default function AccountPage() {
       <p className="text-sm text-muted-foreground">{t('account.noFamily')}</p>
       {showCreateFamily ? (
         <div className="flex flex-col gap-2">
-          <input type="text" value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder="Family name (e.g. The Smiths)"
+          <input type="text" value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder="Название семьи"
             className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
           {familyError && <p className="text-xs text-destructive">{familyError}</p>}
           <div className="flex gap-2">
@@ -301,22 +329,9 @@ export default function AccountPage() {
 
   const appearanceBlock = (
     <div className="fb-card p-4">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div>
-          <p className="text-xs font-extrabold uppercase tracking-[.08em] text-muted-foreground">{t('account.appearance')}</p>
-          <p className="mt-1 text-sm font-bold text-foreground">{t('account.theme')}</p>
-        </div>
-        <button
-          onClick={() => handleDarkMode(!isDarkMode)}
-          className="relative h-[28px] w-[50px] rounded-full border border-border bg-muted transition-colors"
-          style={{ background: isDarkMode ? 'hsl(var(--primary))' : 'hsl(var(--muted))' }}
-          aria-label={t('account.darkMode')}
-        >
-          <span
-            className="absolute top-[3px] h-5 w-5 rounded-full bg-card transition-all duration-200"
-            style={{ left: isDarkMode ? '25px' : '3px', boxShadow: 'var(--shadow-sm)' }}
-          />
-        </button>
+      <div className="mb-3">
+        <p className="text-xs font-extrabold uppercase tracking-[.08em] text-muted-foreground">{t('account.appearance')}</p>
+        <p className="mt-1 text-sm font-bold text-foreground">{t('account.theme')}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
@@ -341,9 +356,19 @@ export default function AccountPage() {
           );
         })}
       </div>
-      <div className="mt-3 flex items-center justify-between rounded-xl bg-muted px-3 py-2">
+      <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-muted px-3 py-2">
         <span className="text-sm font-bold text-foreground">{t('account.darkMode')}</span>
-        <span className="text-xs font-semibold text-muted-foreground">{isDarkMode ? t('account.dark') : t('account.light')}</span>
+        <button
+          onClick={() => handleDarkMode(!isDarkMode)}
+          className="relative h-[28px] w-[50px] shrink-0 rounded-full border border-border bg-muted transition-colors"
+          style={{ background: isDarkMode ? 'hsl(var(--primary))' : 'hsl(var(--muted))' }}
+          aria-label={t('account.darkMode')}
+        >
+          <span
+            className="absolute top-[3px] h-5 w-5 rounded-full bg-card transition-all duration-200"
+            style={{ left: isDarkMode ? '25px' : '3px', boxShadow: 'var(--shadow-sm)' }}
+          />
+        </button>
       </div>
     </div>
   );
@@ -436,6 +461,18 @@ export default function AccountPage() {
         </select>
       </div>
       <div className="flex flex-col gap-1">
+        <label className="text-xs text-muted-foreground">{t('export.format')}</label>
+        <div className="flex rounded-xl bg-muted p-1 gap-1">
+          {(['xlsx', 'csv'] as const).map((formatValue) => (
+            <button key={formatValue} onClick={() => setExportFormat(formatValue)}
+              className={cn('flex-1 rounded-lg py-2 text-xs font-medium transition-colors', exportFormat === formatValue ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground')}>
+              {formatValue === 'xlsx' ? t('export.xlsx') : t('export.csv')}
+            </button>
+          ))}
+        </div>
+      </div>
+      {exportFormat === 'csv' && (
+      <div className="flex flex-col gap-1">
         <label className="text-xs text-muted-foreground">{t('export.type')}</label>
         <div className="flex rounded-xl bg-muted p-1 gap-1">
           {(['expenses', 'income', 'both'] as const).map((type) => (
@@ -446,9 +483,10 @@ export default function AccountPage() {
           ))}
         </div>
       </div>
+      )}
       <button onClick={handleExport} disabled={exporting}
         className="rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50 transition-opacity">
-        {exporting ? t('export.exporting') : t('export.exportBtn')}
+        {exporting ? t('export.exporting') : exportFormat === 'xlsx' ? t('export.exportExcelBtn') : t('export.exportCsvBtn')}
       </button>
     </div>
   );
@@ -460,7 +498,7 @@ export default function AccountPage() {
     </button>
   );
 
-  const mobileRow = (icon: string, bg: string, title: string, sub?: string, right?: React.ReactNode, onClick?: () => void) => (
+  const mobileRow = (icon: React.ReactNode, bg: string, title: string, sub?: string, right?: React.ReactNode, onClick?: () => void) => (
     <div onClick={onClick} className={cn('flex items-center gap-3 px-4 py-3.5', onClick && 'cursor-pointer active:bg-muted/50 transition-colors')}>
       <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: bg }}>{icon}</div>
       <div className="flex-1 min-w-0">
@@ -495,9 +533,9 @@ export default function AccountPage() {
         {/* Budget section */}
         {mobileLabel('Бюджет')}
         {mobileCard(<>
-          <Link href="/categories">{mobileRow('🗂', '#F2CC8F22', t('account.categories').replace('🏷️ ', ''))}</Link>
-          <Link href="/recurring">{mobileRow('🔁', '#8AA9D622', t('account.recurringPayments').replace('🔄 ', ''))}</Link>
-          <Link href="/savings">{mobileRow('🐷', '#81B29A22', t('account.savingsGoals').replace('🎯 ', ''))}</Link>
+          <Link href="/categories">{mobileRow(<StickerIcon icon="box" color="#E07A5F" className="h-6 w-6" />, '#F2CC8F22', t('account.categories'))}</Link>
+          <Link href="/recurring">{mobileRow(<StickerIcon icon="receipt" color="#8AA9D6" className="h-6 w-6" />, '#8AA9D622', t('account.recurringPayments'))}</Link>
+          <Link href="/savings">{mobileRow(<StickerIcon icon="coin" color="#81B29A" className="h-6 w-6" />, '#81B29A22', t('account.savingsGoals'))}</Link>
         </>)}
 
         {mobileLabel(t('account.appearance'))}

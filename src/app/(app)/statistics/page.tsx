@@ -128,15 +128,15 @@ export default function StatisticsPage() {
 
         return (
           <div key={d.catId}>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
               <CategoryIcon icon={d.icon} color={d.color} size="sm" />
-              <span className="flex-1 text-sm">{d.name}</span>
-              <span className="text-sm font-semibold tabular-nums">{formatAmount(d.amount, currency)}</span>
+              <span className="min-w-0 flex-1 basis-[48%] text-sm leading-tight line-clamp-2 [overflow-wrap:anywhere]">{d.name}</span>
+              <span className="text-sm font-semibold tabular-nums shrink-0">{formatAmount(d.amount, currency)}</span>
               {showBudget && (
                 <button
                   onClick={() => isEditing ? setEditingCatId(null) : openBudgetEdit(d.catId)}
                   className={cn(
-                    'text-xs px-2 py-0.5 rounded-full transition-colors',
+                    'max-w-full shrink-0 text-xs px-2 py-0.5 rounded-full transition-colors',
                     overBudget ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground hover:text-foreground'
                   )}
                 >
@@ -153,26 +153,26 @@ export default function StatisticsPage() {
               </div>
             )}
             {isEditing && (
-              <div className="flex items-center gap-2 mt-1.5">
+              <div className="grid grid-cols-2 gap-2 mt-1.5 sm:flex sm:items-center">
                 <input
                   autoFocus
                   type="number"
                   min="0"
                   step="1"
-                  placeholder="Monthly limit (0 to remove)"
+                  placeholder={t('stats.limitPlaceholder')}
                   value={limitInput}
                   onChange={(e) => setLimitInput(e.target.value)}
                   onKeyDown={blockInvalidAmountKeys}
-                  className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="col-span-2 min-w-0 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:flex-1 sm:py-1.5"
                 />
                 <button
                   onClick={() => handleSaveBudget(d.catId)}
                   disabled={savingBudget}
-                  className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-50"
+                  className="min-w-0 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50 sm:py-1.5"
                 >
                   {savingBudget ? '…' : t('stats.save')}
                 </button>
-                <button onClick={() => setEditingCatId(null)} className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground">
+                <button onClick={() => setEditingCatId(null)} className="min-w-0 rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground sm:py-1.5">
                   {t('common.cancel')}
                 </button>
               </div>
@@ -195,8 +195,8 @@ export default function StatisticsPage() {
           <XAxis dataKey="name" tick={{ fontSize: 11 }} />
           <YAxis tick={{ fontSize: 11 }} width={45} />
           <Tooltip formatter={(value) => formatAmount(value as number, currency)} contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))' }} />
-          <Bar dataKey="expenses" name="Expenses" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="income" name="Income" fill="#10b981" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="expenses" name={t('stats.expenses')} fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="income" name={t('stats.income')} fill="#10b981" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

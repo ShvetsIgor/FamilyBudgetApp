@@ -1,9 +1,26 @@
 import React from 'react';
 
 /**
- * Family Budget - Outline icon set (v2, Mist + Paper compatible).
- * Public API is preserved: I, IconKey, IconProps.
- * CategoryIcon icon="cart" keeps working; only the rendering style changed.
+ * Family Budget — Outline icon set (v2 · Mist + Paper compatible)
+ *
+ * Drop-in replacement for the sticker-style `icons.tsx`. Same exports
+ * (`I`, `IconKey`, `IconProps`) and same icon names so any existing
+ * `<CategoryIcon icon="cart" .../>` keeps working — only the rendering
+ * changes from playful stickers to clean outline glyphs.
+ *
+ * Strokes use `currentColor`-style approach via the `c` prop. Each icon
+ * is a single monochrome outline rendered at 32×32 (matches v1 viewBox
+ * so chip/tile sizes don't need to change). `id` is kept in the props
+ * signature for API compatibility but unused (no gradient).
+ *
+ * Usage stays identical:
+ *
+ *   const Icon = I[catKey] ?? I.box;
+ *   <Icon c={category.color} id={catKey} />
+ *
+ * Theme-aware tinting happens at the wrapper level (the `.fb-cat-chip`
+ * background uses the category --cat-*-tint var, while the icon stroke
+ * uses the matching --cat-* solid). Both come from the active theme.
  */
 
 interface IconProps { c: string; id: string }
@@ -20,7 +37,7 @@ const out = (c: string) => ({
 /* eslint-disable react/display-name */
 export const I: Record<string, (props: IconProps) => React.ReactElement> = {};
 
-/* в”Ђв”Ђв”Ђв”Ђв”Ђ MONEY / INCOME в”Ђв”Ђв”Ђв”Ђв”Ђ */
+/* ───── MONEY / INCOME ───── */
 I.briefcase = ({ c }) => <svg {...out(c)}>
   <path d="M5 11h22a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V13a2 2 0 0 1 2-2Z"/>
   <path d="M12 11V8a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v3"/>
@@ -65,7 +82,7 @@ I.refund = ({ c }) => <svg {...out(c)}>
   <path d="M22 7v5h-5"/>
 </svg>;
 
-/* в”Ђв”Ђв”Ђв”Ђв”Ђ GROCERIES в”Ђв”Ђв”Ђв”Ђв”Ђ */
+/* ───── GROCERIES ───── */
 I.cart = ({ c }) => <svg {...out(c)}>
   <path d="M3 5h4l3 16h14l2-11H9"/>
   <circle cx="12" cy="25" r="2"/>
@@ -86,7 +103,7 @@ I.broom = ({ c }) => <svg {...out(c)}>
   <path d="M9 23l3 3M12 20l3 3M15 17l3 3"/>
 </svg>;
 
-/* в”Ђв”Ђв”Ђв”Ђв”Ђ DINING OUT в”Ђв”Ђв”Ђв”Ђв”Ђ */
+/* ───── DINING OUT ───── */
 I.plate = ({ c }) => <svg {...out(c)}>
   <circle cx="16" cy="16" r="11"/>
   <circle cx="16" cy="16" r="6"/>
@@ -112,7 +129,7 @@ I.icecream = ({ c }) => <svg {...out(c)}>
   <path d="M11 17l10 0M13 22l6 0"/>
 </svg>;
 
-/* в”Ђв”Ђв”Ђв”Ђв”Ђ ENTERTAINMENT в”Ђв”Ђв”Ђв”Ђв”Ђ */
+/* ───── ENTERTAINMENT ───── */
 I.cinema = ({ c }) => <svg {...out(c)}>
   <rect x="3" y="6" width="26" height="20" rx="2"/>
   <path d="M3 12h26M9 6v20M23 6v20"/>
@@ -139,7 +156,7 @@ I.brush = ({ c }) => <svg {...out(c)}>
   <path d="M7 26l4 0" strokeWidth="1.5"/>
 </svg>;
 
-/* в”Ђв”Ђв”Ђв”Ђв”Ђ HOME / BILLS в”Ђв”Ђв”Ђв”Ђв”Ђ */
+/* ───── HOME / BILLS ───── */
 I.house = ({ c }) => <svg {...out(c)}>
   <path d="M4 15L16 5l12 10v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/>
   <path d="M13 27v-7h6v7"/>
@@ -192,7 +209,7 @@ I.wrench = ({ c }) => <svg {...out(c)}>
   <path d="M23 4a6 6 0 0 0-7 7.4L4 23l5 5 11.6-12A6 6 0 0 0 28 9l-4 4-3-3z"/>
 </svg>;
 
-/* в”Ђв”Ђв”Ђв”Ђв”Ђ CAR / TRANSPORT в”Ђв”Ђв”Ђв”Ђв”Ђ */
+/* ───── CAR / TRANSPORT ───── */
 I.car = ({ c }) => <svg {...out(c)}>
   <path d="M5 18l2-7a3 3 0 0 1 3-2h12a3 3 0 0 1 3 2l2 7v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-2H9v2a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/>
   <path d="M5 18h22"/>
@@ -244,7 +261,7 @@ I.train = ({ c }) => <svg {...out(c)}>
   <path d="M9 28l-2 2M23 28l2 2"/>
 </svg>;
 
-/* в”Ђв”Ђв”Ђв”Ђв”Ђ TRAVEL в”Ђв”Ђв”Ђв”Ђв”Ђ */
+/* ───── TRAVEL ───── */
 I.plane = ({ c }) => <svg {...out(c)}>
   <path d="M16 3l3 11h9v3l-9 2v6l3 2v2l-6-2-6 2v-2l3-2v-6l-9-2v-3h9z"/>
 </svg>;
@@ -258,7 +275,7 @@ I.suitcase = ({ c }) => <svg {...out(c)}>
   <path d="M16 13v11" strokeWidth="1.5"/>
 </svg>;
 
-/* в”Ђв”Ђв”Ђв”Ђв”Ђ HEALTH в”Ђв”Ђв”Ђв”Ђв”Ђ */
+/* ───── HEALTH ───── */
 I.heart = ({ c }) => <svg {...out(c)}>
   <path d="M16 27c-8-5-12-11-12-15a6 6 0 0 1 12-2 6 6 0 0 1 12 2c0 4-4 10-12 15z"/>
   <path d="M16 11v8M12 15h8"/>
@@ -283,7 +300,7 @@ I.dumbbell = ({ c }) => <svg {...out(c)}>
   <path d="M6 10v12M26 10v12"/>
 </svg>;
 
-/* в”Ђв”Ђв”Ђв”Ђв”Ђ SHOPPING в”Ђв”Ђв”Ђв”Ђв”Ђ */
+/* ───── SHOPPING ───── */
 I.shirt = ({ c }) => <svg {...out(c)}>
   <path d="M4 11l8-7 4 3 4-3 8 7-3 5-3-1v13H10V15l-3 1z"/>
 </svg>;
@@ -307,7 +324,7 @@ I.watch = ({ c }) => <svg {...out(c)}>
   <path d="M16 14v3l2 2"/>
 </svg>;
 
-/* в”Ђв”Ђв”Ђв”Ђв”Ђ KIDS в”Ђв”Ђв”Ђв”Ђв”Ђ */
+/* ───── KIDS ───── */
 I.ball = ({ c }) => <svg {...out(c)}>
   <circle cx="16" cy="16" r="11.5"/>
   <path d="M16 4.5L19 10l-3 4-3-4zM4.5 16l5.5-3 4 3-4 3zM27.5 16l-5.5-3-4 3 4 3zM16 27.5l-3-5.5 3-4 3 4z"/>
@@ -340,7 +357,7 @@ I.hands = ({ c }) => <svg {...out(c)}>
   <path d="M6 19l4 2 1 4M26 19l-4 2-1 4"/>
 </svg>;
 
-/* в”Ђв”Ђв”Ђв”Ђв”Ђ GIFTS / OCCASIONS в”Ђв”Ђв”Ђв”Ђв”Ђ */
+/* ───── GIFTS / OCCASIONS ───── */
 I.cake = ({ c }) => <svg {...out(c)}>
   <path d="M16 4v3"/>
   <path d="M14 4q0-2 2-2t0 2"/>
@@ -354,7 +371,7 @@ I.palm = ({ c }) => <svg {...out(c)}>
   <path d="M16 12v17"/>
 </svg>;
 
-/* в”Ђв”Ђв”Ђв”Ђв”Ђ ONLINE / DIGITAL в”Ђв”Ђв”Ђв”Ђв”Ђ */
+/* ───── ONLINE / DIGITAL ───── */
 I.tv = ({ c }) => <svg {...out(c)}>
   <rect x="3" y="5" width="26" height="18" rx="2"/>
   <path d="M10 27h12"/>
@@ -381,7 +398,7 @@ I.headphones = ({ c }) => <svg {...out(c)}>
   <rect x="22" y="17" width="7" height="11" rx="2"/>
 </svg>;
 
-/* в”Ђв”Ђв”Ђв”Ђв”Ђ MISC в”Ђв”Ђв”Ђв”Ђв”Ђ */
+/* ───── MISC ───── */
 I.scissors = ({ c }) => <svg {...out(c)}>
   <circle cx="10" cy="22" r="4.5"/>
   <circle cx="22" cy="22" r="4.5"/>

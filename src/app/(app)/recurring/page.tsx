@@ -435,8 +435,26 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
   const selectedGroupCat = expenseCatGroups.find((g) => g.id === selectedGroupId);
   const catsInGroup = selectedGroupId ? getCatsInGroup(selectedGroupId) : [];
   const catColor = selectedGroupCat?.color ?? category?.color ?? '#E07A5F';
+  const categoryValidationError = t('categories.selectCategory');
+  const visibleError = categoryId && error === categoryValidationError ? '' : error;
 
   function tap(key: NumKey) { setAmount((cur) => applyKey(cur, key)); }
+
+  const selectCategory = useCallback((nextCategory: Category | undefined) => {
+    const nextCategoryId = nextCategory?.id ?? '';
+    setCategoryId(nextCategoryId);
+    setSelectedGroupId(nextCategory ? getGroupOf(nextCategory) : '');
+    if (nextCategoryId) setError('');
+  }, [getGroupOf]);
+
+  useEffect(() => {
+    if (!categoryId) return;
+    const current = allExpCats.find((entry) => entry.id === categoryId && !entry.archived);
+    if (!current) return;
+    const groupId = getGroupOf(current);
+    if (groupId !== selectedGroupId) setSelectedGroupId(groupId);
+    if (error === categoryValidationError) setError('');
+  }, [allExpCats, categoryId, categoryValidationError, error, getGroupOf, selectedGroupId]);
 
   const attachCategoryToFolder = (current: Category, folderId?: string) => {
     if (!folderId || current.folderId === folderId || current.extraFolderIds?.includes(folderId)) {
@@ -464,6 +482,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
       setSelectedGroupId(existing.id);
       setCategoryId('');
       setShowFolderEditor(false);
+      if (error === categoryValidationError) setError('');
       if (getCatsInGroup(existing.id).length === 0) {
         requestAnimationFrame(() => setShowCategoryEditor(true));
       }
@@ -505,8 +524,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
         await updateCategoryInDb(user.id, attached);
         dispatch(updateCategoryAction(attached));
       }
-      setSelectedGroupId(rest.folderId ?? attached.folderId ?? '');
-      setCategoryId(attached.id);
+      selectCategory(attached);
       setShowCategoryEditor(false);
       return;
     }
@@ -529,8 +547,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
         });
 
     dispatch(addCategoryAction(created));
-    setSelectedGroupId(created.folderId ?? '');
-    setCategoryId(created.id);
+    selectCategory(created);
     setShowCategoryEditor(false);
   }
 
@@ -539,7 +556,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
     if (amountNum <= 0 || saving) return;
 
     if (!categoryId) {
-      setError(t('categories.selectCategory'));
+      setError(categoryValidationError);
       return;
     }
 
@@ -585,7 +602,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
             autoFocus
             className="block w-full px-4 py-2.5 rounded-[14px] text-sm font-bold bg-card border border-border outline-none focus:border-primary transition-colors"
           />
-          {error && <p className="text-[11px] text-destructive mt-1 px-1">{error}</p>}
+          {visibleError && <p className="text-[11px] text-destructive mt-1 px-1">{visibleError}</p>}
         </div>
 
         {/* Amount row */}
@@ -720,12 +737,12 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
             {/* Folder category row */}
             {catsInGroup.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-1.5 pl-2" style={{ borderLeft: `2px solid ${catColor}44` }}>
-                {catsInGroup.map((sub) => {
+                  {catsInGroup.map((sub) => {
                   const sel = categoryId === sub.id;
                   return (
                     <button
                       key={sub.id}
-                      onClick={() => setCategoryId(sel ? '' : sub.id)}
+                      onClick={() => selectCategory(sel ? undefined : sub)}
                       className="h-[36px] px-3 rounded-[10px] flex items-center gap-1.5 transition-all border-0 text-[10px] font-extrabold"
                       style={{
                         background: sel ? catColor : catColor + '18',
@@ -818,7 +835,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
         <div className="px-4 pt-1.5 flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
           <button
             onClick={handleSubmit}
-            disabled={saving || amountNum <= 0}
+            disabled={saving || amountNum <= 0 || !categoryId}
             className="w-full py-[12px] rounded-[16px] flex items-center justify-center gap-2 text-[14px] font-black text-white transition-opacity disabled:opacity-50 border-0"
             style={{ background: catColor, boxShadow: `0 12px 24px ${catColor}60` }}
           >
@@ -870,9 +887,8 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
             type="expense"
             value={categoryId}
             onChange={(nextId) => {
-              setCategoryId(nextId);
               const nextCat = allExpCats.find((entry) => entry.id === nextId);
-              setSelectedGroupId(nextCat?.folderId ?? getGroupOf(nextCat) ?? '');
+              selectCategory(nextCat);
             }}
           />
           <div className="mt-3 flex gap-2">
@@ -912,12 +928,12 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
           <input value={comment} onChange={(e) => setComment(e.target.value)} placeholder={t('recurring.commentPlaceholder')}
             className="w-full bg-transparent text-sm outline-none" />
         </div>
-        {error && <p className="text-xs text-destructive px-1">{error}</p>}
+        {visibleError && <p className="text-xs text-destructive px-1">{visibleError}</p>}
         <div className="flex gap-3">
           <button type="button" onClick={onCancel} className="flex-1 rounded-2xl border border-border py-3 text-sm font-medium text-muted-foreground">
             {t('recurring.cancel')}
           </button>
-          <button type="submit" disabled={saving} className="flex-1 rounded-2xl bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+          <button type="submit" disabled={saving || amountNum <= 0 || !categoryId} className="flex-1 rounded-2xl bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
             {saving ? t('recurring.saving') : initial ? t('recurring.saveChanges') : t('recurring.save')}
           </button>
         </div>

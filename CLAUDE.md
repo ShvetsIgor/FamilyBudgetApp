@@ -164,11 +164,11 @@ Rules:
 
 Do not move this concern into `expensesService` or mutate stored category ids just to satisfy list UI.
 
-### 8. Mist/Paper visual layer is presentation-only
+### 8. Mist/Press visual layer is presentation-only
 
-- `features/ui/store/uiSlice.ts` owns `theme: mist | paper` and `isDarkMode`.
+- `features/ui/store/uiSlice.ts` owns `theme: mist | press` and `isDarkMode`.
 - `shared/components/ThemeProvider.tsx` applies `data-theme` plus `.dark`.
-- `app/globals.css` owns the Mist/Paper token bridge and `fb-*` helper classes.
+- `app/globals.css` owns the Mist/Press token bridge and `fb-*` helper classes.
 - Category icons use the outline icon registry API (`I`, `IconKey`, `IconProps`) and must not change stored category schema.
 - Do not route theme work through parser, expense write services, category policy, split persistence, or Firestore schema.
 

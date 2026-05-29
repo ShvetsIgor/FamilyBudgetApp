@@ -246,6 +246,22 @@ Runtime contract:
 - Store/tag learning keeps display and matching separate: UI uses `storeName`, while history lookup uses normalized merchant/tag keys.
 - Split receipt display should use section/folder context as the primary label; split line categories are secondary breakdown data.
 
+## Paper → Press Theme Migration (2026-05-29)
+
+Implemented:
+
+- replaced the `paper` theme variant with the editorial **Press** direction from the v2 design handoff: warm paper background `#F7F4EE`, hot-red accent `#E8442A`, beige hairlines, 15px radii, retuned `--cat-*` tints in `globals.css`
+- `Theme` type is now `'mist' | 'press'`; `uiSlice`, `AuthProvider`, and `RegisterForm` migrate previously-saved `'paper'` values (localStorage + Firestore profile) to `'press'` on first read
+- `account/page.tsx` theme picker, `en.json`, and `ru.json` use `themePress` / `themePressDesc` keys with the new copy; swatch updated to `#E8442A`
+- `Manrope` swapped for `Instrument_Sans` via `next/font/google`, exposed as `--font-instrument-sans`
+- `features/categories/icons/icons.tsx` overwritten with the v2 outline set (same `I` / `IconKey` / `IconProps` API)
+- baseline after migration: lint clean, build clean, `npm test` `492/492` green
+
+Runtime contract update:
+
+- visual theme is now `mist | press` (was `mist | paper`); the `'paper'` key only survives as a one-way migration shim in `uiSlice.hydrateThemePreferences` and the auth profile readers
+- `.fb-*` helper classes are now consistent across themes (both lean on hairline + soft shadow); paper-era `:root[data-theme="paper"]` overrides for `.fb-pin`, `.fb-btn-primary`, etc. are gone
+
 ## Known Gaps
 
 - Split persistence is still one `Expense` document with `splits[]`.

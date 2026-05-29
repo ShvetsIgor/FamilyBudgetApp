@@ -261,6 +261,7 @@ Runtime contract update:
 
 - visual theme is now `mist | press` (was `mist | paper`); the `'paper'` key only survives as a one-way migration shim in `uiSlice.hydrateThemePreferences` and the auth profile readers
 - `.fb-*` helper classes are now consistent across themes (both lean on hairline + soft shadow); paper-era `:root[data-theme="paper"]` overrides for `.fb-pin`, `.fb-btn-primary`, etc. are gone
+- 2026-05-29 doc sync: Active Runtime Contract and Architecture §8 updated to reference `mist | press` instead of `mist | paper`
 
 ## Known Gaps
 

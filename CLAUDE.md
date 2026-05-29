@@ -34,8 +34,8 @@ Core principle:
 
 - Active locales: `en`, `ru`
 - Hebrew / RTL is intentionally paused and is not part of the active runtime guarantee
-- Visual theme is `mist | paper`; dark mode is a separate boolean and must not be inferred from `theme`
-- `<html>` owns `data-theme="mist|paper"` and the `dark` class independently through `ThemeProvider`
+- Visual theme is `mist | press`; dark mode is a separate boolean and must not be inferred from `theme`
+- `<html>` owns `data-theme="mist|press"` and the `dark` class independently through `ThemeProvider`
 - `/home` is the main expense-entry path
 - `/categories` is an advanced cleanup/library screen, not a primary navigation flow
 - `/expenses` should present split purchases by merchant context when that context exists, while analytics still stay category-based

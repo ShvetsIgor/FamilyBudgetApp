@@ -155,6 +155,29 @@ export default function AccountPage() {
     await signOut();
   }
 
+  async function handleResetEverything() {
+    if (!user) return;
+    const ok = confirm(
+      'Удалить все траты, доходы, копилки, повторяющиеся платежи, историю чата и обучение?\n\n' +
+      'Категории, папки и настройки будут сохранены. Это действие нельзя отменить.'
+    );
+    if (!ok) return;
+    setResetting(true); setResetDone(false);
+    try {
+      await resetUserDataExceptCategories(user.id);
+      dispatch(setExpenses([]));
+      dispatch(setIncome([]));
+      dispatch(setGoals([]));
+      dispatch(setRecurring([]));
+      dispatch(setMessages([]));
+      dispatch(clearProfiles());
+      dispatch(clearMemory());
+      setResetDone(true);
+    } finally {
+      setResetting(false);
+    }
+  }
+
   async function handleCreateFamily() {
     if (!familyName.trim()) return;
     setFamilyLoading(true); setFamilyError('');

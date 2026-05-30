@@ -122,3 +122,25 @@ export async function deleteMessageAndExpense(
     await deleteDoc(doc(getDb(), 'expenses', userId, expenseId));
   }
 }
+
+/**
+ * Delete every chat message for this user. Expenses, income, savings etc. stay.
+ * Firestore batches cap at 500 ops, so we commit in chunks.
+ */
+export async function clearAllMessages(userId: string): Promise<void> {
+  const snap = await getDocs(col(userId));
+  if (snap.empty) return;
+
+  let batch = writeBatch(getDb());
+  let n = 0;
+  for (const docSnap of snap.docs) {
+    batch.delete(docSnap.ref);
+    n++;
+    if (n === 450) {
+      await batch.commit();
+      batch = writeBatch(getDb());
+      n = 0;
+    }
+  }
+  if (n > 0) await batch.commit();
+}

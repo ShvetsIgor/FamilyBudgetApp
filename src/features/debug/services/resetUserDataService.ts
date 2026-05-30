@@ -1,4 +1,4 @@
-import { collection, deleteDoc, getDocs, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, writeBatch } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import { clearStoreProfiles } from '@/features/chat/services/storeProfilesService';
 import { clearLearnedKeywords } from '@/features/chat/parser/learning';

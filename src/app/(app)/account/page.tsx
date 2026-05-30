@@ -698,6 +698,7 @@ export default function AccountPage() {
           {preferencesBlock}
           {notificationsBlock}
           {quickLinks}
+          {debugBlock}
           {signOutBtn}
         </div>
       </div>

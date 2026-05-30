@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
@@ -10,12 +10,27 @@ import { ChatHeader } from '@/features/chat/components/ChatHeader';
 import { MenuOverlay } from '@/features/chat/components/MenuOverlay';
 import { NotificationsPanel } from '@/features/notifications/components/NotificationsPanel';
 import { DesktopChatLayout } from '@/features/chat/desktop/DesktopChatLayout';
+import { useAppSelector, useAppDispatch } from '@/store/store';
+import { clearAllMessages } from '@/features/chat/services/messagesService';
+import { setMessages } from '@/features/chat/store/chatSlice';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isChat = pathname === '/home';
   const [menuOpen, setMenuOpen] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
+  const userId = useAppSelector((s) => s.auth.user?.id);
+  const dispatch = useAppDispatch();
+
+  const handleClearChat = useCallback(async () => {
+    if (!userId) return;
+    if (!window.confirm('Очистить всю историю чата? Траты, доходы и копилки останутся.')) return;
+    try {
+      await clearAllMessages(userId);
+    } finally {
+      dispatch(setMessages([]));
+    }
+  }, [userId, dispatch]);
 
   return (
     <>

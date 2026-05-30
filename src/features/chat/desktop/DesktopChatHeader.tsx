@@ -48,6 +48,17 @@ export function DesktopChatHeader() {
           </p>
         </div>
 
+        {/* Clear chat */}
+        <button
+          onClick={handleClearChat}
+          className="h-9 w-9 rounded-xl flex items-center justify-center transition-colors hover:bg-black/5"
+          style={{ color: C.sub }}
+          title="Очистить чат"
+          aria-label="Очистить чат"
+        >
+          <Trash2 className="h-[18px] w-[18px]" />
+        </button>
+
         {/* Search */}
         <button
           onClick={() => setCmdOpen(true)}

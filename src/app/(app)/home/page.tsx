@@ -506,7 +506,3 @@ export default function HomePage() {
   );
 }
 
-// Suppress unused-import warnings for cards that ship today but render via shared/SavedCard path.
-void MorningCard;
-void WeeklyCard;
-void syncChatExpenseMemory;

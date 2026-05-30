@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Menu } from 'lucide-react';
+import { Bell, Menu, Trash2 } from 'lucide-react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { useT } from '@/shared/hooks/useT';
@@ -9,9 +9,10 @@ import { useAppSelector } from '@/store/store';
 interface ChatHeaderProps {
   onMenu: () => void;
   onBell?: () => void;
+  onClearChat?: () => void;
 }
 
-export function ChatHeader({ onMenu, onBell }: ChatHeaderProps) {
+export function ChatHeader({ onMenu, onBell, onClearChat }: ChatHeaderProps) {
   const C = useChatTokens();
   const t = useT();
   const unread = useAppSelector((s) => s.notifications.items.filter((n) => !n.read).length);

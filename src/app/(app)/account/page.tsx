@@ -26,6 +26,14 @@ import { fetchRecurring } from '@/features/recurring/services/recurringService';
 import { fetchGoals } from '@/features/savings/services/savingsService';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { budgetExportSheets, expensesToCsv, incomeTocsv, downloadCsv, downloadXlsx } from '@/shared/utils/exportCsv';
+import { resetUserDataExceptCategories } from '@/features/debug/services/resetUserDataService';
+import { setExpenses } from '@/features/expenses/store/expensesSlice';
+import { setIncome } from '@/features/income/store/incomeSlice';
+import { setGoals } from '@/features/savings/store/savingsSlice';
+import { setRecurring } from '@/features/recurring/store/recurringSlice';
+import { setMessages } from '@/features/chat/store/chatSlice';
+import { clearProfiles } from '@/features/chat/store/storeProfilesSlice';
+import { clearMemory } from '@/features/expenses/store/suggestionMemorySlice';
 
 const CURRENCIES: { value: Currency; label: string }[] = [
   { value: 'ILS', label: '₪ ILS' },

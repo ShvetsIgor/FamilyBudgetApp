@@ -15,7 +15,7 @@ import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
 import type { Category, SerializableExpense, SplitItem } from '@/shared/types';
 import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
-import { recordExpense, recordSplitExpense, recordTagAssociation, recordMerchantContext, extractTags } from '@/features/expenses/store/suggestionMemorySlice';
+import { recordExpense, recordSplitExpense, recordTagAssociation, recordMerchantContext, extractTags, normalizeTag } from '@/features/expenses/store/suggestionMemorySlice';
 import { buildExpenseDraft } from '@/features/expenses/engine/buildExpenseDraft';
 import { useSplitEditor, applyKey, type SplitRow } from '@/features/expenses/hooks/useSplitEditor';
 import { addCategory as addCategoryFirestore } from '@/features/categories/services/categoriesService';

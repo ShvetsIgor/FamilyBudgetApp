@@ -496,7 +496,7 @@ export function FastExpenseEntry({
 
       {/* ── Top bar ── */}
       <div className="flex items-center gap-2 px-4 pt-1 pb-0.5 flex-shrink-0">
-        <button onClick={() => router.back()} className="p-1.5 rounded-full hover:bg-muted transition-colors">
+        <button onClick={handleClose} className="p-1.5 rounded-full hover:bg-muted transition-colors">
           <X className="h-4 w-4" />
         </button>
         <div className="flex-1 text-center text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">

@@ -7,10 +7,8 @@ import { ru } from 'date-fns/locale';
 
 import { useAppSelector, useAppDispatch, useAppStore } from '@/store/store';
 import { setTyping, removeMessage } from '@/features/chat/store/chatSlice';
-import { addFolder as addFolderAction } from '@/features/categories/store/categoriesSlice';
-import { addFolder, addFolderWithId } from '@/features/categories/services/categoryFoldersService';
 import { prependExpense, removeExpense, mergeExpenses } from '@/features/expenses/store/expensesSlice';
-import { recordExpense, recordMerchantContext } from '@/features/expenses/store/suggestionMemorySlice';
+import { recordExpense } from '@/features/expenses/store/suggestionMemorySlice';
 import { prependIncome } from '@/features/income/store/incomeSlice';
 import { updateRecurringItem } from '@/features/recurring/store/recurringSlice';
 
@@ -19,15 +17,10 @@ import { useLearnedKeywords } from '@/features/chat/hooks/useLearnedKeywords';
 import { useStoreProfiles } from '@/features/chat/hooks/useStoreProfiles';
 
 import { parseMessage } from '@/features/chat/parser/parse';
-import { matchItem } from '@/features/chat/parser/itemDictionary';
-import { saveLearnedKeyword } from '@/features/chat/parser/learning';
-import { updateStoreProfile } from '@/features/chat/services/storeProfilesService';
-import { upsertProfile } from '@/features/chat/store/storeProfilesSlice';
 import { deleteExpense, fetchMonthExpenses } from '@/features/expenses/services/expensesService';
 import { deleteMessageAndExpense } from '@/features/chat/services/messagesService';
 import { collectBotContext } from '@/features/chat/bot/context';
-import { respondToUserMessage, confirmFutureExpense } from '@/features/chat/bot/respond';
-import type { FutureCardData } from '@/features/chat/bot/respond';
+import { respondToUserMessage } from '@/features/chat/bot/respond';
 import { addMessage } from '@/features/chat/services/messagesService';
 import {
   shouldSendMorningGreeting,
@@ -49,7 +42,6 @@ import { DateChip } from '@/features/chat/components/DateChip';
 import { BotBubble, BotCardBubble } from '@/features/chat/components/BotBubble';
 import { UserBubble } from '@/features/chat/components/UserBubble';
 import { SavedCard } from '@/features/chat/components/BotCard/SavedCard';
-import { FutureCard } from '@/features/chat/components/BotCard/FutureCard';
 import { ClarifyCard } from '@/features/chat/components/BotCard/ClarifyCard';
 import { MorningCard } from '@/features/chat/components/BotCard/MorningCard';
 import { WeeklyCard } from '@/features/chat/components/BotCard/WeeklyCard';
@@ -61,8 +53,6 @@ import type { WeeklyCardData } from '@/features/chat/components/BotCard/WeeklyCa
 import type { EnvelopesCardData } from '@/features/chat/components/BotCard/EnvelopesCard';
 import type { Currency } from '@/shared/types';
 import { toLocalDateKey, toLocalMonthKey } from '@/shared/utils/dateKey';
-import { findFolderBlueprint } from '@/features/categories/utils/libraryLookup';
-import { getStoreGroupFolderId } from '@/features/categories/utils/storeGroupFolders';
 
 import type { SerializableChatMessage } from '@/shared/types/message';
 
@@ -82,10 +72,6 @@ function groupByDay(messages: SerializableChatMessage[]): { day: string; items: 
     map.get(key)!.push(m);
   }
   return Array.from(map.entries()).map(([day, items]) => ({ day, items }));
-}
-
-function normalizeLabel(value: string): string {
-  return value.trim().toLowerCase();
 }
 
 export default function HomePage() {
@@ -109,7 +95,7 @@ export default function HomePage() {
   }
 
   useChatMessages();
-  const [learned, addLearned] = useLearnedKeywords();
+  const [learned] = useLearnedKeywords();
   useStoreProfiles();
 
   const budgetMode = useAppSelector((s) => s.ui.budgetMode);
@@ -158,7 +144,6 @@ export default function HomePage() {
 
   const allExpenses = useAppSelector((s) => s.expenses.list);
   const allExpenseCats = useAppSelector((s) => s.categories.expense);
-  const allExpenseFolders = useAppSelector((s) => s.categories.folders.expense ?? []);
   const allIncomeCats = useAppSelector((s) => s.categories.income);
   const savingsGoals = useAppSelector((s) => s.savings.list);
   const [budgetSettingsOpen, setBudgetSettingsOpen] = useState(false);
@@ -208,18 +193,13 @@ export default function HomePage() {
 
   const sendingRef = useRef(false);
 
-  type ClarifyContext = {
+  type IncomeClarifyContext = {
     amount: number;
     parsedDate?: string;
     parsedDateLabel?: string;
     parsedNote?: string;
-    isIncome?: boolean;
-    storeId?: string;
-    storeName?: string;
-    storeGroup?: string;
-    isTagLearning?: boolean;
   };
-  const [categorySheet, setCategorySheet] = useState<ClarifyContext | null>(null);
+  const [incomeCategorySheet, setIncomeCategorySheet] = useState<IncomeClarifyContext | null>(null);
 
   const buildEnrichedCtx = useCallback(() => {
     const ctx = collectBotContext(appStore.getState());
@@ -279,140 +259,26 @@ export default function HomePage() {
       for (const botMsg of reply.messages) {
         await addMessage(botMsg);
       }
-      if (reply.expense) {
-        dispatch(prependExpense(reply.expense));
-        syncChatExpenseMemory(reply.expense);
-        if (reply.expense.storeId && reply.expense.store) {
-          dispatch(upsertProfile({
-            storeId: reply.expense.storeId,
-            storeName: reply.expense.store,
-            storeGroup: reply.expense.storeGroup,
-            categoryId: reply.expense.categoryId,
-          }));
-        }
-      }
       if (reply.income) dispatch(prependIncome(reply.income));
+
+      // Expense path: always navigate to Split — no clarify cards, no auto-save in chat.
+      if (reply.openSplit) {
+        const params = new URLSearchParams({
+          fromChat: 'true',
+          amount: String(reply.openSplit.amount),
+          userMsgId: reply.openSplit.userMsgId,
+        });
+        if (reply.openSplit.storeId) params.set('storeId', reply.openSplit.storeId);
+        if (reply.openSplit.storeName) params.set('storeName', reply.openSplit.storeName);
+        if (reply.openSplit.storeGroup) params.set('storeGroup', reply.openSplit.storeGroup);
+        if (reply.openSplit.date) params.set('date', reply.openSplit.date);
+        router.push(`/expenses/new?${params.toString()}`);
+      }
     } finally {
       dispatch(setTyping(false));
       sendingRef.current = false;
     }
-  }, [userId, buildEnrichedCtx, learned, dispatch, syncChatExpenseMemory]);
-
-  const handleClarifyChip = useCallback(async (
-    amount: number,
-    chip: { id: string; name: string; icon: string; color: string },
-    parsedDate?: string,
-    parsedDateLabel?: string,
-    parsedNote?: string,
-    storeId?: string,
-    storeName?: string,
-    storeGroup?: string,
-    isTagLearning?: boolean,
-  ) => {
-    if (!userId || sendingRef.current) return;
-    sendingRef.current = true;
-
-    try {
-      // isTagLearning + folder chip → ensure folder exists, then navigate to split UI
-      if (isTagLearning) {
-        const existingFolder = allExpenseFolders.find((folder) => (
-          folder.id === chip.id || normalizeLabel(folder.name) === normalizeLabel(chip.name)
-        ));
-        const preset = findFolderBlueprint('expense', { id: chip.id, name: chip.name });
-
-        let folder = existingFolder;
-        if (!folder && preset) {
-          folder = await addFolderWithId(userId, preset.id, {
-            name: preset.ru ?? preset.name,
-            icon: preset.icon,
-            color: preset.color,
-            type: 'expense',
-            order: allExpenseFolders.length,
-          });
-          dispatch(addFolderAction(folder));
-        }
-
-        if (folder) {
-          if (storeName) {
-            dispatch(recordMerchantContext({
-              merchant: storeName,
-              folderId: folder.id,
-              date: toLocalDateKey(parsedDate ? parseISO(parsedDate) : new Date()),
-            }));
-          }
-          const params = new URLSearchParams({
-            fromChat: 'true',
-            amount: String(amount),
-            folderId: folder.id,
-            folderName: folder.name,
-          });
-          if (storeId) params.set('storeId', storeId);
-          if (storeName) params.set('storeName', storeName);
-          if (storeGroup) params.set('storeGroup', storeGroup);
-          if (parsedDate) params.set('date', parsedDate);
-          router.push(`/expenses/new?${params.toString()}`);
-          return;
-        }
-      }
-
-      if (storeId) {
-        // Update store purchase history (store ≠ category — probabilistic memory)
-        dispatch(upsertProfile({ storeId, storeName: storeName!, storeGroup, categoryId: chip.id }));
-        updateStoreProfile(userId, storeId, storeName!, chip.id, storeGroup).catch(() => {});
-      } else {
-        // Teach learned keyword for non-store inputs
-        const keyword = parsedNote?.trim() || chip.name.toLowerCase();
-        const hit = { categoryId: chip.id };
-        await saveLearnedKeyword(userId, keyword.toLowerCase(), hit);
-        addLearned(keyword.toLowerCase(), hit); // optimistic update so next parse uses it immediately
-      }
-
-      dispatch(setTyping(true));
-      try {
-        const enrichedCtx = buildEnrichedCtx();
-        if (!enrichedCtx) return;
-
-        // Add visible user message
-        const storeLabel = storeName ? ` · ${storeName}` : '';
-        const userMsg = await addMessage({
-          userId,
-          senderId: userId,
-          kind: 'user',
-          text: `${amount} ${t.cat(chip.name).toLowerCase()}${storeLabel}${parsedDateLabel ? ` · ${parsedDateLabel}` : ''}`,
-          status: 'saved',
-        });
-
-        await new Promise((r) => setTimeout(r, 150));
-
-        // Bypass re-parse — we already know the category and date
-        const parsed: import('@/shared/types/message').ParseResult = {
-          amount,
-          categoryId: chip.id,
-          confidence: 'high',
-          date: parsedDate,
-          dateLabel: parsedDateLabel,
-          note: parsedNote,
-          storeId,
-          storeName,
-          storeGroup,
-        };
-
-        const reply = await respondToUserMessage(userMsg, parsed, enrichedCtx);
-        for (const botMsg of reply.messages) {
-          await addMessage(botMsg);
-        }
-        if (reply.expense) {
-          dispatch(prependExpense(reply.expense));
-          syncChatExpenseMemory(reply.expense);
-        }
-        if (reply.income) dispatch(prependIncome(reply.income));
-      } finally {
-        dispatch(setTyping(false));
-      }
-    } finally {
-      sendingRef.current = false;
-    }
-  }, [userId, allExpenseFolders, buildEnrichedCtx, dispatch, router, addLearned, t, syncChatExpenseMemory]);
+  }, [userId, buildEnrichedCtx, learned, dispatch, router]);
 
   const handleIncomeClarifyChip = useCallback(async (
     amount: number,
@@ -480,129 +346,6 @@ export default function HomePage() {
       }
     } catch { /* ignore */ }
   }, [userId, allExpenses, dispatch]);
-
-  const handleCreateFolder = useCallback(async (
-    name: string,
-    amount?: number,
-    storeId?: string,
-    storeName?: string,
-    storeGroup?: string,
-    parsedDate?: string,
-  ) => {
-    if (!userId) return;
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    try {
-      const existingFolder = allExpenseFolders.find((folder) => normalizeLabel(folder.name) === normalizeLabel(trimmed));
-      const preset = findFolderBlueprint('expense', { name: trimmed });
-
-      const newFolder = existingFolder ?? (
-        preset
-          ? await addFolderWithId(userId, preset.id, {
-              name: preset.ru ?? preset.name,
-              icon: preset.icon,
-              color: preset.color,
-              order: allExpenseFolders.length,
-              type: 'expense',
-            })
-          : await addFolder(userId, {
-              name: trimmed,
-              icon: 'box',
-              color: '#94A3B8',
-              order: allExpenseFolders.length,
-              type: 'expense',
-            })
-      );
-      if (!existingFolder) {
-        dispatch(addFolderAction(newFolder));
-      }
-
-      // Navigate directly to split UI — no bot message, flow continues unbroken
-      const params = new URLSearchParams({ fromChat: 'true', amount: String(amount ?? 0), folderId: newFolder.id, folderName: newFolder.name });
-      if (storeId) params.set('storeId', storeId);
-      if (storeName) params.set('storeName', storeName);
-      if (storeGroup) params.set('storeGroup', storeGroup);
-      if (parsedDate) params.set('date', parsedDate);
-      router.push(`/expenses/new?${params.toString()}`);
-    } catch (error) {
-      console.error('handleCreateFolder error:', error);
-    }
-  }, [userId, dispatch, router, allExpenseFolders]);
-
-  const ensureStoreGroupFolder = useCallback(async (storeGroup?: string) => {
-    if (!userId) return undefined;
-    const preferredFolderId = getStoreGroupFolderId(storeGroup);
-    if (!preferredFolderId) return undefined;
-
-    const preset = findFolderBlueprint('expense', { id: preferredFolderId });
-    const existingFolder = allExpenseFolders.find((folder) => (
-      folder.id === preferredFolderId ||
-      (preset && normalizeLabel(folder.name) === normalizeLabel(preset.ru ?? preset.name))
-    ));
-    if (existingFolder) return existingFolder;
-    if (!preset) return undefined;
-
-    const folder = await addFolderWithId(userId, preset.id, {
-      name: preset.ru ?? preset.name,
-      icon: preset.icon,
-      color: preset.color,
-      order: allExpenseFolders.length,
-      type: 'expense',
-    });
-    dispatch(addFolderAction(folder));
-    return folder;
-  }, [userId, allExpenseFolders, dispatch]);
-
-  const handleSplitFromClarify = useCallback(async (
-    amount: number,
-    storeId?: string,
-    storeName?: string,
-    storeGroup?: string,
-    parsedDate?: string,
-  ) => {
-    const params = new URLSearchParams({ fromChat: 'true', amount: String(amount) });
-    const folder = await ensureStoreGroupFolder(storeGroup);
-    if (folder) {
-      params.set('folderId', folder.id);
-      params.set('folderName', folder.name);
-    }
-    if (storeId) params.set('storeId', storeId);
-    if (storeName) params.set('storeName', storeName);
-    if (storeGroup) params.set('storeGroup', storeGroup);
-    if (parsedDate) params.set('date', parsedDate);
-    router.push(`/expenses/new?${params.toString()}`);
-  }, [ensureStoreGroupFolder, router]);
-
-  const handleFutureConfirm = useCallback(async (botMsgId: string, data: FutureCardData) => {
-    if (!userId || sendingRef.current) return;
-    sendingRef.current = true;
-    dispatch(setTyping(true));
-    try {
-      const enrichedCtx = buildEnrichedCtx();
-      if (!enrichedCtx) return;
-      const reply = await confirmFutureExpense(data, botMsgId, enrichedCtx);
-      for (const botMsg of reply.messages) {
-        await addMessage(botMsg);
-      }
-      if (reply.expense) {
-        dispatch(prependExpense(reply.expense));
-        syncChatExpenseMemory(reply.expense);
-      }
-    } finally {
-      dispatch(setTyping(false));
-      sendingRef.current = false;
-    }
-  }, [userId, buildEnrichedCtx, dispatch, syncChatExpenseMemory]);
-
-  const handleFutureCancel = useCallback(async (botMsgId: string, userMsgId: string) => {
-    if (!userId) return;
-    dispatch(removeMessage(botMsgId));
-    dispatch(removeMessage(userMsgId));
-    try {
-      await deleteMessageAndExpense(userId, botMsgId);
-      await deleteMessageAndExpense(userId, userMsgId);
-    } catch { /* ignore */ }
-  }, [userId, dispatch]);
 
   const groups = groupByDay(messages);
 
@@ -701,25 +444,11 @@ export default function HomePage() {
               );
             }
 
-            if (msg.card?.kind === 'future') {
-              const d = msg.card.data as FutureCardData;
-              return (
-                <BotCardBubble key={msg.id} tail={tail}>
-                  <FutureCard
-                    amount={d.amount}
-                    currency={d.currency}
-                    note={d.note}
-                    dateLabel={d.dateLabel}
-                    onConfirm={() => handleFutureConfirm(msg.id, d)}
-                    onCancel={() => handleFutureCancel(msg.id, d.userMsgId)}
-                  />
-                </BotCardBubble>
-              );
-            }
-
             if (msg.card?.kind === 'clarify') {
               const d = msg.card.data as Record<string, unknown>;
               const cardIsIncome = !!(d.isIncome as boolean | undefined);
+              // Clarify cards are kept only for income.
+              if (!cardIsIncome) return null;
               return (
                 <BotCardBubble key={msg.id} tail={tail}>
                   <ClarifyCard
@@ -727,80 +456,22 @@ export default function HomePage() {
                     currency={(d.currency as string | undefined) ?? '₪'}
                     chips={d.chips as { id: string; name: string; icon: string; color: string }[]}
                     unknownNote={d.parsedNote as string | undefined}
-                    isRepeat={(d.isRepeat as boolean | undefined) ?? false}
-                    storeName={d.storeName as string | undefined}
-                    isTagLearning={(d.isTagLearning as boolean | undefined) ?? false}
-                    categories={cardIsIncome ? allIncomeCats : allExpenseCats}
-                    onSelectChip={(chip) => cardIsIncome
-                      ? handleIncomeClarifyChip(
-                          d.amount as number,
-                          chip,
-                          d.parsedDate as string | undefined,
-                          d.parsedDateLabel as string | undefined,
-                          d.parsedNote as string | undefined,
-                        )
-                      : handleClarifyChip(
-                          d.amount as number,
-                          chip,
-                          d.parsedDate as string | undefined,
-                          d.parsedDateLabel as string | undefined,
-                          d.parsedNote as string | undefined,
-                          d.storeId as string | undefined,
-                          d.storeName as string | undefined,
-                          d.storeGroup as string | undefined,
-                          (d.isTagLearning as boolean | undefined) ?? false,
-                        )
+                    categories={allIncomeCats}
+                    onSelectChip={(chip) =>
+                      handleIncomeClarifyChip(
+                        d.amount as number,
+                        chip,
+                        d.parsedDate as string | undefined,
+                        d.parsedDateLabel as string | undefined,
+                        d.parsedNote as string | undefined,
+                      )
                     }
-                    onAllCategories={() => setCategorySheet({
+                    onAllCategories={() => setIncomeCategorySheet({
                       amount: d.amount as number,
                       parsedDate: d.parsedDate as string | undefined,
                       parsedDateLabel: d.parsedDateLabel as string | undefined,
                       parsedNote: d.parsedNote as string | undefined,
-                      isIncome: cardIsIncome,
-                      storeId: d.storeId as string | undefined,
-                      storeName: d.storeName as string | undefined,
-                      storeGroup: d.storeGroup as string | undefined,
-                      isTagLearning: (d.isTagLearning as boolean | undefined) ?? false,
                     })}
-                    onSplit={cardIsIncome ? undefined : () => handleSplitFromClarify(
-                      d.amount as number,
-                      d.storeId as string | undefined,
-                      d.storeName as string | undefined,
-                      d.storeGroup as string | undefined,
-                      d.parsedDate as string | undefined,
-                    )}
-                    onCreateFolder={cardIsIncome ? undefined : (name) => handleCreateFolder(name, d.amount as number, d.storeId as string | undefined, d.storeName as string | undefined, d.storeGroup as string | undefined, d.parsedDate as string | undefined)}
-                    onOtherText={cardIsIncome ? undefined : (text) => {
-                      const itemHit = matchItem(text.toLowerCase());
-                      if (itemHit) {
-                        const cat = allExpenseCats.find(
-                          (c) => c.id === itemHit.categoryId || (c.name.toLowerCase() === itemHit.keyword && !c.archived)
-                        );
-                        if (cat) {
-                          handleClarifyChip(
-                            d.amount as number,
-                            { id: cat.id, name: cat.name, icon: cat.icon, color: cat.color },
-                            d.parsedDate as string | undefined,
-                            d.parsedDateLabel as string | undefined,
-                            text,
-                            d.storeId as string | undefined,
-                            d.storeName as string | undefined,
-                            d.storeGroup as string | undefined,
-                          );
-                          return;
-                        }
-                      }
-                      setCategorySheet({
-                        amount: d.amount as number,
-                        parsedDate: d.parsedDate as string | undefined,
-                        parsedDateLabel: d.parsedDateLabel as string | undefined,
-                        parsedNote: text,
-                        storeId: d.storeId as string | undefined,
-                        storeName: d.storeName as string | undefined,
-                        storeGroup: d.storeGroup as string | undefined,
-                        isTagLearning: (d.isTagLearning as boolean | undefined) ?? false,
-                      });
-                    }}
                   />
                 </BotCardBubble>
               );
@@ -817,35 +488,21 @@ export default function HomePage() {
       {typing && <Typing />}
     </ChatScreen>
 
-    {/* All categories sheet */}
-    {categorySheet && (
+    {/* Income categories sheet */}
+    {incomeCategorySheet && (
       <CategorySheet
-        categories={categorySheet.isIncome ? allIncomeCats : undefined}
+        categories={allIncomeCats}
         onSelect={(chip) => {
-          if (categorySheet.isIncome) {
-            handleIncomeClarifyChip(
-              categorySheet.amount,
-              chip,
-              categorySheet.parsedDate,
-              categorySheet.parsedDateLabel,
-              categorySheet.parsedNote,
-            );
-          } else {
-            handleClarifyChip(
-              categorySheet.amount,
-              chip,
-              categorySheet.parsedDate,
-              categorySheet.parsedDateLabel,
-              categorySheet.parsedNote,
-              categorySheet.storeId,
-              categorySheet.storeName,
-              categorySheet.storeGroup,
-              categorySheet.isTagLearning,
-            );
-          }
-          setCategorySheet(null);
+          handleIncomeClarifyChip(
+            incomeCategorySheet.amount,
+            chip,
+            incomeCategorySheet.parsedDate,
+            incomeCategorySheet.parsedDateLabel,
+            incomeCategorySheet.parsedNote,
+          );
+          setIncomeCategorySheet(null);
         }}
-        onClose={() => setCategorySheet(null)}
+        onClose={() => setIncomeCategorySheet(null)}
       />
     )}
 
@@ -859,3 +516,8 @@ export default function HomePage() {
     </>
   );
 }
+
+// Suppress unused-import warnings for cards that ship today but render via shared/SavedCard path.
+void MorningCard;
+void WeeklyCard;
+void syncChatExpenseMemory;

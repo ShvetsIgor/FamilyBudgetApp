@@ -6,7 +6,7 @@ import { addIncome } from '@/features/income/services/incomeService';
 import { updateMessage } from '@/features/chat/services/messagesService';
 import type { SerializableChatMessage, ParseResult } from '@/shared/types/message';
 import type { BotContext } from './context';
-import { savedPhrase, UNKNOWN_PHRASE } from './templates';
+import { UNKNOWN_PHRASE } from './templates';
 
 function nowTimestamp(): string {
   return new Date().toISOString();

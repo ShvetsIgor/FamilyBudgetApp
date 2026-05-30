@@ -12,8 +12,10 @@ import {
   increment,
   serverTimestamp,
   Timestamp,
+  writeBatch,
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
+import { queueLinkedChatMessageDeletes } from '@/features/expenses/services/expensesService';
 import type { SerializableIncome, Currency, Privacy } from '@/shared/types';
 import { format } from 'date-fns';
 

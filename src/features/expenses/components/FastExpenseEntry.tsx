@@ -225,9 +225,18 @@ export function FastExpenseEntry({
     [getCategoryHistoryRank],
   );
 
+  // Folders this tag/merchant was previously assigned to — sort them to the top.
+  const tagFolderContext = useMemo(() => {
+    if (!initialStore) return {} as Record<string, number>;
+    return memory.merchantContextStats[normalizeTag(initialStore)] ?? {};
+  }, [initialStore, memory.merchantContextStats]);
+
   const topFolders = useMemo(
     () =>
       [...baseTopFolders].sort((a, b) => {
+        const aCtx = tagFolderContext[a.id] ?? 0;
+        const bCtx = tagFolderContext[b.id] ?? 0;
+        if (aCtx !== bCtx) return bCtx - aCtx;
         const aRank = Math.max(0, ...activeExpCats
           .filter((cat) => cat.folderId === a.id || cat.extraFolderIds?.includes(a.id))
           .map((cat) => getCategoryHistoryRank(cat.id)));
@@ -236,7 +245,7 @@ export function FastExpenseEntry({
           .map((cat) => getCategoryHistoryRank(cat.id)));
         return bRank - aRank || a.name.localeCompare(b.name);
       }),
-    [baseTopFolders, activeExpCats, getCategoryHistoryRank],
+    [baseTopFolders, activeExpCats, getCategoryHistoryRank, tagFolderContext],
   );
   const noFolders = topFolders.length === 0;
 

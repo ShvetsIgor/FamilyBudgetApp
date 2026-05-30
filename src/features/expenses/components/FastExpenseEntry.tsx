@@ -325,6 +325,18 @@ export function FastExpenseEntry({
     }
   }
 
+  // Cancel from chat-driven Split → remove originating chat bubble (saves nothing)
+  const handleClose = useCallback(async () => {
+    if (fromChat && initialUserMsgId && user) {
+      dispatch(removeChatMessage(initialUserMsgId));
+      try {
+        const { deleteMessageAndExpense } = await import('@/features/chat/services/messagesService');
+        await deleteMessageAndExpense(user.id, initialUserMsgId);
+      } catch { /* ignore */ }
+    }
+    router.back();
+  }, [fromChat, initialUserMsgId, user, dispatch, router]);
+
   function changeCategory(id: string) {
     setSelectedCatId(id);
     setEditing('total');

@@ -121,7 +121,10 @@ export async function updateIncome(input: AddIncomeInput & { id: string }): Prom
 }
 
 export async function deleteIncome(userId: string, income: SerializableIncome): Promise<void> {
-  await deleteDoc(doc(getDb(), 'incomes', userId, 'items', income.id));
+  const batch = writeBatch(getDb());
+  batch.delete(doc(getDb(), 'incomes', userId, 'items', income.id));
+  await queueLinkedChatMessageDeletes(batch, userId, 'incomeId', income.id);
+  await batch.commit();
   const month = format(new Date(income.date), 'yyyy-MM');
   await updateMonthlyIncome(userId, month, income.amount, -1);
 }

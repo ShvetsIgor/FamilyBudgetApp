@@ -60,6 +60,3 @@ export async function resetUserDataExceptCategories(userId: string): Promise<voi
     try { localStorage.removeItem(SUGGESTION_MEMORY_KEY); } catch { /* ignore */ }
   }
 }
-
-// Re-export for symmetry; not currently used but the contract is "delete one user thing"
-export { deleteDoc };

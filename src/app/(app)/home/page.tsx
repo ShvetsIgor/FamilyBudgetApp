@@ -17,7 +17,7 @@ import { useStoreProfiles } from '@/features/chat/hooks/useStoreProfiles';
 
 import { parseMessage } from '@/features/chat/parser/parse';
 import { deleteExpense, fetchMonthExpenses } from '@/features/expenses/services/expensesService';
-import { deleteMessageAndExpense } from '@/features/chat/services/messagesService';
+import { deleteMessage } from '@/features/chat/services/messagesService';
 import { collectBotContext } from '@/features/chat/bot/context';
 import { respondToUserMessage } from '@/features/chat/bot/respond';
 import { addMessage } from '@/features/chat/services/messagesService';

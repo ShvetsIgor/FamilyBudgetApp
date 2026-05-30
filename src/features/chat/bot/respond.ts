@@ -185,5 +185,3 @@ export async function respondToUserMessage(
   };
 }
 
-// Reference to keep savedPhrase wired for future reuse (chat now defers save to Split).
-void savedPhrase;

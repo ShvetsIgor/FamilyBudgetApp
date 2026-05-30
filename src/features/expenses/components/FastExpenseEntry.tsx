@@ -6,6 +6,7 @@ import { X, MessageSquare, Calendar, ChevronLeft, Scissors, ChevronRight, Plus }
 import { format, parseISO, isToday, isYesterday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useAppSelector, useAppDispatch } from '@/store/store';
+import { removeMessage as removeChatMessage } from '@/features/chat/store/chatSlice';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import { prependExpense, updateExpense as updateExpenseAction } from '@/features/expenses/store/expensesSlice';
 import { addExpense, updateExpense } from '@/features/expenses/services/expensesService';

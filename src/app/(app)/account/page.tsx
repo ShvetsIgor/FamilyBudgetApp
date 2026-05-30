@@ -532,6 +532,27 @@ export default function AccountPage() {
     </button>
   );
 
+  const debugBlock = (
+    <div className="rounded-2xl border border-border bg-card p-4 flex flex-col gap-3">
+      <div>
+        <p className="text-xs text-muted-foreground">Отладка</p>
+        <p className="text-xs text-muted-foreground/70 mt-1">
+          Удалит траты, доходы, копилки, повторяющиеся платежи, чат и обучение. Категории, папки и настройки останутся.
+        </p>
+      </div>
+      {resetDone && (
+        <p className="text-xs text-emerald-600 dark:text-emerald-400">Готово. Данные очищены.</p>
+      )}
+      <button
+        onClick={handleResetEverything}
+        disabled={resetting}
+        className="rounded-xl border border-destructive/40 bg-destructive/5 py-2.5 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
+      >
+        {resetting ? 'Очистка…' : 'Сбросить всё остальное'}
+      </button>
+    </div>
+  );
+
   const mobileRow = (icon: React.ReactNode, bg: string, title: string, sub?: string, right?: React.ReactNode, onClick?: () => void) => (
     <div onClick={onClick} className={cn('flex items-center gap-3 px-4 py-3.5', onClick && 'cursor-pointer active:bg-muted/50 transition-colors')}>
       <div className="h-10 w-10 rounded-[14px] flex items-center justify-center text-[18px] shrink-0" style={{ background: bg }}>{icon}</div>

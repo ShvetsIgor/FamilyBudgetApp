@@ -213,16 +213,6 @@ export default function HomePage() {
     };
   }, [appStore, allExpenses, monthBudget, budgetLimits, dailyBudget, savingsGoals]);
 
-  const syncChatExpenseMemory = useCallback((expense: { categoryId: string; store?: string; date: string }) => {
-    const category = allExpenseCats.find((c) => c.id === expense.categoryId);
-    dispatch(recordExpense({
-      merchant: expense.store,
-      categoryId: expense.categoryId,
-      folderId: category?.folderId ?? undefined,
-      date: toLocalDateKey(expense.date),
-    }));
-  }, [allExpenseCats, dispatch]);
-
   const handleSend = useCallback(async (text: string) => {
     if (!userId || sendingRef.current) return;
     sendingRef.current = true;

@@ -252,6 +252,7 @@ function validateExpenseInput(input: AddExpenseInput) {
 export async function deleteExpense(userId: string, expense: SerializableExpense) {
   const batch = writeBatch(getDb());
   batch.delete(expenseDoc(userId, expense.id));
+  await queueLinkedChatMessageDeletes(batch, userId, 'expenseId', expense.id);
   queueMonthlyStatsUpdate(
     batch,
     userId,
@@ -260,6 +261,22 @@ export async function deleteExpense(userId: string, expense: SerializableExpense
   );
   await batch.commit();
   return restoreRecurringDueFromDeletedExpense(userId, expense);
+}
+
+/**
+ * Find chat messages that reference this entity (by top-level expenseId/incomeId field)
+ * and queue them for deletion in the same batch. Idempotent — no-ops when no message
+ * was ever linked. Shared with incomeService/recurring/savings via a thin wrapper.
+ */
+export async function queueLinkedChatMessageDeletes(
+  batch: WriteBatch,
+  userId: string,
+  field: 'expenseId' | 'incomeId',
+  entityId: string,
+): Promise<void> {
+  const msgCol = collection(getDb(), 'messages', userId, 'items');
+  const snap = await getDocs(query(msgCol, where(field, '==', entityId)));
+  snap.docs.forEach((d) => batch.delete(d.ref));
 }
 
 interface StatsDelta {

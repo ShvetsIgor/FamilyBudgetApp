@@ -138,7 +138,6 @@ export default function HomePage() {
   const displayLabel = budgetMode === 'monthly' ? t('chat.today.monthLabel') : t('chat.today.budgetLabel');
 
   const allExpenses = useAppSelector((s) => s.expenses.list);
-  const allExpenseCats = useAppSelector((s) => s.categories.expense);
   const allIncomeCats = useAppSelector((s) => s.categories.income);
   const savingsGoals = useAppSelector((s) => s.savings.list);
   const [budgetSettingsOpen, setBudgetSettingsOpen] = useState(false);

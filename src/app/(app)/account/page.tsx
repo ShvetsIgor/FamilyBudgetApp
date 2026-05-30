@@ -81,6 +81,9 @@ export default function AccountPage() {
   const [familyError, setFamilyError] = useState('');
   const [inviteSent, setInviteSent] = useState(false);
 
+  const [resetting, setResetting] = useState(false);
+  const [resetDone, setResetDone] = useState(false);
+
   if (!user) return null;
 
   const initials = user.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2);

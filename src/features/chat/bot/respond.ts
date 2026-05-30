@@ -128,7 +128,7 @@ export async function respondToUserMessage(
       return { messages: [makeBotMsg(userId, { text: saveErrorPhrase(ctx.language) })] };
     }
 
-    await updateMessage(userId, userMsg.id, { status: 'saved' });
+    await updateMessage(userId, userMsg.id, { status: 'saved', incomeId: income.id });
 
     const catName = incomeCat?.name ?? 'Доход';
     const _now = new Date();

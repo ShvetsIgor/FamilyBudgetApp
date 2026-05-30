@@ -142,6 +142,7 @@ export async function respondToUserMessage(
       messages: [
         makeBotMsg(userId, {
           text: `+${sym}\u202F${parsed.amount} · ${catName}`,
+          incomeId: income.id,
           card: {
             kind: 'saved',
             data: {

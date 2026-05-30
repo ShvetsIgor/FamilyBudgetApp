@@ -3,16 +3,10 @@ import { toLocalDateKey } from '@/shared/utils/dateKey';
 import { ru } from 'date-fns/locale';
 import { addExpense } from '@/features/expenses/services/expensesService';
 import { addIncome } from '@/features/income/services/incomeService';
-import { addMessage, updateMessage } from '@/features/chat/services/messagesService';
+import { updateMessage } from '@/features/chat/services/messagesService';
 import type { SerializableChatMessage, ParseResult } from '@/shared/types/message';
-import type { Category } from '@/shared/types';
 import type { BotContext } from './context';
-import { normalizeTag } from '@/features/expenses/store/suggestionMemorySlice';
-import { resolveCategoryByAlias } from '@/features/categories/utils/resolveCategory';
-import { getStoreGroupFolderId } from '@/features/categories/utils/storeGroupFolders';
-import { savedPhrase, clarifyPhrase, clarifyStorePhrase, UNKNOWN_PHRASE } from './templates';
-
-const resolveCategory = resolveCategoryByAlias;
+import { savedPhrase, UNKNOWN_PHRASE } from './templates';
 
 function nowTimestamp(): string {
   return new Date().toISOString();
@@ -50,92 +44,13 @@ function expenseDate(parsed: ParseResult): Date {
   return new Date();
 }
 
-export interface FutureCardData {
+export interface OpenSplitRequest {
   amount: number;
-  currency: string;
-  note?: string;
-  dateLabel: string;
-  parsedDate: string;
-  parsedNote?: string;
-  categoryId: string | null;
   userMsgId: string;
   storeId?: string;
   storeName?: string;
   storeGroup?: string;
-}
-
-export async function confirmFutureExpense(
-  data: FutureCardData,
-  botMsgId: string,
-  ctx: BotContext
-): Promise<BotReply & { expense: Awaited<ReturnType<typeof addExpense>> | undefined }> {
-  const { userId, currency, categoriesById, foldersById } = ctx;
-  const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
-  const sym = symMap[currency] ?? currency;
-
-  const cat = resolveCategory(data.categoryId, categoriesById);
-  const catId = cat?.id ?? data.categoryId!;
-  const folderCat = cat?.folderId ? foldersById.get(cat.folderId) : undefined;
-
-  const parts = data.parsedDate.split('-').map(Number);
-  const date = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
-
-  let expense: Awaited<ReturnType<typeof addExpense>> | undefined;
-  try {
-    expense = await addExpense({
-      userId,
-      amount: data.amount,
-      categoryId: catId,
-      date,
-      paymentMethod: 'card',
-      tags: ['planned'],
-      privacy: 'regular',
-      currency,
-      splits: [],
-      ...(data.parsedNote ? { comment: data.parsedNote } : {}),
-      ...(data.storeName ? { store: data.storeName } : {}),
-      ...(data.storeId ? { storeId: data.storeId } : {}),
-      ...(data.storeGroup ? { storeGroup: data.storeGroup } : {}),
-    });
-  } catch {
-    return {
-      messages: [makeBotMsg(userId, { text: saveErrorPhrase(ctx.language) })],
-      expense: undefined,
-    };
-  }
-
-  await updateMessage(userId, data.userMsgId, { expenseId: expense.id, status: 'saved' });
-  await updateMessage(userId, botMsgId, { status: 'saved' });
-
-  const savedText = `${savedPhrase()} · ${sym}\u202F${data.amount}`;
-  const catPath = folderCat ? `${folderCat.name} · ${cat?.name ?? ''}` : (cat?.name ?? '');
-
-  const dateHint = format(parseISO(data.parsedDate), 'd MMMM', { locale: ru });
-
-  return {
-    messages: [
-      makeBotMsg(userId, {
-        text: savedText,
-        card: {
-          kind: 'saved',
-          data: {
-            icon: cat?.icon ?? folderCat?.icon ?? 'box',
-            color: cat?.color ?? folderCat?.color ?? '#E07A5F',
-            title: catPath,
-            catName: cat?.name ?? null,
-            groupName: folderCat?.name ?? null,
-            hint: dateHint,
-            amount: data.amount,
-            currency: sym,
-            expenseId: expense.id,
-            userMsgId: data.userMsgId,
-          },
-        },
-        status: 'saved',
-      }),
-    ],
-    expense,
-  };
+  date?: string;
 }
 
 export interface BotReply {
@@ -143,6 +58,8 @@ export interface BotReply {
   expense?: Awaited<ReturnType<typeof addExpense>>;
   income?: Awaited<ReturnType<typeof addIncome>>;
   userMsgUpdate?: { messageId: string; expenseId: string };
+  /** Signal: host should navigate to Split entry instead of saving an expense in chat. */
+  openSplit?: OpenSplitRequest;
 }
 
 export async function respondToUserMessage(
@@ -150,7 +67,7 @@ export async function respondToUserMessage(
   parsed: ParseResult,
   ctx: BotContext
 ): Promise<BotReply> {
-  const { userId, currency, categoriesById, topCategoryIds, incomeCategoriesById, topIncomeCategoryIds } = ctx;
+  const { userId, currency, incomeCategoriesById, topIncomeCategoryIds } = ctx;
   const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
   const sym = symMap[currency] ?? currency;
 
@@ -248,251 +165,25 @@ export async function respondToUserMessage(
     };
   }
 
-  // ── Case 1: no number at all
-  if (parsed.confidence === 'failed' && parsed.amount === 0) {
-    return {
-      messages: [makeBotMsg(userId, { text: UNKNOWN_PHRASE })],
-    };
+  // ── No number recognized → fail with unknown phrase
+  if (parsed.amount <= 0) {
+    return { messages: [makeBotMsg(userId, { text: UNKNOWN_PHRASE })] };
   }
 
-  // ── Case 1.5: store known but no items → ask what was bought, suggest from profile
-  if (parsed.storeId && (parsed.confidence === 'low' || !ctx.storeProfiles?.[parsed.storeId] || (ctx.storeProfiles[parsed.storeId].probableCategories ?? []).length === 0)) {
-    const profile = ctx.storeProfiles?.[parsed.storeId];
-    let chips: { id: string; name: string; icon: string; color: string }[];
-
-    if (profile && (profile.probableCategories ?? []).length > 0) {
-      // Sort by usageCount desc, then by lastUsed desc
-      const sorted = [...profile.probableCategories].sort(
-        (a, b) => b.usageCount - a.usageCount || b.lastUsed.localeCompare(a.lastUsed)
-      );
-      const profileChips = sorted
-        .slice(0, 4)
-        .map((u) => categoriesById.get(u.categoryId))
-        .filter(Boolean)
-        .map((c) => ({ id: c!.id, name: c!.name, icon: c!.icon, color: c!.color }));
-
-      // Fill remaining slots from top parents not already shown
-      const shownIds = new Set(profileChips.map((c) => c.id));
-      const fillChips = topCategoryIds
-        .filter((id) => !shownIds.has(id))
-        .slice(0, Math.max(0, 3 - profileChips.length))
-        .map((id) => categoriesById.get(id))
-        .filter(Boolean)
-        .map((c) => ({ id: c!.id, name: c!.name, icon: c!.icon, color: c!.color }));
-
-      chips = [...profileChips, ...fillChips];
-    } else {
-      // No history: show only folders the user explicitly created/activated.
-      // Library folders stay hidden until the user opens the library flow.
-      const activeFolderChips = Array.from(ctx.foldersById.values())
-        .filter((f) => f.type === 'expense')
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-        .slice(0, 8)
-        .map((f) => ({ id: f.id, name: f.name, icon: f.icon ?? 'box', color: f.color ?? '#E07A5F' }));
-
-      const merchantContext = ctx.suggestionMemory.merchantContextStats[
-        normalizeTag(parsed.storeName ?? parsed.storeId ?? '')
-      ] ?? {};
-      const preferredFolderId = getStoreGroupFolderId(parsed.storeGroup);
-      chips = activeFolderChips.sort((left, right) => {
-        const contextDelta = (merchantContext[right.id] ?? 0) - (merchantContext[left.id] ?? 0);
-        if (contextDelta !== 0) return contextDelta;
-        if (left.id === preferredFolderId) return -1;
-        if (right.id === preferredFolderId) return 1;
-        return 0;
-      });
-    }
-
-    const isTagLearning = !profile || (profile.probableCategories ?? []).length === 0;
-
-    return {
-      messages: [
-        makeBotMsg(userId, {
-          text: clarifyStorePhrase(parsed.storeName!, parsed.amount, sym),
-          card: {
-            kind: 'clarify',
-            data: {
-              amount: parsed.amount,
-              chips,
-              isTagLearning,
-              parsedDate: parsed.date,
-              parsedDateLabel: parsed.dateLabel,
-              parsedNote: parsed.note,
-              storeId: parsed.storeId,
-              storeName: parsed.storeName,
-              storeGroup: parsed.storeGroup,
-            },
-          },
-          status: 'saved',
-        }),
-      ],
-    };
-  }
-
-  // ── Case 1.75: learned keyword — ask again with suggested category on top
-  if (parsed.confidence === 'low' && !parsed.storeId && parsed.learnedCategoryId) {
-    const learnedCat = resolveCategory(parsed.learnedCategoryId, categoriesById);
-    const learnedChip = learnedCat
-      ? [{ id: learnedCat.id, name: learnedCat.name, icon: learnedCat.icon, color: learnedCat.color }]
-      : [];
-    const shownIds = new Set(learnedChip.map((c) => c.id));
-    const fillChips = topCategoryIds
-      .filter((id) => !shownIds.has(id))
-      .slice(0, 4 - learnedChip.length)
-      .map((id) => categoriesById.get(id))
-      .filter(Boolean)
-      .map((c) => ({ id: c!.id, name: c!.name, icon: c!.icon, color: c!.color }));
-    const chips = [...learnedChip, ...fillChips];
-
-    return {
-      messages: [
-        makeBotMsg(userId, {
-          text: clarifyPhrase(parsed.amount, sym),
-          card: {
-            kind: 'clarify',
-            data: {
-              amount: parsed.amount,
-              chips,
-              isRepeat: true,
-              parsedDate: parsed.date,
-              parsedDateLabel: parsed.dateLabel,
-              parsedNote: parsed.note,
-            },
-          },
-          status: 'saved',
-        }),
-      ],
-    };
-  }
-
-  // ── Case 2: have amount but no category → clarify card
-  if (parsed.confidence === 'failed') {
-    const chipIds = topCategoryIds.slice(0, 5);
-    const chips = chipIds
-      .map((id) => categoriesById.get(id))
-      .filter(Boolean)
-      .map((c) => ({ id: c!.id, name: c!.name, icon: c!.icon, color: c!.color }));
-
-    return {
-      messages: [
-        makeBotMsg(userId, {
-          text: clarifyPhrase(parsed.amount, sym),
-          card: {
-            kind: 'clarify',
-            data: {
-              amount: parsed.amount,
-              chips,
-              parsedDate: parsed.date,
-              parsedDateLabel: parsed.dateLabel,
-              parsedNote: parsed.note,
-            },
-          },
-          status: 'saved',
-        }),
-      ],
-    };
-  }
-
-  // ── Case 2.5: future date → ask confirmation
-  if (parsed.date) {
-    const _now = new Date();
-    const todayStr = toLocalDateKey(_now);
-    if (parsed.date > todayStr) {
-      return {
-        messages: [
-          makeBotMsg(userId, {
-            text: '',
-            card: {
-              kind: 'future',
-              data: {
-                amount: parsed.amount,
-                currency: sym,
-                note: parsed.note,
-                dateLabel: parsed.dateLabel ?? parsed.date,
-                parsedDate: parsed.date,
-                parsedNote: parsed.note,
-                categoryId: parsed.categoryId,
-                userMsgId: userMsg.id,
-                storeId: parsed.storeId,
-                storeName: parsed.storeName,
-                storeGroup: parsed.storeGroup,
-              },
-            },
-            status: 'clarifying',
-          }),
-        ],
-      };
-    }
-  }
-
-  // ── Case 3: happy path — save expense
-  const cat = resolveCategory(parsed.categoryId, categoriesById);
-  const catId = cat?.id ?? parsed.categoryId!;
-  const folderCat2 = cat?.folderId ? ctx.foldersById.get(cat.folderId) : undefined;
-  const date = expenseDate(parsed);
-
-  let expense: Awaited<ReturnType<typeof addExpense>> | undefined;
-  try {
-    expense = await addExpense({
-      userId,
-      amount: parsed.amount,
-      categoryId: catId,
-      date,
-      paymentMethod: 'card',
-      tags: [],
-      privacy: 'regular',
-      currency,
-      splits: [],
-      ...(parsed.note ? { comment: parsed.note } : {}),
-      ...(parsed.storeName ? { store: parsed.storeName } : {}),
-      ...(parsed.storeId ? { storeId: parsed.storeId } : {}),
-      ...(parsed.storeGroup ? { storeGroup: parsed.storeGroup } : {}),
-    });
-  } catch {
-    return {
-      messages: [makeBotMsg(userId, { text: saveErrorPhrase(ctx.language) })],
-    };
-  }
-
-  await updateMessage(userId, userMsg.id, {
-    expenseId: expense.id,
-    status: 'saved',
-  });
-
-  const savedText = `${savedPhrase()} · ${sym}\u202F${parsed.amount}`;
-  const catPath = folderCat2 ? `${folderCat2.name} · ${cat?.name ?? ''}` : (cat?.name ?? '');
-
-  // Show date hint if it's not today (use local date to avoid UTC offset issues)
-  const _now = new Date();
-  const todayStr = toLocalDateKey(_now);
-  const isToday = (parsed.date ?? todayStr) === todayStr;
-  const dateHint = !isToday && parsed.date
-    ? format(parseISO(parsed.date), 'd MMMM', { locale: ru })
-    : undefined;
-
+  // ── Any expense with recognized amount → always open Split.
+  //    No intermediate clarify cards, no auto-save in chat.
   return {
-    messages: [
-      makeBotMsg(userId, {
-        text: savedText,
-        card: {
-          kind: 'saved',
-          data: {
-            icon: cat?.icon ?? folderCat2?.icon ?? 'box',
-            color: cat?.color ?? folderCat2?.color ?? '#E07A5F',
-            title: catPath,
-            catName: cat?.name ?? null,
-            groupName: folderCat2?.name ?? null,
-            hint: dateHint,
-            amount: parsed.amount,
-            currency: sym,
-            expenseId: expense.id,
-            userMsgId: userMsg.id,
-          },
-        },
-        status: 'saved',
-      }),
-    ],
-    expense,
-    userMsgUpdate: { messageId: userMsg.id, expenseId: expense.id },
+    messages: [],
+    openSplit: {
+      amount: parsed.amount,
+      userMsgId: userMsg.id,
+      ...(parsed.storeId ? { storeId: parsed.storeId } : {}),
+      ...(parsed.storeName ? { storeName: parsed.storeName } : parsed.note ? { storeName: parsed.note } : {}),
+      ...(parsed.storeGroup ? { storeGroup: parsed.storeGroup } : {}),
+      ...(parsed.date ? { date: parsed.date } : {}),
+    },
   };
 }
+
+// Reference to keep savedPhrase wired for future reuse (chat now defers save to Split).
+void savedPhrase;

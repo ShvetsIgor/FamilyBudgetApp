@@ -322,8 +322,8 @@ export default function HomePage() {
     if (expense) dispatch(removeExpense(expenseId));
     // Delete from Firestore
     try {
-      await deleteMessageAndExpense(userId, botMsgId);
-      await deleteMessageAndExpense(userId, userMsgId);
+      await deleteMessage(userId, botMsgId);
+      await deleteMessage(userId, userMsgId);
       if (expense) {
         const restored = await deleteExpense(userId, expense);
         if (restored) dispatch(updateRecurringItem(restored));

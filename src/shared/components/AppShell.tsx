@@ -37,7 +37,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Mobile — unified chrome: ChatHeader + no BottomNav */}
       <div className="flex flex-col overflow-hidden lg:hidden" style={{ height: '100dvh' }}>
         <UpdateBanner />
-        <ChatHeader onMenu={() => setMenuOpen(true)} onBell={() => setBellOpen((v) => !v)} />
+        <ChatHeader
+          onMenu={() => setMenuOpen(true)}
+          onBell={() => setBellOpen((v) => !v)}
+          onClearChat={isChat ? handleClearChat : undefined}
+        />
         <main className={isChat ? 'flex-1 flex flex-col overflow-hidden' : 'flex-1 overflow-y-auto'}>
           {children}
         </main>

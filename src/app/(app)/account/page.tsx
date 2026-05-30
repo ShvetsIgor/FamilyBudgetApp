@@ -675,6 +675,10 @@ export default function AccountPage() {
         {/* Export controls */}
         {exportBlock}
 
+        {/* Debug */}
+        {mobileLabel('Отладка')}
+        {debugBlock}
+
         {/* Sign out */}
         {signOutBtn}
       </div>

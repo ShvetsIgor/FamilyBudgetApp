@@ -57,6 +57,18 @@ export function ChatHeader({ onMenu, onBell, onClearChat }: ChatHeaderProps) {
         </p>
       </div>
 
+      {onClearChat && (
+        <button
+          onClick={onClearChat}
+          className="flex h-9 w-9 items-center justify-center rounded-xl transition-colors"
+          style={{ color: C.sub }}
+          aria-label="Очистить чат"
+          title="Очистить чат"
+        >
+          <Trash2 size={18} strokeWidth={2} />
+        </button>
+      )}
+
       <button
         onClick={onBell}
         className="relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors"

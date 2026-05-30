@@ -84,12 +84,13 @@ function stripUndef(v: unknown): unknown {
 }
 
 export async function addMessage(input: AddMessageInput): Promise<SerializableChatMessage> {
-  const { userId, expenseId, parsed, card, ...rest } = input;
+  const { userId, expenseId, incomeId, parsed, card, ...rest } = input;
   const data = Object.fromEntries(
     Object.entries({
       ...rest,
       userId,
       expenseId,
+      incomeId,
       parsed: parsed ? stripUndef(parsed) : undefined,
       card: card ? stripUndef(card) : undefined,
       createdAt: serverTimestamp(),

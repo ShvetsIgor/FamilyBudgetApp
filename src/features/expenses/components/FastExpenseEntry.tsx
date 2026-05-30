@@ -48,6 +48,10 @@ interface Props {
   initialFolderName?: string;
   /** ISO date string from chat parser (e.g. "вчера", "15 мая") — pre-fills the date field */
   initialDate?: string;
+  /** Chat user-message id, when entry was opened from the chat flow.
+   *  Used to (a) link the saved expense back to the originating chat bubble,
+   *  (b) clean up the chat bubble if the user dismisses Split without saving. */
+  initialUserMsgId?: string;
 }
 
 export function FastExpenseEntry({

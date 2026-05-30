@@ -49,6 +49,7 @@ export interface AddMessageInput {
   status: MessageStatus;
   parsed?: ParseResult;
   expenseId?: string;
+  incomeId?: string;
   card?: BotCard;
 }
 

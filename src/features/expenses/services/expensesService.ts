@@ -13,6 +13,7 @@ import {
   serverTimestamp,
   Timestamp,
   type DocumentSnapshot,
+  type WriteBatch,
 } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { getDb } from '@/shared/lib/firebase';

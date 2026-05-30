@@ -106,7 +106,7 @@ export async function addMessage(input: AddMessageInput): Promise<SerializableCh
 export async function updateMessage(
   userId: string,
   messageId: string,
-  updates: Partial<Pick<SerializableChatMessage, 'status' | 'expenseId' | 'parsed' | 'card' | 'text'>>
+  updates: Partial<Pick<SerializableChatMessage, 'status' | 'expenseId' | 'incomeId' | 'parsed' | 'card' | 'text'>>
 ): Promise<void> {
   const clean = Object.fromEntries(
     Object.entries({ ...updates, updatedAt: serverTimestamp() }).filter(([, v]) => v !== undefined)
@@ -114,15 +114,9 @@ export async function updateMessage(
   await updateDoc(doc(col(userId), messageId), clean);
 }
 
-export async function deleteMessageAndExpense(
-  userId: string,
-  messageId: string,
-  expenseId?: string
-): Promise<void> {
+/** Delete a single chat message. Does not cascade — entity-side delete handlers own the cascade. */
+export async function deleteMessage(userId: string, messageId: string): Promise<void> {
   await deleteDoc(doc(col(userId), messageId));
-  if (expenseId) {
-    await deleteDoc(doc(getDb(), 'expenses', userId, expenseId));
-  }
 }
 
 /**

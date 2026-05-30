@@ -27,6 +27,7 @@ export default function NewExpensePage() {
   const initialFolderId = searchParams.get('folderId') ?? undefined;
   const initialFolderName = searchParams.get('folderName') ?? undefined;
   const initialDate = searchParams.get('date') ?? undefined;
+  const initialUserMsgId = searchParams.get('userMsgId') ?? undefined;
 
   return (
     <FastExpenseEntry
@@ -38,6 +39,7 @@ export default function NewExpensePage() {
       initialFolderId={initialFolderId}
       initialFolderName={initialFolderName}
       initialDate={initialDate}
+      initialUserMsgId={initialUserMsgId}
     />
   );
 }

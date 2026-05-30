@@ -7,8 +7,7 @@ import { ru } from 'date-fns/locale';
 
 import { useAppSelector, useAppDispatch, useAppStore } from '@/store/store';
 import { setTyping, removeMessage } from '@/features/chat/store/chatSlice';
-import { prependExpense, removeExpense, mergeExpenses } from '@/features/expenses/store/expensesSlice';
-import { recordExpense } from '@/features/expenses/store/suggestionMemorySlice';
+import { removeExpense, mergeExpenses } from '@/features/expenses/store/expensesSlice';
 import { prependIncome } from '@/features/income/store/incomeSlice';
 import { updateRecurringItem } from '@/features/recurring/store/recurringSlice';
 

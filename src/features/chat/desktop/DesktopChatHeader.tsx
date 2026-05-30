@@ -1,13 +1,28 @@
 'use client';
-import { Search } from 'lucide-react';
-import { useState } from 'react';
+import { Search, Trash2 } from 'lucide-react';
+import { useState, useCallback } from 'react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { CommandPalette } from './CommandPalette';
+import { useAppDispatch, useAppSelector } from '@/store/store';
+import { clearAllMessages } from '@/features/chat/services/messagesService';
+import { setMessages } from '@/features/chat/store/chatSlice';
 
 export function DesktopChatHeader() {
   const C = useChatTokens();
   const [cmdOpen, setCmdOpen] = useState(false);
+  const userId = useAppSelector((s) => s.auth.user?.id);
+  const dispatch = useAppDispatch();
+
+  const handleClearChat = useCallback(async () => {
+    if (!userId) return;
+    if (!window.confirm('Очистить всю историю чата? Траты, доходы и копилки останутся.')) return;
+    try {
+      await clearAllMessages(userId);
+    } finally {
+      dispatch(setMessages([]));
+    }
+  }, [userId, dispatch]);
 
   return (
     <>

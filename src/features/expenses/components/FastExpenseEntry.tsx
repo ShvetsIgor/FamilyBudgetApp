@@ -64,6 +64,7 @@ export function FastExpenseEntry({
   initialFolderId,
   initialFolderName,
   initialDate,
+  initialUserMsgId,
 }: Props) {
   const router = useRouter();
   const dispatch = useAppDispatch();

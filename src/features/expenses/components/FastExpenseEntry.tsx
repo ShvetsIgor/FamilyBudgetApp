@@ -437,8 +437,14 @@ export function FastExpenseEntry({
           dispatch(recordMerchantContext({ merchant: initialStore, folderId: initialFolderId, date: dateStr }));
         }
         if (fromChat) {
+          // Link the originating chat bubble to the saved expense
+          const { addMessage, updateMessage } = await import('@/features/chat/services/messagesService');
+          if (initialUserMsgId) {
+            try {
+              await updateMessage(user.id, initialUserMsgId, { expenseId: exp.id, status: 'saved' });
+            } catch { /* non-blocking */ }
+          }
           // Add bot "split saved" message to chat
-          const { addMessage } = await import('@/features/chat/services/messagesService');
           const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
           const sym = symMap[currency] ?? currency;
           const storeLabel = initialStore ? ` · ${initialStore}` : '';
@@ -456,10 +462,11 @@ export function FastExpenseEntry({
                 title: initialStore ?? t.cat(effectiveCat?.name ?? selectedCat?.name ?? activeFolder?.name ?? ''),
                 catName: null,
                 groupName: null,
-                hint: `сплит · ${posCount} поз.`,
+                hint: posCount > 1 ? `сплит · ${posCount} поз.` : undefined,
                 amount: totalNum,
                 currency: sym,
                 expenseId: exp.id,
+                ...(initialUserMsgId ? { userMsgId: initialUserMsgId } : {}),
               },
             },
           });

@@ -454,6 +454,7 @@ export function FastExpenseEntry({
             kind: 'bot',
             text: `Сохранено${storeLabel} · ${sym}\u202F${totalNum}`,
             status: 'saved',
+            expenseId: exp.id,
             card: {
               kind: 'saved',
               data: {

@@ -330,8 +330,8 @@ export function FastExpenseEntry({
     if (fromChat && initialUserMsgId && user) {
       dispatch(removeChatMessage(initialUserMsgId));
       try {
-        const { deleteMessageAndExpense } = await import('@/features/chat/services/messagesService');
-        await deleteMessageAndExpense(user.id, initialUserMsgId);
+        const { deleteMessage } = await import('@/features/chat/services/messagesService');
+        await deleteMessage(user.id, initialUserMsgId);
       } catch { /* ignore */ }
     }
     router.back();

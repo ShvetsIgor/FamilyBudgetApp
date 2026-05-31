@@ -51,7 +51,7 @@ export function SavingsDrawerForm({ accent }: { accent: string }) {
     try {
       const updated = await addContribution(user.id, selected, {
         amount: amountNum,
-        note: comment.trim() || undefined,
+        note: normalizeName(comment) || undefined,
       });
       dispatch(updateGoalItem(updated));
       dispatch(closeQuickAdd());

@@ -273,24 +273,25 @@ export default function ExpensesPage() {
                         onEdit={() => router.push(`/expenses/${e.id}/edit`)}
                         onDelete={() => {
                           if (!user) return;
-                          // Cancel any previous pending delete
+                          // Dismiss any existing undo toast — its delete already
+                          // hit Firestore the moment it was triggered.
                           if (undoItem) {
                             clearTimeout(undoItem.timerId);
-                            deleteExpense(user.id, undoItem.expense)
-                              .then((restored) => {
-                                if (restored) dispatch(updateRecurringItem(restored));
-                              })
-                              .catch(() => {});
-                          }
-                          // Optimistic remove
-                          dispatch(removeExpense(e.id));
-                          const timerId = setTimeout(async () => {
-                            try {
-                              const restored = await deleteExpense(user.id, e);
-                              if (restored) dispatch(updateRecurringItem(restored));
-                            } catch { /* ignore */ }
                             setUndoItem(null);
-                          }, 5000);
+                          }
+                          // Commit the delete to Firestore now. If the tab is
+                          // closed before Undo fires, the row stays gone.
+                          dispatch(removeExpense(e.id));
+                          deleteExpense(user.id, e)
+                            .then((restored) => {
+                              if (restored) dispatch(updateRecurringItem(restored));
+                            })
+                            .catch(() => {
+                              // Network failure: surface the expense again so
+                              // the list doesn't lie about the deletion.
+                              dispatch(prependExpense(e));
+                            });
+                          const timerId = setTimeout(() => setUndoItem(null), 5000);
                           setUndoItem({ expense: e, timerId });
                         }}
                       />

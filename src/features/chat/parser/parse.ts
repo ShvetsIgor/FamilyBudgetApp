@@ -1,6 +1,7 @@
 import type { ParseResult } from '@/shared/types/message';
 import type { KeywordHit } from './dictionary';
 import { extractDate } from './parseDate';
+import { normalizeName } from '@/shared/utils/normalizeName';
 import {
   tokenizeInput,
   detectMerchant,

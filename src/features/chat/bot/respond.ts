@@ -4,6 +4,7 @@ import { ru } from 'date-fns/locale';
 import { addExpense } from '@/features/expenses/services/expensesService';
 import { addIncome } from '@/features/income/services/incomeService';
 import { updateMessage } from '@/features/chat/services/messagesService';
+import { getPresetDisplayName } from '@/features/categories/config/categoryLabels';
 import type { SerializableChatMessage, ParseResult } from '@/shared/types/message';
 import type { BotContext } from './context';
 import { UNKNOWN_PHRASE } from './templates';

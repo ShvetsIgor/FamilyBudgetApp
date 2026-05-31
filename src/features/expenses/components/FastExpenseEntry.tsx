@@ -717,28 +717,37 @@ export function FastExpenseEntry({
             className="bg-card rounded-[14px] p-2.5 flex-shrink-0"
             style={{ boxShadow: '0 1px 3px rgba(61,44,31,.08)' }}
           >
-            {/* Picker header */}
-            <div className="flex items-center gap-1.5 px-1 pb-2">
-              {pickerGroupId && (
+            {/* Picker header — when inside a folder the back arrow + label is
+                one large tap target (44px high) so it works on small phones. */}
+            <div className="flex items-center gap-1 pb-2">
+              {pickerGroupId ? (
                 <button
+                  type="button"
                   onClick={() => setPickerGroupId(null)}
-                  className="flex items-center active:opacity-50 transition-opacity"
+                  aria-label="Назад к разделам"
+                  className="flex min-h-[44px] flex-1 items-center gap-1.5 rounded-[10px] px-2 -ml-1 active:bg-muted/60 transition-colors"
+                  style={{ color: pickerGroupFolder?.color ?? 'hsl(var(--muted-foreground))' }}
+                >
+                  <ChevronLeft size={18} strokeWidth={2.5} />
+                  <span className="text-[11px] font-extrabold uppercase tracking-[.08em]">
+                    {t.cat(pickerGroupFolder?.name ?? '')}
+                  </span>
+                </button>
+              ) : (
+                <div
+                  className="flex min-h-[44px] flex-1 items-center px-2 text-[11px] font-extrabold uppercase tracking-[.08em]"
                   style={{ color: 'hsl(var(--muted-foreground))' }}
                 >
-                  <ChevronLeft size={14} strokeWidth={2.5} />
-                </button>
+                  Разделы
+                </div>
               )}
-              <div
-                className="text-[11px] font-extrabold uppercase tracking-[.08em]"
-                style={{ color: pickerGroupFolder?.color ?? 'hsl(var(--muted-foreground))' }}
-              >
-                {pickerGroupId ? t.cat(pickerGroupFolder?.name ?? '') : 'Разделы'}
-              </div>
               <button
+                type="button"
                 onClick={() => closePicker()}
-                className="ml-auto text-muted-foreground hover:text-foreground"
+                aria-label="Закрыть"
+                className="flex h-11 w-11 items-center justify-center rounded-[10px] text-muted-foreground hover:text-foreground active:bg-muted/60 transition-colors"
               >
-                <X size={13} />
+                <X size={16} />
               </button>
             </div>
 

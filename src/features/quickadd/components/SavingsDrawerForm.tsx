@@ -8,6 +8,7 @@ import { addContribution } from '@/features/savings/services/savingsService';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
+import { normalizeName } from '@/shared/utils/normalizeName';
 
 const AMOUNT_PRESETS = [500, 1000, 5000, 10000];
 

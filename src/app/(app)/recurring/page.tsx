@@ -882,31 +882,90 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
           </div>
         </div>
         <div className="rounded-2xl border border-border bg-card p-4">
-          <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.category')}</label>
-          <CategoryPicker
-            type="expense"
-            value={categoryId}
-            onChange={(nextId) => {
-              const nextCat = allExpCats.find((entry) => entry.id === nextId);
-              selectCategory(nextCat);
-            }}
-          />
-          <div className="mt-3 flex gap-2">
+          <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.section')}</label>
+          <div className="flex flex-wrap gap-1.5">
+            {expenseCatGroups.map((cat) => {
+              const sel = selectedGroupId === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => {
+                    if (sel) { setSelectedGroupId(''); setCategoryId(''); }
+                    else { setSelectedGroupId(cat.id); setCategoryId(''); }
+                  }}
+                  className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
+                  style={{
+                    background: sel ? (cat.color ?? '#E07A5F') : 'hsl(var(--card))',
+                    boxShadow: sel ? `0 3px 8px ${cat.color ?? '#E07A5F'}55` : '0 1px 3px rgba(61,44,31,.06)',
+                    border: sel ? 'none' : '1px solid hsl(var(--border))',
+                  }}
+                >
+                  <StickerIcon icon={cat.icon ?? 'box'} color={sel ? '#fff' : (cat.color ?? '#E07A5F')} className="h-4 w-4" />
+                  <span className="text-[9px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
+                    style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}>
+                    {t.cat(cat.name)}
+                  </span>
+                </button>
+              );
+            })}
             <button
               type="button"
               onClick={() => setShowFolderEditor(true)}
-              className="flex-1 rounded-xl border border-dashed border-border px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+              className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 border border-dashed border-border text-muted-foreground transition-colors hover:text-foreground"
             >
-              + {t('chat.clarify.newFolder')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowCategoryEditor(true)}
-              className="flex-1 rounded-xl border border-dashed border-border px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
-            >
-              + {t('categories.newCategory')}
+              <Plus className="h-3.5 w-3.5" />
+              <span className="text-[9px] font-extrabold leading-tight">{t('chat.clarify.newFolder')}</span>
             </button>
           </div>
+          {catsInGroup.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2 pl-2" style={{ borderLeft: `2px solid ${catColor}44` }}>
+              {catsInGroup.map((sub) => {
+                const sel = categoryId === sub.id;
+                return (
+                  <button
+                    key={sub.id}
+                    type="button"
+                    onClick={() => selectCategory(sel ? undefined : sub)}
+                    className="h-[36px] px-3 rounded-[10px] flex items-center gap-1.5 transition-all border-0 text-[10px] font-extrabold"
+                    style={{
+                      background: sel ? catColor : catColor + '18',
+                      color: sel ? '#fff' : 'hsl(var(--foreground))',
+                      boxShadow: sel ? `0 2px 6px ${catColor}44` : 'none',
+                    }}
+                  >
+                    <StickerIcon icon={sub.icon} color={sel ? '#fff' : catColor} className="h-3.5 w-3.5" />
+                    {t.cat(sub.name)}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => setShowCategoryEditor(true)}
+                className="h-[36px] px-3 rounded-[10px] flex items-center gap-1.5 border border-dashed text-[10px] font-extrabold"
+                style={{ borderColor: catColor + '55', color: catColor }}
+              >
+                <Plus className="h-3 w-3" />
+                {t('categories.newCategory')}
+              </button>
+            </div>
+          )}
+          {selectedGroupId && catsInGroup.length === 0 && (
+            <div
+              className="mt-2 rounded-[14px] border border-dashed bg-card px-3 py-3"
+              style={{ borderColor: `${catColor}55` }}
+            >
+              <p className="text-[11px] font-bold text-foreground">{t('recurring.noCategoriesInSection')}</p>
+              <button
+                type="button"
+                onClick={() => setShowCategoryEditor(true)}
+                className="mt-2 rounded-xl px-3 py-2 text-xs font-semibold text-white"
+                style={{ backgroundColor: catColor }}
+              >
+                + {t('recurring.addCategoryToSection')}
+              </button>
+            </div>
+          )}
         </div>
         <div className="rounded-2xl border border-border bg-card p-4">
           <label className="text-xs text-muted-foreground mb-1 block">{t('recurring.nextDue')}</label>

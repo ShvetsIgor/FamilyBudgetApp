@@ -72,7 +72,7 @@ export async function sendWeeklySummary(ctx: BotContext): Promise<void> {
     .filter(([, lim]) => lim > 0)
     .map(([catId, monthLimit]) => {
       const cat = categoriesById.get(catId);
-      return { name: cat?.name ?? catId, icon: cat?.icon ?? 'box', color: cat?.color ?? '#E07A5F', spent: catSpent[catId] ?? 0, limit: Math.round(monthLimit / 4) };
+      return { name: catDisplayName(catId, cat?.name), icon: cat?.icon ?? 'box', color: cat?.color ?? '#E07A5F', spent: catSpent[catId] ?? 0, limit: Math.round(monthLimit / 4) };
     })
     .sort((a, b) => b.spent - a.spent)
     .slice(0, 5);

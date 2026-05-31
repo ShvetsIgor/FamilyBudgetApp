@@ -69,7 +69,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
       const inc = await addIncome({
         userId: user.id, currency, date: new Date(dateStr),
         method, privacy: 'regular',
-        comment: comment.trim() || undefined,
+        comment: normalizeName(comment) || undefined,
         amount: amountNum, categoryId,
       });
       dispatch(prependIncome(inc));

@@ -15,7 +15,6 @@ import {
 } from '@/features/recurring/services/recurringService';
 import { addExpense } from '@/features/expenses/services/expensesService';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
-import { CategoryPicker } from '@/features/categories/components/CategoryPicker';
 import { CategoryEditorSheet } from '@/features/categories/components/CategoryEditorSheet';
 import { FolderEditorSheet } from '@/features/categories/components/FolderEditorSheet';
 import { CategoryIcon, StickerIcon } from '@/features/categories/components/CategoryIcon';

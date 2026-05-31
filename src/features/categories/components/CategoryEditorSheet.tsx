@@ -201,7 +201,7 @@ export function CategoryEditorSheet({
               <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">
                 Бюджет в месяц <span className="font-normal normal-case">(необязательно)</span>
               </label>
-              <BudgetField value={budgetVal} onChange={(value) => { setBudgetVal(value); onBudgetChange?.(value); }} />
+              <BudgetField value={budgetVal} onChange={(value) => setBudgetVal(value)} />
             </div>
           )}
 

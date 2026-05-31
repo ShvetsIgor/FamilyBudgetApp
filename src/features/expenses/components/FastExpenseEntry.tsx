@@ -551,8 +551,8 @@ export function FastExpenseEntry({
           </div>
           {topFolders.length === 0 ? (
             <button
-              onClick={() => {/* handled by CategoriesHub */}}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold border-2 border-dashed"
+              onClick={() => setShowFolderEditor(true)}
+              className="inline-flex min-h-[44px] items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold border-2 border-dashed"
               style={{ borderColor: catColor + '77', color: catColor }}
             >
               <Plus size={12} strokeWidth={2.5} />

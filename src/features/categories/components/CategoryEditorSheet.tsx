@@ -91,12 +91,13 @@ export function CategoryEditorSheet({
   if (!open) return null;
 
   const handleSave = async () => {
-    if (!name.trim() || saving) return;
+    const cleanName = normalizeName(name);
+    if (!cleanName || saving) return;
     setSaving(true);
     try {
       await onSave({
         id: initial?.id,
-        name: name.trim(),
+        name: cleanName,
         icon,
         color,
         isPrivate,
@@ -107,7 +108,8 @@ export function CategoryEditorSheet({
         tags,
         presetId: selectedPresetId,
       });
-      if (onBudgetChange && budgetVal !== null) {
+      // Always forward budget — including null/0 — so "Clear" persists on Save.
+      if (onBudgetChange && type === 'expense') {
         await onBudgetChange(budgetVal);
       }
       onClose();

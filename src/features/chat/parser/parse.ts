@@ -47,9 +47,10 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
   const { amount, rest } = amounts;
   const displayRest = extractAmounts(displayText)?.rest ?? rest;
 
-  // Income: skip expense store/item pipeline
+  // Income: skip expense store/item pipeline. Preserve user casing via displayRest.
   if (isIncome) {
-    const note = rest ? rest.replace(/\b\p{L}/gu, (c) => c.toUpperCase()) : undefined;
+    const displayIncomeRest = extractAmounts(displayText)?.rest ?? rest;
+    const note = displayIncomeRest ? normalizeName(displayIncomeRest) : undefined;
     return { amount, categoryId: null, confidence: 'failed', ...(note ? { note } : {}), ...df, ...inc };
   }
 
@@ -57,7 +58,7 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
     return { amount, categoryId: null, confidence: 'failed', ...df };
   }
 
-  const note = rest.replace(/\b\p{L}/gu, (c) => c.toUpperCase());
+  const note = normalizeName(displayRest);
 
   // ── Stage 4: emoji (highest priority) ────────────────────────────────────
   const emojiHit = resolveEmojiHit(rest);

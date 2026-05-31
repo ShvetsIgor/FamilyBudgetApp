@@ -485,7 +485,15 @@ export function FastExpenseEntry({
   if (!user) return null;
 
   const displayIcon = selectedCat?.icon ?? activeFolder?.icon ?? 'box';
-  const displayName = selectedCat ? t.cat(selectedCat.name) : activeFolder ? t.cat(activeFolder.name) : initialStore ?? t('expense.category');
+  // Merchant tag from chat always wins as the title; selecting a section/category
+  // only feeds learning (it does not rename "Даббах 1000" into "Супермаркет").
+  const displayName = initialStore
+    ? initialStore
+    : selectedCat
+      ? t.cat(selectedCat.name)
+      : activeFolder
+        ? t.cat(activeFolder.name)
+        : t('expense.category');
   const catColor = selectedCat?.color ?? activeFolder?.color ?? '#E07A5F';
   const selectedCatInActiveFolderForUi = activeFolderId
     ? activeFolderCats.some((cat) => cat.id === selectedCatId)

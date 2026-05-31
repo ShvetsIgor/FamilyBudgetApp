@@ -584,14 +584,13 @@
         "example": "Dabbah 1000 → Groceries 700 + Home 300"
       },
       "tip4": {
-        "title": "Delete with swipe",
-        "desc": "Swipe an expense left or tap the bin — you have 5 seconds to undo. After that the expense is removed from the cloud",
-        "example": "Swipe → Undo"
+        "title": "Undo delete",
+        "desc": "After Delete you have 5 seconds to tap Undo and bring the expense back. Otherwise it is removed for good."
       },
       "tip5": {
-        "title": "Future expenses",
-        "desc": "Add a date or future month — the bot will ask whether to schedule the expense for that date",
-        "example": "TV 15000 June 20"
+        "title": "Date in chat",
+        "desc": "Type the date together with the expense — \"tomorrow\", \"05.06\", \"June 5\", \"next week\". The expense will be saved for that date.",
+        "example": "TV 15000 June 5"
       },
       "tip6": {
         "title": "Type + before amount for income",

@@ -41,7 +41,9 @@ export async function addCategory(userId: string, data: Omit<Category, 'id' | 'u
     Object.entries({ ...data, userId }).filter(([, v]) => v !== undefined)
   );
   const ref = await addDoc(colRef(userId, data.type), clean);
-  return { id: ref.id, userId, ...data };
+  // Spread data first, then override id/userId so callers cannot
+  // accidentally null out the returned id by passing id: undefined.
+  return { ...data, id: ref.id, userId };
 }
 
 export async function addCategoryWithId(userId: string, id: string, data: Omit<Category, 'id' | 'userId'>): Promise<Category> {
@@ -49,7 +51,7 @@ export async function addCategoryWithId(userId: string, id: string, data: Omit<C
     Object.entries({ ...data, userId }).filter(([, v]) => v !== undefined)
   );
   await setDoc(doc(getDb(), 'categories', userId, data.type, id), clean);
-  return { id, userId, ...data };
+  return { ...data, id, userId };
 }
 
 export async function updateCategory(userId: string, category: Category): Promise<void> {

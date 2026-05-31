@@ -14,6 +14,7 @@ import { selectAllActiveCategories } from '@/features/categories/store/selectors
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
+import { normalizeName } from '@/shared/utils/normalizeName';
 import type { SerializableIncome } from '@/shared/types';
 
 const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫'] as const;

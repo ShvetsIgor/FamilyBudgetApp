@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { addMessage } from '@/features/chat/services/messagesService';
+import { getPresetDisplayName } from '@/features/categories/config/categoryLabels';
 import type { BotContext } from './context';
 import type { EnvelopesCardData } from '@/features/chat/components/BotCard/EnvelopesCard';
 import type { WeeklyCardData } from '@/features/chat/components/BotCard/WeeklyCard';

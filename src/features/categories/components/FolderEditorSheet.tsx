@@ -7,6 +7,7 @@ import { ColorPaletteRow } from './ColorPaletteRow';
 import { IconPickerGrid } from './IconPickerGrid';
 import { CC } from '../styles/tokens';
 import type { LibrarySuggestion } from '../utils/libraryLookup';
+import { normalizeName } from '@/shared/utils/normalizeName';
 
 interface Props {
   open: boolean;

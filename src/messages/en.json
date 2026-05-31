@@ -64,6 +64,7 @@
     "editTitle": "Edit Expense",
     "amount": "Amount",
     "category": "Category",
+    "section": "Section",
     "subcategory": "Subcategory",
     "date": "Date",
     "paymentMethod": "Payment Method",

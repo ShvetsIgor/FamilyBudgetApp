@@ -28,7 +28,9 @@ export async function addFolder(userId: string, data: Omit<CategoryFolder, 'id' 
     Object.entries({ ...data, userId }).filter(([, v]) => v !== undefined),
   );
   const ref = await addDoc(foldersRef(userId, data.type), clean);
-  return { id: ref.id, userId, ...data };
+  // Spread data first, then override id/userId so callers cannot
+  // accidentally null out the returned id by passing id: undefined.
+  return { ...data, id: ref.id, userId };
 }
 
 export async function addFolderWithId(
@@ -40,7 +42,7 @@ export async function addFolderWithId(
     Object.entries({ ...data, userId }).filter(([, v]) => v !== undefined),
   );
   await setDoc(doc(getDb(), 'categoryFolders', userId, data.type, id), clean);
-  return { id, userId, ...data };
+  return { ...data, id, userId };
 }
 
 export async function updateFolder(userId: string, folder: CategoryFolder): Promise<void> {

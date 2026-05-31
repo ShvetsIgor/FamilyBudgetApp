@@ -65,6 +65,7 @@
     "editTitle": "Редактировать расход",
     "amount": "Сумма",
     "category": "Категория",
+    "section": "Раздел",
     "subcategory": "Подкатегория",
     "date": "Дата",
     "paymentMethod": "Способ оплаты",

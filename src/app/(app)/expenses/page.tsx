@@ -326,9 +326,16 @@ export default function ExpensesPage() {
           </span>
           <button
             onClick={() => {
+              if (!user) { setUndoItem(null); return; }
               clearTimeout(undoItem.timerId);
-              dispatch(prependExpense(undoItem.expense));
+              const expense = undoItem.expense;
               setUndoItem(null);
+              dispatch(prependExpense(expense));
+              restoreExpense(user.id, expense).catch(() => {
+                // Restore failed — revert the optimistic list change so the
+                // user sees the actual server state.
+                dispatch(removeExpense(expense.id));
+              });
             }}
             className="shrink-0 rounded-xl bg-background/20 px-3 py-1.5 text-sm font-bold text-background hover:bg-background/30 transition-colors"
           >

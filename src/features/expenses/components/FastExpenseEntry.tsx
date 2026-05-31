@@ -449,6 +449,17 @@ export function FastExpenseEntry({
           const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
           const sym = symMap[currency] ?? currency;
           const storeLabel = initialStore ? ` · ${initialStore}` : '';
+          // Build optional date hint when the expense date is not today,
+          // so the chat card reflects the actual expense date (Bug 6.1).
+          const expenseDate = parseISO(dateStr);
+          let dateHint: string | undefined;
+          if (!isToday(expenseDate)) {
+            dateHint = isYesterday(expenseDate)
+              ? 'вчера'
+              : format(expenseDate, 'd MMMM', { locale: ru });
+          }
+          const splitHint = posCount > 1 ? `сплит · ${posCount} поз.` : undefined;
+          const combinedHint = [dateHint, splitHint].filter(Boolean).join(' · ') || undefined;
           await addMessage({
             userId: user.id,
             senderId: 'bot',
@@ -464,7 +475,7 @@ export function FastExpenseEntry({
                 title: initialStore ?? t.cat(effectiveCat?.name ?? selectedCat?.name ?? activeFolder?.name ?? ''),
                 catName: null,
                 groupName: null,
-                hint: posCount > 1 ? `сплит · ${posCount} поз.` : undefined,
+                hint: combinedHint,
                 amount: totalNum,
                 currency: sym,
                 expenseId: exp.id,

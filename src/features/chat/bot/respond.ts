@@ -131,7 +131,9 @@ export async function respondToUserMessage(
 
     await updateMessage(userId, userMsg.id, { status: 'saved', incomeId: income.id });
 
-    const catName = incomeCat?.name ?? 'Доход';
+    const catName = incomeCat
+      ? (getPresetDisplayName(incomeCat.id, ctx.language) ?? incomeCat.name)
+      : (ctx.language === 'ru' ? 'Доход' : 'Income');
     const _now = new Date();
     const todayStr = toLocalDateKey(_now);
     const isToday = (parsed.date ?? todayStr) === todayStr;

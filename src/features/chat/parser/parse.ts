@@ -35,6 +35,11 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
   const date = extracted?.date;
   const dateLabel = extracted?.label;
   if (extracted) t = extracted.rest.replace(/\s+/g, ' ').trim();
+  // Strip the same date phrase from the display string so the note doesn't
+  // end up containing "5 июня" or "завтра".
+  const displayWithoutDate = extracted
+    ? displayText.replace(new RegExp(extracted.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'), '').replace(/\s+/g, ' ').trim()
+    : displayText;
 
   const df = date != null ? { date, ...(dateLabel != null ? { dateLabel } : {}) } : {};
   const inc = isIncome ? { isIncome: true as const } : {};
@@ -45,11 +50,11 @@ export function parseMessage(text: string, ctx: ParserContext): ParseResult {
     return { amount: 0, categoryId: null, confidence: 'failed', ...df, ...inc };
   }
   const { amount, rest } = amounts;
-  const displayRest = extractAmounts(displayText)?.rest ?? rest;
+  const displayRest = extractAmounts(displayWithoutDate)?.rest ?? rest;
 
   // Income: skip expense store/item pipeline. Preserve user casing via displayRest.
   if (isIncome) {
-    const displayIncomeRest = extractAmounts(displayText)?.rest ?? rest;
+    const displayIncomeRest = extractAmounts(displayWithoutDate)?.rest ?? rest;
     const note = displayIncomeRest ? normalizeName(displayIncomeRest) : undefined;
     return { amount, categoryId: null, confidence: 'failed', ...(note ? { note } : {}), ...df, ...inc };
   }

@@ -264,6 +264,49 @@ export async function deleteExpense(userId: string, expense: SerializableExpense
 }
 
 /**
+ * Re-creates an expense at its original Firestore id (used by the Undo flow
+ * after a delete). Stats are reversed back, but recurring state is left
+ * untouched — callers may explicitly re-run recurring sync if needed.
+ */
+export async function restoreExpense(userId: string, expense: SerializableExpense): Promise<void> {
+  const ref = expenseDoc(userId, expense.id);
+  const data = Object.fromEntries(
+    Object.entries({
+      userId,
+      amount: expense.amount,
+      currency: expense.currency,
+      categoryId: expense.categoryId,
+      paymentMethod: expense.paymentMethod,
+      store: expense.store,
+      storeId: expense.storeId,
+      storeGroup: expense.storeGroup,
+      tags: expense.tags ?? [],
+      comment: expense.comment,
+      photoUrl: expense.photoUrl,
+      privacy: expense.privacy,
+      splits: expense.splits ?? [],
+      items: expense.items,
+      isRecurring: expense.isRecurring ?? false,
+      recurringId: expense.recurringId,
+      goalId: expense.goalId,
+      date: Timestamp.fromDate(new Date(expense.date)),
+      createdAt: isoToTimestamp(expense.createdAt),
+      updatedAt: serverTimestamp(),
+    }).filter(([, value]) => value !== undefined),
+  );
+
+  const batch = writeBatch(getDb());
+  batch.set(ref, data);
+  queueMonthlyStatsUpdate(
+    batch,
+    userId,
+    toLocalMonthKey(expense.date),
+    buildStatsDelta(expense.categoryId, expense.amount, expense.splits ?? [], 1),
+  );
+  await batch.commit();
+}
+
+/**
  * Find chat messages that reference this entity (by top-level expenseId/incomeId field)
  * and queue them for deletion in the same batch. Idempotent — no-ops when no message
  * was ever linked. Shared with incomeService/recurring/savings via a thin wrapper.

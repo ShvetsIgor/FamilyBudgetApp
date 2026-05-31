@@ -7,7 +7,7 @@ import { ru } from 'date-fns/locale';
 import { Plus } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { mergeExpenses, removeExpense, prependExpense } from '@/features/expenses/store/expensesSlice';
-import { fetchMonthExpenses, deleteExpense } from '@/features/expenses/services/expensesService';
+import { fetchMonthExpenses, deleteExpense, restoreExpense } from '@/features/expenses/services/expensesService';
 import { updateRecurringItem } from '@/features/recurring/store/recurringSlice';
 import { ExpenseCard } from '@/features/expenses/components/ExpenseCard';
 import { UpcomingBills } from '@/features/recurring/components/UpcomingBills';

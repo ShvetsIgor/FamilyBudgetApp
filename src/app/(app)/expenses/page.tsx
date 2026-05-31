@@ -74,28 +74,19 @@ export default function ExpensesPage() {
   const monthBarRef = useRef<HTMLDivElement>(null);
   const t = useT();
 
-  // Undo-delete state
+  // Undo-delete state. The delete is committed to Firestore *immediately* so
+  // closing the tab can't strand a half-deleted item; the toast just offers a
+  // 5-second window to restore via setDoc on the original id.
   const [undoItem, setUndoItem] = useState<{ expense: SerializableExpense; timerId: ReturnType<typeof setTimeout> } | null>(null);
   const undoRef = useRef<typeof undoItem>(null);
   undoRef.current = undoItem;
-  const userRef = useRef(user);
-  userRef.current = user;
 
-  // Commit pending delete immediately when user navigates away
   useEffect(() => {
     return () => {
       const u = undoRef.current;
-      const currentUser = userRef.current;
-      if (u && currentUser) {
-        clearTimeout(u.timerId);
-        deleteExpense(currentUser.id, u.expense)
-          .then((restored) => {
-            if (restored) dispatch(updateRecurringItem(restored));
-          })
-          .catch(() => {});
-      }
+      if (u) clearTimeout(u.timerId);
     };
-  }, [dispatch]); // empty deps — cleanup on unmount only
+  }, []);
 
   const isCurrentMonth = selectedMonth === currentMonth;
   const expenses = isCurrentMonth ? reduxExpenses : (localExpenses ?? []);

@@ -543,75 +543,74 @@ export function FastExpenseEntry({
         </div>
       </div>
 
-      {initialFolderId ? (
-        /* ── Разделы chips (chat tag-learning flow) ── */
-        <div className="px-3.5 pb-2 flex-shrink-0">
-          <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[.08em] mb-1.5">
-            Разделы
-          </div>
-          {topFolders.length === 0 ? (
-            <button
-              onClick={() => setShowFolderEditor(true)}
-              className="inline-flex min-h-[44px] items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold border-2 border-dashed"
-              style={{ borderColor: catColor + '77', color: catColor }}
-            >
-              <Plus size={12} strokeWidth={2.5} />
-              Создать раздел
-            </button>
-          ) : (
-            <div className="flex flex-wrap gap-1.5">
-              {topFolders.map((f) => {
-                const sel = f.id === activeFolderId;
-                const fc = f.color ?? '#E07A5F';
-                return (
-                  <button
-                    key={f.id}
-                    onClick={() => handleFolderSwitch(f.id)}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-extrabold transition-all"
-                    style={{
-                      background: sel ? fc : fc + '18',
-                      color: sel ? '#fff' : fc,
-                      border: `1.5px solid ${sel ? fc : fc + '44'}`,
-                    }}
-                  >
-                    <StickerIcon icon={f.icon ?? 'box'} color={sel ? '#fff' : fc} className="h-3 w-3" />
-                    {t.cat(f.name)}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
+      {/* ── Section-first: разделы всегда сверху. Категории показываются ниже только
+          после выбора раздела, чтобы не нарушать поток "тег → раздел → категория". */}
+      <div className="px-3.5 pb-2 flex-shrink-0">
+        <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[.08em] mb-1.5">
+          {t('expense.section') as string}
         </div>
-      ) : (
-        /* ── Category grid (main category for leftover) — real categories, never folder IDs ── */
-        <div className="overflow-x-auto px-3.5 py-2 flex-shrink-0 [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
-          <div className="grid grid-rows-2 grid-flow-col gap-1.5" style={{ gridAutoColumns: '64px' }}>
-            {sortCategoriesByHistory(activeExpCats).map((cat) => {
-              const sel = cat.id === selectedCatId;
-              const cc = cat.color ?? '#E07A5F';
+        {topFolders.length === 0 ? (
+          <button
+            onClick={() => setShowFolderEditor(true)}
+            className="inline-flex min-h-[44px] items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold border-2 border-dashed"
+            style={{ borderColor: catColor + '77', color: catColor }}
+          >
+            <Plus size={12} strokeWidth={2.5} />
+            Создать раздел
+          </button>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {topFolders.map((f) => {
+              const sel = f.id === activeFolderId;
+              const fc = f.color ?? '#E07A5F';
               return (
                 <button
-                  key={cat.id}
-                  onClick={() => changeCategory(cat.id)}
-                  className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
+                  key={f.id}
+                  onClick={() => handleFolderSwitch(f.id)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-extrabold transition-all"
                   style={{
-                    background: sel ? cc : 'hsl(var(--card))',
-                    boxShadow: sel ? `0 3px 8px ${cc}55` : '0 1px 3px rgba(61,44,31,.06)',
+                    background: sel ? fc : fc + '18',
+                    color: sel ? '#fff' : fc,
+                    border: `1.5px solid ${sel ? fc : fc + '44'}`,
                   }}
                 >
-                  <StickerIcon icon={cat.icon ?? 'box'} color={sel ? '#fff' : cc} className="h-4 w-4" />
-                  <span
-                    className="text-[9px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
-                    style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}
-                  >
-                    {t.cat(cat.name)}
-                  </span>
+                  <StickerIcon icon={f.icon ?? 'box'} color={sel ? '#fff' : fc} className="h-3 w-3" />
+                  {t.cat(f.name)}
                 </button>
               );
             })}
           </div>
-        </div>
+        )}
+
+        {/* Категории выбранного раздела — второй уровень, появляется только после выбора раздела */}
+        {activeFolderId && activeFolderCats.length > 0 && (
+          <div className="mt-2 overflow-x-auto [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
+            <div className="grid grid-rows-2 grid-flow-col gap-1.5" style={{ gridAutoColumns: '64px' }}>
+              {activeFolderCats.map((cat) => {
+                const sel = cat.id === selectedCatId;
+                const cc = cat.color ?? catColor;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => changeCategory(cat.id)}
+                    className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
+                    style={{
+                      background: sel ? cc : 'hsl(var(--card))',
+                      boxShadow: sel ? `0 3px 8px ${cc}55` : '0 1px 3px rgba(61,44,31,.06)',
+                    }}
+                  >
+                    <StickerIcon icon={cat.icon ?? 'box'} color={sel ? '#fff' : cc} className="h-4 w-4" />
+                    <span
+                      className="text-[9px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
+                      style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}
+                    >
+                      {t.cat(cat.name)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
       )}
 
       {/* ── Split table ── */}

@@ -32,7 +32,7 @@ export async function handleSlashCommand(
   }
 ): Promise<void> {
   const cmd = text.trim().toLowerCase();
-  const { userId, categoriesById, currency, allExpenses, budgetLimits } = ctx;
+  const { userId, categoriesById, currency, allExpenses, budgetLimits, language } = ctx;
 
   const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
   const sym = symMap[currency] ?? currency;

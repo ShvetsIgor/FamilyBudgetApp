@@ -743,26 +743,41 @@ export function FastExpenseEntry({
             </div>
 
             {noFolders ? (
-              /* Fallback: no folders loaded — show all active categories directly */
-              <div className="grid grid-cols-4 gap-1.5">
-                {activeExpCats.length > 0 ? activeExpCats.map((cat) => {
-                  const selected = !!splits.find((x) => x.categoryId === cat.id);
-                  const c = cat.color ?? '#E07A5F';
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => selected ? removeSplit(splits.findIndex((x) => x.categoryId === cat.id)) : addSplit(cat)}
-                      className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
-                      style={{ background: selected ? c + '30' : c + '14', borderColor: selected ? c : 'transparent' }}
-                    >
-                      <StickerIcon icon={cat.icon ?? 'box'} color={c} className="h-3.5 w-3.5" />
-                      <span className="leading-tight text-center line-clamp-1">{t.cat(cat.name)}</span>
-                      {selected && <span className="text-[8px]" style={{ color: c }}>✓</span>}
-                    </button>
-                  );
-                }) : (
-                  <p className="col-span-4 text-center text-xs text-muted-foreground py-3">Нет категорий</p>
+              /* Fallback: no folders loaded — show all active categories directly,
+                 and always expose "Create section" so a fresh user is not stuck. */
+              <div>
+                {activeExpCats.length > 0 ? (
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {activeExpCats.map((cat) => {
+                      const selected = !!splits.find((x) => x.categoryId === cat.id);
+                      const c = cat.color ?? '#E07A5F';
+                      return (
+                        <button
+                          key={cat.id}
+                          onClick={() => selected ? removeSplit(splits.findIndex((x) => x.categoryId === cat.id)) : addSplit(cat)}
+                          className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
+                          style={{ background: selected ? c + '30' : c + '14', borderColor: selected ? c : 'transparent' }}
+                        >
+                          <StickerIcon icon={cat.icon ?? 'box'} color={c} className="h-3.5 w-3.5" />
+                          <span className="leading-tight text-center line-clamp-1">{t.cat(cat.name)}</span>
+                          {selected && <span className="text-[8px]" style={{ color: c }}>✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-center text-xs text-muted-foreground py-3">
+                    Пока нет разделов — создайте первый, чтобы продолжить.
+                  </p>
                 )}
+                <button
+                  onClick={() => setShowFolderEditor(true)}
+                  className="mt-1 flex w-full min-h-[44px] items-center justify-center gap-1.5 rounded-[10px] border border-dashed text-[11px] font-extrabold"
+                  style={{ borderColor: catColor + '55', color: catColor }}
+                >
+                  <Plus size={12} strokeWidth={2.5} />
+                  Создать раздел
+                </button>
               </div>
             ) : pickerGroupId === null ? (
               /* Show folders — tap a folder to see real categories inside */

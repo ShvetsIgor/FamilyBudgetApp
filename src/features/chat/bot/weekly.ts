@@ -99,7 +99,7 @@ export async function sendWeeklySummary(ctx: BotContext): Promise<void> {
   if (Object.keys(catCount).length > 0) {
     const topId = Object.entries(catCount).sort((a, b) => b[1] - a[1])[0][0];
     const topCat = categoriesById.get(topId);
-    mostFrequent = `${topCat?.name ?? topId} ×${catCount[topId]}`;
+    mostFrequent = `${catDisplayName(topId, topCat?.name)} ×${catCount[topId]}`;
   }
 
   const cardData: WeeklyCardData = { weekNum, weekRange, totalSpent, totalBudget, saved, savingsGoalName, envelopes, bestDay, worstDay, mostFrequent, currency: sym };

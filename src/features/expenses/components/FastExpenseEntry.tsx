@@ -395,11 +395,11 @@ export function FastExpenseEntry({
       paymentMethod,
       tags: [] as string[],
       privacy: 'regular' as const,
-      comment: comment.trim() || undefined,
+      comment: normalizeName(comment) || undefined,
       amount: totalNum,
       categoryId: effectiveCatId,
       splits: splitItems,
-      ...(initialStore ? { store: initialStore } : {}),
+      ...(initialStore ? { store: normalizeName(initialStore) } : {}),
       ...(initialStoreId ? { storeId: initialStoreId } : {}),
       ...(initialStoreGroup ? { storeGroup: initialStoreGroup } : {}),
     };

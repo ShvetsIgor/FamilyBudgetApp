@@ -17,7 +17,18 @@ let _db: Firestore | null = null;
 let _auth: Auth | null = null;
 let _storage: FirebaseStorage | null = null;
 
+export function isFirebaseConfigured(): boolean {
+  return Object.values(firebaseConfig).every(Boolean);
+}
+
+function assertFirebaseConfigured() {
+  if (!isFirebaseConfigured()) {
+    throw new Error('Firebase is not configured. Fill .env.local with NEXT_PUBLIC_FIREBASE_* values.');
+  }
+}
+
 export function getApp(): FirebaseApp {
+  assertFirebaseConfigured();
   if (!_app) {
     _app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
   }

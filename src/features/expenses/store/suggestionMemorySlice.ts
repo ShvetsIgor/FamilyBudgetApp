@@ -57,7 +57,7 @@ export interface SuggestionMemoryState {
    */
   tagAssociations: TagAssociation[];
   /** Merchant context stats — merchantKey → folderId → count */
-  merchantContextStats: Record<string, Record<string, number>>;
+  merchantContextStats?: Record<string, Record<string, number>>;
 }
 
 const MAX_RECENTS = 20;
@@ -148,6 +148,7 @@ const suggestionMemorySlice = createSlice({
 
         // Context stats — record which folder this merchant was used in
         if (folderId) {
+          state.merchantContextStats ??= {};
           if (!state.merchantContextStats[key]) state.merchantContextStats[key] = {};
           state.merchantContextStats[key][folderId] = (state.merchantContextStats[key][folderId] ?? 0) + 1;
         }
@@ -201,6 +202,7 @@ const suggestionMemorySlice = createSlice({
       // Context stats — record folders for each split category
       if (merchant && folderIds) {
         const key = normalizeTag(merchant);
+        state.merchantContextStats ??= {};
         if (!state.merchantContextStats[key]) state.merchantContextStats[key] = {};
         for (const fid of folderIds) {
           if (fid) state.merchantContextStats[key][fid] = (state.merchantContextStats[key][fid] ?? 0) + 1;
@@ -265,6 +267,7 @@ const suggestionMemorySlice = createSlice({
       const { merchant, folderId } = action.payload;
       const key = normalizeTag(merchant ?? '');
       if (!key || !folderId) return;
+      state.merchantContextStats ??= {};
       if (!state.merchantContextStats[key]) state.merchantContextStats[key] = {};
       state.merchantContextStats[key][folderId] = (state.merchantContextStats[key][folderId] ?? 0) + 1;
       saveToStorage(state);

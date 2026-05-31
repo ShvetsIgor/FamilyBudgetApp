@@ -229,7 +229,7 @@ export function FastExpenseEntry({
   // Folders this tag/merchant was previously assigned to — sort them to the top.
   const tagFolderContext = useMemo(() => {
     if (!initialStore) return {} as Record<string, number>;
-    return memory.merchantContextStats[normalizeTag(initialStore)] ?? {};
+    return memory.merchantContextStats?.[normalizeTag(initialStore)] ?? {};
   }, [initialStore, memory.merchantContextStats]);
 
   const topFolders = useMemo(

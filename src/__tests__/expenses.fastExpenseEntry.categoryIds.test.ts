@@ -15,16 +15,16 @@ import type { Category, CategoryFolder } from '@/shared/types';
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
 const folders: CategoryFolder[] = [
-  { id: 'food', name: 'Food', icon: 'food', color: '#F59E0B', type: 'expense', order: 0 },
-  { id: 'home', name: 'Home', icon: 'home', color: '#6366F1', type: 'expense', order: 1 },
+  { id: 'food', userId: 'user-1', name: 'Food', icon: 'food', color: '#F59E0B', type: 'expense', order: 0 },
+  { id: 'home', userId: 'user-1', name: 'Home', icon: 'home', color: '#6366F1', type: 'expense', order: 1 },
 ];
 
 const categories: Category[] = [
-  { id: 'groceries', name: 'Groceries', icon: 'cart', color: '#F59E0B', type: 'expense', order: 0, folderId: 'food', isPrivate: false },
-  { id: 'cafe', name: 'Cafe', icon: 'coffee', color: '#FBBF24', type: 'expense', order: 1, folderId: 'food', isPrivate: false },
-  { id: 'tools', name: 'Tools', icon: 'hammer', color: '#6366F1', type: 'expense', order: 2, folderId: 'home', isPrivate: false },
-  { id: 'repairs', name: 'Repairs', icon: 'wrench', color: '#8B5CF6', type: 'expense', order: 3, folderId: 'home', isPrivate: false },
-  { id: 'savings', name: 'Savings', icon: 'piggy', color: '#10B981', type: 'expense', order: 99, isPrivate: false },
+  { id: 'groceries', userId: 'user-1', name: 'Groceries', icon: 'cart', color: '#F59E0B', type: 'expense', order: 0, folderId: 'food', isPrivate: false },
+  { id: 'cafe', userId: 'user-1', name: 'Cafe', icon: 'coffee', color: '#FBBF24', type: 'expense', order: 1, folderId: 'food', isPrivate: false },
+  { id: 'tools', userId: 'user-1', name: 'Tools', icon: 'hammer', color: '#6366F1', type: 'expense', order: 2, folderId: 'home', isPrivate: false },
+  { id: 'repairs', userId: 'user-1', name: 'Repairs', icon: 'wrench', color: '#8B5CF6', type: 'expense', order: 3, folderId: 'home', isPrivate: false },
+  { id: 'savings', userId: 'user-1', name: 'Savings', icon: 'piggy', color: '#10B981', type: 'expense', order: 99, isPrivate: false },
 ];
 
 const folderIds = new Set(folders.map((f) => f.id));

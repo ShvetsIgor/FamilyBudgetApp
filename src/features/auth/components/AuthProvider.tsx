@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { getFirebaseAuth, getDb } from '@/shared/lib/firebase';
+import { getFirebaseAuth, getDb, isFirebaseConfigured } from '@/shared/lib/firebase';
 import { useAppDispatch } from '@/store/store';
 import { setUser, setLoading } from '@/features/auth/store/authSlice';
 import { setCurrency, setDarkMode, setLanguage, setTheme, setWeekStart } from '@/features/ui/store/uiSlice';
@@ -18,6 +18,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
+    if (!isFirebaseConfigured()) {
+      dispatch(setUser(null));
+      return;
+    }
+
     const auth = getFirebaseAuth();
     const db = getDb();
 

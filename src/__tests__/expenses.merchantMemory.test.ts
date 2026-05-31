@@ -99,9 +99,9 @@ describe('getSuggestedContext', () => {
 
 describe('getTopMerchantCategories', () => {
   const cats = [
-    { id: 'groceries', name: 'Groceries', icon: 'cart', color: '#abc', folderId: 'food', isPrivate: false, order: 0, type: 'expense' as const },
-    { id: 'household', name: 'Household', icon: 'house', color: '#def', folderId: 'home', isPrivate: false, order: 1, type: 'expense' as const },
-    { id: 'alcohol', name: 'Alcohol', icon: 'beer', color: '#ghi', folderId: 'food', isPrivate: false, order: 2, type: 'expense' as const },
+    { id: 'groceries', userId: 'user-1', name: 'Groceries', icon: 'cart', color: '#abc', folderId: 'food', isPrivate: false, order: 0, type: 'expense' as const },
+    { id: 'household', userId: 'user-1', name: 'Household', icon: 'house', color: '#def', folderId: 'home', isPrivate: false, order: 1, type: 'expense' as const },
+    { id: 'alcohol', userId: 'user-1', name: 'Alcohol', icon: 'beer', color: '#ghi', folderId: 'food', isPrivate: false, order: 2, type: 'expense' as const },
   ];
 
   it('returns empty when no merchant history', () => {

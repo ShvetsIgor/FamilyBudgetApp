@@ -611,7 +611,8 @@ export function FastExpenseEntry({
               })}
             </div>
           </div>
-      )}
+        )}
+      </div>
 
       {/* ── Split table ── */}
       <div

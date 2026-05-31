@@ -69,12 +69,13 @@ export function FolderEditorSheet({
   if (!open) return null;
 
   const handleSave = async () => {
-    if (!name.trim() || saving) return;
+    const cleanName = normalizeName(name);
+    if (!cleanName || saving) return;
     setSaving(true);
     try {
       await onSave({
         id: initial?.id,
-        name: name.trim(),
+        name: cleanName,
         icon,
         color,
         type,

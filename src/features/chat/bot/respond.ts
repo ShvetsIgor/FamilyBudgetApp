@@ -85,7 +85,12 @@ export async function respondToUserMessage(
         .slice(0, 5)
         .map((id) => incomeCategoriesById.get(id))
         .filter(Boolean)
-        .map((c) => ({ id: c!.id, name: c!.name, icon: c!.icon, color: c!.color }));
+        .map((c) => ({
+          id: c!.id,
+          name: getPresetDisplayName(c!.id, ctx.language) ?? c!.name,
+          icon: c!.icon,
+          color: c!.color,
+        }));
 
       return {
         messages: [

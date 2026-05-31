@@ -26,7 +26,7 @@ export function markMorningGreetingSent(): void {
 }
 
 export async function sendMorningGreeting(ctx: BotContext): Promise<void> {
-  const { currency, categoriesById, todaySpent } = ctx;
+  const { currency, categoriesById, todaySpent, language } = ctx;
 
   const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
   const sym = symMap[currency] ?? currency;
@@ -37,7 +37,8 @@ export async function sendMorningGreeting(ctx: BotContext): Promise<void> {
   const catFreq: Record<string, number> = {};
   yesterdayExpenses.forEach((e) => {
     const cat = categoriesById.get(e.categoryId);
-    const name = (cat?.name ?? e.categoryId).toLowerCase();
+    const displayName = getPresetDisplayName(e.categoryId, language) ?? cat?.name ?? e.categoryId;
+    const name = displayName.toLowerCase();
     if (name) catFreq[name] = (catFreq[name] ?? 0) + 1;
   });
   const topCatNames = Object.entries(catFreq)

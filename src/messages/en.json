@@ -566,45 +566,46 @@
     },
     "help": {
       "title": "How to use",
-      "subtitle": "It's simple — just type",
+      "subtitle": "Chat → Tag → Section → Refine → Save",
       "tip1": {
-        "title": "Type amount and what you bought",
-        "desc": "Just write amount and name — the bot figures out the category",
-        "example": "bread 150 · coffee 80 · taxi 350"
+        "title": "Type a merchant and amount",
+        "desc": "The merchant becomes a tag and is saved verbatim. Just write where and how much",
+        "example": "Dabbah 1000 · Coffee 80 · Taxi 350"
       },
       "tip2": {
-        "title": "Unknown word? Pick a category",
-        "desc": "If the bot doesn't know the word, it'll ask — pick from the list and it'll remember next time",
-        "example": "rami levy 500 → Supermarket"
+        "title": "Pick a section once — it's remembered",
+        "desc": "If the merchant is new, the bot will ask for a section. Next time Dabbah goes straight into Supermarket without asking",
+        "example": "Dabbah → Supermarket"
       },
       "tip3": {
-        "title": "Comment is saved automatically",
-        "desc": "Any word in your message becomes a note on the expense — handy to find it later",
-        "example": "nike sneakers 2000"
+        "title": "Split a receipt by categories",
+        "desc": "When a single receipt holds different things, split it inside the chosen section — the merchant tag stays on the card, categories show in detail",
+        "example": "Dabbah 1000 → Groceries 700 + Home 300"
       },
       "tip4": {
-        "title": "Undo right away",
-        "desc": "Under each saved expense there's an Undo link — tap it and the expense disappears"
+        "title": "Delete with swipe",
+        "desc": "Swipe an expense left or tap the bin — you have 5 seconds to undo. After that the expense is removed from the cloud",
+        "example": "Swipe → Undo"
       },
       "tip5": {
         "title": "Future expenses",
-        "desc": "Type a future date and the bot will ask if you want to schedule it",
+        "desc": "Add a date or future month — the bot will ask whether to schedule the expense for that date",
         "example": "TV 15000 June 20"
       },
       "tip6": {
         "title": "Type + before amount for income",
-        "desc": "Just add + at the start — the bot saves it as income, not an expense",
-        "example": "+15000 salary · +3000 freelance"
+        "desc": "+ at the start switches the entry to income. The bot will offer income sections and save the merchant as a source",
+        "example": "+15000 Salary · +3000 Freelance"
       },
       "tip7": {
-        "title": "Category Constructor",
-        "desc": "Categories tab → orange Constructor card. 4 steps: pick groups → refine subcategories → set monthly budgets → done",
-        "example": "Food · Transport · Health…"
+        "title": "Categories tab — library and cleanup",
+        "desc": "Day-to-day everything happens in chat. The Categories tab is for editing the library, budgets and bulk cleanup",
+        "example": "Edit · Budget · Reset"
       },
       "tip8": {
         "title": "Recurring payments",
-        "desc": "Set up subscriptions, rent, mortgage once — the app reminds you before each due date and shows upcoming bills on Home",
-        "example": "Netflix · Rent · Gym"
+        "desc": "Set rent, subscription or mortgage once — the app will remind you of the due date and show upcoming bills on Home",
+        "example": "Netflix · Rent · Mortgage"
       }
     },
     "menu": {

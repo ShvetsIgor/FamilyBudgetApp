@@ -32,7 +32,12 @@ export function markWeeklySummarySent(): void {
 }
 
 export async function sendWeeklySummary(ctx: BotContext): Promise<void> {
-  const { currency, categoriesById } = ctx;
+  const { currency, categoriesById, language } = ctx;
+  const catDisplayName = (catId: string, fallback?: string | null): string => {
+    const preset = getPresetDisplayName(catId, language);
+    if (preset) return preset;
+    return fallback ?? catId;
+  };
 
   const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
   const sym = symMap[currency] ?? currency;

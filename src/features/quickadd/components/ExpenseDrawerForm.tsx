@@ -120,7 +120,7 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
       const exp = await addExpense({
         userId: user.id, currency, date: new Date(dateStr),
         paymentMethod, tags: [], privacy: 'regular',
-        comment: comment.trim() || undefined,
+        comment: normalizeName(comment) || undefined,
         amount: totalNum, categoryId: effectiveCategoryId, splits: splitItems,
       });
       dispatch(prependExpense(exp));

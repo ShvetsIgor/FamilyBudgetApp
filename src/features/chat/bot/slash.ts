@@ -74,7 +74,7 @@ export async function handleSlashCommand(
       .map((catId) => {
         const cat = categoriesById.get(catId);
         return {
-          name: cat?.name ?? catId,
+          name: getPresetDisplayName(catId, language) ?? cat?.name ?? catId,
           icon: cat?.icon ?? 'box',
           color: cat?.color ?? '#E07A5F',
           spent: catSpent[catId] ?? 0,

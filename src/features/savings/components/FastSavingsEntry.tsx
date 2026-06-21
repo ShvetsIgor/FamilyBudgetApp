@@ -15,8 +15,6 @@ import { addExpense } from '@/features/expenses/services/expensesService';
 import { addCategory } from '@/features/categories/services/categoriesService';
 import { getCurrencySymbol, formatAmount } from '@/shared/utils/currency';
 import { buildSavingsExpenseComment } from '@/features/savings/utils/savingsExpenseComment';
-
-import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
 import type { SavingsGoal } from '@/shared/types';
 
@@ -67,7 +65,7 @@ export function FastSavingsEntry() {
 
   const selectedGoal = goals.find((g) => g.id === selectedGoalId);
   const amountNum = parseFloat(amount) || 0;
-  const goalColor = selectedGoal?.color ?? '#10b981';
+  const goalColor = selectedGoal?.color ?? '#E8442A';
 
   function tap(key: NumKey) {
     setAmount((cur) => applyKey(cur, key));
@@ -80,7 +78,6 @@ export function FastSavingsEntry() {
       const updated = await addContribution(user.id, selectedGoal, { amount: amountNum });
       dispatch(updateGoalItem(updated));
 
-      // Record as expense in Savings category
       let catId = expenseCategories.find((c) => c.name === 'Savings' && !c.archived)?.id ?? '';
       if (!catId) {
         const created = await addCategory(user.id, {
@@ -90,12 +87,45 @@ export function FastSavingsEntry() {
         dispatch(addCategoryRedux(created));
         catId = created.id;
       }
-      dispatch(prependExpense(await addExpense({
+      const exp = await addExpense({
         userId: user.id, amount: amountNum, currency: selectedGoal.currency,
         categoryId: catId, date: new Date(dateStr), paymentMethod: 'other',
-        comment: buildSavingsExpenseComment(t('savings.expenseLabel'), selectedGoal.name, comment.trim() || undefined), tags: ['savings'],
-        privacy: 'regular', splits: [], goalId: selectedGoal.id,
-      })));
+        comment: buildSavingsExpenseComment(t('savings.expenseLabel'), selectedGoal.name, comment.trim() || undefined),
+        tags: ['savings'], privacy: 'regular', splits: [], goalId: selectedGoal.id,
+      });
+      dispatch(prependExpense(exp));
+
+      // Record in chat
+      const { addMessage } = await import('@/features/chat/services/messagesService');
+      const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
+      const sym = symMap[currency] ?? currency;
+      const expenseDate = parseISO(dateStr);
+      let dateHint: string | undefined;
+      if (!isToday(expenseDate)) {
+        dateHint = isYesterday(expenseDate) ? 'вчера' : format(expenseDate, 'd MMMM', { locale: ru });
+      }
+      await addMessage({
+        userId: user.id,
+        senderId: 'bot',
+        kind: 'bot',
+        text: `Копилка · ${selectedGoal.name} · ${sym} ${amountNum}`,
+        status: 'saved',
+        expenseId: exp.id,
+        card: {
+          kind: 'saved',
+          data: {
+            icon: '🐷',
+            color: goalColor,
+            title: selectedGoal.name,
+            catName: null,
+            groupName: null,
+            hint: dateHint,
+            amount: amountNum,
+            currency: sym,
+            expenseId: exp.id,
+          },
+        },
+      });
 
       router.back();
     } catch {
@@ -105,13 +135,10 @@ export function FastSavingsEntry() {
 
   if (!user) return null;
 
-  const pct = selectedGoal
-    ? Math.min(100, (selectedGoal.currentAmount / selectedGoal.targetAmount) * 100)
-    : 0;
-
   return (
     <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:bg-black/50 lg:backdrop-blur-sm">
     <div className="flex flex-col bg-background w-full lg:max-w-[440px] lg:rounded-2xl lg:shadow-2xl overflow-hidden" style={{ height: '100dvh', maxHeight: '100dvh' }}>
+
       {/* ── Top bar ── */}
       <div className="flex items-center gap-2 px-4 pt-1 pb-0.5 flex-shrink-0">
         <button onClick={() => router.back()} className="p-1.5 rounded-full hover:bg-muted transition-colors">
@@ -140,7 +167,7 @@ export function FastSavingsEntry() {
       </div>
 
       {/* ── Goals list ── */}
-      <div className="flex-1 overflow-y-auto px-4 py-2 flex flex-col gap-2 min-h-0 [scrollbar-width:none]">
+      <div className="flex-1 overflow-y-auto px-4 py-2 flex flex-col gap-1.5 min-h-0 [scrollbar-width:none]">
         {goals.length === 0 ? (
           <div className="flex flex-col items-center justify-center flex-1 gap-2 text-muted-foreground text-sm">
             <span className="text-4xl">🐷</span>
@@ -154,35 +181,38 @@ export function FastSavingsEntry() {
               <button
                 key={goal.id}
                 onClick={() => setSelectedGoalId(goal.id)}
-                className="rounded-[16px] p-3.5 flex items-center gap-3 text-left transition-all border-[1.5px] flex-shrink-0"
+                className="flex items-center gap-3 pl-3 pr-4 py-3 text-left transition-colors flex-shrink-0"
                 style={{
-                  background: sel ? goal.color + '14' : 'hsl(var(--card))',
-                  borderColor: sel ? goal.color : 'transparent',
-                  boxShadow: '0 1px 3px rgba(61,44,31,.05)',
+                  borderLeft: `4px solid ${sel ? goal.color : 'transparent'}`,
+                  background: sel ? goal.color + '0e' : 'hsl(var(--card))',
+                  boxShadow: '0 1px 2px rgba(61,44,31,.05)',
                 }}
               >
                 <div
-                  className="h-10 w-10 rounded-[12px] flex items-center justify-center text-xl flex-shrink-0"
+                  className="h-9 w-9 rounded-[12px] flex items-center justify-center text-xl flex-shrink-0"
                   style={{ background: goal.color + '22' }}
                 >
                   {goal.icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-extrabold text-foreground mb-1">{goal.name}</div>
-                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all"
-                      style={{ width: `${gPct}%`, background: goal.color }}
-                    />
+                  <div className="text-sm font-extrabold text-foreground truncate">{goal.name}</div>
+                  <div className="mt-1 h-1 bg-muted overflow-hidden">
+                    <div className="h-full transition-all" style={{ width: `${gPct}%`, background: goal.color }} />
                   </div>
                   <div className="text-[10px] text-muted-foreground font-semibold mt-0.5">
                     {formatAmount(goal.currentAmount, currency)} / {formatAmount(goal.targetAmount, currency)}
                   </div>
                 </div>
+                {sel && (
+                  <div className="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: goal.color }}>
+                    <div className="h-2 w-2 rounded-full bg-white" />
+                  </div>
+                )}
               </button>
             );
           })
         )}
+
         {/* Date row */}
         <div className="rounded-[14px] overflow-hidden flex-shrink-0" style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}>
           <button
@@ -258,27 +288,24 @@ export function FastSavingsEntry() {
         ))}
       </div>
 
-      {/* ── Save bar ── */}
-      <div className="px-4 pt-1.5 pb-safe flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
+      {/* ── Save button ── */}
+      <div className="px-4 pt-1.5 flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
         <button
           onClick={handleSave}
           disabled={saving || amountNum <= 0 || !selectedGoal}
-          className="w-full py-[12px] rounded-[16px] flex items-center justify-center gap-2 text-[14px] font-black text-white transition-opacity disabled:opacity-50 border-0"
-          style={{
-            background: goalColor,
-            boxShadow: `0 12px 24px ${goalColor}60`,
-          }}
+          className="w-full py-[14px] rounded-[16px] flex items-center justify-center gap-2 text-[15px] font-black text-white transition-opacity disabled:opacity-40 border-0"
+          style={{ background: saving ? '#18A957' : goalColor }}
         >
-          <span className="text-lg leading-none">🐷</span>
-          <span>
-            {saving
-              ? t('common.saving')
-              : selectedGoal
-              ? `${t('savings.contribute')} ${symbol}\u202F${amount} → ${selectedGoal.name}`
-              : t('savings.selectGoal')}
-          </span>
+          {saving ? (
+            <span>✓ {t('common.saving')}</span>
+          ) : selectedGoal ? (
+            <span>{symbol} {amount} → {selectedGoal.name}</span>
+          ) : (
+            <span>{t('savings.selectGoal')}</span>
+          )}
         </button>
       </div>
+
     </div>
     </div>
   );

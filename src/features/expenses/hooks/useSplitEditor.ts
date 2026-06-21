@@ -51,9 +51,9 @@ export function useSplitEditor({
   const posCount = splits.filter((s) => parseFloat(s.amount) > 0).length + (remainder > 0 ? 1 : 0);
 
   const addSplit = useCallback(
-    (sub: Category) => {
+    (sub: Category, folderOverride?: Pick<CategoryGroup, 'id' | 'name' | 'color'> | null) => {
       if (splits.find((s) => s.categoryId === sub.id)) return;
-      const groupFolder = pickerGroupId ? topFolders.find((f) => f.id === pickerGroupId) : null;
+      const groupFolder = folderOverride ?? (pickerGroupId ? topFolders.find((f) => f.id === pickerGroupId) : null);
       const color = groupFolder?.color ?? sub.color;
       const newIdx = splits.length; // index the new split will occupy
       setSplits((prev) => [

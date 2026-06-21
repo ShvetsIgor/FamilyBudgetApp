@@ -2,7 +2,7 @@
 
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, MessageSquare, Calendar, ChevronLeft, Scissors, ChevronRight, Plus } from 'lucide-react';
+import { X, MessageSquare, Calendar, ChevronRight } from 'lucide-react';
 import { format, parseISO, isToday, isYesterday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useAppSelector, useAppDispatch } from '@/store/store';
@@ -26,6 +26,7 @@ import { addFolder as addFolderToDb } from '@/features/categories/services/categ
 import { FolderEditorSheet } from '@/features/categories/components/FolderEditorSheet';
 import { CategoryEditorSheet } from '@/features/categories/components/CategoryEditorSheet';
 import type { CategoryFolder } from '@/shared/types';
+import { CategoryFolderPickerSheet, type CategoryPickerFolder } from '@/features/categories/components/CategoryFolderPickerSheet';
 import {
   categoryBlueprintToSuggestion,
   folderBlueprintToSuggestion,
@@ -35,6 +36,7 @@ import {
 
 const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫'] as const;
 type NumKey = (typeof NUMPAD_KEYS)[number];
+type EntryMode = 'single' | 'split';
 
 
 interface Props {
@@ -147,6 +149,9 @@ export function FastExpenseEntry({
   const startTotal = initialAmount != null ? String(initialAmount) : (initialExpense ? String(initialExpense.amount) : '0');
 
   const [total, setTotal] = useState(startTotal);
+  const [entryMode, setEntryMode] = useState<EntryMode>(
+    initialExpense?.splits?.length ? 'split' : 'single',
+  );
   const [selectedCatId, setSelectedCatId] = useState(initSelectedCatId);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash' | 'other'>(
     initialExpense?.paymentMethod ?? 'card'
@@ -170,6 +175,10 @@ export function FastExpenseEntry({
   const [showFolderEditor, setShowFolderEditor] = useState(false);
   const [showCategoryEditor, setShowCategoryEditor] = useState(false);
   const [inlineCreating, setInlineCreating] = useState(false);
+  const [categorySheetMode, setCategorySheetMode] = useState<EntryMode | null>(null);
+  const [newCategoryFolderId, setNewCategoryFolderId] = useState<string | null>(null);
+  const [returnToCategorySheetMode, setReturnToCategorySheetMode] = useState<EntryMode | null>(null);
+  const [amountEditorTarget, setAmountEditorTarget] = useState<'total' | number | null>(null);
 
   const selectedCat = allCats.find((c) => c.id === selectedCatId);
 
@@ -248,8 +257,6 @@ export function FastExpenseEntry({
       }),
     [baseTopFolders, activeExpCats, getCategoryHistoryRank, tagFolderContext],
   );
-  const noFolders = topFolders.length === 0;
-
   const totalNum = parseFloat(total) || 0;
 
   // Compute initial splits once at mount
@@ -264,8 +271,8 @@ export function FastExpenseEntry({
     onSplitAdded: () => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }),
   });
   const {
-    splits, editing, setEditing, pickerOpen, pickerGroupId, setPickerGroupId,
-    addSplit, removeSplit, openPicker, closePicker, tapOnSplit,
+    splits, editing, setEditing,
+    addSplit, removeSplit, tapOnSplit,
     splitsSum, remainder, splitsOverflow, posCount,
   } = splitEditor;
 
@@ -275,11 +282,6 @@ export function FastExpenseEntry({
     () => (activeFolderId ? topFolders.find((folder) => folder.id === activeFolderId) ?? null : null),
     [activeFolderId, topFolders],
   );
-  const activeFolderCats = useMemo(
-    () => (activeFolderId ? sortCategoriesByHistory(getCatsInGroup(activeFolderId)) : []),
-    [activeFolderId, getCatsInGroup, sortCategoriesByHistory],
-  );
-
   useEffect(() => {
     if (initialExpense) return;
 
@@ -292,8 +294,7 @@ export function FastExpenseEntry({
     if (initialFolderId) {
       setSelectedCatId('');
       if (getCatsInGroup(initialFolderId).length === 0) {
-        openPicker();
-        setPickerGroupId(initialFolderId);
+        setCategorySheetMode('single');
       }
       return;
     }
@@ -307,16 +308,7 @@ export function FastExpenseEntry({
       ? mainCatSuggestion.categoryId
       : '';
     setSelectedCatId(mainId || activeExpCats[0]?.id || '');
-  }, [initialExpense, initialStore, initialFolderId, fromChat, mainCatSuggestion, activeExpCats, getCatsInGroup, openPicker, setPickerGroupId]);
-
-  const handleFolderSwitch = useCallback((folderId: string) => {
-    setActiveFolderId(folderId);
-    setSelectedCatId('');
-    if (getCatsInGroup(folderId).length === 0) {
-      openPicker();
-      setPickerGroupId(folderId);
-    }
-  }, [getCatsInGroup, openPicker, setPickerGroupId]);
+  }, [initialExpense, initialStore, initialFolderId, fromChat, mainCatSuggestion, activeExpCats, getCatsInGroup]);
 
   function tap(key: NumKey) {
     if (editing === 'total') {
@@ -324,6 +316,13 @@ export function FastExpenseEntry({
     } else {
       tapOnSplit(editing, String(key));
     }
+  }
+
+  function openAmountEditor(target: 'total' | number) {
+    setEditing(target);
+    setAmountEditorTarget(target);
+    setShowDate(false);
+    setShowComment(false);
   }
 
   // Cancel from chat-driven Split → remove originating chat bubble (saves nothing)
@@ -338,9 +337,46 @@ export function FastExpenseEntry({
     router.back();
   }, [fromChat, initialUserMsgId, user, dispatch, router]);
 
-  function changeCategory(id: string) {
-    setSelectedCatId(id);
+  function changeCategory(cat: Category, folder?: CategoryPickerFolder | null) {
+    setSelectedCatId(cat.id);
+    setActiveFolderId(folder?.id ?? cat.folderId ?? null);
     setEditing('total');
+  }
+
+  function handleCategorySheetSelect(cat: Category, folder?: CategoryPickerFolder | null) {
+    if (categorySheetMode === 'split') {
+      const existingIndex = splits.findIndex((split) => split.categoryId === cat.id);
+      const targetIndex = existingIndex >= 0 ? existingIndex : splits.length;
+      addSplit(cat, folder);
+      openAmountEditor(targetIndex);
+      setCategorySheetMode(null);
+      return;
+    }
+    changeCategory(cat, folder);
+    setCategorySheetMode(null);
+    openAmountEditor('total');
+  }
+
+  function openCreateCategory(folderId: string | null) {
+    setReturnToCategorySheetMode(categorySheetMode ?? entryMode);
+    setCategorySheetMode(null);
+    setNewCategoryFolderId(folderId);
+    setShowCategoryEditor(true);
+  }
+
+  function openCreateFolder() {
+    setReturnToCategorySheetMode(categorySheetMode ?? entryMode);
+    setCategorySheetMode(null);
+    setShowFolderEditor(true);
+  }
+
+  function closeCategoryEditor() {
+    setShowCategoryEditor(false);
+    setNewCategoryFolderId(null);
+    if (returnToCategorySheetMode) {
+      setCategorySheetMode(returnToCategorySheetMode);
+      setReturnToCategorySheetMode(null);
+    }
   }
 
   async function handleSave() {
@@ -350,40 +386,31 @@ export function FastExpenseEntry({
       return;
     }
 
-    const splitItems: SplitItem[] = splits
+    const splitItems: SplitItem[] = entryMode === 'split'
+      ? splits
       .filter((sp) => parseFloat(sp.amount) > 0)
       // Guard: only include splits whose categoryId is a real active category
       .filter((sp) => activeExpCats.some((c) => c.id === sp.categoryId))
-      .map((sp) => ({ categoryId: sp.categoryId, amount: parseFloat(sp.amount) }));
+        .map((sp) => ({ categoryId: sp.categoryId, amount: parseFloat(sp.amount) }))
+      : [];
 
     const selectedCatValid = activeExpCats.some((c) => c.id === selectedCatId);
-    const selectedCatInActiveFolder = activeFolderId
-      ? activeFolderCats.some((cat) => cat.id === selectedCatId)
-      : true;
-    const needsExplicitCategoryForRemainder =
-      splits.length > 0 && remainder > 0.01 && (!selectedCatValid || !selectedCatInActiveFolder);
-
-    if (needsExplicitCategoryForRemainder) {
-      window.alert(t('expense.selectRemainderCategory'));
+    if (entryMode === 'single' && !selectedCatValid) {
+      window.alert(t('categories.selectCategory'));
       return;
     }
 
-    const splitFullyCoversTotal = splitItems.length > 0 && remainder <= 0.01;
-    const effectiveCatId = (
-      splitFullyCoversTotal && (!selectedCatValid || !selectedCatInActiveFolder)
-        ? (splitItems[0]?.categoryId ?? '')
-        : activeFolderId
-        ? (
-            selectedCatValid && selectedCatInActiveFolder
-              ? selectedCatId
-              : (splitItems[0]?.categoryId ?? '')
-          )
-        : (
-            selectedCatValid
-              ? selectedCatId
-              : (mainCatSuggestion?.categoryId || activeExpCats[0]?.id || '')
-          )
-    );
+    if (entryMode === 'split') {
+      const validSplitSum = splitItems.reduce((sum, item) => sum + item.amount, 0);
+      if (splitItems.length === 0 || Math.abs(totalNum - validSplitSum) > 0.01) {
+        window.alert('Распредели всю сумму по категориям, без скрытого остатка.');
+        return;
+      }
+    }
+
+    const effectiveCatId = entryMode === 'split'
+      ? [...splitItems].sort((a, b) => b.amount - a.amount)[0]?.categoryId ?? ''
+      : selectedCatId;
     if (!effectiveCatId) return;
 
     setSaving(true);
@@ -506,16 +533,36 @@ export function FastExpenseEntry({
         ? t.cat(activeFolder.name)
         : t('expense.category');
   const catColor = selectedCat?.color ?? activeFolder?.color ?? '#E07A5F';
-  const selectedCatInActiveFolderForUi = activeFolderId
-    ? activeFolderCats.some((cat) => cat.id === selectedCatId)
-    : true;
-  const missingRemainderCategory =
-    splits.length > 0 && remainder > 0.01 && (!selectedCat || !selectedCatInActiveFolderForUi);
-
-  // Picker: folder → real categories in that folder
-  // pickerGroupId is a folder ID — look up in topFolders, NOT allCats
-  const pickerGroupFolder = pickerGroupId ? topFolders.find((f) => f.id === pickerGroupId) : null;
-  const pickerGroupCats = pickerGroupId ? sortCategoriesByHistory(getCatsInGroup(pickerGroupId)) : [];
+  const selectedCategoryIdsForSheet = entryMode === 'split'
+    ? splits.map((sp) => sp.categoryId)
+    : selectedCatId
+      ? [selectedCatId]
+      : [];
+  const splitModeInvalid = entryMode === 'split' && (
+    splits.length === 0 ||
+    splitsOverflow ||
+    remainder > 0.01
+  );
+  const saveDisabled =
+    saving ||
+    totalNum <= 0 ||
+    splitsOverflow ||
+    (entryMode === 'single' && !selectedCat) ||
+    splitModeInvalid;
+  const amountEditorSplit = typeof amountEditorTarget === 'number'
+    ? splits[amountEditorTarget] ?? null
+    : null;
+  const amountEditorOpen = amountEditorTarget === 'total' || !!amountEditorSplit;
+  const amountEditorIcon = amountEditorSplit?.icon ?? displayIcon;
+  const amountEditorColor = amountEditorSplit?.color ?? catColor;
+  const amountEditorTitle = amountEditorSplit
+    ? t.cat(amountEditorSplit.name)
+    : entryMode === 'single' && selectedCat
+      ? t.cat(selectedCat.name)
+      : t('expense.numpadTotal');
+  const amountEditorValue = amountEditorTarget === 'total'
+    ? total
+    : amountEditorSplit?.amount ?? '0';
 
   return (
     <>
@@ -539,10 +586,10 @@ export function FastExpenseEntry({
 
       {/* ── Total ── */}
       <div
-        onClick={() => { setEditing('total'); setShowDate(false); setShowComment(false); }}
+        onClick={() => openAmountEditor('total')}
         className={cn(
           'mx-4 px-4 py-1.5 rounded-[18px] cursor-pointer flex items-baseline justify-between flex-shrink-0 transition-all border-[1.5px]',
-          editing === 'total' ? 'bg-primary/10 border-primary' : 'bg-transparent border-transparent'
+          amountEditorTarget === 'total' ? 'bg-primary/10 border-primary' : 'bg-transparent border-transparent'
         )}
       >
         <span className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">{t('expense.numpadTotal')}</span>
@@ -554,124 +601,88 @@ export function FastExpenseEntry({
         </div>
       </div>
 
-      {/* ── Section-first: разделы всегда сверху. Категории показываются ниже только
-          после выбора раздела, чтобы не нарушать поток "тег → раздел → категория". */}
-      <div className="px-3.5 pb-2 flex-shrink-0">
-        <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[.08em] mb-1.5">
-          {t('expense.section') as string}
-        </div>
-        {topFolders.length === 0 ? (
-          <button
-            onClick={() => setShowFolderEditor(true)}
-            className="inline-flex min-h-[44px] items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold border-2 border-dashed"
-            style={{ borderColor: catColor + '77', color: catColor }}
-          >
-            <Plus size={12} strokeWidth={2.5} />
-            Создать раздел
-          </button>
-        ) : (
-          <div className="flex flex-wrap gap-1.5">
-            {topFolders.map((f) => {
-              const sel = f.id === activeFolderId;
-              const fc = f.color ?? '#E07A5F';
-              return (
-                <button
-                  key={f.id}
-                  onClick={() => handleFolderSwitch(f.id)}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-extrabold transition-all"
-                  style={{
-                    background: sel ? fc : fc + '18',
-                    color: sel ? '#fff' : fc,
-                    border: `1.5px solid ${sel ? fc : fc + '44'}`,
-                  }}
-                >
-                  <StickerIcon icon={f.icon ?? 'box'} color={sel ? '#fff' : fc} className="h-3 w-3" />
-                  {t.cat(f.name)}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Категории выбранного раздела — второй уровень, появляется только после выбора раздела */}
-        {activeFolderId && activeFolderCats.length > 0 && (
-          <div className="mt-2 overflow-x-auto [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
-            <div className="grid grid-rows-2 grid-flow-col gap-1.5" style={{ gridAutoColumns: '64px' }}>
-              {activeFolderCats.map((cat) => {
-                const sel = cat.id === selectedCatId;
-                const cc = cat.color ?? catColor;
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => changeCategory(cat.id)}
-                    className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
-                    style={{
-                      background: sel ? cc : 'hsl(var(--card))',
-                      boxShadow: sel ? `0 3px 8px ${cc}55` : '0 1px 3px rgba(61,44,31,.06)',
-                    }}
-                  >
-                    <StickerIcon icon={cat.icon ?? 'box'} color={sel ? '#fff' : cc} className="h-4 w-4" />
-                    <span
-                      className="text-[9px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
-                      style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}
-                    >
-                      {t.cat(cat.name)}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
+      {/* ── Mode ── */}
+      <div className="mx-4 mb-2 grid grid-cols-2 rounded-[16px] bg-muted p-1 flex-shrink-0">
+        {(['single', 'split'] as EntryMode[]).map((mode) => {
+          const selected = entryMode === mode;
+          return (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => {
+                setEntryMode(mode);
+                setEditing(mode === 'single' ? 'total' : editing);
+                setAmountEditorTarget(null);
+              }}
+              className={cn(
+                'min-h-[38px] rounded-[12px] text-[12px] font-black transition-all',
+                selected ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground',
+              )}
+            >
+              {mode === 'single' ? 'Одна трата' : 'Сплит'}
+            </button>
+          );
+        })}
       </div>
 
-      {/* ── Split table ── */}
+      {/* ── Entry rows ── */}
       <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto px-4 pb-2 flex flex-col gap-1.5 min-h-0 [scrollbar-width:none]"
       >
-        {/* Parent/leftover row */}
-        <div
-          className="bg-card rounded-[14px] p-3 flex items-center gap-3 flex-shrink-0"
-          style={{
-            boxShadow: '0 1px 3px rgba(61,44,31,.06)',
-            border: splitsOverflow ? '1.5px solid hsl(var(--destructive))' : '1.5px solid transparent',
-          }}
-        >
-          <CategoryIcon icon={displayIcon} color={catColor} size="md" />
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-extrabold text-foreground">
-              {displayName}
-              {splits.length > 0 && (
-                <span className="text-xs font-semibold text-muted-foreground ml-1">· общее</span>
-              )}
-            </div>
-            {activeFolderId && !selectedCat && splits.length === 0 && (
-              <div className="text-[11px] text-muted-foreground font-semibold mt-0.5">{t('categories.selectCategory')}</div>
-            )}
-            {missingRemainderCategory ? (
-              <div className="text-[11px] text-destructive font-semibold mt-0.5">{t('expense.selectRemainderCategory')}</div>
-            ) : splits.length > 0 && (
-              <div className="text-[11px] text-muted-foreground font-semibold mt-0.5">остаток после уточнений</div>
-            )}
-            {splitsOverflow && (
-              <div className="text-[9px] font-bold text-destructive mt-0.5">
-                превышено на {symbol}{(splitsSum - totalNum).toFixed(2)}
+        {entryMode === 'single' ? (
+          <button
+            type="button"
+            onClick={() => setCategorySheetMode('single')}
+            className="bg-card rounded-[16px] p-3 flex items-center gap-3 flex-shrink-0 text-left"
+            style={{
+              boxShadow: '0 1px 3px rgba(61,44,31,.06)',
+              border: selectedCat ? '1.5px solid transparent' : '1.5px solid hsl(var(--destructive))',
+            }}
+          >
+            <CategoryIcon icon={displayIcon} color={catColor} size="md" />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-extrabold text-foreground truncate">
+                {selectedCat ? t.cat(selectedCat.name) : t('categories.selectCategory')}
               </div>
-            )}
-          </div>
-          <span className="text-lg font-black text-foreground tabular-nums">
-            {symbol}{splits.length > 0 ? remainder : total}
-          </span>
-        </div>
+              <div className="text-[11px] text-muted-foreground font-semibold mt-0.5 truncate">
+                {initialStore ? displayName : activeFolder ? t.cat(activeFolder.name) : 'Нажми, чтобы выбрать'}
+              </div>
+            </div>
+            <span className="text-lg font-black text-foreground tabular-nums">{symbol}{total}</span>
+          </button>
+        ) : (
+          <>
+            <div
+              className="rounded-[16px] px-3 py-2.5 flex items-center gap-3 flex-shrink-0"
+              style={{
+                background: remainder > 0.01 || splitsOverflow ? catColor + '12' : 'hsl(var(--card))',
+                border: splitsOverflow ? '1.5px solid hsl(var(--destructive))' : `1.5px solid ${remainder > 0.01 ? catColor + '55' : 'transparent'}`,
+              }}
+            >
+              <div className="h-9 w-9 rounded-[12px] flex items-center justify-center flex-shrink-0" style={{ background: catColor + '20' }}>
+                <StickerIcon icon={displayIcon} color={catColor} className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-extrabold text-foreground">Осталось распределить</div>
+                <div className="text-[11px] text-muted-foreground font-semibold mt-0.5">
+                  {splits.length === 0 ? 'Добавь категории из папок' : 'Сумма должна сойтись перед сохранением'}
+                </div>
+                {splitsOverflow && (
+                  <div className="text-[9px] font-bold text-destructive mt-0.5">
+                    превышено на {symbol}{(splitsSum - totalNum).toFixed(2)}
+                  </div>
+                )}
+              </div>
+              <span className="text-lg font-black text-foreground tabular-nums">{symbol}{remainder.toFixed(2)}</span>
+            </div>
 
-        {/* Split rows */}
-        {splits.map((sp, i) => {
-          const isEditing = editing === i;
-          return (
+            {splits.map((sp, i) => {
+              const isEditing = amountEditorTarget === i;
+              return (
             <div
               key={i}
-              onClick={() => setEditing(i)}
+              onClick={() => openAmountEditor(i)}
               className="rounded-xl px-3 py-2 flex items-center gap-2.5 cursor-pointer transition-all border-[1.5px] flex-shrink-0"
               style={{
                 marginLeft: 18,
@@ -694,179 +705,29 @@ export function FastExpenseEntry({
               </div>
               <span className="text-sm font-black text-foreground tabular-nums">{symbol}{sp.amount}</span>
               <button
-                onClick={(e) => { e.stopPropagation(); removeSplit(i); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (amountEditorTarget === i) setAmountEditorTarget(null);
+                  removeSplit(i);
+                }}
                 className="text-muted-foreground hover:text-foreground transition-colors text-sm px-1"
               >
                 ✕
               </button>
             </div>
-          );
-        })}
+              );
+            })}
 
-        {/* Add split button row */}
-        <div className="flex gap-2 flex-shrink-0">
-          <button
-            onClick={() => {
-              if (activeFolderId) setPickerGroupId(activeFolderId);
-              openPicker();
-            }}
-            className="flex-1 rounded-[14px] py-2.5 flex items-center justify-center gap-1.5 text-sm font-extrabold transition-all border-2 border-dashed"
-            style={{ borderColor: catColor + '77', color: catColor, background: 'transparent' }}
-          >
-            <span className="text-lg leading-none">＋</span>
-            {initialFolderId
-              ? 'Уточнить позицию'
-              : shouldSuggestSplit && splits.length === 0
-                ? 'Разбить на позиции'
-                : 'Уточнить позицию'}
-          </button>
-        </div>
-
-        {/* Group category picker */}
-        {pickerOpen && (
-          <div
-            className="bg-card rounded-[14px] p-2.5 flex-shrink-0"
-            style={{ boxShadow: '0 1px 3px rgba(61,44,31,.08)' }}
-          >
-            {/* Picker header — when inside a folder the back arrow + label is
-                one large tap target (44px high) so it works on small phones. */}
-            <div className="flex items-center gap-1 pb-2">
-              {pickerGroupId ? (
-                <button
-                  type="button"
-                  onClick={() => setPickerGroupId(null)}
-                  aria-label="Назад к разделам"
-                  className="flex min-h-[44px] flex-1 items-center gap-1.5 rounded-[10px] px-2 -ml-1 active:bg-muted/60 transition-colors"
-                  style={{ color: pickerGroupFolder?.color ?? 'hsl(var(--muted-foreground))' }}
-                >
-                  <ChevronLeft size={18} strokeWidth={2.5} />
-                  <span className="text-[11px] font-extrabold uppercase tracking-[.08em]">
-                    {t.cat(pickerGroupFolder?.name ?? '')}
-                  </span>
-                </button>
-              ) : (
-                <div
-                  className="flex min-h-[44px] flex-1 items-center px-2 text-[11px] font-extrabold uppercase tracking-[.08em]"
-                  style={{ color: 'hsl(var(--muted-foreground))' }}
-                >
-                  Разделы
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => closePicker()}
-                aria-label="Закрыть"
-                className="flex h-11 w-11 items-center justify-center rounded-[10px] text-muted-foreground hover:text-foreground active:bg-muted/60 transition-colors"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {noFolders ? (
-              /* Fallback: no folders loaded — show all active categories directly,
-                 and always expose "Create section" so a fresh user is not stuck. */
-              <div>
-                {activeExpCats.length > 0 ? (
-                  <div className="grid grid-cols-4 gap-1.5">
-                    {activeExpCats.map((cat) => {
-                      const selected = !!splits.find((x) => x.categoryId === cat.id);
-                      const c = cat.color ?? '#E07A5F';
-                      return (
-                        <button
-                          key={cat.id}
-                          onClick={() => selected ? removeSplit(splits.findIndex((x) => x.categoryId === cat.id)) : addSplit(cat)}
-                          className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
-                          style={{ background: selected ? c + '30' : c + '14', borderColor: selected ? c : 'transparent' }}
-                        >
-                          <StickerIcon icon={cat.icon ?? 'box'} color={c} className="h-3.5 w-3.5" />
-                          <span className="leading-tight text-center line-clamp-1">{t.cat(cat.name)}</span>
-                          {selected && <span className="text-[8px]" style={{ color: c }}>✓</span>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-center text-xs text-muted-foreground py-3">
-                    Пока нет разделов — создайте первый, чтобы продолжить.
-                  </p>
-                )}
-                <button
-                  onClick={() => setShowFolderEditor(true)}
-                  className="mt-1 flex w-full min-h-[44px] items-center justify-center gap-1.5 rounded-[10px] border border-dashed text-[11px] font-extrabold"
-                  style={{ borderColor: catColor + '55', color: catColor }}
-                >
-                  <Plus size={12} strokeWidth={2.5} />
-                  Создать раздел
-                </button>
-              </div>
-            ) : pickerGroupId === null ? (
-              /* Show folders — tap a folder to see real categories inside */
-              <div>
-                {/* Folder tiles */}
-                <div className="grid grid-cols-4 gap-1.5">
-                  {topFolders.map((folder) => {
-                    const c = folder.color ?? '#E07A5F';
-                    return (
-                      <button
-                        key={folder.id}
-                        onClick={() => setPickerGroupId(folder.id)}
-                        className="flex flex-col items-center gap-0.5 px-0.5 py-2 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
-                        style={{ background: c + '18', borderColor: 'transparent' }}
-                      >
-                        <StickerIcon icon={folder.icon ?? 'box'} color={c} className="h-4 w-4" />
-                        <span className="leading-tight text-center line-clamp-1">{t.cat(folder.name)}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                {/* Create new section button */}
-                <button
-                  onClick={() => setShowFolderEditor(true)}
-                  className="col-span-4 flex items-center justify-center gap-1 py-1.5 rounded-[9px] text-[9px] font-extrabold border border-dashed mt-1"
-                  style={{ borderColor: catColor + '55', color: catColor }}
-                >
-                  <Plus size={10} strokeWidth={2.5} />
-                  Создать раздел
-                </button>
-              </div>
-            ) : (
-              /* Show categories in selected folder group */
-              <div className="grid grid-cols-4 gap-1.5">
-                {pickerGroupCats.map((s) => {
-                  const selected = !!splits.find((x) => x.categoryId === s.id);
-                  return (
-                    <button
-                      key={s.id}
-                      onClick={() =>
-                        selected
-                          ? removeSplit(splits.findIndex((x) => x.categoryId === s.id))
-                          : addSplit(s)
-                      }
-                      className="flex flex-col items-center gap-0.5 px-0.5 py-1.5 rounded-[9px] text-[9px] font-extrabold text-foreground border transition-all"
-                      style={{
-                        background: selected ? (pickerGroupFolder?.color ?? catColor) + '30' : (pickerGroupFolder?.color ?? catColor) + '14',
-                        borderColor: selected ? (pickerGroupFolder?.color ?? catColor) : 'transparent',
-                      }}
-                    >
-                      <StickerIcon icon={s.icon} color={pickerGroupFolder?.color ?? catColor} className="h-3.5 w-3.5" />
-                      <span className="leading-tight text-center line-clamp-1">{t.cat(s.name)}</span>
-                      {selected && <span className="text-[8px]" style={{ color: pickerGroupFolder?.color ?? catColor }}>✓</span>}
-                    </button>
-                  );
-                })}
-                {/* Open CategoryEditorSheet for inline category creation */}
-                <button
-                  onClick={() => setShowCategoryEditor(true)}
-                  className="col-span-4 flex items-center justify-center gap-1 py-1.5 rounded-[9px] text-[9px] font-extrabold border border-dashed mt-0.5"
-                  style={{ borderColor: (pickerGroupFolder?.color ?? catColor) + '55', color: pickerGroupFolder?.color ?? catColor }}
-                  disabled={inlineCreating}
-                >
-                  <Plus size={10} strokeWidth={2.5} />
-                  {inlineCreating ? '…' : 'Создать категорию'}
-                </button>
-              </div>
-            )}
-          </div>
+            <button
+              type="button"
+              onClick={() => setCategorySheetMode('split')}
+              className="flex-1 rounded-[14px] py-2.5 flex items-center justify-center gap-1.5 text-sm font-extrabold transition-all border-2 border-dashed"
+              style={{ borderColor: catColor + '77', color: catColor, background: 'transparent' }}
+            >
+              <span className="text-lg leading-none">＋</span>
+              {shouldSuggestSplit && splits.length === 0 ? 'Добавить категории' : 'Добавить категорию'}
+            </button>
+          </>
         )}
 
         {/* Date row */}
@@ -951,29 +812,11 @@ export function FastExpenseEntry({
         })}
       </div>
 
-      {/* ── Numpad ── */}
-      <div className="px-3 pt-0.5 grid grid-cols-3 flex-shrink-0" style={{ gridAutoRows: '40px', gap: '4px' }}>
-        {NUMPAD_KEYS.map((k) => (
-          <button
-            key={String(k)}
-            onClick={() => tap(k)}
-            className="bg-card rounded-xl font-extrabold transition-colors active:bg-muted border-0"
-            style={{
-              fontSize: typeof k === 'number' ? 20 : 16,
-              color: k === '⌫' ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
-              boxShadow: '0 1px 2px rgba(61,44,31,.05)',
-            }}
-          >
-            {k}
-          </button>
-        ))}
-      </div>
-
       {/* ── Save bar ── */}
       <div className="px-4 pt-1.5 pb-safe flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
         <button
           onClick={handleSave}
-          disabled={saving || totalNum <= 0 || splitsOverflow}
+          disabled={saveDisabled}
           className="w-full py-[12px] rounded-[16px] flex items-center justify-center gap-2 text-[14px] font-black text-primary-foreground transition-opacity disabled:opacity-50 border-0"
           style={{
             background: catColor,
@@ -988,6 +831,90 @@ export function FastExpenseEntry({
     </div>
     </div>
 
+    {amountEditorOpen && (
+      <div
+        className="fixed inset-0 z-[65] flex items-end justify-center bg-black/35 lg:items-center lg:p-6"
+        onClick={() => setAmountEditorTarget(null)}
+      >
+        <div
+          className="w-full rounded-t-[24px] bg-background px-4 pb-safe pt-4 shadow-2xl lg:max-w-[360px] lg:rounded-[24px]"
+          style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 14px)' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="mb-3 flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px]" style={{ background: amountEditorColor + '20' }}>
+              <StickerIcon icon={amountEditorIcon} color={amountEditorColor} className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-black text-foreground">{amountEditorTitle}</div>
+              <div className="text-[11px] font-bold text-muted-foreground">
+                {amountEditorTarget === 'total' ? 'Сумма чека' : 'Сумма категории'}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAmountEditorTarget(null)}
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="Закрыть ввод суммы"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div
+            className="mb-3 flex min-h-[64px] items-baseline justify-end rounded-[18px] border px-4 py-3"
+            style={{ borderColor: amountEditorColor + '55', background: amountEditorColor + '10' }}
+          >
+            <span className="mr-1 text-base font-bold text-muted-foreground">{symbol}</span>
+            <span className="text-[34px] font-black leading-none text-foreground tabular-nums">{amountEditorValue}</span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-1.5" style={{ gridAutoRows: '44px' }}>
+            {NUMPAD_KEYS.map((k) => (
+              <button
+                key={String(k)}
+                onClick={() => tap(k)}
+                className="rounded-xl bg-card font-extrabold transition-colors active:bg-muted"
+                style={{
+                  fontSize: typeof k === 'number' ? 21 : 16,
+                  color: k === '⌫' ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
+                  boxShadow: '0 1px 2px rgba(61,44,31,.06)',
+                }}
+              >
+                {k}
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setAmountEditorTarget(null)}
+            className="mt-3 w-full rounded-[16px] py-3 text-sm font-black text-primary-foreground"
+            style={{ background: amountEditorColor }}
+          >
+            Готово
+          </button>
+        </div>
+      </div>
+    )}
+
+    <CategoryFolderPickerSheet
+      open={categorySheetMode !== null}
+      title={categorySheetMode === 'split' ? 'Добавить категорию' : 'Выбрать категорию'}
+      mode={categorySheetMode ?? 'single'}
+      merchantLabel={initialStore}
+      folders={topFolders}
+      categories={activeExpCats}
+      selectedCategoryIds={selectedCategoryIdsForSheet}
+      suggestedCategoryIds={Array.from(historyCategoryIds)}
+      initialFolderId={activeFolderId}
+      accentColor={catColor}
+      onClose={() => setCategorySheetMode(null)}
+      onSelectCategory={handleCategorySheetSelect}
+      onCreateFolder={openCreateFolder}
+      onCreateCategory={openCreateCategory}
+    />
+
     {/* ── FolderEditorSheet: create new section from split picker ── */}
     <FolderEditorSheet
       open={showFolderEditor}
@@ -999,10 +926,11 @@ export function FastExpenseEntry({
         const { id: _id, ...rest } = data;
         const newFolder = await addFolderToDb(user.id, rest);
         dispatch(addFolderAction(newFolder));
-        setPickerGroupId(newFolder.id);
+        setNewCategoryFolderId(newFolder.id);
         setActiveFolderId(newFolder.id);
         setSelectedCatId('');
-        setShowCategoryEditor(true);
+        setCategorySheetMode(returnToCategorySheetMode ?? entryMode);
+        setReturnToCategorySheetMode(null);
         setShowFolderEditor(false);
       }}
     />
@@ -1010,10 +938,10 @@ export function FastExpenseEntry({
     {/* ── CategoryEditorSheet: create new category from split picker ── */}
     <CategoryEditorSheet
       open={showCategoryEditor}
-      onClose={() => setShowCategoryEditor(false)}
+      onClose={closeCategoryEditor}
       type="expense"
-      folderId={pickerGroupId ?? undefined}
-      initial={{ folderId: pickerGroupId ?? undefined }}
+      folderId={newCategoryFolderId ?? undefined}
+      initial={{ folderId: newCategoryFolderId ?? undefined }}
       availableFolders={topFolders as unknown as CategoryFolder[]}
       suggestions={categorySuggestions}
       onSave={async (catData) => {
@@ -1021,22 +949,30 @@ export function FastExpenseEntry({
         if (!name || !user || inlineCreating) return;
         setInlineCreating(true);
         try {
-          const color = catData.color ?? pickerGroupFolder?.color ?? '#94A3B8';
+          const primaryFolderId = catData.folderId ?? newCategoryFolderId ?? undefined;
+          const targetFolder = primaryFolderId
+            ? topFolders.find((folder) => folder.id === primaryFolderId) ?? null
+            : null;
+          const color = catData.color ?? targetFolder?.color ?? '#94A3B8';
           const newCat = await addCategoryFirestore(user.id, {
             name,
             icon: catData.icon ?? 'box',
             color,
-            folderId: catData.folderId ?? pickerGroupId ?? undefined,
+            folderId: primaryFolderId,
+            extraFolderIds: catData.extraFolderIds?.filter((id) => id !== primaryFolderId) ?? [],
             isPrivate: catData.isPrivate ?? false,
             order: 99,
             type: 'expense',
             ...(catData.tags ? { tags: catData.tags } : {}),
           });
           dispatch(addCategoryAction(newCat));
-          addSplit(newCat);
+          setActiveFolderId(primaryFolderId ?? null);
+          setCategorySheetMode(returnToCategorySheetMode ?? entryMode);
+          setReturnToCategorySheetMode(null);
         } finally {
           setInlineCreating(false);
           setShowCategoryEditor(false);
+          setNewCategoryFolderId(null);
         }
       }}
     />

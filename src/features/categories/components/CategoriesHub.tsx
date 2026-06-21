@@ -33,6 +33,7 @@ import {
 import { saveBudget } from '@/features/budget/services/budgetService';
 import type { Category, CategoryFolder, CategoryType } from '@/shared/types';
 import { CategoryEditorSheet } from './CategoryEditorSheet';
+import { CategoryFolderPickerView } from './CategoryFolderPickerSheet';
 import { FolderEditorSheet } from './FolderEditorSheet';
 import { ConstructorWizard } from './constructor/ConstructorWizard';
 import { StickerIcon } from './CategoryIcon';
@@ -416,6 +417,18 @@ export function CategoriesHub() {
 
   const openNewCategoryInFolder = (folderId: string) => {
     setEditor({ open: true, folderId });
+  };
+
+  const openCategoryFromFolderPicker = (cat: Category) => {
+    openEditor(cat);
+  };
+
+  const openFolderEditorFromPicker = () => {
+    setFolderEditor({ open: true });
+  };
+
+  const openCategoryEditorFromPicker = (folderId: string | null) => {
+    setEditor({ open: true, folderId: folderId ?? undefined });
   };
 
   const handleSave = async (catData: Omit<Category, 'id' | 'userId'> & { id?: string; presetId?: string }) => {
@@ -1158,141 +1171,31 @@ export function CategoriesHub() {
             </div>
           )
         ) : isEmpty ? (
-          /* Chat-first empty state */
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              border: `1.5px dashed ${T.hairline}`,
-              borderRadius: 20,
-              padding: '36px 20px 28px',
-              textAlign: 'center',
-              gap: 12,
-            }}
-          >
-            <div
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: 18,
-                backgroundColor: `${T.primary}18`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <StickerIcon icon="cart" color={T.primary} className="h-9 w-9" />
-            </div>
-            <div>
-              <p style={{ fontSize: 15, fontWeight: 700, color: T.fg, marginBottom: 6 }}>
-                Категории растут сами
-              </p>
-              <p style={{ fontSize: 13, color: T.sub, lineHeight: 1.5, maxWidth: 280, margin: '0 auto' }}>
-                Просто пишите в чат: <span style={{ color: T.fg, fontWeight: 600 }}>«Дабах 1000»</span> — система научится и предложит контексты автоматически.
-              </p>
-            </div>
-            <p style={{ fontSize: 12, color: T.subLight, marginTop: -4 }}>
-              Или добавьте несколько контекстов для старта:
-            </p>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-              <button
-                onClick={() => setFolderEditor({ open: true })}
-                style={{
-                  padding: '10px 16px',
-                  borderRadius: 14,
-                  backgroundColor: T.bgSoft,
-                  color: T.fg,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  border: `1px solid ${T.hairline}`,
-                  cursor: 'pointer',
-                }}
-              >
-                + Создать раздел
-              </button>
-              {tab === 'expense' && (
-                <button
-                  onClick={() => setShowLibrary(true)}
-                  style={{
-                    padding: '10px 16px',
-                    borderRadius: 14,
-                    backgroundColor: T.primary,
-                    color: '#fff',
-                    fontSize: 13,
-                    fontWeight: 700,
-                    border: 'none',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Из библиотеки
-                </button>
-              )}
-            </div>
-          </div>
+          <CategoryFolderPickerView
+            title="Папки категорий"
+            mode="single"
+            folders={folders}
+            categories={allActiveCats}
+            accentColor={T.primary}
+            onSelectCategory={openCategoryFromFolderPicker}
+            onCreateFolder={openFolderEditorFromPicker}
+            onCreateCategory={openCategoryEditorFromPicker}
+            showSearch={false}
+            variant="inline"
+          />
         ) : (
-          /* Outliner list — user's own collection */
-          <>
-          <div style={{ fontSize: 11, fontWeight: 700, color: T.subLight, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6, paddingLeft: 2 }}>
-            Моя коллекция
-          </div>
-          <div
-            style={{
-              backgroundColor: T.card,
-              borderRadius: 18,
-              border: `1px solid ${T.hairline}`,
-              overflow: 'hidden',
-              marginBottom: 8,
-              padding: '4px 0',
-            }}
-          >
-            {visibleRootFolders.map((folder) => (
-              <div key={folder.id}>
-                {renderFolderRow(folder)}
-                {/* Child folders */}
-                {dedupeFoldersByName(childFoldersMap[folder.id] ?? []).map((child) =>
-                  renderFolderRow(child, 1)
-                )}
-              </div>
-            ))}
-
-            {/* Ungrouped categories */}
-            {ungroupedCats.map((cat) => renderCategoryRow(cat))}
-
-            {/* Add folder row */}
-            {inlineEdit?.kind === 'folder-new' ? (
-              <div style={{ padding: '4px 8px' }}>
-                <InlineInputRow
-                  placeholder="Название папки"
-                  indent={false}
-                  onSave={handleInlineCreateFolder}
-                  onCancel={() => setInlineEdit(null)}
-                />
-              </div>
-            ) : (
-              <button
-                onClick={() => setFolderEditor({ open: true })}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '100%',
-                  margin: '8px 0 4px',
-                  padding: '8px 0',
-                  border: `1.5px dashed ${T.hairline}`,
-                  borderRadius: 12,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: T.sub,
-                  background: 'transparent',
-                  cursor: 'pointer',
-                }}
-              >
-                ＋ Новый раздел
-              </button>
-            )}
-          </div>
-          </>
+          <CategoryFolderPickerView
+            title="Папки категорий"
+            mode="single"
+            folders={folders}
+            categories={allActiveCats}
+            accentColor={T.primary}
+            onSelectCategory={openCategoryFromFolderPicker}
+            onCreateFolder={openFolderEditorFromPicker}
+            onCreateCategory={openCategoryEditorFromPicker}
+            showSearch={false}
+            variant="inline"
+          />
         )}
 
         {/* Standard Library section — collapsed by default, available for activation */}

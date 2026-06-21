@@ -10,6 +10,7 @@ const SUBCOLLECTIONS: Array<[string, string]> = [
   ['incomes', 'items'],
   ['savingsGoals', 'goals'],
   ['recurringPayments', 'items'],
+  ['recurringIncome', 'items'],
   ['messages', 'items'],
   ['monthlyStats', 'months'],
 ];
@@ -38,7 +39,7 @@ async function wipeSubcollection(userId: string, top: string, sub: string): Prom
  * Used for debug "fresh start while keeping category structure".
  *
  * Deletes:
- *  - all expenses, income, savings goals, recurring payments, messages
+ *  - all expenses, income, savings goals, recurring payments, recurring income templates, messages
  *  - monthlyStats (derived; would be rebuilt naturally on new writes)
  *  - storeProfiles + learnedKeywords (merchant memory)
  *  - localStorage suggestionMemory_v2 (shared deterministic memory)

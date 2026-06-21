@@ -628,7 +628,7 @@ export function FastExpenseEntry({
       {/* ── Entry rows ── */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-4 pb-2 flex flex-col gap-1.5 min-h-0 [scrollbar-width:none]"
+        className="flex-1 overflow-y-auto overscroll-contain px-4 pb-2 flex flex-col gap-1.5 min-h-0 [scrollbar-width:none]"
       >
         {entryMode === 'single' ? (
           <button
@@ -967,7 +967,17 @@ export function FastExpenseEntry({
           });
           dispatch(addCategoryAction(newCat));
           setActiveFolderId(primaryFolderId ?? null);
-          setCategorySheetMode(returnToCategorySheetMode ?? entryMode);
+          const targetMode = returnToCategorySheetMode ?? entryMode;
+          if (targetMode === 'split') {
+            const newIdx = splits.length;
+            addSplit(newCat, targetFolder ? { id: targetFolder.id, name: targetFolder.name, color: targetFolder.color } : null);
+            setAmountEditorTarget(newIdx);
+            setEditing(newIdx);
+            setCategorySheetMode(null);
+          } else {
+            changeCategory(newCat, targetFolder ? { id: targetFolder.id, name: targetFolder.name, color: targetFolder.color, icon: targetFolder.icon } : null);
+            setCategorySheetMode(null);
+          }
           setReturnToCategorySheetMode(null);
         } finally {
           setInlineCreating(false);

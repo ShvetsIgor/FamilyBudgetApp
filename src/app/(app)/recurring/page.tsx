@@ -229,33 +229,40 @@ export default function RecurringPage() {
     const days = daysUntil(item.nextDueDate);
     const typeObj = TYPES.find((tp) => tp.value === item.type);
     const isSelected = formMode?.mode === 'edit' && formMode.item.id === item.id;
+    const borderColor = cat?.color ?? 'hsl(var(--muted-foreground))';
     return (
       <div
         key={item.id}
         className={cn(
-          'flex w-full items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors',
+          'flex w-full items-center gap-3 pl-3 pr-4 py-3.5 hover:bg-muted/30 transition-colors',
           !item.isActive && 'opacity-50',
           isSelected && 'bg-primary/5'
         )}
+        style={{ borderLeft: `4px solid ${borderColor}` }}
       >
         <div className="flex flex-1 items-center gap-3 min-w-0 cursor-pointer" onClick={() => setFormMode({ mode: 'edit', item })}>
           {cat ? <CategoryIcon icon={cat.icon} color={cat.color} size="md" /> : <span className="text-2xl shrink-0">{typeObj?.icon ?? '🔄'}</span>}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{item.name}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {FREQ.find((f) => f.value === item.frequency)?.label}{' · '}
+            <p className="text-[15px] font-semibold truncate leading-snug">{item.name}</p>
+            <p className="flex items-center gap-1.5 mt-0.5">
+              <span style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: borderColor }}>
+                {FREQ.find((f) => f.value === item.frequency)?.label}
+              </span>
+              <span className="text-muted-foreground/40">·</span>
               {days <= 0 ? (
-                <span className="text-destructive font-medium">{t('recurring.dueToday')}</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'hsl(var(--destructive))' }}>{t('recurring.dueToday')}</span>
               ) : days <= 3 ? (
-                <span className="text-amber-500 font-medium">{t('recurring.inDays').replace('{n}', String(days))}</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'hsl(38 80% 45%)' }}>{t('recurring.inDays').replace('{n}', String(days))}</span>
               ) : (
-                <span>{t('recurring.due')}: {format(parseISO(item.nextDueDate), 'd MMM', { locale: ru })}</span>
+                <span style={{ fontSize: 10, color: 'hsl(var(--muted-foreground))' }}>{format(parseISO(item.nextDueDate), 'd MMM', { locale: ru })}</span>
               )}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-sm font-semibold tabular-nums">{item.amount > 0 ? '-' : ''}{formatAmount(item.amount, item.currency)}</span>
+          <span style={{ fontSize: 18, fontWeight: 900, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em' }}>
+            {item.amount > 0 ? '-' : ''}{formatAmount(item.amount, item.currency)}
+          </span>
           {item.isActive && days <= 0 && (
             <button
               onClick={() => handleMarkPaid(item)}
@@ -304,19 +311,17 @@ export default function RecurringPage() {
   return (
     <>
       {/* ── MOBILE ── */}
-      <div className="lg:hidden flex flex-col gap-4 px-4 pt-5 pb-24">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold">{t('recurring.title')}</h1>
-        </div>
-
-        {list.length > 0 && (
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground">{t('recurring.monthlyTotal')}</p>
-            <p className="text-2xl font-bold tabular-nums mt-1 text-destructive">
+      <div className="lg:hidden flex flex-col gap-0 pt-5 pb-24">
+        <div className="px-4 pb-4" style={{ borderBottom: '2px solid hsl(var(--foreground))', background: 'hsl(var(--card))' }}>
+          <p style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
+            {t('recurring.title')}
+          </p>
+          {list.length > 0 && (
+            <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, color: 'hsl(var(--destructive))' }}>
               {monthlyTotal > 0 ? '-' : ''}{formatAmount(monthlyTotal, currency)}
-            </p>
-          </div>
-        )}
+            </div>
+          )}
+        </div>
 
         {loading && <div className="flex justify-center py-12"><div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-primary" /></div>}
         {!loading && list.length === 0 && (
@@ -327,7 +332,7 @@ export default function RecurringPage() {
           </div>
         )}
         {list.length > 0 && (
-          <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">{listItems}</div>
+          <div className="divide-y divide-border/20 border-b border-border/30">{listItems}</div>
         )}
 
         {/* FAB */}
@@ -351,22 +356,24 @@ export default function RecurringPage() {
 
       {/* ── DESKTOP — 2-col ── */}
       <div className="hidden lg:grid lg:grid-cols-3 lg:gap-6 lg:items-start pb-6">
-        <div className="col-span-2 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold">{t('recurring.title')}</h1>
-            <button onClick={() => setFormMode({ mode: 'add' })} className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-medium">
-              {t('recurring.add')}
-            </button>
-          </div>
-
-          {list.length > 0 && (
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <p className="text-xs text-muted-foreground">{t('recurring.monthlyTotal')}</p>
-              <p className="text-2xl font-bold tabular-nums mt-1 text-destructive">
-                {monthlyTotal > 0 ? '-' : ''}{formatAmount(monthlyTotal, currency)}
-              </p>
+        <div className="col-span-2 flex flex-col gap-0">
+          <div className="pb-4 mb-4" style={{ borderBottom: '2px solid hsl(var(--foreground))', background: 'hsl(var(--card))' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+              <div>
+                <p style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
+                  {t('recurring.title')}
+                </p>
+                {list.length > 0 && (
+                  <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, color: 'hsl(var(--destructive))' }}>
+                    {monthlyTotal > 0 ? '-' : ''}{formatAmount(monthlyTotal, currency)}
+                  </div>
+                )}
+              </div>
+              <button onClick={() => setFormMode({ mode: 'add' })} className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-medium">
+                {t('recurring.add')}
+              </button>
             </div>
-          )}
+          </div>
 
           {loading && <div className="flex justify-center py-12"><div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-primary" /></div>}
           {!loading && list.length === 0 && (
@@ -377,7 +384,7 @@ export default function RecurringPage() {
             </div>
           )}
           {list.length > 0 && (
-            <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">{listItems}</div>
+            <div className="divide-y divide-border/20 border-b border-border/30">{listItems}</div>
           )}
         </div>
 

@@ -11,7 +11,7 @@ import { aggregateTopCategories } from '@/features/categories/utils/statsAggrega
 import { useT } from '@/shared/hooks/useT';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 
 type Period = 1 | 3 | 6 | 9 | 12;
@@ -140,34 +140,31 @@ export default function AnalyticsPage() {
 
   const statCards = (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <p className="text-xs text-muted-foreground">{t('analytics.avgMonth')}</p>
-        <p className="text-lg font-bold tabular-nums mt-1">{formatAmount(avgMonthly, currency)}</p>
-      </div>
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <p className="text-xs text-muted-foreground">{t('analytics.vsLastMonth')}</p>
-        {momChange !== null ? (
-          <p className={`text-lg font-bold mt-1 ${momChange > 0 ? 'text-destructive' : 'text-emerald-500'}`}>
-            {momChange > 0 ? '+' : ''}{momChange.toFixed(1)}%
+      {/* Bento hero card — spans 2 cols on desktop */}
+      <div className="col-span-2 rounded-[22px] bg-card p-5 shadow-sm hover:scale-[1.01] transition-transform cursor-default"
+        style={{ boxShadow: '0 2px 8px rgba(61,44,31,.06)' }}>
+        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[.08em]">{t('analytics.avgMonth')}</p>
+        <p className="text-[28px] font-black tabular-nums mt-1 leading-none tracking-tight">{formatAmount(avgMonthly, currency)}</p>
+        {momChange !== null && (
+          <p className={`text-[12px] font-bold mt-1.5 ${momChange > 0 ? 'text-destructive' : 'text-emerald-500'}`}>
+            {momChange > 0 ? '↑' : '↓'} {Math.abs(momChange).toFixed(1)}% {t('analytics.vsLastMonth')}
           </p>
-        ) : (
-          <p className="text-lg font-bold mt-1 text-muted-foreground">—</p>
         )}
       </div>
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <p className="text-xs text-muted-foreground">{t('analytics.totalSpendPeriod').replace('{n}', String(period))}</p>
-        <p className="text-lg font-bold tabular-nums mt-1">{formatAmount(totalSpend, currency)}</p>
+      <div className="rounded-[22px] border border-border bg-card p-4 hover:scale-[1.02] transition-transform cursor-default">
+        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[.06em]">{t('analytics.totalSpendPeriod').replace('{n}', String(period))}</p>
+        <p className="text-lg font-black tabular-nums mt-1.5">{formatAmount(totalSpend, currency)}</p>
       </div>
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <p className="text-xs text-muted-foreground">{t('analytics.bestMonth')}</p>
-        <p className="text-lg font-bold mt-1 text-emerald-500">{bestMonth ? bestMonth.month.slice(5) : '—'}</p>
+      <div className="rounded-[22px] border border-border bg-card p-4 hover:scale-[1.02] transition-transform cursor-default">
+        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[.06em]">{t('analytics.bestMonth')}</p>
+        <p className="text-lg font-black mt-1.5 text-emerald-500">{bestMonth ? bestMonth.month.slice(5) : '—'}</p>
       </div>
     </div>
   );
 
   const avgDailyChart = avgDailyByMonth.some((d) => d.avgDay > 0) && (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <h2 className="text-sm font-semibold mb-3">{t('analytics.avgDayByMonth')}</h2>
+    <div className="rounded-[22px] border border-border bg-card p-4 hover:scale-[1.005] transition-transform" style={{ boxShadow: '0 2px 8px rgba(61,44,31,.04)' }}>
+      <h2 className="text-sm font-bold mb-3">{t('analytics.avgDayByMonth')}</h2>
       <ResponsiveContainer width="100%" height={160}>
         <BarChart data={avgDailyByMonth}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -181,39 +178,49 @@ export default function AnalyticsPage() {
   );
 
   const trendChart = hasTrendData && (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <h2 className="text-sm font-semibold mb-3">{t('analytics.trend')}</h2>
+    <div className="rounded-[22px] border border-border bg-card p-4 hover:scale-[1.005] transition-transform" style={{ boxShadow: '0 2px 8px rgba(61,44,31,.04)' }}>
+      <h2 className="text-sm font-bold mb-3">{t('analytics.trend')}</h2>
       <ResponsiveContainer width="100%" height={200}>
-        <BarChart data={trendData} barGap={2}>
+        <AreaChart data={trendData}>
+          <defs>
+            <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#10b981" stopOpacity={0.18} />
+              <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.18} />
+              <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+            </linearGradient>
+          </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis dataKey="name" tick={{ fontSize: 11 }} />
           <YAxis tick={{ fontSize: 11 }} width={45} />
           <Tooltip formatter={(value) => formatAmount(value as number, currency)} contentStyle={tooltipStyle} />
-          <Bar dataKey="income" name={t('stats.income')} fill="#10b981" radius={[3, 3, 0, 0]} />
-          <Bar dataKey="expenses" name={t('stats.expenses')} fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} />
-        </BarChart>
+          <Area dataKey="income" name={t('stats.income')} stroke="#10b981" strokeWidth={2} fill="url(#incomeGrad)" dot={false} />
+          <Area dataKey="expenses" name={t('stats.expenses')} stroke="#ef4444" strokeWidth={2} fill="url(#expenseGrad)" dot={false} />
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   );
 
   const topCatsCard = topCats.length > 0 && (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <h2 className="text-sm font-semibold mb-3">{t('analytics.topCategories')}</h2>
-      <div className="flex flex-col gap-3">
-        {topCats.map(({ catId, total, name, color, icon }) => {
+    <div className="rounded-[22px] border border-border bg-card p-4 hover:scale-[1.005] transition-transform" style={{ boxShadow: '0 2px 8px rgba(61,44,31,.04)' }}>
+      <h2 className="text-sm font-bold mb-3">{t('analytics.topCategories')}</h2>
+      <div className="flex flex-col gap-2.5">
+        {[...topCats].sort((a, b) => b.total - a.total).map(({ catId, total, name, color, icon }) => {
           const pct = totalSpend > 0 ? (total / totalSpend) * 100 : 0;
           return (
-            <div key={catId}>
-              <div className="flex items-center gap-2 mb-1">
-                <div className="h-8 w-8 flex shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: `${color}20` }}>
-                  <StickerIcon icon={icon} color={color} className="h-5 w-5" />
+            <div key={catId} className="group">
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="h-7 w-7 flex shrink-0 items-center justify-center rounded-[10px]" style={{ backgroundColor: `${color}20` }}>
+                  <StickerIcon icon={icon} color={color} className="h-4 w-4" />
                 </div>
-                <span className="flex-1 text-sm">{t.cat(name)}</span>
-                <span className="text-sm font-semibold tabular-nums">{formatAmount(total, currency)}</span>
-                <span className="text-xs text-muted-foreground w-9 text-right">{pct.toFixed(0)}%</span>
+                <span className="flex-1 text-[13px] font-semibold truncate">{t.cat(name)}</span>
+                <span className="text-[13px] font-black tabular-nums">{formatAmount(total, currency)}</span>
+                <span className="text-[11px] font-bold text-muted-foreground w-8 text-right">{pct.toFixed(0)}%</span>
               </div>
-              <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
+                <div className="h-full rounded-full transition-all duration-300" style={{ width: `${pct}%`, backgroundColor: color }} />
               </div>
             </div>
           );
@@ -235,8 +242,8 @@ export default function AnalyticsPage() {
   };
 
   const dowChart = (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <h2 className="text-sm font-semibold mb-3">{t('analytics.byDow')}</h2>
+    <div className="rounded-[22px] border border-border bg-card p-4 hover:scale-[1.005] transition-transform" style={{ boxShadow: '0 2px 8px rgba(61,44,31,.04)' }}>
+      <h2 className="text-sm font-bold mb-3">{t('analytics.byDow')}</h2>
       <ResponsiveContainer width="100%" height={160}>
         <BarChart data={dowData}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />

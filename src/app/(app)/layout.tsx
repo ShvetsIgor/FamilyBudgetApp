@@ -93,9 +93,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (!user) return null;
 
   return (
-    <AppShell>
-      {children}
+    <>
+      <AppShell>{children}</AppShell>
       {showOnboarding && <OnboardingFlow onComplete={() => setShowOnboarding(false)} />}
-    </AppShell>
+    </>
   );
 }

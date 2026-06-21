@@ -47,11 +47,11 @@
   --input: 225 17% 94%;
   --ring: 232 100% 68%;
 
-  --radius: 1rem;                      /* 16px base */
-  --radius-sm: 0.625rem;               /* 10px chips */
+  --radius: 1.125rem;                  /* 18px base */
+  --radius-sm: 0.5rem;                 /* 8px chips */
   --radius-md: 0.875rem;               /* 14px buttons */
-  --radius-lg: 1rem;                   /* 16px cards */
-  --radius-xl: 1.25rem;                /* 20px hero */
+  --radius-lg: 1.5rem;                 /* 24px cards */
+  --radius-xl: 1.75rem;                /* 28px hero */
   --radius-pill: 9999px;
 
   /* Fonts */
@@ -59,13 +59,13 @@
   --font-display: var(--font-inter, Inter), system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --shadow-sm:  0 1px 1px rgba(20, 22, 30, .04);
-  --shadow-md:  0 1px 2px rgba(20, 22, 30, .04), 0 4px 12px rgba(20, 22, 30, .05);
-  --shadow-lg:  0 2px 4px rgba(20, 22, 30, .06), 0 12px 24px rgba(20, 22, 30, .08);
+  --shadow-sm:  0 1px 3px rgba(20, 22, 30, .06);
+  --shadow-md:  0 2px 4px rgba(20, 22, 30, .06), 0 8px 24px rgba(20, 22, 30, .10);
+  --shadow-lg:  0 4px 8px rgba(20, 22, 30, .08), 0 16px 40px rgba(20, 22, 30, .14);
   --shadow-primary:    0 8px 18px hsl(var(--primary) / 0.35);
   --shadow-primary-sm: 0 4px 10px hsl(var(--primary) / 0.25);
 
-  --card-border: 1px solid hsl(var(--border));
+  --card-border: none;
 
   --cat-food:          #0F8559;
   --cat-food-tint:     #E2F4EB;
@@ -123,24 +123,24 @@
   --input: 36 33% 86%;                 /* #E7E0D4 */
   --ring: 8 81% 54%;
 
-  /* Soft, friendly radii — 15px base */
-  --radius: 0.9375rem;
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 0.9375rem;
-  --radius-xl: 1rem;
+  /* Monzo-style radii — generous corners, floating card feel */
+  --radius: 1.125rem;          /* 18px base */
+  --radius-sm: 0.5rem;         /* 8px chips */
+  --radius-md: 0.875rem;       /* 14px buttons */
+  --radius-lg: 1.5rem;         /* 24px cards */
+  --radius-xl: 1.75rem;        /* 28px hero panels */
 
   --font-sans: var(--font-instrument-sans, 'Instrument Sans'), system-ui, -apple-system, sans-serif;
   --font-display: var(--font-instrument-sans, 'Instrument Sans'), system-ui, sans-serif;
 
-  /* Press keeps a gentle warm shadow (unlike the old paper flat borders) */
-  --shadow-sm: 0 1px 2px rgba(60, 50, 30, .04);
-  --shadow-md: 0 1px 2px rgba(60, 50, 30, .04), 0 4px 12px rgba(60, 50, 30, .05);
-  --shadow-lg: 0 2px 4px rgba(60, 50, 30, .06), 0 14px 28px rgba(60, 50, 30, .08);
+  /* Press: elevated floating cards — shadow replaces borders (Monzo approach) */
+  --shadow-sm: 0 1px 3px rgba(60, 50, 30, .06);
+  --shadow-md: 0 2px 4px rgba(60, 50, 30, .06), 0 8px 24px rgba(60, 50, 30, .10);
+  --shadow-lg: 0 4px 8px rgba(60, 50, 30, .08), 0 16px 40px rgba(60, 50, 30, .14);
   --shadow-primary:    0 8px 18px hsl(var(--primary) / 0.28);
   --shadow-primary-sm: 0 4px 10px hsl(var(--primary) / 0.20);
 
-  --card-border: 1px solid hsl(var(--border));
+  --card-border: none;
 
   --cat-food:          #4C7A2C;
   --cat-food-tint:     #E9F1E4;

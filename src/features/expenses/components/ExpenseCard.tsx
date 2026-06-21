@@ -51,10 +51,12 @@ export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
   const isRecurring = expense.tags?.includes('recurring') ?? false;
   const isSavings = expense.tags?.includes('savings') ?? false;
 
+  const borderColor = listMeta?.color ?? 'transparent';
+
   return (
-    <div className="flex flex-col">
-      <div className="flex w-full items-center gap-3 px-4 py-3">
-        {/* Icon — clickable to open detail */}
+    <div className="flex flex-col group" style={{ borderLeft: `4px solid ${borderColor}` }}>
+      <div className="flex w-full items-center gap-3 pl-3 pr-4 py-3.5">
+        {/* Icon */}
         <button onClick={onClick} className="shrink-0 active:opacity-70 transition-opacity">
           {listMeta ? (
             <CategoryIcon icon={listMeta.icon} color={listMeta.color} size="md" />
@@ -63,35 +65,41 @@ export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
           )}
         </button>
 
-        {/* Text — clickable to open detail */}
-        <button onClick={onClick} className="flex-1 min-w-0 text-left active:opacity-70 transition-opacity">
-          <p className="text-sm font-medium truncate">{topLine}</p>
-          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-            <span>{subtitleLabel}</span>
+        {/* Text */}
+        <div onClick={onClick} className="flex-1 min-w-0 text-left active:opacity-70 transition-opacity cursor-pointer">
+          <p className="text-[15px] font-semibold truncate leading-snug">{topLine}</p>
+          <p className="flex items-center gap-1.5 mt-0.5">
+            <span style={{
+              fontSize: 10,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              fontWeight: 700,
+              color: listMeta?.color ?? 'hsl(var(--muted-foreground))',
+            }}>{subtitleLabel}</span>
             {hasSplit && (
               <button
                 onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
-                className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] hover:bg-muted/80 transition-colors"
+                className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] hover:bg-muted/80 transition-colors text-muted-foreground"
               >
-                сплит · {effectiveParts} {expanded ? '▲' : '▼'}
+                {effectiveParts}× {expanded ? '▲' : '▼'}
               </button>
             )}
-            <span>·</span>
+            <span className="text-muted-foreground/40">·</span>
             {isRecurring && <span title="Регулярный">🔄</span>}
-            {!isRecurring && !isSavings && <span>{PAYMENT_ICONS[expense.paymentMethod]}</span>}
+            {!isRecurring && !isSavings && <span className="opacity-50">{PAYMENT_ICONS[expense.paymentMethod]}</span>}
             {expense.privacy === 'secret' && <span>🔒</span>}
           </p>
-        </button>
+        </div>
 
         {/* Amount + action buttons */}
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-sm font-semibold tabular-nums">
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span style={{ fontSize: 18, fontWeight: 900, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em' }}>
             {expense.amount > 0 ? '-' : ''}{formatAmount(expense.amount, expense.currency || currency)}
           </span>
           {onEdit && (
             <button
               onClick={onEdit}
-              className="text-muted-foreground hover:text-primary transition-colors text-xs px-1"
+              className="opacity-0 group-hover:opacity-100 lg:flex hidden text-muted-foreground hover:text-primary transition-all text-xs w-6 h-6 items-center justify-center rounded-lg hover:bg-muted"
             >
               ✎
             </button>
@@ -99,7 +107,7 @@ export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
           {onDelete && (
             <button
               onClick={() => setShowDeleteModal(true)}
-              className="text-muted-foreground hover:text-destructive transition-colors text-xs"
+              className="opacity-0 group-hover:opacity-100 lg:flex hidden text-muted-foreground hover:text-destructive transition-all text-xs w-6 h-6 items-center justify-center rounded-lg hover:bg-muted"
             >
               ✕
             </button>

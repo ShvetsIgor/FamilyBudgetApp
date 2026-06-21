@@ -1096,41 +1096,6 @@ export function CategoriesHub() {
             )}
           </div>
 
-          {/* Quick-add actions */}
-          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-            <button
-              onClick={() => setFolderEditor({ open: true })}
-              style={{
-                padding: '8px 10px',
-                borderRadius: 12,
-                backgroundColor: T.bgSoft,
-                color: T.sub,
-                fontSize: 12,
-                fontWeight: 700,
-                border: `1px solid ${T.hairline}`,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              + Раздел
-            </button>
-            <button
-              onClick={() => setEditor({ open: true })}
-              style={{
-                padding: '8px 10px',
-                borderRadius: 12,
-                backgroundColor: `${T.primary}15`,
-                color: T.primary,
-                fontSize: 12,
-                fontWeight: 700,
-                border: 'none',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              + Категория
-            </button>
-          </div>
         </div>
 
         {/* ── Content area ────────────────────────────────────────────────── */}
@@ -1170,19 +1135,6 @@ export function CategoriesHub() {
               <p style={{ fontSize: 12, color: T.sub }}>Попробуйте другой запрос</p>
             </div>
           )
-        ) : isEmpty ? (
-          <CategoryFolderPickerView
-            title="Папки категорий"
-            mode="single"
-            folders={folders}
-            categories={allActiveCats}
-            accentColor={T.primary}
-            onSelectCategory={openCategoryFromFolderPicker}
-            onCreateFolder={openFolderEditorFromPicker}
-            onCreateCategory={openCategoryEditorFromPicker}
-            showSearch={false}
-            variant="inline"
-          />
         ) : (
           <CategoryFolderPickerView
             title="Папки категорий"

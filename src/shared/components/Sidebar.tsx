@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   MessageCircle, List, BarChart2,
   PiggyBank, Repeat2,
-  LogOut, UserCircle,
+  LogOut, UserCircle, Palette,
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { useAppSelector } from '@/store/store';
@@ -98,6 +98,22 @@ export function Sidebar() {
           </div>
         ))}
       </nav>
+
+      {/* Design preview link */}
+      <div className="px-3 pb-2">
+        <Link
+          href="/theme-examples"
+          className={cn(
+            'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
+            pathname === '/theme-examples'
+              ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30'
+              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+          )}
+        >
+          <Palette className="h-4 w-4 flex-shrink-0" />
+          Примеры тем
+        </Link>
+      </div>
 
       {/* Profile card */}
       <div className="flex-shrink-0 border-t border-border p-3">

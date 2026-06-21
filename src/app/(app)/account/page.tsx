@@ -578,6 +578,16 @@ export default function AccountPage() {
     <>
       {/* ── MOBILE layout ── */}
       <div className="lg:hidden flex flex-col gap-4 px-[22px] pt-4 pb-28">
+        {/* Architectural header */}
+        <div className="pb-4 pt-4 -mt-4 -mx-[22px] px-[22px]" style={{ borderBottom: '2px solid hsl(var(--foreground))', background: 'hsl(var(--card))' }}>
+          <p style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
+            {t('account.title')}
+          </p>
+          <div style={{ fontSize: 36, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1 }}>
+            {user.name}
+          </div>
+        </div>
+
         {/* Profile card */}
         {profileCard}
 
@@ -687,14 +697,21 @@ export default function AccountPage() {
       <div className="hidden lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start pb-8">
         {/* Left: profile + family */}
         <div className="flex flex-col gap-4">
-          <h1 className="text-xl font-bold">{t('account.title')}</h1>
+          <div className="pb-4" style={{ borderBottom: '2px solid hsl(var(--foreground))', background: 'hsl(var(--card))' }}>
+            <p style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
+              {t('account.title')}
+            </p>
+            <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1 }}>
+              {user.name}
+            </div>
+          </div>
           {profileCard}
           {familyBlock}
           {exportBlock}
         </div>
 
         {/* Right: preferences + misc */}
-        <div className="flex flex-col gap-4 pt-[52px]">
+        <div className="flex flex-col gap-4 pt-[88px]">
           {preferencesBlock}
           {notificationsBlock}
           {quickLinks}

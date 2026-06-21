@@ -145,11 +145,16 @@ export default function StatisticsPage() {
               )}
             </div>
             {limit > 0 && !isEditing && (
-              <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-1">
-                <div
-                  className={cn('h-full rounded-full transition-all', pct >= 100 ? 'bg-destructive' : pct >= 80 ? 'bg-amber-500' : 'bg-emerald-500')}
-                  style={{ width: `${pct}%` }}
-                />
+              <div className="flex items-center gap-2 mb-1">
+                <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className={cn('h-full rounded-full transition-all duration-300', pct >= 100 ? 'bg-destructive' : pct >= 80 ? 'bg-amber-500' : 'bg-emerald-500')}
+                    style={{ width: `${Math.min(100, pct)}%` }}
+                  />
+                </div>
+                <span className={cn('text-[10px] font-bold w-8 text-right shrink-0 tabular-nums', pct >= 100 ? 'text-destructive' : pct >= 80 ? 'text-amber-500' : 'text-muted-foreground')}>
+                  {pct.toFixed(0)}%
+                </span>
               </div>
             )}
             {isEditing && (
@@ -157,6 +162,7 @@ export default function StatisticsPage() {
                 <input
                   autoFocus
                   type="number"
+                  inputMode="numeric"
                   min="0"
                   step="1"
                   placeholder={t('stats.limitPlaceholder')}
@@ -187,8 +193,8 @@ export default function StatisticsPage() {
   );
 
   const barChart = barData.length > 1 && (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <h2 className="text-sm font-semibold mb-3">{t('analytics.trend')}</h2>
+    <div className="rounded-[22px] border border-border bg-card p-4 hover:scale-[1.005] transition-transform" style={{ boxShadow: '0 2px 8px rgba(61,44,31,.04)' }}>
+      <h2 className="text-sm font-bold mb-3">{t('analytics.trend')}</h2>
       <ResponsiveContainer width="100%" height={180}>
         <BarChart data={barData} barGap={4}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -245,11 +251,11 @@ export default function StatisticsPage() {
           <div className="lg:hidden flex flex-col gap-4">
             {summaryCards}
             {pieData.length > 0 && (
-              <div className="rounded-2xl border border-border bg-card p-4">
-                <h2 className="text-sm font-semibold mb-3">{t('stats.byCategory')}</h2>
-                <ResponsiveContainer width="100%" height={200}>
+              <div className="rounded-[22px] border border-border bg-card p-4" style={{ boxShadow: '0 2px 8px rgba(61,44,31,.04)' }}>
+                <h2 className="text-sm font-bold mb-3">{t('stats.byCategory')}</h2>
+                <ResponsiveContainer width="100%" height={210}>
                   <PieChart>
-                    <Pie data={pieData} dataKey="amount" nameKey="name" cx="50%" cy="50%" outerRadius={80} innerRadius={50}>
+                    <Pie data={pieData} dataKey="amount" nameKey="name" cx="50%" cy="50%" outerRadius={88} innerRadius={62} paddingAngle={2}>
                       {pieData.map((entry) => <Cell key={entry.catId} fill={entry.color} />)}
                     </Pie>
                     <Tooltip formatter={(value) => formatAmount(value as number, currency)} contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))' }} />
@@ -279,11 +285,11 @@ export default function StatisticsPage() {
             {pieData.length > 0 && (
               <div className="grid grid-cols-2 gap-4 items-start">
                 {/* Left: pie + category list */}
-                <div className="rounded-2xl border border-border bg-card p-5">
-                  <h2 className="text-sm font-semibold mb-3">{t('stats.byCategory')}</h2>
-                  <ResponsiveContainer width="100%" height={220}>
+                <div className="rounded-[22px] border border-border bg-card p-5 hover:scale-[1.005] transition-transform" style={{ boxShadow: '0 2px 8px rgba(61,44,31,.04)' }}>
+                  <h2 className="text-sm font-bold mb-3">{t('stats.byCategory')}</h2>
+                  <ResponsiveContainer width="100%" height={230}>
                     <PieChart>
-                      <Pie data={pieData} dataKey="amount" nameKey="name" cx="50%" cy="50%" outerRadius={90} innerRadius={55}>
+                      <Pie data={pieData} dataKey="amount" nameKey="name" cx="50%" cy="50%" outerRadius={100} innerRadius={68} paddingAngle={2}>
                         {pieData.map((entry) => <Cell key={entry.catId} fill={entry.color} />)}
                       </Pie>
                       <Tooltip formatter={(value) => formatAmount(value as number, currency)} contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))' }} />
@@ -333,9 +339,9 @@ function SummaryCard({ label, value, color, prefix = '' }: {
   label: string; value: string; color: string; prefix?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-3 flex flex-col gap-1">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={`text-sm font-bold tabular-nums ${color}`}>{prefix}{value}</p>
+    <div className="rounded-[18px] border border-border bg-card p-3 flex flex-col gap-1 hover:scale-[1.02] transition-transform cursor-default" style={{ boxShadow: '0 1px 4px rgba(61,44,31,.05)' }}>
+      <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[.06em]">{label}</p>
+      <p className={`text-base font-black tabular-nums leading-tight ${color}`}>{prefix}{value}</p>
     </div>
   );
 }

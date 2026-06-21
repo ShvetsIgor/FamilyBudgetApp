@@ -14,7 +14,8 @@
     "recurring": "Recurring",
     "goals": "Goals",
     "members": "Members",
-    "settings": "Settings"
+    "settings": "Settings",
+    "themeExamples": "Theme Examples"
   },
   "sidebar": {
     "budget": "Budget",
@@ -158,7 +159,9 @@
     "noExpenses": "No expenses this month",
     "tapToAdd": "Tap + to add your first expense",
     "noResults": "No results",
-    "tryOther": "Try a different search or filter"
+    "tryOther": "Try a different search or filter",
+    "budget": "Budget",
+    "budgetLeft": "left"
   },
   "stats": {
     "title": "Statistics",
@@ -374,6 +377,18 @@
       "subs": "{n} subcategories",
       "more": "+{n}",
       "inLibrary": "in library"
+    },
+    "picker": {
+      "ungrouped": "Without folder",
+      "foldersOnlyHint": "Folders are just for storage",
+      "folderHint": "Folder just holds categories",
+      "merchantHint": "For {merchant}: familiar categories higher",
+      "emptyFolder": "No categories in this folder yet",
+      "suggested": "Suggested",
+      "forMerchant": "For {merchant}",
+      "folders": "Folders",
+      "createFolder": "Create folder",
+      "create": "Create"
     },
     "constructor": {
       "cardTitle": "Constructor",

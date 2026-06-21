@@ -15,7 +15,8 @@
     "recurring": "Регулярные",
     "goals": "Цели",
     "members": "Участники",
-    "settings": "Настройки"
+    "settings": "Настройки",
+    "themeExamples": "Примеры тем"
   },
   "sidebar": {
     "budget": "Бюджет",
@@ -160,7 +161,9 @@
     "noExpenses": "Расходов в этом месяце нет",
     "tapToAdd": "Нажмите + чтобы добавить расход",
     "noResults": "Ничего не найдено",
-    "tryOther": "Попробуйте другой запрос или фильтр"
+    "tryOther": "Попробуйте другой запрос или фильтр",
+    "budget": "Бюджет",
+    "budgetLeft": "осталось"
   },
   "stats": {
     "title": "Статистика",
@@ -376,6 +379,18 @@
       "subs": "{n} подкатегорий",
       "more": "+{n}",
       "inLibrary": "в библиотеке"
+    },
+    "picker": {
+      "ungrouped": "Без папки",
+      "foldersOnlyHint": "Папки только для удобного хранения",
+      "folderHint": "Папка только хранит категории",
+      "merchantHint": "Для {merchant}: знакомые категории выше",
+      "emptyFolder": "В этой папке пока нет категорий",
+      "suggested": "Подходящие",
+      "forMerchant": "Для {merchant}",
+      "folders": "Папки",
+      "createFolder": "Создать папку",
+      "create": "Создать"
     },
     "constructor": {
       "cardTitle": "Конструктор",

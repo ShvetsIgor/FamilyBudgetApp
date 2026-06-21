@@ -168,13 +168,6 @@ export default function SavingsPage() {
   // ── List content ─────────────────────────────────────────────────────────────
   const listContent = (
     <>
-      {list.length > 0 && (
-        <div className="rounded-2xl border border-border bg-card p-4">
-          <p className="text-xs text-muted-foreground">{t('savings.totalSaved')}</p>
-          <p className="text-2xl font-bold tabular-nums mt-1 text-emerald-500">{formatAmount(totalSaved, currency)}</p>
-        </div>
-      )}
-
       {loading && (
         <div className="flex justify-center py-12">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-primary" />
@@ -189,42 +182,35 @@ export default function SavingsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      <div className="flex flex-col">
         {list.map((goal) => {
           const pct = Math.min(100, goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0);
           const done = pct >= 100;
           const isSelected = typeof mode === 'object' && mode.goal.id === goal.id;
           return (
-            <button
-              key={goal.id}
-              onClick={() => setMode({ goal, action: 'detail' })}
-              className={cn(
-                'rounded-[20px] bg-card shadow text-left transition-colors',
-                isSelected ? 'ring-2 ring-primary' : 'hover:bg-muted/30'
-              )}
-            >
-              <div className="p-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-3xl">{goal.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold truncate">{goal.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatAmount(goal.currentAmount, goal.currency)} / {formatAmount(goal.targetAmount, goal.currency)}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-lg font-bold tabular-nums" style={{ color: done ? '#10b981' : goal.color }}>{pct.toFixed(0)}%</p>
-                    {done && <p className="text-xs text-emerald-500">{t('savings.done')}</p>}
-                  </div>
+            <div key={goal.id} className="border-b border-border/30">
+              <button
+                onClick={() => setMode({ goal, action: 'detail' })}
+                className={cn('w-full flex items-center gap-3 pl-3 pr-4 py-3.5 text-left transition-colors', isSelected ? 'bg-muted/40' : 'hover:bg-muted/20')}
+                style={{ borderLeft: `4px solid ${done ? '#10b981' : goal.color}` }}
+              >
+                <span className="text-2xl shrink-0">{goal.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-semibold truncate leading-snug">{goal.name}</p>
+                  <p style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: done ? '#10b981' : goal.color }}>
+                    {formatAmount(goal.currentAmount, goal.currency)} / {formatAmount(goal.targetAmount, goal.currency)}
+                    {goal.deadline && !done && ` · ${format(parseISO(goal.deadline), 'MMM d, yyyy')}`}
+                  </p>
                 </div>
-                <div className="h-2 rounded-full bg-muted overflow-hidden">
-                  <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: goal.color }} />
+                <div className="shrink-0 text-right">
+                  <p style={{ fontSize: 18, fontWeight: 900, fontVariantNumeric: 'tabular-nums', color: done ? '#10b981' : goal.color }}>{pct.toFixed(0)}%</p>
+                  {done && <p className="text-xs text-emerald-500">{t('savings.done')}</p>}
                 </div>
-                {goal.deadline && !done && (
-                  <p className="text-xs text-muted-foreground mt-2">{format(parseISO(goal.deadline), 'MMM d, yyyy')}</p>
-                )}
+              </button>
+              <div style={{ height: 2, background: 'hsl(var(--muted))', marginLeft: 4 }}>
+                <div style={{ height: '100%', width: `${pct}%`, backgroundColor: done ? '#10b981' : goal.color, transition: 'width 0.5s ease' }} />
               </div>
-            </button>
+            </div>
           );
         })}
       </div>
@@ -234,14 +220,12 @@ export default function SavingsPage() {
   return (
     <>
       {/* ── MOBILE ── */}
-      <div className="lg:hidden flex flex-col gap-4 px-4 pt-5 pb-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold">{t('savings.title')}</h1>
-          {mode !== 'list' && (
+      <div className="lg:hidden flex flex-col gap-0 pt-5 pb-8">
+        {mode !== 'list' && (
+          <div className="px-4 pb-3 flex justify-end">
             <button onClick={() => setMode('list')} className="text-sm text-muted-foreground">{t('savings.back')}</button>
-          )}
-        </div>
+          </div>
+        )}
 
         {mode === 'list' && listContent}
 
@@ -253,29 +237,30 @@ export default function SavingsPage() {
           const monthsLeft = goal.deadline ? differenceInMonths(parseISO(goal.deadline), new Date()) : null;
           const done = pct >= 100;
           return (
-            <div className="flex flex-col gap-4">
-              <div className="rounded-[20px] bg-card shadow p-6 flex flex-col items-center gap-3">
-                <div className="text-5xl">{goal.icon}</div>
-                <h2 className="text-xl font-bold">{goal.name}</h2>
-                <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
-                  <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: goal.color }} />
-                </div>
-                <div className="flex justify-between w-full text-sm">
-                  <span className="font-semibold tabular-nums" style={{ color: goal.color }}>{formatAmount(goal.currentAmount, goal.currency)}</span>
-                  <span className="text-muted-foreground tabular-nums">{formatAmount(goal.targetAmount, goal.currency)}</span>
-                </div>
-                <p className="text-2xl font-bold">{pct.toFixed(0)}%</p>
-                {!done && <p className="text-sm text-muted-foreground">{formatAmount(remaining, goal.currency)} {t('savings.toGo')}</p>}
-                {done && <p className="text-sm text-emerald-500 font-semibold">{t('savings.achieved')}</p>}
-                {daysLeft !== null && !done && (
-                  <p className="text-xs text-muted-foreground">
-                    {daysLeft > 0 ? `${daysLeft} ${t('savings.remaining')} · ${format(parseISO(goal.deadline!), 'MMM d, yyyy')}` : t('savings.remaining')}
+            <div className="flex flex-col gap-4 px-4">
+              <div className="flex items-center gap-4 py-3" style={{ borderLeft: `4px solid ${done ? '#10b981' : goal.color}`, paddingLeft: 12 }}>
+                <div className="text-4xl">{goal.icon}</div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-[15px] font-semibold">{goal.name}</h2>
+                  <p style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: done ? '#10b981' : goal.color }}>
+                    {formatAmount(goal.currentAmount, goal.currency)} / {formatAmount(goal.targetAmount, goal.currency)}
                   </p>
-                )}
-                {monthsLeft !== null && !done && monthsLeft > 0 && remaining > 0 && (
-                  <p className="text-xs text-muted-foreground">~{formatAmount(remaining / monthsLeft, goal.currency)}/{t('recurring.monthly').toLowerCase()}</p>
-                )}
+                </div>
+                <p style={{ fontSize: 36, fontWeight: 900, letterSpacing: '-0.04em', color: done ? '#10b981' : goal.color }}>{pct.toFixed(0)}%</p>
               </div>
+              <div style={{ height: 3, background: 'hsl(var(--muted))' }}>
+                <div style={{ height: '100%', width: `${pct}%`, backgroundColor: done ? '#10b981' : goal.color, transition: 'width 0.5s ease' }} />
+              </div>
+              {!done && <p className="text-sm text-muted-foreground">{formatAmount(remaining, goal.currency)} {t('savings.toGo')}</p>}
+              {done && <p className="text-sm text-emerald-500 font-semibold">{t('savings.achieved')}</p>}
+              {daysLeft !== null && !done && (
+                <p className="text-xs text-muted-foreground">
+                  {daysLeft > 0 ? `${daysLeft} ${t('savings.remaining')} · ${format(parseISO(goal.deadline!), 'MMM d, yyyy')}` : t('savings.remaining')}
+                </p>
+              )}
+              {monthsLeft !== null && !done && monthsLeft > 0 && remaining > 0 && (
+                <p className="text-xs text-muted-foreground">~{formatAmount(remaining / monthsLeft, goal.currency)}/{t('recurring.monthly').toLowerCase()}</p>
+              )}
               <button
                 onClick={() => router.push(`/savings/contribute?goalId=${goal.id}`)}
                 className="rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground"
@@ -283,13 +268,13 @@ export default function SavingsPage() {
                 {t('savings.addContribution')}
               </button>
               {goal.contributions.length > 0 && (
-                <div className="rounded-[20px] bg-card shadow overflow-hidden">
-                  <p className="px-4 pt-3 pb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('savings.history')}</p>
-                  <div className="divide-y divide-border">
+                <div className="border-t border-border/30">
+                  <p style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 800, color: 'hsl(var(--muted-foreground))' }} className="px-0 pt-3 pb-2">{t('savings.history')}</p>
+                  <div className="divide-y divide-border/20">
                     {[...goal.contributions].reverse().map((c, i) => (
-                      <div key={i} className="flex items-center justify-between px-4 py-3">
+                      <div key={i} className="flex items-center justify-between py-3">
                         <div>
-                          <p className="text-sm font-medium">{formatAmount(c.amount, goal.currency)}</p>
+                          <p className="text-sm font-semibold">{formatAmount(c.amount, goal.currency)}</p>
                           {c.note && <p className="text-xs text-muted-foreground">{c.note}</p>}
                         </div>
                         <p className="text-xs text-muted-foreground">{format(parseISO(c.date), 'MMM d, yyyy')}</p>
@@ -308,10 +293,7 @@ export default function SavingsPage() {
 
       {/* ── DESKTOP — 2-col ── */}
       <div className="hidden lg:grid lg:grid-cols-3 lg:gap-6 lg:items-start pb-6">
-        <div className="col-span-2 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold">{t('savings.title')}</h1>
-          </div>
+        <div className="col-span-2 flex flex-col gap-0">
           {listContent}
         </div>
         <div className="sticky top-6">

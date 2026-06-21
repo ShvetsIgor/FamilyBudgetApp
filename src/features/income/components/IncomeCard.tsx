@@ -13,20 +13,20 @@ interface Props {
 }
 
 const METHOD_ICONS: Record<string, string> = {
-  card: '💳',
-  cash: '💵',
-  bank: '🏦',
-  other: '🔄',
+  card: '💳', cash: '💵', bank: '🏦', other: '🔄',
 };
 
 export function IncomeCard({ income, onDelete, onEdit }: Props) {
   const categories = useAppSelector((s) => s.categories.income);
+  const currency = useAppSelector((s) => s.ui.currency);
   const category = categories.find((c) => c.id === income.categoryId);
   const t = useT();
   const isRecurring = income.tags?.includes('recurring') ?? false;
+  const borderColor = category?.color ?? '#18A957';
 
   return (
-    <div className="flex w-full items-center gap-3 px-4 py-3">
+    <div className="flex w-full items-center gap-3 pl-3 pr-4 py-3.5 group"
+      style={{ borderLeft: `4px solid ${borderColor}` }}>
       {category ? (
         <CategoryIcon icon={category.icon} color={category.color} size="md" />
       ) : (
@@ -34,25 +34,30 @@ export function IncomeCard({ income, onDelete, onEdit }: Props) {
       )}
 
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate">
+        <p className="text-[15px] font-semibold truncate leading-snug">
           {income.comment || (category ? t.cat(category.name) : t('income.title'))}
         </p>
-        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-          <span>{category ? t.cat(category.name) : ''}</span>
-          <span>·</span>
-          <span>{isRecurring ? '🔄' : (METHOD_ICONS[income.method] ?? '🔄')}</span>
+        <p className="flex items-center gap-1.5 mt-0.5">
+          <span style={{
+            fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase',
+            fontWeight: 700, color: borderColor,
+          }}>
+            {category ? t.cat(category.name) : ''}
+          </span>
+          <span className="text-muted-foreground/40">·</span>
+          <span className="opacity-50">{isRecurring ? '🔄' : (METHOD_ICONS[income.method] ?? '🔄')}</span>
           {income.privacy === 'secret' && <span>🔒</span>}
         </p>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
-        <span className="text-sm font-semibold tabular-nums text-emerald-500">
-          +{formatAmount(income.amount, income.currency)}
+      <div className="flex items-center gap-1.5 shrink-0">
+        <span style={{ fontSize: 18, fontWeight: 900, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em', color: '#18A957' }}>
+          +{formatAmount(income.amount, income.currency ?? currency)}
         </span>
         {onEdit && (
           <button
             onClick={onEdit}
-            className="text-muted-foreground hover:text-primary transition-colors text-xs px-1"
+            className="opacity-0 group-hover:opacity-100 lg:flex hidden text-muted-foreground hover:text-primary transition-all text-xs w-6 h-6 items-center justify-center rounded-lg hover:bg-muted"
           >
             ✎
           </button>
@@ -60,7 +65,7 @@ export function IncomeCard({ income, onDelete, onEdit }: Props) {
         {onDelete && (
           <button
             onClick={onDelete}
-            className="text-muted-foreground hover:text-destructive transition-colors text-xs"
+            className="opacity-0 group-hover:opacity-100 lg:flex hidden text-muted-foreground hover:text-destructive transition-all text-xs w-6 h-6 items-center justify-center rounded-lg hover:bg-muted"
           >
             ✕
           </button>

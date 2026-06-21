@@ -147,7 +147,8 @@ export default function ExpensesPage() {
   const monthBar = (
     <div
       ref={monthBarRef}
-      className="flex gap-1.5 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [-webkit-overflow-scrolling:touch] lg:px-0"
+      className="flex gap-1.5 overflow-x-auto px-4 pt-3 pb-2 [scrollbar-width:none] [-webkit-overflow-scrolling:touch] lg:px-0"
+      style={{ background: 'hsl(var(--card))' }}
     >
       {yearMonths.map((m) => {
         const sel = m === selectedMonth;
@@ -171,31 +172,57 @@ export default function ExpensesPage() {
     </div>
   );
 
+  const monthBudget = useAppSelector((s) =>
+    Object.values(s.budget.limits).reduce((acc: number, v) => acc + (v as number), 0)
+  );
+  const budgetPct = monthBudget > 0 ? Math.min(100, Math.round((monthTotal / monthBudget) * 100)) : 0;
+
   return (
     <div className="lg:grid lg:grid-cols-3 lg:gap-6 lg:items-start">
       {/* ── List column ── */}
       <div className="lg:col-span-2 flex flex-col">
-        {/* Header */}
-        <div className="px-4 pt-5 pb-2 flex items-center justify-between lg:px-0 lg:pt-0">
-          <div>
-            <h1 className="text-xl font-bold">{t('expenses.title')}</h1>
-            <p className="text-sm text-muted-foreground capitalize">
-              {format(parseISO(selectedMonth + '-01'), 'LLLL yyyy', { locale: ru })}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs text-muted-foreground">{t('expenses.total')}</p>
-            <p className="text-lg font-bold text-destructive">
+        {/* Header — architectural: large number + budget bar */}
+        <div className="px-4 pt-6 pb-4 lg:px-0 lg:pt-0" style={{ borderBottom: '2px solid hsl(var(--foreground))', background: 'hsl(var(--card))' }}>
+          <p style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
+            {format(parseISO(selectedMonth + '-01'), 'LLLL yyyy', { locale: ru })}
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1 }}>
               {monthTotal > 0 ? '-' : ''}{formatAmount(monthTotal, currency)}
-            </p>
+            </div>
+            {monthBudget > 0 && (
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))' }}>
+                  {t('expenses.budget')}
+                </p>
+                <p style={{ fontSize: 16, fontWeight: 800 }}>
+                  {formatAmount(monthBudget, currency)}
+                </p>
+              </div>
+            )}
           </div>
+          {monthBudget > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ height: 3, background: 'hsl(var(--muted))' }}>
+                <div style={{
+                  height: '100%',
+                  width: `${budgetPct}%`,
+                  background: budgetPct > 85 ? 'hsl(var(--destructive))' : 'hsl(var(--foreground))',
+                  transition: 'width 0.4s ease',
+                }} />
+              </div>
+              <p style={{ marginTop: 4, fontSize: 10, color: 'hsl(var(--muted-foreground))' }}>
+                {budgetPct}% · {t('expenses.budgetLeft')} {formatAmount(Math.max(0, monthBudget - monthTotal), currency)}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Month bar */}
         {monthBar}
 
         {/* Search + filter */}
-        <div className="px-4 mb-2 flex flex-col gap-2 lg:px-0">
+        <div className="px-4 mt-3 mb-2 flex flex-col gap-2 lg:px-0">
           <input
             type="search"
             value={search}
@@ -253,18 +280,22 @@ export default function ExpensesPage() {
 
         {/* Expense groups */}
         {!loading && (
-          <div className="flex flex-col gap-2 pb-4">
+          <div className="flex flex-col pb-4">
             {expenseGroups.map(([day, items]) => {
               const dayTotal = (items as SerializableExpense[]).reduce((s, e) => s + e.amount, 0);
               return (
-                <div key={day} className="rounded-2xl bg-card border border-border overflow-hidden mx-4 lg:mx-0">
-                  <div className="flex items-center justify-between px-4 py-2 bg-muted/50">
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{dateLabel(day)}</span>
-                    <span className="text-xs font-semibold text-muted-foreground tabular-nums">
+                <div key={day} className="border-b border-border/30">
+                  {/* Day header */}
+                  <div className="flex items-center justify-between px-4 py-2 lg:px-0" style={{ background: 'hsl(var(--muted)/0.4)' }}>
+                    <span style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 800, color: 'hsl(var(--muted-foreground))' }}>
+                      {dateLabel(day)}
+                    </span>
+                    <span style={{ fontSize: 10, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: 'hsl(var(--muted-foreground))' }}>
                       {dayTotal > 0 ? '-' : ''}{formatAmount(dayTotal, currency)}
                     </span>
                   </div>
-                  <div className="divide-y divide-border">
+                  {/* Rows */}
+                  <div className="divide-y divide-border/20">
                     {(items as SerializableExpense[]).map((e) => (
                       <ExpenseCard
                         key={e.id}

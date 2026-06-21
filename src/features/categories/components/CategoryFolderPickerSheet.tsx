@@ -142,7 +142,7 @@ export function CategoryFolderPickerView({
   );
 
   const currentFolder = folderId === UNGROUPED_FOLDER_ID
-    ? { id: UNGROUPED_FOLDER_ID, name: 'Без папки', icon: 'box', color: accentColor }
+    ? { id: UNGROUPED_FOLDER_ID, name: t('categories.picker.ungrouped'), icon: 'box', color: accentColor }
     : folderId
       ? folders.find((folder) => folder.id === folderId) ?? null
       : null;
@@ -158,7 +158,11 @@ export function CategoryFolderPickerView({
   }
 
   return (
-    <div className={cn('flex min-h-0 flex-col overflow-hidden', variant === 'inline' && 'rounded-[18px] border border-border bg-card')}>
+    <div className={cn(
+      'flex min-h-0 flex-col',
+      variant === 'sheet' && 'overflow-hidden',
+      variant === 'inline' && 'rounded-[18px] border border-border bg-card',
+    )}>
       {(variant === 'sheet' || folderId) && (
         <div className={cn(
           'flex items-center gap-2 px-4 pb-3 pt-4',
@@ -184,10 +188,10 @@ export function CategoryFolderPickerView({
             </div>
             <div className="truncate text-[11px] font-bold text-muted-foreground">
               {folderId
-                ? 'Папка только хранит категории'
+                ? t('categories.picker.folderHint')
                 : merchantLabel
-                  ? `Для ${merchantLabel}: знакомые категории выше`
-                  : 'Папки только для удобного хранения'}
+                  ? t('categories.picker.merchantHint', { merchant: merchantLabel })
+                  : t('categories.picker.foldersOnlyHint')}
             </div>
           </div>
 
@@ -227,7 +231,7 @@ export function CategoryFolderPickerView({
       )}
 
       <div className={cn(
-        'flex-1 overflow-y-auto px-4 pb-6 pt-4 [scrollbar-width:none]',
+        'flex-1 overflow-y-auto overscroll-contain px-4 pb-6 pt-4 [scrollbar-width:none]',
         variant === 'inline' && 'overflow-visible',
       )}>
           {query ? (
@@ -244,7 +248,7 @@ export function CategoryFolderPickerView({
                 cats={currentCats}
                 selectedIds={selectedIds}
                 suggestedIds={suggestedIds}
-                emptyLabel="В этой папке пока нет категорий"
+                emptyLabel={t('categories.picker.emptyFolder')}
                 onSelect={(cat) => selectCategory(cat, folderId === UNGROUPED_FOLDER_ID ? null : currentFolder)}
                 trailing={onCreateCategory ? (
                   <CreateCategoryTile
@@ -258,7 +262,7 @@ export function CategoryFolderPickerView({
             <div className="space-y-6">
               {suggestedCats.length > 0 && (
                 <section>
-                  <SectionTitle color={accentColor}>{merchantLabel ? `Для ${merchantLabel}` : 'Подходящие'}</SectionTitle>
+                  <SectionTitle color={accentColor}>{merchantLabel ? t('categories.picker.forMerchant', { merchant: merchantLabel }) : t('categories.picker.suggested')}</SectionTitle>
                   <CategoryGrid
                     cats={suggestedCats}
                     selectedIds={selectedIds}
@@ -269,7 +273,7 @@ export function CategoryFolderPickerView({
               )}
 
               <section>
-                <SectionTitle color={accentColor}>Папки</SectionTitle>
+                <SectionTitle color={accentColor}>{t('categories.picker.folders')}</SectionTitle>
                 <div className="grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-4">
                   {folders.map((folder) => (
                     <FolderTile
@@ -283,7 +287,7 @@ export function CategoryFolderPickerView({
                   ))}
                   {showUngroupedTile && (
                     <FolderTile
-                      folder={{ id: '', name: 'Без папки', icon: 'box', color: accentColor }}
+                      folder={{ id: '', name: t('categories.picker.ungrouped'), icon: 'box', color: accentColor }}
                       cats={ungroupedCats}
                       selectedIds={selectedIds}
                       suggestedIds={suggestedIds}
@@ -299,7 +303,7 @@ export function CategoryFolderPickerView({
                       <span className="flex aspect-square w-full max-w-[96px] items-center justify-center rounded-[22px] border-2 border-dashed bg-card text-muted-foreground">
                         <Plus className="h-7 w-7" />
                       </span>
-                      <span className="max-w-[96px] text-[11px] font-black leading-tight text-muted-foreground">Создать папку</span>
+                      <span className="max-w-[96px] text-[11px] font-black leading-tight text-muted-foreground">{t('categories.picker.createFolder')}</span>
                     </button>
                   )}
                 </div>
@@ -428,6 +432,7 @@ function CategoryGrid({
 }
 
 function CreateCategoryTile({ color, onClick }: { color: string; onClick: () => void }) {
+  const t = useT();
   return (
     <button
       type="button"
@@ -436,7 +441,7 @@ function CreateCategoryTile({ color, onClick }: { color: string; onClick: () => 
       style={{ borderColor: color + '66', color }}
     >
       <Plus className="h-6 w-6" />
-      <span className="text-[10px] font-black leading-tight">Создать</span>
+      <span className="text-[10px] font-black leading-tight">{t('categories.picker.create')}</span>
     </button>
   );
 }

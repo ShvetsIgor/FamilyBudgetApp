@@ -1,8 +1,6 @@
 'use client';
 
 import { Settings2 } from 'lucide-react';
-import { SHADOW, RAD } from '@/features/chat/styles/tokens';
-import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
 import type { Currency } from '@/shared/types';
@@ -18,7 +16,6 @@ interface PinnedTodayProps {
 }
 
 export function PinnedToday({ spent, total, currency, dayLabel, budgetMode, onSettings }: PinnedTodayProps) {
-  const C = useChatTokens();
   const t = useT();
   const sym = getCurrencySymbol(currency);
   const left = Math.max(0, total - spent);
@@ -33,83 +30,72 @@ export function PinnedToday({ spent, total, currency, dayLabel, budgetMode, onSe
   };
 
   return (
-    <div className="sticky top-0 z-10 px-3 pt-2 pb-2" style={{ background: C.bg }}>
-      <div
-        style={{
-          borderRadius: RAD.card,
-          background: `linear-gradient(135deg, ${C.primary} 0%, ${C.primaryDeep} 110%)`,
-          boxShadow: SHADOW.pinned,
-          overflow: 'hidden',
-          position: 'relative',
-          padding: '12px 14px 14px',
-        }}
-      >
-        {/* decorative circle */}
-        <svg
-          style={{ position: 'absolute', top: -18, right: -18, opacity: 0.15, pointerEvents: 'none' }}
-          width="80" height="80" viewBox="0 0 80 80"
-        >
-          <circle cx="40" cy="40" r="38" stroke="white" strokeWidth="1.5" fill="none" />
-        </svg>
-
-        {/* main row */}
-        <div className="relative flex items-center gap-2.5 mb-3">
-          {/* left: label + amount */}
-          <div className="flex-1">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <span className="text-[10px] font-[800] uppercase tracking-[.08em] opacity-75" style={{ color: 'white' }}>
-                {dayLabel}
-              </span>
-              <span
-                className="rounded-full px-1.5 py-[1px] text-[8.5px] font-[900] uppercase tracking-wider"
-                style={{ background: 'rgba(255,255,255,.18)', color: 'white' }}
-              >
-                {modeBadge[budgetMode]}
-              </span>
-            </div>
-            <div className="flex items-baseline gap-1.5">
-              <span
-                className="text-[22px] font-[900] tabular-nums leading-none"
-                style={{ letterSpacing: -0.5, color: isOver ? '#FFD166' : 'white' }}
-              >
-                {total > 0 ? `${sym}\u202F${(isOver ? over : left).toLocaleString()}` : `${sym}\u202F${spent.toLocaleString()}`}
-              </span>
-              {total > 0 && (
-                <span className="text-[11.5px] font-[700] opacity-80" style={{ color: 'white' }}>
-                  {isOver ? t('chat.budget.over') : `${t('chat.today.of')} ${sym}\u202F${total.toLocaleString()}`}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* right: settings + spent */}
-          <div className="flex flex-col items-end gap-1">
-            <button
-              onClick={onSettings}
-              className="flex h-6 w-6 items-center justify-center rounded-full border-0 transition-opacity active:opacity-60"
-              style={{ background: 'rgba(255,255,255,.16)', color: 'white' }}
-            >
-              <Settings2 size={11} strokeWidth={2.8} />
-            </button>
-            <span className="text-[10.5px] font-[700] opacity-80" style={{ color: 'white' }}>
-              {t('chat.today.spent')} {sym}{spent.toLocaleString()}
+    <div className="px-3 pt-2 pb-1" style={{ background: 'hsl(var(--background))' }}>
+      <div style={{
+        background: 'hsl(var(--card))',
+        borderBottom: '2px solid hsl(var(--foreground))',
+        padding: '14px 16px 12px',
+      }}>
+        {/* top row: label + mode badge + settings */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 800, color: 'hsl(var(--muted-foreground))' }}>
+              {dayLabel}
             </span>
+            <span style={{
+              fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 900,
+              background: 'hsl(var(--foreground))', color: 'hsl(var(--background))',
+              padding: '2px 6px',
+            }}>
+              {modeBadge[budgetMode]}
+            </span>
+          </div>
+          <button
+            onClick={onSettings}
+            className="flex h-6 w-6 items-center justify-center transition-opacity active:opacity-60 hover:opacity-70"
+            style={{ color: 'hsl(var(--muted-foreground))' }}
+          >
+            <Settings2 size={13} strokeWidth={2.2} />
+          </button>
+        </div>
+
+        {/* main amount */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <div>
+            <div style={{
+              fontSize: 36, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1,
+              color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--foreground))',
+            }}>
+              {total > 0
+                ? `${sym} ${(isOver ? over : left).toLocaleString()}`
+                : `${sym} ${spent.toLocaleString()}`
+              }
+            </div>
+            {total > 0 && (
+              <p style={{ fontSize: 11, color: 'hsl(var(--muted-foreground))', marginTop: 2 }}>
+                {isOver ? t('chat.budget.over') : `${t('chat.today.of')} ${sym} ${total.toLocaleString()}`}
+              </p>
+            )}
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))' }}>
+              {t('chat.today.spent')}
+            </p>
+            <p style={{ fontSize: 16, fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: 'hsl(var(--foreground))' }}>
+              {sym}{spent.toLocaleString()}
+            </p>
           </div>
         </div>
 
-        {/* progress bar with inner padding */}
+        {/* progress bar */}
         {total > 0 && (
-          <div
-            className="relative h-[6px] rounded-full overflow-hidden"
-            style={{ background: 'rgba(255,255,255,.2)' }}
-          >
-            <div
-              className="h-full rounded-full transition-all duration-700"
-              style={{
-                width: `${spentPct}%`,
-                background: isOver ? '#FFD166' : 'rgba(255,255,255,.9)',
-              }}
-            />
+          <div style={{ marginTop: 10, height: 3, background: 'hsl(var(--muted))' }}>
+            <div style={{
+              height: '100%',
+              width: `${spentPct}%`,
+              background: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--foreground))',
+              transition: 'width 0.5s ease',
+            }} />
           </div>
         )}
       </div>

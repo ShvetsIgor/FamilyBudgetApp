@@ -172,9 +172,7 @@ export default function ExpensesPage() {
     </div>
   );
 
-  const monthBudget = useAppSelector((s) =>
-    Object.values(s.budget.limits).reduce((acc: number, v) => acc + (v as number), 0)
-  );
+  const monthBudget = useAppSelector((s) => s.ui.budgetMonthlyLimit);
   const budgetPct = monthBudget > 0 ? Math.min(100, Math.round((monthTotal / monthBudget) * 100)) : 0;
 
   return (

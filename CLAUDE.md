@@ -279,6 +279,7 @@ Runtime contract update:
 
 - **2026-06-21** — Refine expense split category picker: new `CategoryFolderPickerSheet` component, updated `FastExpenseEntry` and `CategoriesHub` to use folder-first picker UI, minor `useSplitEditor` fix.
 - **2026-06-21** — Monzo-style card redesign: increased Press theme radius to 24px, shadow-only cards (no borders), bolder transaction typography; fixed phantom recurring income generation after data reset (`recurringIncome/items` now wiped by `resetUserDataExceptCategories`).
+- **2026-06-21** — Architectural design system applied across all pages: flat lists with colored 4px left borders, 44px bold headers with white card background and 2px foreground separator, month bar / search spacing fixed, savings header removed, categories search bar decluttered.
 
 ## Safe Guidance For Future Changes
 

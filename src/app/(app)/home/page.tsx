@@ -347,7 +347,7 @@ export default function HomePage() {
         currency={currency}
         dayLabel={displayLabel}
         budgetMode={budgetMode}
-        onSettings={() => setBudgetSettingsOpen(true)}
+        onSettings={() => router.push('/budget')}
       />
 
       {/* Message groups */}

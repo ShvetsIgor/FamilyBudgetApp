@@ -172,7 +172,10 @@ export default function ExpensesPage() {
     </div>
   );
 
-  const monthBudget = useAppSelector((s) => s.ui.budgetMonthlyLimit);
+  const budgetMode = useAppSelector((s) => s.ui.budgetMode);
+  const budgetMonthlyLimit = useAppSelector((s) => s.ui.budgetMonthlyLimit);
+  // Only show budget bar in monthly mode — auto/daily don't have a meaningful monthly limit here
+  const monthBudget = budgetMode === 'monthly' ? budgetMonthlyLimit : 0;
   const budgetPct = monthBudget > 0 ? Math.min(100, Math.round((monthTotal / monthBudget) * 100)) : 0;
 
   return (

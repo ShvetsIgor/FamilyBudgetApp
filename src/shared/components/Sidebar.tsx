@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   MessageCircle, List, BarChart2,
-  PiggyBank, Repeat2,
+  PiggyBank, Repeat2, Wallet,
   LogOut, UserCircle,
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
@@ -20,6 +20,7 @@ const NAV_SECTIONS = [
     items: [
       { href: '/home', icon: MessageCircle, labelKey: 'nav.chat' },
       { href: '/expenses', icon: List, labelKey: 'nav.transactions' },
+      { href: '/budget', icon: Wallet, labelKey: 'nav.budget' },
       { href: '/analytics', icon: BarChart2, labelKey: 'nav.analytics' },
     ],
   },

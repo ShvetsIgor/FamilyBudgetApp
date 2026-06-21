@@ -22,6 +22,7 @@ const NAV_ITEMS: NavItem[] = [
   { icon: 'piggy',    color: '#E07A5F', labelKey: 'nav.chat',        href: '/home'       },
   { icon: 'receipt',  color: '#8AA9D6', labelKey: 'nav.expenses',    href: '/expenses'   },
   { icon: 'cash',     color: '#81B29A', labelKey: 'nav.income',      href: '/income'     },
+  { icon: 'coin',     color: '#E8442A', labelKey: 'nav.budget',      href: '/budget'     },
   { icon: 'chart_up', color: '#E07A5F', labelKey: 'nav.statistics',  href: '/statistics' },
   { icon: 'chart_up', color: '#81B29A', labelKey: 'nav.analytics',   href: '/analytics'  },
   { icon: 'piggy',    color: '#A48BC9', labelKey: 'nav.savings',     href: '/savings'    },
@@ -127,14 +128,14 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
               key={item.href}
               href={item.href}
               onClick={onClose}
-              className="flex items-center gap-3 rounded-[14px] px-3 py-2.5 transition-colors hover:bg-black/5 active:bg-black/8"
+              className="flex items-center gap-3 rounded-[14px] px-3 py-1.5 transition-colors hover:bg-black/5 active:bg-black/8"
               style={{ color: C.fg, textDecoration: 'none' }}
             >
               <div
-                className="flex h-9 w-9 items-center justify-center rounded-[11px]"
+                className="flex h-8 w-8 items-center justify-center rounded-[10px]"
                 style={{ background: item.color + '18' }}
               >
-                <StickerIcon icon={item.icon} color={item.color} className="h-6 w-6" />
+                <StickerIcon icon={item.icon} color={item.color} className="h-5 w-5" />
               </div>
               <span className="flex-1 text-[14.5px] font-[800]">{t(item.labelKey)}</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2.4" strokeLinecap="round">

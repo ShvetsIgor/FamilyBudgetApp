@@ -283,6 +283,7 @@ Runtime contract update:
 - **2026-06-21** — Fix budget inconsistency: expenses page header now uses `budgetMonthlyLimit` from uiSlice (same source as chat PinnedToday) instead of summing per-category Firestore limits.
 - **2026-06-21** — Remove theme-examples link from desktop sidebar and mobile menu overlay.
 - **2026-06-22** — Fix auto budget mode: displaySpent now uses monthSpent (not todaySpent) since autoDaily is derived from monthSpent; daily mode keeps todaySpent.
+- **2026-06-22** — PinnedToday shows '—' when no budget (auto mode with no income), instead of duplicating the spent amount in the main large number.
 
 ## Safe Guidance For Future Changes
 

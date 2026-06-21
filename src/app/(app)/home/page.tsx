@@ -35,7 +35,6 @@ import { isSlashCommand, handleSlashCommand } from '@/features/chat/bot/slash';
 
 import { ChatScreen } from '@/features/chat/components/ChatScreen';
 import { CategorySheet } from '@/features/chat/components/CategorySheet';
-import { BudgetSettingsSheet } from '@/features/chat/components/BudgetSettingsSheet';
 import { PinnedToday } from '@/features/chat/components/PinnedToday';
 import { DateChip } from '@/features/chat/components/DateChip';
 import { BotBubble, BotCardBubble } from '@/features/chat/components/BotBubble';
@@ -142,7 +141,6 @@ export default function HomePage() {
   const allExpenses = useAppSelector((s) => s.expenses.list);
   const allIncomeCats = useAppSelector((s) => s.categories.income);
   const savingsGoals = useAppSelector((s) => s.savings.list);
-  const [budgetSettingsOpen, setBudgetSettingsOpen] = useState(false);
 
   // Load current month expenses on home mount so todaySpent is accurate
   useEffect(() => {
@@ -492,14 +490,7 @@ export default function HomePage() {
       />
     )}
 
-    {/* Budget settings sheet */}
-    {budgetSettingsOpen && (
-      <BudgetSettingsSheet
-        autoDaily={autoDaily}
-        onClose={() => setBudgetSettingsOpen(false)}
-      />
-    )}
-    </>
+</>
   );
 }
 

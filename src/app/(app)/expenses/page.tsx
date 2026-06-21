@@ -192,14 +192,14 @@ export default function ExpensesPage() {
               {monthTotal > 0 ? '-' : ''}{formatAmount(monthTotal, currency)}
             </div>
             {monthBudget > 0 && (
-              <div style={{ textAlign: 'right' }}>
+              <button onClick={() => router.push('/budget')} style={{ textAlign: 'right' }}>
                 <p style={{ fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))' }}>
                   {t('expenses.budget')}
                 </p>
                 <p style={{ fontSize: 16, fontWeight: 800 }}>
                   {formatAmount(monthBudget, currency)}
                 </p>
-              </div>
+              </button>
             )}
           </div>
           {monthBudget > 0 && (

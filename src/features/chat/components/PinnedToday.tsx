@@ -66,14 +66,11 @@ export function PinnedToday({ spent, total, currency, dayLabel, budgetMode, onSe
               fontSize: 36, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1,
               color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--foreground))',
             }}>
-              {total > 0
-                ? `${sym} ${(isOver ? over : left).toLocaleString()}`
-                : `${sym} ${spent.toLocaleString()}`
-              }
+              {total > 0 ? `${sym} ${(isOver ? over : left).toLocaleString()}` : '—'}
             </div>
             {total > 0 && (
               <p style={{ fontSize: 11, color: 'hsl(var(--muted-foreground))', marginTop: 2 }}>
-                {isOver ? t('chat.budget.over') : `${t('chat.today.of')} ${sym} ${total.toLocaleString()}`}
+                {isOver ? t('chat.budget.over') : `${t('chat.today.of')} ${sym} ${total.toLocaleString()}`}
               </p>
             )}
           </div>
@@ -82,7 +79,7 @@ export function PinnedToday({ spent, total, currency, dayLabel, budgetMode, onSe
               {t('chat.today.spent')}
             </p>
             <p style={{ fontSize: 16, fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: 'hsl(var(--foreground))' }}>
-              {sym}{spent.toLocaleString()}
+              {spent > 0 ? `${sym}${spent.toLocaleString()}` : '—'}
             </p>
           </div>
         </div>

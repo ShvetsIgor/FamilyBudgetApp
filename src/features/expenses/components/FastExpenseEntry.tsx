@@ -464,20 +464,17 @@ export function FastExpenseEntry({
         if (initialStore && initialFolderId) {
           dispatch(recordMerchantContext({ merchant: initialStore, folderId: initialFolderId, date: dateStr }));
         }
-        if (fromChat) {
-          // Link the originating chat bubble to the saved expense
+        // Always record the save in chat so the history stays consistent
+        {
           const { addMessage, updateMessage } = await import('@/features/chat/services/messagesService');
           if (initialUserMsgId) {
             try {
               await updateMessage(user.id, initialUserMsgId, { expenseId: exp.id, status: 'saved' });
             } catch { /* non-blocking */ }
           }
-          // Add bot "split saved" message to chat
           const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
           const sym = symMap[currency] ?? currency;
           const storeLabel = initialStore ? ` · ${initialStore}` : '';
-          // Build optional date hint when the expense date is not today,
-          // so the chat card reflects the actual expense date (Bug 6.1).
           const expenseDate = parseISO(dateStr);
           let dateHint: string | undefined;
           if (!isToday(expenseDate)) {
@@ -510,10 +507,8 @@ export function FastExpenseEntry({
               },
             },
           });
-          router.push('/home');
-        } else {
-          router.push('/expenses');
         }
+        router.push(fromChat ? '/home' : '/expenses');
       }
     } catch {
       setSaving(false);

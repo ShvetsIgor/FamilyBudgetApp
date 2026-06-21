@@ -328,6 +328,7 @@ export function CategoriesHub() {
   const [folderEditor, setFolderEditor] = useState<FolderEditorState>({ open: false });
   const [searchQuery, setSearchQuery] = useState('');
   const [collapsedFolderIds, setCollapsedFolderIds] = useState<Set<string>>(new Set());
+  const [highlightFolderId, setHighlightFolderId] = useState<string | null>(null);
   const initializedCollapseTabs = useRef<Set<CategoryType>>(new Set());
   const [contextMenu, setContextMenu] = useState<ContextMenuTarget | null>(null);
   const [inlineEdit, setInlineEdit] = useState<InlineEditState | null>(null);
@@ -515,8 +516,23 @@ export function CategoriesHub() {
     });
   };
 
+  const revealFolder = (folderId: string) => {
+    setCollapsedFolderIds((prev) => { const n = new Set(prev); n.delete(folderId); return n; });
+    setHighlightFolderId(folderId);
+    setTimeout(() => setHighlightFolderId(null), 1800);
+    setTimeout(() => {
+      document.querySelector(`[data-folder-id="${folderId}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
+  };
+
   const handleInlineCreateFolder = async (name: string) => {
     if (!user) return;
+    const duplicate = folders.find((f) => f.type === tab && namesMatch(f.name, name));
+    if (duplicate) {
+      setInlineEdit(null);
+      revealFolder(duplicate.id);
+      return;
+    }
     const created = await addFolderToDb(user.id, {
       name,
       icon: 'box',
@@ -549,7 +565,8 @@ export function CategoriesHub() {
         )
       );
       if (duplicate) {
-        alert(`Раздел "${rest.name}" уже существует`);
+        setFolderEditor({ open: false });
+        revealFolder(duplicate.id);
         return;
       }
       if (preset) {
@@ -642,8 +659,10 @@ export function CategoriesHub() {
     const isMenuOpen = contextMenu?.kind === 'folder' && contextMenu.id === folder.id;
     const isConfirmDelete = confirmDeleteFolderId === folder.id;
 
+    const isHighlighted = highlightFolderId === folder.id;
+
     return (
-      <div key={folder.id} style={{ marginBottom: 2 }}>
+      <div key={folder.id} data-folder-id={folder.id} style={{ marginBottom: 2 }}>
         {/* Folder header row */}
         <div
           style={{
@@ -655,7 +674,9 @@ export function CategoriesHub() {
             minHeight: 48,
             cursor: 'pointer',
             borderRadius: 14,
-            backgroundColor: isMenuOpen ? T.bgSoft : 'transparent',
+            backgroundColor: isHighlighted ? T.primary + '18' : isMenuOpen ? T.bgSoft : 'transparent',
+            outline: isHighlighted ? `2px solid ${T.primary}55` : undefined,
+            transition: 'background-color 0.3s ease, outline 0.3s ease',
             position: 'relative',
           }}
         >

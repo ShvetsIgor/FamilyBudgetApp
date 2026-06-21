@@ -28,7 +28,6 @@ const NAV_ITEMS: NavItem[] = [
   { icon: 'refund',   color: '#F2CC8F', labelKey: 'nav.recurring',   href: '/recurring'  },
   { icon: 'book',     color: '#D4A574', labelKey: 'nav.categories',  href: '/categories' },
   { icon: 'wrench',   color: '#8E7A66', labelKey: 'nav.settings',    href: '/account'    },
-  { icon: 'book',     color: '#E8442A', labelKey: 'nav.themeExamples', href: '/theme-examples' },
 ];
 
 interface MenuOverlayProps {

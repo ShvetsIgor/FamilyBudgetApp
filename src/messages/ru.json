@@ -146,6 +146,8 @@
     "addMore": "+ Добавить доход",
     "confirmDelete": "Удалить этот доход?",
     "record": "Записать",
+    "edit": "Редактировать доход",
+    "recurringDay": "числа",
     "recurring": "Ежемесячный доход",
     "recurringHint": "автоматически добавится каждый месяц",
     "numpadSave": "Записать доход {symbol}{total}",

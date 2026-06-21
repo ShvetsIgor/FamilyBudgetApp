@@ -34,7 +34,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
-  const allCats = useAppSelector((s) => s.categories.income); // includes archived for ID resolution
+  const allCats = useAppSelector((s) => s.categories.income);
   const displayCats = useAppSelector((s) => selectAllActiveCategories(s, 'income'));
   const t = useT();
   const symbol = getCurrencySymbol(currency);
@@ -55,11 +55,14 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
 
   function tap(key: NumKey) { setAmount((cur) => applyKey(cur, key)); }
 
+  function goBack() { window.history.length > 1 ? router.back() : router.replace('/income'); }
+
   async function handleSave() {
     if (!user || amountNum <= 0 || saving) return;
     setSaving(true);
     try {
       const date = new Date(dateStr);
+
       if (initialIncome) {
         const updated = await updateIncomeService({
           userId: user.id, id: initialIncome.id, amount: amountNum, currency,
@@ -68,16 +71,15 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
           tags: initialIncome.tags,
         });
         dispatch(updateIncome(updated));
-        window.history.length > 1 ? router.back() : router.replace('/income');
+        goBack();
         return;
       }
+
       if (isRecurring) {
         const today = new Date(); today.setHours(0, 0, 0, 0);
         const recurDate = new Date(dateStr); recurDate.setHours(0, 0, 0, 0);
         const isFuture = recurDate > today;
         const dayNum = recurDate.getDate();
-
-        // Compute next monthly due date after recurDate
         const nm = recurDate.getMonth() === 11 ? 0 : recurDate.getMonth() + 1;
         const ny = recurDate.getMonth() === 11 ? recurDate.getFullYear() + 1 : recurDate.getFullYear();
         const daysInNext = new Date(ny, nm + 1, 0).getDate();
@@ -90,11 +92,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
           userId: user.id, name: catName, amount: amountNum, currency,
           categoryId, dayOfMonth: dayNum, nextDueDate: nextDue,
         });
-
-        if (isFuture) {
-          window.history.length > 1 ? router.back() : router.replace('/income');
-          return;
-        }
+        if (isFuture) { goBack(); return; }
       }
 
       const income = await addIncome({
@@ -103,7 +101,38 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
         tags: isRecurring ? ['recurring'] : [],
       });
       dispatch(prependIncome(income));
-      window.history.length > 1 ? router.back() : router.replace('/income');
+
+      // Record in chat
+      const { addMessage } = await import('@/features/chat/services/messagesService');
+      const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
+      const sym = symMap[currency] ?? currency;
+      const expenseDate = parseISO(dateStr);
+      let dateHint: string | undefined;
+      if (!isToday(expenseDate)) {
+        dateHint = isYesterday(expenseDate) ? 'вчера' : format(expenseDate, 'd MMMM', { locale: ru });
+      }
+      await addMessage({
+        userId: user.id,
+        senderId: 'bot',
+        kind: 'bot',
+        text: `Доход · ${t.cat(category?.name ?? '')} · +${sym} ${amountNum}`,
+        status: 'saved',
+        card: {
+          kind: 'saved',
+          data: {
+            icon: category?.icon ?? 'cash',
+            color: catColor,
+            title: t.cat(category?.name ?? t('income.title')),
+            catName: null,
+            groupName: null,
+            hint: dateHint,
+            amount: amountNum,
+            currency: sym,
+          },
+        },
+      });
+
+      goBack();
     } catch {
       setSaving(false);
     }
@@ -127,18 +156,19 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
 
       {/* ── Top bar ── */}
       <div className="flex items-center gap-2 px-4 pt-1 pb-0.5 flex-shrink-0">
-        <button onClick={() => window.history.length > 1 ? router.back() : router.replace('/income')} className="p-1.5 rounded-full hover:bg-muted transition-colors">
+        <button onClick={goBack} className="p-1.5 rounded-full hover:bg-muted transition-colors">
           <X className="h-4 w-4" />
         </button>
         <div className="flex-1 text-center text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">
-          {t('income.title')}
+          {initialIncome ? t('income.edit') : t('income.title')}
         </div>
         <div className="w-8" />
       </div>
 
       {/* ── Amount row ── */}
       <div
-        className="mx-4 px-4 py-1.5 rounded-[18px] flex items-baseline justify-between flex-shrink-0 border-[1.5px] border-primary bg-primary/10"
+        className="mx-4 px-4 py-1.5 rounded-[18px] flex items-baseline justify-between flex-shrink-0 border-[1.5px]"
+        style={{ background: catColor + '14', borderColor: catColor + '55' }}
       >
         <span className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">
           {t('income.amount')}
@@ -151,56 +181,38 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
         </div>
       </div>
 
-      {/* ── Category grid ── */}
-      <div className="px-3.5 py-1.5 flex-shrink-0">
-        <div className="flex flex-wrap gap-1.5">
-          {displayCats.map((cat) => {
-            const sel = cat.id === categoryId;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setCategoryId(cat.id)}
-                className="w-[64px] h-[46px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all border-0"
-                style={{
-                  background: sel ? cat.color : 'hsl(var(--card))',
-                  boxShadow: sel ? `0 3px 8px ${cat.color}55` : '0 1px 3px rgba(61,44,31,.06)',
-                }}
+      {/* ── Scrollable section ── */}
+      <div className="flex-1 overflow-y-auto px-4 py-2 flex flex-col gap-1.5 min-h-0 [scrollbar-width:none]">
+
+        {/* Category list — flat left-border rows */}
+        {displayCats.map((cat) => {
+          const sel = cat.id === categoryId;
+          return (
+            <button
+              key={cat.id}
+              onClick={() => setCategoryId(cat.id)}
+              className="flex items-center gap-3 pl-3 pr-4 py-3 text-left transition-colors flex-shrink-0"
+              style={{
+                borderLeft: `4px solid ${sel ? cat.color : 'transparent'}`,
+                background: sel ? cat.color + '0e' : 'hsl(var(--card))',
+                boxShadow: '0 1px 2px rgba(61,44,31,.05)',
+              }}
+            >
+              <div
+                className="h-9 w-9 rounded-[12px] flex items-center justify-center flex-shrink-0"
+                style={{ background: cat.color + '22' }}
               >
-                <StickerIcon icon={cat.icon} color={sel ? '#fff' : cat.color} className="h-4 w-4" />
-                <span
-                  className="text-[9px] font-extrabold leading-tight text-center px-0.5 line-clamp-1"
-                  style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}
-                >
-                  {t.cat(cat.name)}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ── Scrollable middle (category card + recurring) ── */}
-      <div className="flex-1 overflow-y-auto px-4 pb-2 flex flex-col gap-1.5 min-h-0 [scrollbar-width:none]">
-
-        {/* Selected category summary row */}
-        <div
-          className="bg-card rounded-[14px] p-3 flex items-center gap-3 flex-shrink-0"
-          style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}
-        >
-          <div
-            className="h-10 w-10 rounded-[12px] flex items-center justify-center flex-shrink-0"
-            style={{ background: catColor + '20' }}
-          >
-            <StickerIcon icon={category?.icon ?? 'cash'} color={catColor} className="h-6 w-6" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-extrabold text-foreground">{t.cat(category?.name ?? '')}</div>
-            <div className="text-[11px] text-muted-foreground font-semibold mt-0.5">Доход</div>
-          </div>
-          <span className="text-lg font-black text-emerald-500 tabular-nums">
-            +{symbol}{'\u202F'}{amount}
-          </span>
-        </div>
+                <StickerIcon icon={cat.icon} color={cat.color} className="h-5 w-5" />
+              </div>
+              <span className="flex-1 text-sm font-extrabold text-foreground">{t.cat(cat.name)}</span>
+              {sel && (
+                <div className="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: cat.color }}>
+                  <div className="h-2 w-2 rounded-full bg-white" />
+                </div>
+              )}
+            </button>
+          );
+        })}
 
         {/* Date row */}
         <div className="rounded-[14px] overflow-hidden flex-shrink-0" style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}>
@@ -258,61 +270,50 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
           )}
         </div>
 
-        {/* Recurring section */}
-        <div
-          className="rounded-[14px] overflow-hidden flex-shrink-0"
-          style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}
-        >
-          {/* Toggle row */}
-          <button
-            onClick={() => setIsRecurring((v) => !v)}
-            className="w-full flex items-center justify-between px-3.5 py-3 transition-all"
-            style={{
-              background: isRecurring ? catColor + '14' : 'hsl(var(--card))',
-            }}
-          >
-            <div className="flex items-center gap-2.5">
-              <span className="text-base leading-none">🔄</span>
-              <div className="text-left">
-                <p
-                  className="text-[12.5px] font-[800] leading-tight"
-                  style={{ color: isRecurring ? catColor : 'hsl(var(--foreground))' }}
-                >
-                  {t('income.recurring')}
-                </p>
-                {!isRecurring && (
-                  <p className="text-[10px] font-[600] mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    {t('income.recurringHint')}
+        {/* Recurring toggle */}
+        {!initialIncome && (
+          <div className="rounded-[14px] overflow-hidden flex-shrink-0" style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}>
+            <button
+              onClick={() => setIsRecurring((v) => !v)}
+              className="w-full flex items-center justify-between px-3.5 py-3 transition-all"
+              style={{ background: isRecurring ? catColor + '14' : 'hsl(var(--card))' }}
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="text-base leading-none">🔄</span>
+                <div className="text-left">
+                  <p className="text-[12.5px] font-[800] leading-tight" style={{ color: isRecurring ? catColor : 'hsl(var(--foreground))' }}>
+                    {t('income.recurring')}
                   </p>
-                )}
+                  {!isRecurring && (
+                    <p className="text-[10px] font-[600] mt-0.5 text-muted-foreground">
+                      {t('income.recurringHint')}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-            <div
-              className="relative h-5 w-9 rounded-full transition-colors flex-shrink-0"
-              style={{ background: isRecurring ? catColor : 'hsl(var(--muted))' }}
-            >
-              <span
-                className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all"
-                style={{ left: isRecurring ? 18 : 2 }}
-              />
-            </div>
-          </button>
-
-          {/* Recurring info — shows date from calendar */}
-          {isRecurring && (
-            <div
-              className="px-3.5 py-3 flex items-center justify-between"
-              style={{ background: catColor + '0a', borderTop: `1px solid ${catColor}22` }}
-            >
-              <p className="text-[12px] font-[700]" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                Зачислять каждое
-              </p>
-              <span className="text-[14px] font-extrabold tabular-nums" style={{ color: catColor }}>
-                {new Date(dateStr).getDate()} число
-              </span>
-            </div>
-          )}
-        </div>
+              <div
+                className="relative h-5 w-9 rounded-full transition-colors flex-shrink-0"
+                style={{ background: isRecurring ? catColor : 'hsl(var(--muted))' }}
+              >
+                <span
+                  className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all"
+                  style={{ left: isRecurring ? 18 : 2 }}
+                />
+              </div>
+            </button>
+            {isRecurring && (
+              <div
+                className="px-3.5 py-3 flex items-center justify-between"
+                style={{ background: catColor + '0a', borderTop: `1px solid ${catColor}22` }}
+              >
+                <p className="text-[12px] font-[700] text-muted-foreground">Зачислять каждое</p>
+                <span className="text-[14px] font-extrabold tabular-nums" style={{ color: catColor }}>
+                  {new Date(dateStr).getDate()} число
+                </span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── Payment method chips ── */}
@@ -355,22 +356,21 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
         ))}
       </div>
 
-      {/* ── Save bar ── */}
+      {/* ── Save button ── */}
       <div className="px-4 pt-1.5 flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
         <button
           onClick={handleSave}
           disabled={saving || amountNum <= 0}
-          className="w-full py-[12px] rounded-[16px] flex items-center justify-center gap-2 text-[14px] font-black text-white transition-opacity disabled:opacity-50 border-0"
-          style={{ background: catColor, boxShadow: `0 12px 24px ${catColor}60` }}
+          className="w-full py-[14px] rounded-[16px] flex items-center justify-center gap-2 text-[15px] font-black text-white transition-opacity disabled:opacity-40 border-0"
+          style={{ background: saving ? '#18A957' : catColor }}
         >
-          <StickerIcon icon={category?.icon ?? 'cash'} color="#fff" className="h-5 w-5" />
-          <span>
-            {saving
-              ? t('common.saving')
-              : isRecurring
-                ? `${t('income.record')} · ${symbol}\u202F${amount} · ${new Date(dateStr).getDate()} число`
-                : `${t('income.record')} ${symbol}\u202F${amount}`}
-          </span>
+          {saving ? (
+            <span>✓ {t('common.saving')}</span>
+          ) : isRecurring ? (
+            <span>+{symbol} {amount} · {new Date(dateStr).getDate()} {t('income.recurringDay')}</span>
+          ) : (
+            <span>+{symbol} {amount}</span>
+          )}
         </button>
       </div>
 

@@ -144,6 +144,8 @@
     "addMore": "+ Add income",
     "confirmDelete": "Delete this income entry?",
     "record": "Record",
+    "edit": "Edit Income",
+    "recurringDay": "of month",
     "recurring": "Monthly income",
     "recurringHint": "will be added automatically each month",
     "numpadSave": "Record income {symbol}{total}",

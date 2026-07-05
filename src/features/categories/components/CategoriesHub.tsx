@@ -8,6 +8,7 @@ import {
   setCategories, setFolders,
 } from '@/features/categories/store/categoriesSlice';
 import { setBudgetLimit } from '@/features/budget/store/budgetSlice';
+import { normalizeNameKey } from '@/shared/utils/normalizeName';
 import {
   addCategory as addCategoryToDb,
   addCategoryWithId,
@@ -361,12 +362,11 @@ export function CategoriesHub() {
   const existingCategoryIds = new Set(allCategories.map((c) => c.id));
   const existingFolderIds = new Set(folders.map((f) => f.id));
 
-  const normalizeLabel = (value: string) => value.trim().toLowerCase();
-  const namesMatch = (left: string, right: string) => normalizeLabel(left) === normalizeLabel(right);
+  const namesMatch = (left: string, right: string) => normalizeNameKey(left) === normalizeNameKey(right);
   const dedupeFoldersByName = (items: CategoryFolder[]) => {
     const seen = new Set<string>();
     return items.filter((folder) => {
-      const key = normalizeLabel(folder.name);
+      const key = normalizeNameKey(folder.name);
       if (seen.has(key)) return false;
       seen.add(key);
       return true;

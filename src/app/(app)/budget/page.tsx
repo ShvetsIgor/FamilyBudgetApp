@@ -43,8 +43,10 @@ export default function BudgetPage() {
   const [localDaily, setLocalDaily] = useState(dailyLimit > 0 ? String(dailyLimit) : '');
   const [localMonthly, setLocalMonthly] = useState(monthlyLimit > 0 ? String(monthlyLimit) : '');
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   async function handleSave() {
+    setSaveError(false);
     dispatch(setBudgetMode(localMode));
     if (localMode === 'daily') dispatch(setBudgetDailyLimit(Number(localDaily) || 0));
     if (localMode === 'monthly') dispatch(setBudgetMonthlyLimit(Number(localMonthly) || 0));
@@ -52,7 +54,13 @@ export default function BudgetPage() {
       const patch: Record<string, unknown> = { budgetMode: localMode };
       if (localMode === 'daily') patch.budgetDailyLimit = Number(localDaily) || 0;
       if (localMode === 'monthly') patch.budgetMonthlyLimit = Number(localMonthly) || 0;
-      await updateDoc(doc(getDb(), 'users', user.id), patch).catch(() => {});
+      try {
+        await updateDoc(doc(getDb(), 'users', user.id), patch);
+      } catch {
+        // Local state is already updated; surface the failed remote sync instead of faking success
+        setSaveError(true);
+        return;
+      }
     }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -135,7 +143,7 @@ export default function BudgetPage() {
                   </div>
                   {active && key === 'auto' && autoDaily > 0 && (
                     <span style={{ fontSize: 18, fontWeight: 900, fontVariantNumeric: 'tabular-nums', color: 'hsl(var(--primary))' }}>
-                      {sym}{autoDaily.toLocaleString()}/д
+                      {sym}{autoDaily.toLocaleString()}{t('budget.perDayShort')}
                     </span>
                   )}
                   {!active && (
@@ -169,7 +177,7 @@ export default function BudgetPage() {
               />
               {Number(localDaily) > 0 && (
                 <p style={{ fontSize: 11, color: 'hsl(var(--muted-foreground))', marginTop: 4 }}>
-                  ≈ {formatAmount(Number(localDaily) * daysInMonth, currency)} / мес
+                  ≈ {formatAmount(Number(localDaily) * daysInMonth, currency)} {t('budget.perMonth')}
                 </p>
               )}
             </div>
@@ -192,7 +200,7 @@ export default function BudgetPage() {
               />
               {Number(localMonthly) > 0 && (
                 <p style={{ fontSize: 11, color: 'hsl(var(--muted-foreground))', marginTop: 4 }}>
-                  ≈ {formatAmount(Math.round(Number(localMonthly) / daysInMonth), currency)} / день
+                  ≈ {formatAmount(Math.round(Number(localMonthly) / daysInMonth), currency)} {t('budget.perDay')}
                 </p>
               )}
             </div>
@@ -201,20 +209,20 @@ export default function BudgetPage() {
           {localMode === 'auto' && (
             <div className="border-b border-border/30 pb-4">
               <p style={{ fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700, color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
-                Авторасчёт
+                {t('budget.autoCalc')}
               </p>
               {monthIncome > 0 ? (
                 <div className="flex flex-col gap-1">
                   <p style={{ fontSize: 13, color: 'hsl(var(--muted-foreground))' }}>
-                    ({formatAmount(monthIncome, currency)} доход − {formatAmount(monthSpent, currency)} потрачено) ÷ {remainingDays} дн.
+                    {t('budget.autoFormula', { income: formatAmount(monthIncome, currency), spent: formatAmount(monthSpent, currency), days: remainingDays })}
                   </p>
                   <p style={{ fontSize: 24, fontWeight: 900, color: 'hsl(var(--foreground))' }}>
-                    = {sym}{autoDaily.toLocaleString()} / день
+                    = {sym}{autoDaily.toLocaleString()} {t('budget.perDay')}
                   </p>
                 </div>
               ) : (
                 <p style={{ fontSize: 13, color: 'hsl(var(--muted-foreground))' }}>
-                  Нет дохода за этот месяц. Добавьте доход на вкладке Доходы — и бюджет посчитается автоматически.
+                  {t('budget.noIncome')}
                 </p>
               )}
             </div>
@@ -226,8 +234,13 @@ export default function BudgetPage() {
             className="w-full rounded-2xl py-3.5 text-[15px] font-[700] transition-opacity active:opacity-70"
             style={{ background: saved ? '#18A957' : 'hsl(var(--primary))', color: '#fff' }}
           >
-            {saved ? '✓ Сохранено' : t('chat.budget.settings.save')}
+            {saved ? `✓ ${t('home.saved')}` : t('chat.budget.settings.save')}
           </button>
+          {saveError && (
+            <p style={{ fontSize: 12, color: 'hsl(var(--destructive))', textAlign: 'center' }}>
+              {t('budget.saveError')}
+            </p>
+          )}
 
         </div>
       </div>

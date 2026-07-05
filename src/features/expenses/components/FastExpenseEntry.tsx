@@ -14,7 +14,7 @@ import { CategoryIcon, StickerIcon } from '@/features/categories/components/Cate
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
-import { normalizeName } from '@/shared/utils/normalizeName';
+import { normalizeName, normalizeNameKey } from '@/shared/utils/normalizeName';
 import type { Category, SerializableExpense, SplitItem } from '@/shared/types';
 import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
 import { recordExpense, recordSplitExpense, recordTagAssociation, recordMerchantContext, extractTags, normalizeTag } from '@/features/expenses/store/suggestionMemorySlice';
@@ -472,23 +472,22 @@ export function FastExpenseEntry({
               await updateMessage(user.id, initialUserMsgId, { expenseId: exp.id, status: 'saved' });
             } catch { /* non-blocking */ }
           }
-          const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
-          const sym = symMap[currency] ?? currency;
+          const sym = symbol;
           const storeLabel = initialStore ? ` · ${initialStore}` : '';
           const expenseDate = parseISO(dateStr);
           let dateHint: string | undefined;
           if (!isToday(expenseDate)) {
             dateHint = isYesterday(expenseDate)
-              ? 'вчера'
+              ? t('common.yesterday')
               : format(expenseDate, 'd MMMM', { locale: ru });
           }
-          const splitHint = posCount > 1 ? `сплит · ${posCount} поз.` : undefined;
+          const splitHint = posCount > 1 ? `${t('expense.split2')} · ${fmtCount(posCount)}` : undefined;
           const combinedHint = [dateHint, splitHint].filter(Boolean).join(' · ') || undefined;
           await addMessage({
             userId: user.id,
             senderId: 'bot',
             kind: 'bot',
-            text: `Сохранено${storeLabel} · ${sym}\u202F${totalNum}`,
+            text: `${t('home.saved')}${storeLabel} · ${sym}\u202F${totalNum}`,
             status: 'saved',
             expenseId: exp.id,
             card: {
@@ -919,10 +918,18 @@ export function FastExpenseEntry({
       onSave={async (data: Omit<CategoryFolder, 'id' | 'userId'> & { id?: string }) => {
         if (!user) return;
         const { id: _id, ...rest } = data;
-        const newFolder = await addFolderToDb(user.id, rest);
-        dispatch(addFolderAction(newFolder));
-        setNewCategoryFolderId(newFolder.id);
-        setActiveFolderId(newFolder.id);
+        // Reuse an existing folder with the same name instead of creating a duplicate
+        const duplicate = folderGroups.find((g) => normalizeNameKey(g.name) === normalizeNameKey(rest.name));
+        let folderId: string;
+        if (duplicate) {
+          folderId = duplicate.id;
+        } else {
+          const newFolder = await addFolderToDb(user.id, rest);
+          dispatch(addFolderAction(newFolder));
+          folderId = newFolder.id;
+        }
+        setNewCategoryFolderId(folderId);
+        setActiveFolderId(folderId);
         setSelectedCatId('');
         setCategorySheetMode(returnToCategorySheetMode ?? entryMode);
         setReturnToCategorySheetMode(null);

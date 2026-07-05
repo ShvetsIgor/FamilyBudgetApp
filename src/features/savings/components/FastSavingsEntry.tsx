@@ -97,18 +97,18 @@ export function FastSavingsEntry() {
 
       // Record in chat
       const { addMessage } = await import('@/features/chat/services/messagesService');
-      const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
-      const sym = symMap[currency] ?? currency;
+      // The contribution is stored in the goal's currency, so the card must use it too
+      const sym = getCurrencySymbol(selectedGoal.currency);
       const expenseDate = parseISO(dateStr);
       let dateHint: string | undefined;
       if (!isToday(expenseDate)) {
-        dateHint = isYesterday(expenseDate) ? 'вчера' : format(expenseDate, 'd MMMM', { locale: ru });
+        dateHint = isYesterday(expenseDate) ? t('common.yesterday') : format(expenseDate, 'd MMMM', { locale: ru });
       }
       await addMessage({
         userId: user.id,
         senderId: 'bot',
         kind: 'bot',
-        text: `Копилка · ${selectedGoal.name} · ${sym} ${amountNum}`,
+        text: `${t('savings.chatLabel')} · ${selectedGoal.name} · ${sym} ${amountNum}`,
         status: 'saved',
         expenseId: exp.id,
         card: {

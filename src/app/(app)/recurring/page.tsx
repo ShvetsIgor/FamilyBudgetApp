@@ -45,6 +45,7 @@ import type { Currency } from '@/shared/types';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { MiniCalendar } from '@/shared/components/MiniCalendar';
 import { cn } from '@/shared/utils/cn';
+import { normalizeNameKey } from '@/shared/utils/normalizeName';
 import { useT } from '@/shared/hooks/useT';
 import type {
   Category,
@@ -86,9 +87,6 @@ function toLocalNoon(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0, 0);
 }
 
-function normalizeLabel(value: string): string {
-  return value.trim().toLowerCase();
-}
 
 type FormMode = { mode: 'add' } | { mode: 'edit'; item: SerializableRecurringPayment };
 
@@ -482,7 +480,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
     const { presetId, ...rest } = data;
     const preset = findFolderBlueprint('expense', { id: presetId, name: rest.name });
     const existing = expenseFolders.find((folder) => (
-      folder.id === preset?.id || normalizeLabel(folder.name) === normalizeLabel(rest.name)
+      folder.id === preset?.id || normalizeNameKey(folder.name) === normalizeNameKey(rest.name)
     ));
     if (existing) {
       setSelectedGroupId(existing.id);
@@ -518,7 +516,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
     const { presetId, ...rest } = data;
     const preset = findCategoryBlueprint('expense', { id: presetId, name: rest.name });
     const existing = allExpCats.find((entry) => !entry.archived && (
-      entry.id === preset?.id || normalizeLabel(entry.name) === normalizeLabel(rest.name)
+      entry.id === preset?.id || normalizeNameKey(entry.name) === normalizeNameKey(rest.name)
     ));
 
     if (existing) {

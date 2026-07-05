@@ -132,11 +132,14 @@ export default function HomePage() {
   })();
 
   // PinnedToday display values
-  // auto/monthly both track month-level spending since autoDaily is derived from monthSpent
-  // daily mode tracks today only
+  // daily mode tracks today vs the daily limit;
+  // monthly/auto track the month, so spent and total must both be month-scale
+  // (auto's effective month budget is monthIncome — same as /budget page)
   const displaySpent = budgetMode === 'daily' ? todaySpent : monthSpent;
-  const displayTotal = budgetMode === 'monthly' ? budgetMonthlyLimit : dailyBudget;
-  const displayLabel = budgetMode === 'monthly' ? t('chat.today.monthLabel') : t('chat.today.budgetLabel');
+  const displayTotal = budgetMode === 'daily' ? dailyBudget
+    : budgetMode === 'monthly' ? budgetMonthlyLimit
+    : monthIncome;
+  const displayLabel = budgetMode === 'daily' ? t('chat.today.budgetLabel') : t('chat.today.monthLabel');
 
   const allExpenses = useAppSelector((s) => s.expenses.list);
   const allIncomeCats = useAppSelector((s) => s.categories.income);

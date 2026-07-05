@@ -151,7 +151,8 @@
     "numpadSave": "Record income {symbol}{total}",
     "numpadSaving": "Saving…",
     "numpadCancel": "Cancel",
-    "numpadToday": "Today"
+    "numpadToday": "Today",
+    "chatLabel": "Income"
   },
   "expenses": {
     "title": "Expenses",
@@ -201,7 +202,15 @@
     "avgDay": "Avg daily spend",
     "avgDayByMonth": "Avg daily by month",
     "months": "mo",
-    "dow": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    "dow": [
+      "Sun",
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat"
+    ]
   },
   "account": {
     "title": "Account",
@@ -340,7 +349,8 @@
     "numpadSaving": "Saving…",
     "numpadCancel": "Cancel",
     "numpadCreate": "Create · {name} · {symbol}{target}",
-    "numpadCreateHint": "Enter name and amount"
+    "numpadCreateHint": "Enter name and amount",
+    "chatLabel": "Savings"
   },
   "categories": {
     "title": "Categories",
@@ -652,5 +662,14 @@
     "step3": "3. Set category budgets in account settings",
     "open": "Open app",
     "saving": "Saving…"
+  },
+  "budget": {
+    "autoCalc": "Auto calculation",
+    "autoFormula": "({income} income − {spent} spent) ÷ {days} d",
+    "perDay": "/ day",
+    "perDayShort": "/d",
+    "perMonth": "/ mo",
+    "noIncome": "No income this month yet. Add income on the Income tab and the budget will be calculated automatically.",
+    "saveError": "Couldn't save — check your connection and try again."
   }
 }

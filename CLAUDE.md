@@ -277,6 +277,12 @@ Runtime contract update:
 
 ## Change Log
 
+- **2026-07-05** — Code-review fix pass: auto budget mode in PinnedToday now compares month spend vs month income (was month spend vs per-day allowance); split-flow folder creation reuses an existing same-name folder instead of duplicating; `/budget` save surfaces Firestore write failures instead of showing fake success; savings chat card uses the goal's currency symbol; future-dated recurring income records a chat confirmation card; income save requires an active category; hardcoded RU strings in budget/income/savings/expense chat cards localized (new `budget.*` / `chatLabel` keys); inline currency `symMap` copies replaced by `getCurrencySymbol`; folder-name matching unified on `normalizeNameKey`; dead `BudgetSettingsSheet.tsx` deleted.
+- **2026-06-22** — Folder duplicate check: creating a folder with an existing name closes the editor and scrolls/highlights the existing folder instead of creating a duplicate.
+- **2026-06-22** — Redesign income entry form: flat left-border category list, category-color amount box, bot card recorded in chat on save, no glow on save button.
+- **2026-06-22** — Redesign savings contribution form: flat left-border goal list, primary-color save button, records bot card in chat on save.
+- **2026-06-22** — Expense saved via `+` in expenses tab now writes a bot card to chat history; navigation stays on `/expenses`.
+- **2026-06-22** — Remove dead `BudgetSettingsSheet` from home page; budget bar in expenses page is now a tappable link to `/budget`.
 - **2026-06-22** — Add unified `/budget` page (mode selector, limit inputs, live bar, Firestore save); added to burger menu and desktop sidebar; PinnedToday gear navigates to `/budget`; burger nav item height reduced to fit 10 items without scrolling.
 - **2026-06-21** — Refine expense split category picker: new `CategoryFolderPickerSheet` component, updated `FastExpenseEntry` and `CategoriesHub` to use folder-first picker UI, minor `useSplitEditor` fix.
 - **2026-06-21** — Monzo-style card redesign: increased Press theme radius to 24px, shadow-only cards (no borders), bolder transaction typography; fixed phantom recurring income generation after data reset (`recurringIncome/items` now wiped by `resetUserDataExceptCategories`).

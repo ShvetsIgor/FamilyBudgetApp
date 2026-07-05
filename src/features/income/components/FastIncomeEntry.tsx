@@ -57,8 +57,33 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
 
   function goBack() { window.history.length > 1 ? router.back() : router.replace('/income'); }
 
+  async function recordIncomeInChat(hint: string | undefined) {
+    if (!user) return;
+    const { addMessage } = await import('@/features/chat/services/messagesService');
+    await addMessage({
+      userId: user.id,
+      senderId: 'bot',
+      kind: 'bot',
+      text: `${t('income.chatLabel')} · ${t.cat(category?.name ?? '')} · +${symbol} ${amountNum}`,
+      status: 'saved',
+      card: {
+        kind: 'saved',
+        data: {
+          icon: category?.icon ?? 'cash',
+          color: catColor,
+          title: t.cat(category?.name ?? t('income.title')),
+          catName: null,
+          groupName: null,
+          hint,
+          amount: amountNum,
+          currency: symbol,
+        },
+      },
+    });
+  }
+
   async function handleSave() {
-    if (!user || amountNum <= 0 || saving) return;
+    if (!user || amountNum <= 0 || !category || saving) return;
     setSaving(true);
     try {
       const date = new Date(dateStr);
@@ -92,7 +117,12 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
           userId: user.id, name: catName, amount: amountNum, currency,
           categoryId, dayOfMonth: dayNum, nextDueDate: nextDue,
         });
-        if (isFuture) { goBack(); return; }
+        if (isFuture) {
+          // Future-dated recurring income: no income row yet, but still confirm in chat
+          await recordIncomeInChat(`${t('income.recurring')} · ${format(recurDate, 'd MMMM', { locale: ru })}`);
+          goBack();
+          return;
+        }
       }
 
       const income = await addIncome({
@@ -103,34 +133,12 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
       dispatch(prependIncome(income));
 
       // Record in chat
-      const { addMessage } = await import('@/features/chat/services/messagesService');
-      const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
-      const sym = symMap[currency] ?? currency;
-      const expenseDate = parseISO(dateStr);
+      const incomeDate = parseISO(dateStr);
       let dateHint: string | undefined;
-      if (!isToday(expenseDate)) {
-        dateHint = isYesterday(expenseDate) ? 'вчера' : format(expenseDate, 'd MMMM', { locale: ru });
+      if (!isToday(incomeDate)) {
+        dateHint = isYesterday(incomeDate) ? t('common.yesterday') : format(incomeDate, 'd MMMM', { locale: ru });
       }
-      await addMessage({
-        userId: user.id,
-        senderId: 'bot',
-        kind: 'bot',
-        text: `Доход · ${t.cat(category?.name ?? '')} · +${sym} ${amountNum}`,
-        status: 'saved',
-        card: {
-          kind: 'saved',
-          data: {
-            icon: category?.icon ?? 'cash',
-            color: catColor,
-            title: t.cat(category?.name ?? t('income.title')),
-            catName: null,
-            groupName: null,
-            hint: dateHint,
-            amount: amountNum,
-            currency: sym,
-          },
-        },
-      });
+      await recordIncomeInChat(dateHint);
 
       goBack();
     } catch {
@@ -360,7 +368,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
       <div className="px-4 pt-1.5 flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
         <button
           onClick={handleSave}
-          disabled={saving || amountNum <= 0}
+          disabled={saving || amountNum <= 0 || !category}
           className="w-full py-[14px] rounded-[16px] flex items-center justify-center gap-2 text-[15px] font-black text-white transition-opacity disabled:opacity-40 border-0"
           style={{ background: saving ? '#18A957' : catColor }}
         >

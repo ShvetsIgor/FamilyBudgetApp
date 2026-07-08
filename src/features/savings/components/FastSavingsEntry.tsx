@@ -10,11 +10,11 @@ import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setGoals, updateGoalItem } from '@/features/savings/store/savingsSlice';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
 import { addCategory as addCategoryRedux } from '@/features/categories/store/categoriesSlice';
-import { addContribution, fetchGoals } from '@/features/savings/services/savingsService';
+import { fetchGoals } from '@/features/savings/services/savingsService';
 import { getCurrencySymbol, formatAmount } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
 import { applyKey } from '@/features/expenses/hooks/useSplitEditor';
-import { addSavingsExpenseForContribution } from '@/features/savings/services/savingsExpenseService';
+import { addContributionWithExpense } from '@/features/savings/services/savingsExpenseService';
 import { recordSavedCard, buildEntryDateHint } from '@/features/chat/services/savedCardService';
 import type { SavingsGoal } from '@/shared/types';
 
@@ -71,14 +71,13 @@ export function FastSavingsEntry() {
     if (!user || amountNum <= 0 || !selectedGoal || saving) return;
     setSaving(true);
     try {
-      const updated = await addContribution(user.id, selectedGoal, { amount: amountNum });
-      dispatch(updateGoalItem(updated));
-
-      const { expense: exp, createdCategory } = await addSavingsExpenseForContribution({
+      // Contribution + expense land in one atomic WriteBatch
+      const { goal: updated, expense: exp, createdCategory } = await addContributionWithExpense({
         userId: user.id, goal: selectedGoal, amount: amountNum, date: new Date(dateStr),
         label: t('savings.expenseLabel'), note: comment.trim() || undefined,
         expenseCategories,
       });
+      dispatch(updateGoalItem(updated));
       if (createdCategory) dispatch(addCategoryRedux(createdCategory));
       dispatch(prependExpense(exp));
 

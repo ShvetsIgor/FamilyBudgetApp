@@ -1,6 +1,7 @@
 import {
   collection, doc, addDoc, updateDoc, deleteDoc,
   getDocs, query, orderBy, serverTimestamp, Timestamp,
+  writeBatch, type WriteBatch,
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import { format } from 'date-fns';
@@ -70,11 +71,17 @@ export async function addGoal(input: AddGoalInput): Promise<SavingsGoal> {
   return toGoal(ref.id, { ...data, createdAt: Timestamp.fromDate(new Date()) });
 }
 
-export async function addContribution(
+/**
+ * Queues the goal update (currentAmount + contributions) into the caller's
+ * batch without committing — pair with queueAddExpense for an atomic
+ * contribution-plus-expense write.
+ */
+export function queueContribution(
+  batch: WriteBatch,
   userId: string,
   goal: SavingsGoal,
   contribution: { amount: number; note?: string }
-): Promise<SavingsGoal> {
+): SavingsGoal {
   const newContrib: SavingsContribution = {
     amount: contribution.amount,
     date: new Date().toISOString(),
@@ -83,7 +90,7 @@ export async function addContribution(
   const updatedContribs = [...goal.contributions, newContrib];
   const newCurrent = goal.currentAmount + contribution.amount;
 
-  await updateDoc(doc(getDb(), 'savingsGoals', userId, 'goals', goal.id), {
+  batch.update(doc(getDb(), 'savingsGoals', userId, 'goals', goal.id), {
     currentAmount: newCurrent,
     contributions: updatedContribs.map((c) => ({
       amount: c.amount,
@@ -93,6 +100,17 @@ export async function addContribution(
   });
 
   return { ...goal, currentAmount: newCurrent, contributions: updatedContribs };
+}
+
+export async function addContribution(
+  userId: string,
+  goal: SavingsGoal,
+  contribution: { amount: number; note?: string }
+): Promise<SavingsGoal> {
+  const batch = writeBatch(getDb());
+  const updated = queueContribution(batch, userId, goal, contribution);
+  await batch.commit();
+  return updated;
 }
 
 export async function reverseContribution(

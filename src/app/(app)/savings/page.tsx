@@ -10,11 +10,9 @@ import {
   fetchGoals, addContribution, deleteGoal,
 } from '@/features/savings/services/savingsService';
 import { formatAmount, blockInvalidAmountKeys } from '@/shared/utils/currency';
-import { addExpense } from '@/features/expenses/services/expensesService';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
-import { addCategory } from '@/features/categories/services/categoriesService';
 import { addCategory as addCategoryRedux } from '@/features/categories/store/categoriesSlice';
-import { buildSavingsExpenseComment } from '@/features/savings/utils/savingsExpenseComment';
+import { addContributionWithExpense } from '@/features/savings/services/savingsExpenseService';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
 import type { SavingsGoal } from '@/shared/types';
@@ -27,6 +25,7 @@ export default function SavingsPage() {
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const { list, status } = useAppSelector((s) => s.savings);
+  const expenseCategories = useAppSelector((s) => s.categories.expense);
   const [mode, setMode] = useState<Mode>('list');
   const [loading, setLoading] = useState(false);
   const t = useT();
@@ -41,21 +40,20 @@ export default function SavingsPage() {
 
   async function handleContribute(goal: SavingsGoal, amount: number, note: string, recordAsExpense: boolean, expenseCategoryId: string) {
     if (!user) return;
-    dispatch(updateGoalItem(await addContribution(user.id, goal, { amount, note: note || undefined })));
 
     if (recordAsExpense) {
-      let catId = expenseCategoryId;
-      if (!catId) {
-        const created = await addCategory(user.id, { name: 'Savings', icon: 'coin', color: '#10b981', type: 'expense', isPrivate: false, order: 8 });
-        dispatch(addCategoryRedux(created));
-        catId = created.id;
-      }
-      dispatch(prependExpense(await addExpense({
-        userId: user.id, amount, currency: goal.currency, categoryId: catId,
-        date: new Date(), paymentMethod: 'card',
-        comment: buildSavingsExpenseComment(t('savings.expenseLabel'), goal.name, note || undefined),
-        tags: ['savings'], privacy: 'regular', splits: [], goalId: goal.id,
-      })));
+      // Contribution + expense land in one atomic WriteBatch
+      const { goal: updated, expense, createdCategory } = await addContributionWithExpense({
+        userId: user.id, goal, amount, date: new Date(),
+        label: t('savings.expenseLabel'), note: note || undefined,
+        expenseCategories,
+        categoryId: expenseCategoryId || undefined,
+      });
+      dispatch(updateGoalItem(updated));
+      if (createdCategory) dispatch(addCategoryRedux(createdCategory));
+      dispatch(prependExpense(expense));
+    } else {
+      dispatch(updateGoalItem(await addContribution(user.id, goal, { amount, note: note || undefined })));
     }
     setMode('list');
   }

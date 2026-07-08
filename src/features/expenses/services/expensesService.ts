@@ -120,7 +120,12 @@ export interface AddExpenseInput {
   isRecurring?: boolean;
 }
 
-export async function addExpense(input: AddExpenseInput): Promise<SerializableExpense> {
+/**
+ * Queues the expense document plus its monthlyStats delta into the caller's
+ * batch without committing. Lets multi-entity flows (e.g. savings
+ * contribution + expense) stay atomic in a single WriteBatch.
+ */
+export function queueAddExpense(batch: WriteBatch, input: AddExpenseInput): SerializableExpense {
   validateExpenseInput(input);
   const { userId, date, store, storeId, storeGroup, comment, ...rest } = input;
   const ref = expenseDoc(userId);
@@ -139,7 +144,6 @@ export async function addExpense(input: AddExpenseInput): Promise<SerializableEx
     }).filter(([, value]) => value !== undefined),
   );
 
-  const batch = writeBatch(getDb());
   batch.set(ref, data);
   queueMonthlyStatsUpdate(
     batch,
@@ -147,7 +151,6 @@ export async function addExpense(input: AddExpenseInput): Promise<SerializableEx
     format(date, 'yyyy-MM'),
     buildStatsDelta(input.categoryId, input.amount, input.splits, 1),
   );
-  await batch.commit();
 
   return toSerializable(ref.id, {
     ...data,
@@ -155,6 +158,13 @@ export async function addExpense(input: AddExpenseInput): Promise<SerializableEx
     createdAt: Timestamp.fromDate(new Date()),
     updatedAt: Timestamp.fromDate(new Date()),
   });
+}
+
+export async function addExpense(input: AddExpenseInput): Promise<SerializableExpense> {
+  const batch = writeBatch(getDb());
+  const expense = queueAddExpense(batch, input);
+  await batch.commit();
+  return expense;
 }
 
 export interface UpdateExpenseInput extends AddExpenseInput {

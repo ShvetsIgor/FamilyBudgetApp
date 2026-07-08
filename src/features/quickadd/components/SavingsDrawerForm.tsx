@@ -10,7 +10,7 @@ import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
 import { addCategory as addCategoryRedux } from '@/features/categories/store/categoriesSlice';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
-import { addSavingsExpenseForContribution } from '@/features/savings/services/savingsExpenseService';
+import { addContributionWithExpense } from '@/features/savings/services/savingsExpenseService';
 import { recordSavedCard } from '@/features/chat/services/savedCardService';
 import { normalizeName } from '@/shared/utils/normalizeName';
 
@@ -54,18 +54,14 @@ export function SavingsDrawerForm({ accent }: { accent: string }) {
     if (!user || !selected || amountNum <= 0 || saving) return;
     setSaving(true);
     try {
-      const updated = await addContribution(user.id, selected, {
-        amount: amountNum,
-        note: normalizeName(comment) || undefined,
-      });
-      dispatch(updateGoalItem(updated));
-      // Mirror the mobile flow: the contribution also becomes an expense,
-      // so month totals match no matter where the user saved from
-      const { expense, createdCategory } = await addSavingsExpenseForContribution({
+      // Mirror the mobile flow: contribution + linked expense in one
+      // atomic WriteBatch, so month totals match wherever the user saved from
+      const { goal: updated, expense, createdCategory } = await addContributionWithExpense({
         userId: user.id, goal: selected, amount: amountNum, date: new Date(),
         label: t('savings.expenseLabel'), note: normalizeName(comment) || undefined,
         expenseCategories,
       });
+      dispatch(updateGoalItem(updated));
       if (createdCategory) dispatch(addCategoryRedux(createdCategory));
       dispatch(prependExpense(expense));
       const goalSym = getCurrencySymbol(selected.currency);

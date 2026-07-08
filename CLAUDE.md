@@ -277,6 +277,7 @@ Runtime contract update:
 
 ## Change Log
 
+- **2026-07-09** — CI: manual runs enabled via `workflow_dispatch` (Actions → CI → "Run workflow" button).
 - **2026-07-09** — Atomic savings contributions: goal update + linked expense + monthlyStats now land in ONE Firestore WriteBatch via `addContributionWithExpense` (`savingsExpenseService.ts`), so a partial failure can no longer diverge the goal balance from expense history. `expensesService` exposes `queueAddExpense(batch, input)` and `savingsService` exposes `queueContribution(batch, ...)` (both wrapped by the original `addExpense`/`addContribution`); all three contribution entry points (savings page incl. explicit-category choice, mobile fast entry, desktop quick-add) switched to the atomic path; 'Savings' category creation intentionally stays outside the batch (rare one-time setup, harmless alone).
 - **2026-07-09** — CI fix: workflow bumped to Node 24 — the npm 11-generated `package-lock.json` fails `npm ci` validation under npm 10 (Node 20) with "Missing: @swc/helpers from lock file"; CI now matches local dev.
 - **2026-07-08** — Production hardening, steps 6–7 (CI + cleanup): GitHub Actions workflow `.github/workflows/ci.yml` runs lint, tests and build on every push/PR to master (build uses placeholder Firebase env vars — Firebase initializes lazily at runtime); dev-only `/theme-examples` page removed from the app and the production bundle.

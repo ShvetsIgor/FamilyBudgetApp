@@ -13,7 +13,9 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Match local dev (Node 24 / npm 11): the lockfile is written by
+          # npm 11 and npm 10's `npm ci` rejects its nested entries
+          node-version: 24
           cache: npm
 
       - name: Install dependencies

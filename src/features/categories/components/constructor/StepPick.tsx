@@ -1,4 +1,5 @@
 'use client';
+import { useT } from '@/shared/hooks/useT';
 import { useState } from 'react';
 import type { WizardFolder } from '../../hooks/useConstructorState';
 import { StickerIcon } from '../CategoryIcon';
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function StepPick({ folders, onToggle, onToggleExpanded, onAddCustom, locale = 'ru' }: Props) {
+  const t = useT();
   const [query, setQuery] = useState('');
 
   const q = query.toLowerCase().trim();
@@ -29,8 +31,8 @@ export function StepPick({ folders, onToggle, onToggleExpanded, onAddCustom, loc
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
       <div className="px-5 pt-4 pb-3">
-        <h2 className="text-lg font-bold text-[#3D2C1F] mb-0.5">Какие расходы вы отслеживаете?</h2>
-        <p className="text-sm text-[#8E7A66]">Выберите всё подходящее. Всегда можно изменить.</p>
+        <h2 className="text-lg font-bold text-[#3D2C1F] mb-0.5">{t('categories.constructor.pickTitle')}</h2>
+        <p className="text-sm text-[#8E7A66]">{t('categories.constructor.pickSubtitle')}</p>
 
         {/* Search */}
         <div className="relative mt-3">
@@ -44,7 +46,7 @@ export function StepPick({ folders, onToggle, onToggleExpanded, onAddCustom, loc
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Поиск групп…"
+            placeholder={t('categories.constructor.searchGroups')}
             className="w-full rounded-xl border border-[#EDE0CC] bg-white pl-9 pr-4 py-2 text-sm text-[#3D2C1F] placeholder:text-[#C4AA8E] outline-none focus:border-[#E07A5F] transition-colors"
           />
           {query && (
@@ -60,7 +62,7 @@ export function StepPick({ folders, onToggle, onToggleExpanded, onAddCustom, loc
         {/* Selection count */}
         {enabledCount > 0 && (
           <p className="text-xs text-[#E07A5F] font-medium mt-2">
-            Выбрано: {enabledCount}
+            {t('categories.constructor.selectedCount', { n: enabledCount })}
           </p>
         )}
       </div>
@@ -69,7 +71,7 @@ export function StepPick({ folders, onToggle, onToggleExpanded, onAddCustom, loc
       <div className="flex-1 overflow-y-auto px-5 pb-4">
         {filtered.length === 0 ? (
           <div className="text-center py-10 text-sm text-[#8E7A66]">
-            Ничего не найдено
+            {t('categories.nothingFound')}
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-3">
@@ -126,7 +128,7 @@ export function StepPick({ folders, onToggle, onToggleExpanded, onAddCustom, loc
                 >
                   <span className="text-[#E07A5F] text-2xl font-bold">+</span>
                 </div>
-                <span className="text-[11px] font-semibold text-[#8E7A66] text-center">Своя</span>
+                <span className="text-[11px] font-semibold text-[#8E7A66] text-center">{t('categories.constructor.customShort')}</span>
               </button>
             )}
           </div>

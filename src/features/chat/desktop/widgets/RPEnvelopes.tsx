@@ -1,4 +1,5 @@
 'use client';
+import { useT } from '@/shared/hooks/useT';
 import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { RPCard } from './RPCard';
 import { useAppSelector } from '@/store/store';
@@ -6,6 +7,7 @@ import Link from 'next/link';
 
 export function RPEnvelopes() {
   const C = useChatTokens();
+  const t = useT();
   const budgetLimits = useAppSelector((s) => s.budget.limits);
   const expenses = useAppSelector((s) => s.expenses.list ?? []);
   const categories = useAppSelector((s) => s.categories.expense);
@@ -27,14 +29,14 @@ export function RPEnvelopes() {
 
   if (envelopes.length === 0) {
     return (
-      <RPCard title="КОНВЕРТЫ" accentColor={C.sage}>
-        <p style={{ margin: 0, fontSize: 12, color: C.sub }}>Настройте бюджеты в <Link href="/categories" style={{ color: C.primary }}>Категориях</Link></p>
+      <RPCard title={t('chat.desktop.envelopesTitle')} accentColor={C.sage}>
+        <p style={{ margin: 0, fontSize: 12, color: C.sub }}>{t('chat.desktop.envelopesEmpty')}<Link href="/categories" style={{ color: C.primary }}>{t('chat.desktop.categoriesLink')}</Link></p>
       </RPCard>
     );
   }
 
   return (
-    <RPCard title="КОНВЕРТЫ" accentColor={C.sage} action={{ label: 'все', href: '/categories' }}>
+    <RPCard title={t('chat.desktop.envelopesTitle')} accentColor={C.sage} action={{ label: t('chat.desktop.all'), href: '/categories' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {envelopes.map((env) => (
           <div key={env.catId}>

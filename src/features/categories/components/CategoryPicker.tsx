@@ -25,7 +25,7 @@ export function CategoryPicker({
   type,
   value,
   onChange,
-  placeholder = 'Категория',
+  placeholder,
   ungroupedOnly = false,
   groupedOnly = false,
 }: Props) {
@@ -109,7 +109,7 @@ export function CategoryPicker({
               autoFocus
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Поиск..."
+              placeholder={t('categories.search')}
               className="w-full rounded-lg bg-muted px-3 py-2 text-sm outline-none placeholder:text-muted-foreground"
             />
           </div>

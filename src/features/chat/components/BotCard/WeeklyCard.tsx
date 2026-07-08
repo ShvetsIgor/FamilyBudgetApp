@@ -85,7 +85,7 @@ export function WeeklyCard({ data }: { data: WeeklyCardData }) {
 
         <p className="m-0 text-[10px] font-[800] uppercase tracking-[.09em] opacity-85">
           {/* weekNum/weekRange come from stored data — keep as-is */}
-          {weekNum ? `Неделя ${weekNum} · ${weekRange}` : weekRange}
+          {weekNum ? `${t('chat.weeklyWeekN', { n: weekNum })} · ${weekRange}` : weekRange}
         </p>
 
         <div className="mt-1 flex items-baseline justify-between">

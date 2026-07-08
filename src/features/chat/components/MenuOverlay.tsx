@@ -184,7 +184,7 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
             onClick={() => signOut().catch(() => {})}
             className="flex items-center gap-1 rounded-lg p-1.5 transition-colors hover:bg-black/5"
             style={{ color: C.sub }}
-            title="Выйти"
+            title={t('common.logout')}
           >
             <LogOut size={16} />
           </button>

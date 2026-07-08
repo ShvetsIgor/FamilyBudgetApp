@@ -1,4 +1,5 @@
 'use client';
+import { useT } from '@/shared/hooks/useT';
 import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { RPCard } from './RPCard';
 import { useAppSelector } from '@/store/store';
@@ -6,6 +7,7 @@ import Link from 'next/link';
 
 export function RPGoals() {
   const C = useChatTokens();
+  const t = useT();
   const goals = useAppSelector((s) => s.savings?.list ?? []);
   const currency = useAppSelector((s) => s.ui.currency);
   const sym = currency === 'ILS' ? '₪' : currency === 'USD' ? '$' : '€';
@@ -14,14 +16,14 @@ export function RPGoals() {
 
   if (activeGoals.length === 0) {
     return (
-      <RPCard title="КОПИЛКИ" accentColor={C.caramel}>
-        <p style={{ margin: 0, fontSize: 12, color: C.sub }}>Нет целей. <Link href="/savings" style={{ color: C.primary }}>Создать</Link></p>
+      <RPCard title={t('chat.desktop.goalsTitle')} accentColor={C.caramel}>
+        <p style={{ margin: 0, fontSize: 12, color: C.sub }}>{t('chat.desktop.noGoalsShort')}<Link href="/savings" style={{ color: C.primary }}>{t('chat.desktop.createLink')}</Link></p>
       </RPCard>
     );
   }
 
   return (
-    <RPCard title="КОПИЛКИ" accentColor={C.caramel} action={{ label: 'все', href: '/savings' }}>
+    <RPCard title={t('chat.desktop.goalsTitle')} accentColor={C.caramel} action={{ label: t('chat.desktop.all'), href: '/savings' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {activeGoals.map((goal) => {
           const pct = goal.targetAmount > 0 ? Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100)) : 0;
@@ -34,7 +36,7 @@ export function RPGoals() {
               <div style={{ height: 4, background: C.hairline, borderRadius: 99, overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${pct}%`, background: C.caramel, borderRadius: 99 }} />
               </div>
-              <p style={{ margin: '2px 0 0', fontSize: 10, color: C.sub }}>{sym}{goal.currentAmount.toLocaleString()} из {sym}{goal.targetAmount.toLocaleString()}</p>
+              <p style={{ margin: '2px 0 0', fontSize: 10, color: C.sub }}>{sym}{goal.currentAmount.toLocaleString()} {t('chat.today.of')} {sym}{goal.targetAmount.toLocaleString()}</p>
             </div>
           );
         })}

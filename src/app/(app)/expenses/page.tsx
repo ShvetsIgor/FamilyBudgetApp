@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { format, parseISO, isToday, isYesterday } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import type { Locale } from 'date-fns';
+import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { Plus } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { mergeExpenses, removeExpense, prependExpense } from '@/features/expenses/store/expensesSlice';
@@ -32,11 +33,11 @@ function groupByDate<T extends { date: string }>(items: T[]): [string, T[]][] {
   return Array.from(map.entries());
 }
 
-function dateLabel(dateStr: string): string {
+function dateLabel(dateStr: string, t: (key: string) => string, locale: Locale): string {
   const d = parseISO(dateStr);
-  if (isToday(d)) return 'Сегодня';
-  if (isYesterday(d)) return 'Вчера';
-  return format(d, 'EEEE, d MMMM', { locale: ru });
+  if (isToday(d)) return t('common.today');
+  if (isYesterday(d)) return t('common.yesterday');
+  return format(d, 'EEEE, d MMMM', { locale });
 }
 
 // Generate months from Jan of current year up to (and including) current month
@@ -73,6 +74,7 @@ export default function ExpensesPage() {
   const [localExpenses, setLocalExpenses] = useState<SerializableExpense[] | null>(null);
   const monthBarRef = useRef<HTMLDivElement>(null);
   const t = useT();
+  const dfLocale = useDateFnsLocale();
 
   // Undo-delete state. The delete is committed to Firestore *immediately* so
   // closing the tab can't strand a half-deleted item; the toast just offers a
@@ -152,7 +154,7 @@ export default function ExpensesPage() {
     >
       {yearMonths.map((m) => {
         const sel = m === selectedMonth;
-        const label = format(parseISO(m + '-01'), 'LLL', { locale: ru });
+        const label = format(parseISO(m + '-01'), 'LLL', { locale: dfLocale });
         return (
           <button
             key={m}
@@ -185,7 +187,7 @@ export default function ExpensesPage() {
         {/* Header — architectural: large number + budget bar */}
         <div className="px-4 pt-6 pb-4 lg:px-0 lg:pt-0" style={{ borderBottom: '2px solid hsl(var(--foreground))', background: 'hsl(var(--card))' }}>
           <p style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
-            {format(parseISO(selectedMonth + '-01'), 'LLLL yyyy', { locale: ru })}
+            {format(parseISO(selectedMonth + '-01'), 'LLLL yyyy', { locale: dfLocale })}
           </p>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
             <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1 }}>
@@ -289,7 +291,7 @@ export default function ExpensesPage() {
                   {/* Day header */}
                   <div className="flex items-center justify-between px-4 py-2 lg:px-0" style={{ background: 'hsl(var(--muted)/0.4)' }}>
                     <span style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 800, color: 'hsl(var(--muted-foreground))' }}>
-                      {dateLabel(day)}
+                      {dateLabel(day, t, dfLocale)}
                     </span>
                     <span style={{ fontSize: 10, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: 'hsl(var(--muted-foreground))' }}>
                       {dayTotal > 0 ? '-' : ''}{formatAmount(dayTotal, currency)}
@@ -354,7 +356,7 @@ export default function ExpensesPage() {
       {undoItem && (
         <div className="fixed bottom-28 left-4 right-4 z-40 flex items-center gap-3 rounded-2xl bg-foreground px-4 py-3 shadow-xl lg:left-auto lg:right-6 lg:max-w-sm">
           <span className="flex-1 text-sm font-semibold text-background truncate">
-            Удалено: {undoItem.expense.store || undoItem.expense.comment || 'Расход'}
+            {t('expenses.deletedLabel')}: {undoItem.expense.store || undoItem.expense.comment || t('quickadd.tabExpense')}
           </span>
           <button
             onClick={() => {
@@ -371,7 +373,7 @@ export default function ExpensesPage() {
             }}
             className="shrink-0 rounded-xl bg-background/20 px-3 py-1.5 text-sm font-bold text-background hover:bg-background/30 transition-colors"
           >
-            Отменить
+            {t('common.undo')}
           </button>
         </div>
       )}

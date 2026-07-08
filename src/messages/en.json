@@ -118,7 +118,21 @@
     "numpadSaveEdit": "Save {symbol}{total}",
     "numpadSaving": "Saving…",
     "numpadCancel": "Cancel",
-    "numpadPos": "{count} pos."
+    "numpadPos": "{count} pos.",
+    "splitDistributeAll": "Distribute the whole amount across categories, no hidden remainder.",
+    "singleMode": "Single expense",
+    "splitMode": "Split",
+    "tapToPick": "Tap to choose",
+    "remainderTitle": "Left to distribute",
+    "addFromFolders": "Add categories from folders",
+    "sumMustMatch": "The sum must match before saving",
+    "overBy": "over by",
+    "addCategories": "Add categories",
+    "addCategory": "Add category",
+    "notePlaceholder": "Note…",
+    "receiptTotal": "Receipt total",
+    "categoryAmount": "Category amount",
+    "closeAmountAria": "Close amount input"
   },
   "income": {
     "title": "Add Income",
@@ -152,7 +166,10 @@
     "numpadSaving": "Saving…",
     "numpadCancel": "Cancel",
     "numpadToday": "Today",
-    "chatLabel": "Income"
+    "chatLabel": "Income",
+    "notePlaceholder": "Income note…",
+    "creditEvery": "Credited on the",
+    "dayNum": "day {day}"
   },
   "expenses": {
     "title": "Expenses",
@@ -165,7 +182,9 @@
     "noResults": "No results",
     "tryOther": "Try a different search or filter",
     "budget": "Budget",
-    "budgetLeft": "left"
+    "budgetLeft": "left",
+    "deletedLabel": "Deleted",
+    "recurringBadge": "Recurring"
   },
   "stats": {
     "title": "Statistics",
@@ -210,7 +229,9 @@
       "Thu",
       "Fri",
       "Sat"
-    ]
+    ],
+    "peakPrefix": "Spending peak —",
+    "pctOfSpending": "{p}% of spending"
   },
   "account": {
     "title": "Account",
@@ -252,7 +273,22 @@
     "family2": "family",
     "weekStart": "Week starts on",
     "weekMonday": "Monday",
-    "weekSunday": "Sunday"
+    "weekSunday": "Sunday",
+    "confirmLogout": "Log out?",
+    "confirmResetData": "Delete all expenses, incomes, savings, recurring payments, chat history and learning?\n\nCategories, folders and settings will be kept. This action cannot be undone.",
+    "familyCreateError": "Couldn't create the family. Try again.",
+    "familyInviteError": "Couldn't send the invitation. Try again.",
+    "familyAcceptError": "Couldn't accept the invitation. Try again.",
+    "familyLeaveError": "Couldn't leave the family. Try again.",
+    "confirmLeaveOwner": "You are the owner. Leaving will dissolve the family for all members. Continue?",
+    "confirmLeaveFamily": "Leave this family?",
+    "familyNamePlaceholder": "Family name",
+    "debug": "Debug",
+    "resetHint": "Deletes expenses, incomes, savings, recurring payments, chat and learning. Categories, folders and settings remain.",
+    "resetDone": "Done. Data cleared.",
+    "resetClearing": "Clearing…",
+    "resetButton": "Reset everything else",
+    "appSection": "App"
   },
   "recurring": {
     "title": "Recurring Payments",
@@ -304,7 +340,10 @@
     "upcomingBills": "Upcoming bills",
     "seeAll": "See all",
     "noBills": "No upcoming bills",
-    "total": "Monthly total"
+    "total": "Monthly total",
+    "overdue": "Overdue",
+    "todayBang": "Today!",
+    "daysShort": "{days} d"
   },
   "savings": {
     "title": "Savings Goals",
@@ -350,7 +389,12 @@
     "numpadCancel": "Cancel",
     "numpadCreate": "Create · {name} · {symbol}{target}",
     "numpadCreateHint": "Enter name and amount",
-    "chatLabel": "Savings"
+    "chatLabel": "Savings",
+    "goalNew": "New goal",
+    "goalName": "Goal name",
+    "goalNamePlaceholder": "E.g. Vacation or Car…",
+    "until": "Until",
+    "goalLabel": "Goal"
   },
   "categories": {
     "title": "Categories",
@@ -440,7 +484,35 @@
         "statSubs": "subcategories",
         "statBudget": "per month",
         "cta": "Get Started"
-      }
+      },
+      "doneTitle": "All set!",
+      "doneSubtitle": "Categories are configured. Start adding expenses right now.",
+      "statGroups": "groups",
+      "statCategories": "categories",
+      "statPerMonth": "per month",
+      "thousandSuffix": "k",
+      "nCategories": "{n} categories",
+      "startBudgeting": "Start budgeting",
+      "addFirstExpense": "Add first expense",
+      "pickTitle": "Which expenses do you track?",
+      "pickSubtitle": "Select everything that fits. You can change it later.",
+      "searchGroups": "Search groups…",
+      "selectedCount": "Selected: {n}",
+      "customShort": "Custom",
+      "budgetTitle": "How much per month?",
+      "budgetSubtitle": "Leave it empty and set later if you like.",
+      "totalBudget": "Total budget",
+      "bigBudget": "⚠ Quite a large budget",
+      "perMonthAllGroups": "per month across all groups",
+      "budgetWarning": "The budget looks large. Make sure the amounts are per month, not per year.",
+      "refineTitle": "Refine each category",
+      "refineSubtitle": "More categories = better statistics.",
+      "customPlaceholder": "+ Custom",
+      "stepsCategories": "Categories",
+      "stepsRefine": "Refine",
+      "stepsBudget": "Budget",
+      "stepsDone": "Done",
+      "stepOf": "Step {a} of {b}"
     },
     "editor": {
       "title": "Edit",
@@ -454,7 +526,60 @@
       "privateHint": "Hide from family",
       "save": "Save Category",
       "delete": "Delete",
-      "confirmDelete": "Delete this category?"
+      "confirmDelete": "Delete this category?",
+      "section": "Section",
+      "noSection": "No section",
+      "alsoInSections": "Also in sections",
+      "tags": "Tags",
+      "tagsHint": "(for search)",
+      "addTagPlaceholder": "Add tag, Enter",
+      "deleteCategory": "Delete category",
+      "suggestionAria": "Pick suggestion {label}"
+    },
+    "confirmArchive": "Archive this category?",
+    "confirmReset": "Reset all categories to defaults? Your custom categories and sections will be deleted.",
+    "confirmDeleteFolder": "Delete this section? Categories will remain but lose their group.",
+    "deleteFolderNamed": "Delete “{name}”? Its categories will lose the group.",
+    "menuEdit": "Edit",
+    "menuExpand": "Expand",
+    "menuCollapse": "Collapse",
+    "menuDeleteFolder": "Delete section",
+    "menuMove": "Move",
+    "menuArchive": "Archive",
+    "resultsCount": "{n} results",
+    "nothingFound": "Nothing found",
+    "tryAnotherQuery": "Try another query",
+    "folderPickerTitle": "Category folders",
+    "libraryTitle": "Standard library",
+    "librarySubtitle": "Ready-made contexts — add them when needed",
+    "addShort": "Add",
+    "addPlus": "+ Add",
+    "resetToDefaults": "Reset to defaults",
+    "perMonthShort": "/mo",
+    "pickerPlaceholder": "Category",
+    "folderEditor": {
+      "editTitle": "Edit section",
+      "newTitle": "New section",
+      "namePlaceholder": "Section name",
+      "typeExpense": "Expense group",
+      "typeIncome": "Income group",
+      "parentSection": "Parent section",
+      "noParent": "No parent",
+      "deleteFolder": "Delete section"
+    },
+    "iconGroups": {
+      "all": "All",
+      "food": "Food",
+      "home": "Home",
+      "transport": "Transport",
+      "fun": "Fun",
+      "kids": "Kids",
+      "health": "Health",
+      "other": "Other"
+    },
+    "pickerAria": {
+      "back": "Back to sections",
+      "close": "Close"
     }
   },
   "auth": {
@@ -490,7 +615,9 @@
     "denied": "Access denied in browser settings",
     "unsupported": "Browser does not support notifications",
     "empty": "All quiet here",
-    "clear": "Clear all"
+    "clear": "Clear all",
+    "familyInviteTitle": "Family invitation",
+    "familyInviteText": "You have been invited to join a family budget. Go to Settings → Family."
   },
   "export": {
     "title": "Export Data",
@@ -506,7 +633,23 @@
     "exportExcelBtn": "Download Excel",
     "exportCsvBtn": "Download CSV",
     "exporting": "Exporting…",
-    "noData": "No data for this period"
+    "noData": "No data for this period",
+    "sheetExpenses": "Expenses",
+    "sheetIncome": "Incomes",
+    "sheetRecurring": "Recurring payments",
+    "sheetGoals": "Goals",
+    "colDate": "Date",
+    "colSection": "Section",
+    "colCategory": "Category",
+    "colAmount": "Amount",
+    "colStoreTag": "Store/Tag",
+    "colComment": "Comment",
+    "colName": "Name",
+    "colFrequency": "Frequency",
+    "colNextDate": "Next date",
+    "colGoal": "Goal",
+    "colSaved": "Saved",
+    "colLeft": "Left"
   },
   "common": {
     "loading": "Loading...",
@@ -527,7 +670,14 @@
     "budget": "Budget",
     "family": "Family",
     "regular": "Regular",
-    "saving": "Saving…"
+    "saving": "Saving…",
+    "done": "Done",
+    "thousandSuffix": "k",
+    "undo": "Undo",
+    "logout": "Log out",
+    "pageNotFound": "Page not found",
+    "goHome": "Go home",
+    "entryNotFound": "Entry not found"
   },
   "chat": {
     "header": {
@@ -640,6 +790,64 @@
       "todaySpent": "spent today",
       "online": "Family online · {n}",
       "onlyYou": "Just you"
+    },
+    "confirmClearChat": "Clear the entire chat history? Expenses, incomes and savings will remain.",
+    "clearChat": "Clear chat",
+    "otherCategories": "Other",
+    "weeklyWeekN": "Week {n}",
+    "bot": {
+      "helpText": "How to log expenses:\n• «<b>bread 12</b>» — word + amount\n• «<b>65 coffee</b>» — amount + word\n• «<b>☕ 40</b>» — emoji + amount\n\nCommands:\n• <b>/balance</b> — monthly envelopes\n• <b>/week</b> — weekly summary\n• <b>/help</b> — this message",
+      "envelopes": "Envelopes",
+      "unknownCommand": "I don't know the command <b>{cmd}</b>. Try <b>/help</b>.",
+      "saved1": "Logged",
+      "saved2": "Added",
+      "saved3": "Done",
+      "clarifyWhere": "Got it — {currency}{amount} for what? 🤔",
+      "clarifyStore": "{currency}{amount} at {store} — what did you buy? 🛒",
+      "unknown": "Didn’t get that 🤔 Try: «coffee 65» or «☕ 30»",
+      "duplicate": "Same receipt or a new one?",
+      "morningTitle": "Good morning ✨",
+      "morningYesterday": "Spent {sym} {amount} yesterday. {sym} {free} free today.",
+      "morningFree": "{sym} {free} free today.",
+      "andJoiner": " and ",
+      "whereTo": "+{sym} {amount} — where should it go?",
+      "weeklyTitle": "Week {n} wrapped 💫",
+      "weeklySpent": "Spent {sym} {total} over {range}",
+      "weeklySaved": ", saved {sym} {amount}"
+    },
+    "desktop": {
+      "searchPlaceholder": "Search expenses, categories…",
+      "commands": "Commands",
+      "paletteHint": "↵ open · ESC close · local search",
+      "personalBudget": "Personal budget",
+      "botLocal": "● bot runs locally · offline",
+      "searchShortcut": "Search (⌘K)",
+      "cheatTitle": "HOW TO WRITE",
+      "firstStepsTitle": "FIRST STEPS",
+      "stepRegistered": "Signed up",
+      "stepBudget": "Set a monthly budget",
+      "stepFamily": "Invite your family",
+      "stepFirstEntry": "Add your first entry in chat",
+      "todayTitle": "TODAY",
+      "details": "details",
+      "leftShort": "left",
+      "overShort": "over by",
+      "setDailyBudget": "Set a daily budget →",
+      "billsTitle": "BILLS",
+      "noBills": "No upcoming bills. ",
+      "addLink": "Add",
+      "all": "all",
+      "today": "today",
+      "tomorrow": "tomorrow",
+      "inDays": "in {n} d",
+      "goalsTitle": "SAVINGS",
+      "noGoalsShort": "No goals yet. ",
+      "createLink": "Create",
+      "envelopesTitle": "ENVELOPES",
+      "envelopesEmpty": "Set budgets in ",
+      "categoriesLink": "Categories",
+      "recentTitle": "RECENT",
+      "noExpensesShort": "No expenses"
     }
   },
   "onboarding": {
@@ -671,5 +879,25 @@
     "perMonth": "/ mo",
     "noIncome": "No income this month yet. Add income on the Income tab and the budget will be calculated automatically.",
     "saveError": "Couldn't save — check your connection and try again."
+  },
+  "quickadd": {
+    "totalHint": "· total",
+    "remainderAfterSplits": "remainder after itemizing",
+    "refineItem": "Itemize a line",
+    "date": "Date",
+    "payment": "Payment",
+    "note": "Note",
+    "optionalPlaceholder": "Optional…",
+    "source": "Source",
+    "willAddToBalance": "will be added to the balance",
+    "account": "Account",
+    "noGoals": "No savings goals",
+    "createGoalHint": "Create a goal on the Savings page",
+    "percentDone": "{p}% done",
+    "goalProgress": "Goal progress",
+    "left": "Left",
+    "tabExpense": "Expense",
+    "tabIncome": "Income",
+    "tabSavings": "To savings"
   }
 }

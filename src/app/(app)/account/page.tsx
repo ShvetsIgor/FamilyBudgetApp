@@ -14,7 +14,7 @@ import {
   leaveFamily, fetchFamilyMembers,
 } from '@/features/family/services/familyService';
 import { format, subMonths, parseISO } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import type { Currency, Language, Theme } from '@/shared/types';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
@@ -66,6 +66,7 @@ export default function AccountPage() {
   const [nameInput, setNameInput] = useState(user?.name ?? '');
   const [nameSaving, setNameSaving] = useState(false);
   const t = useT();
+  const dfLocale = useDateFnsLocale();
 
   const [notifPermission, setNotifPermission] = useState<string>(() => getNotificationPermission());
   const [exportMonth, setExportMonth] = useState(format(new Date(), 'yyyy-MM'));
@@ -127,7 +128,7 @@ export default function AccountPage() {
           savingsGoals.length > 0 ? Promise.resolve(savingsGoals) : fetchGoals(user.id),
         ]);
         downloadXlsx(
-          budgetExportSheets({
+          budgetExportSheets(t, {
             expenses,
             incomes,
             recurring,
@@ -150,7 +151,7 @@ export default function AccountPage() {
   }
 
   async function handleSignOut() {
-    if (!confirm('Выйти из аккаунта?')) return;
+    if (!confirm(t('account.confirmLogout'))) return;
     setSigningOut(true);
     await signOut();
   }
@@ -158,8 +159,7 @@ export default function AccountPage() {
   async function handleResetEverything() {
     if (!user) return;
     const ok = confirm(
-      'Удалить все траты, доходы, копилки, повторяющиеся платежи, историю чата и обучение?\n\n' +
-      'Категории, папки и настройки будут сохранены. Это действие нельзя отменить.'
+      t('account.confirmResetData')
     );
     if (!ok) return;
     setResetting(true); setResetDone(false);
@@ -186,7 +186,7 @@ export default function AccountPage() {
       dispatch(setFamily(newFamily)); dispatch(setMembers([user!]));
       dispatch(setUser({ ...user!, familyId: newFamily.id, accountType: 'family' }));
       setShowCreateFamily(false); setFamilyName('');
-    } catch { setFamilyError('Не удалось создать семью. Попробуйте ещё раз.'); } finally { setFamilyLoading(false); }
+    } catch { setFamilyError(t('account.familyCreateError')); } finally { setFamilyLoading(false); }
   }
 
   async function handleSendInvite() {
@@ -195,7 +195,7 @@ export default function AccountPage() {
     try {
       await sendInvite(family.id, user!.id, inviteEmail.trim());
       setInviteSent(true); setInviteEmail(''); setShowInvite(false);
-    } catch { setFamilyError('Не удалось отправить приглашение. Попробуйте ещё раз.'); } finally { setFamilyLoading(false); }
+    } catch { setFamilyError(t('account.familyInviteError')); } finally { setFamilyLoading(false); }
   }
 
   async function handleAcceptInvite() {
@@ -208,7 +208,7 @@ export default function AccountPage() {
       if (f) { dispatch(setFamily(f)); dispatch(setMembers(await fetchFamilyMembers(f.memberIds))); }
       dispatch(setUser({ ...user!, familyId: pendingInvite.familyId, accountType: 'family' }));
       dispatch(setPendingInvite(null));
-    } catch { setFamilyError('Не удалось принять приглашение. Попробуйте ещё раз.'); } finally { setFamilyLoading(false); }
+    } catch { setFamilyError(t('account.familyAcceptError')); } finally { setFamilyLoading(false); }
   }
 
   async function handleRejectInvite() {
@@ -219,13 +219,13 @@ export default function AccountPage() {
 
   async function handleLeaveFamily() {
     if (!family) return;
-    const msg = isOwner ? 'Вы владелец. Выход расформирует семью для всех участников. Продолжить?' : 'Покинуть эту семью?';
+    const msg = isOwner ? t('account.confirmLeaveOwner') : t('account.confirmLeaveFamily');
     if (!confirm(msg)) return;
     setFamilyLoading(true); setFamilyError('');
     try {
       await leaveFamily(user!.id, family);
       dispatch(clearFamily()); dispatch(setUser({ ...user!, familyId: undefined, accountType: 'personal' }));
-    } catch { setFamilyError('Не удалось покинуть семью. Попробуйте ещё раз.'); } finally { setFamilyLoading(false); }
+    } catch { setFamilyError(t('account.familyLeaveError')); } finally { setFamilyLoading(false); }
   }
 
   // ── Reusable section blocks ──────────────────────────────────────────────────
@@ -338,7 +338,7 @@ export default function AccountPage() {
       <p className="text-sm text-muted-foreground">{t('account.noFamily')}</p>
       {showCreateFamily ? (
         <div className="flex flex-col gap-2">
-          <input type="text" value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder="Название семьи"
+          <input type="text" value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder={t('account.familyNamePlaceholder')}
             className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
           {familyError && <p className="text-xs text-destructive">{familyError}</p>}
           <div className="flex gap-2">
@@ -489,7 +489,7 @@ export default function AccountPage() {
           {Array.from({ length: 24 }, (_, i) => {
             const d = subMonths(new Date(), i);
             const val = format(d, 'yyyy-MM');
-            const label = format(d, 'LLLL yyyy', { locale: ru });
+            const label = format(d, 'LLLL yyyy', { locale: dfLocale });
             return <option key={val} value={val}>{label}</option>;
           })}
         </select>
@@ -535,20 +535,20 @@ export default function AccountPage() {
   const debugBlock = (
     <div className="rounded-2xl border border-border bg-card p-4 flex flex-col gap-3">
       <div>
-        <p className="text-xs text-muted-foreground">Отладка</p>
+        <p className="text-xs text-muted-foreground">{t('account.debug')}</p>
         <p className="text-xs text-muted-foreground/70 mt-1">
-          Удалит траты, доходы, копилки, повторяющиеся платежи, чат и обучение. Категории, папки и настройки останутся.
+          {t('account.resetHint')}
         </p>
       </div>
       {resetDone && (
-        <p className="text-xs text-emerald-600 dark:text-emerald-400">Готово. Данные очищены.</p>
+        <p className="text-xs text-emerald-600 dark:text-emerald-400">{t('account.resetDone')}</p>
       )}
       <button
         onClick={handleResetEverything}
         disabled={resetting}
         className="rounded-xl border border-destructive/40 bg-destructive/5 py-2.5 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
       >
-        {resetting ? 'Очистка…' : 'Сбросить всё остальное'}
+        {resetting ? t('account.resetClearing') : t('account.resetButton')}
       </button>
     </div>
   );
@@ -596,7 +596,7 @@ export default function AccountPage() {
         {familyBlock}
 
         {/* Budget section */}
-        {mobileLabel('Бюджет')}
+        {mobileLabel(t('common.budget'))}
         {mobileCard(<>
           <Link href="/categories">{mobileRow(<StickerIcon icon="box" color="#E07A5F" className="h-6 w-6" />, '#F2CC8F22', t('account.categories'))}</Link>
           <Link href="/recurring">{mobileRow(<StickerIcon icon="receipt" color="#8AA9D6" className="h-6 w-6" />, '#8AA9D622', t('account.recurringPayments'))}</Link>
@@ -607,7 +607,7 @@ export default function AccountPage() {
         {appearanceBlock}
 
         {/* App section */}
-        {mobileLabel('Приложение')}
+        {mobileLabel(t('account.appSection'))}
         {mobileCard(<>
           {/* Language */}
           <div className="flex items-center gap-3 px-4 py-3.5">
@@ -686,7 +686,7 @@ export default function AccountPage() {
         {exportBlock}
 
         {/* Debug */}
-        {mobileLabel('Отладка')}
+        {mobileLabel(t('account.debug'))}
         {debugBlock}
 
         {/* Sign out */}

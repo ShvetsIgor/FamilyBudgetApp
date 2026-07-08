@@ -1,4 +1,5 @@
 'use client';
+import { useT } from '@/shared/hooks/useT';
 import { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { addCategory, addFolder } from '@/features/categories/store/categoriesSlice';
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export function ConstructorWizard({ open, onClose, existingCategoryIds, existingFolderIds }: Props) {
+  const t = useT();
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency) ?? 'ILS';
@@ -121,9 +123,9 @@ export function ConstructorWizard({ open, onClose, existingCategoryIds, existing
   };
 
   const nextLabel =
-    step === 1 ? 'Бюджет' :
-    step === 2 ? 'Готово' :
-    step === 0 ? `Далее · ${enabledFolders.length}` :
+    step === 1 ? t('categories.constructor.stepsBudget') :
+    step === 2 ? t('categories.constructor.stepsDone') :
+    step === 0 ? `${t('categories.constructor.next')} · ${enabledFolders.length}` :
     undefined;
 
   return (

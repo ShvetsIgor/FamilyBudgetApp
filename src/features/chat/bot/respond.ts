@@ -1,13 +1,14 @@
 import { format, parseISO } from 'date-fns';
 import { toLocalDateKey } from '@/shared/utils/dateKey';
-import { ru } from 'date-fns/locale';
+import { getDateFnsLocale } from '@/shared/utils/dateLocale';
 import { addExpense } from '@/features/expenses/services/expensesService';
 import { addIncome } from '@/features/income/services/incomeService';
 import { updateMessage } from '@/features/chat/services/messagesService';
 import { getPresetDisplayName } from '@/features/categories/config/categoryLabels';
 import type { SerializableChatMessage, ParseResult } from '@/shared/types/message';
 import type { BotContext } from './context';
-import { UNKNOWN_PHRASE } from './templates';
+import { makeT } from '@/shared/utils/makeT';
+import { unknownPhrase } from './templates';
 
 function nowTimestamp(): string {
   return new Date().toISOString();
@@ -76,7 +77,7 @@ export async function respondToUserMessage(
   if (parsed.isIncome) {
     // No number → fail
     if (parsed.amount <= 0) {
-      return { messages: [makeBotMsg(userId, { text: UNKNOWN_PHRASE })] };
+      return { messages: [makeBotMsg(userId, { text: unknownPhrase(ctx.language) })] };
     }
 
     // No category selected yet → show income clarify card
@@ -95,7 +96,7 @@ export async function respondToUserMessage(
       return {
         messages: [
           makeBotMsg(userId, {
-            text: `+${sym}\u202F${parsed.amount} — куда записать?`,
+            text: makeT(ctx.language)('chat.bot.whereTo', { sym, amount: parsed.amount }),
             card: {
               kind: 'clarify',
               data: {
@@ -143,7 +144,7 @@ export async function respondToUserMessage(
     const todayStr = toLocalDateKey(_now);
     const isToday = (parsed.date ?? todayStr) === todayStr;
     const dateHint = !isToday && parsed.date
-      ? format(parseISO(parsed.date), 'd MMMM', { locale: ru })
+      ? format(parseISO(parsed.date), 'd MMMM', { locale: getDateFnsLocale(ctx.language) })
       : undefined;
 
     return {
@@ -176,7 +177,7 @@ export async function respondToUserMessage(
 
   // ── No number recognized → fail with unknown phrase
   if (parsed.amount <= 0) {
-    return { messages: [makeBotMsg(userId, { text: UNKNOWN_PHRASE })] };
+    return { messages: [makeBotMsg(userId, { text: unknownPhrase(ctx.language) })] };
   }
 
   // ── Any expense with recognized amount → always open Split.

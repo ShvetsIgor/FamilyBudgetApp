@@ -173,7 +173,7 @@ export function CategoryFolderPickerView({
             <button
               type="button"
               onClick={() => setFolderId(null)}
-              aria-label="Назад к разделам"
+              aria-label={t('categories.pickerAria.back')}
               className="flex h-10 w-10 items-center justify-center rounded-xl hover:bg-muted active:bg-muted"
             >
               <ChevronLeft className="h-5 w-5" />
@@ -199,7 +199,7 @@ export function CategoryFolderPickerView({
             <button
               type="button"
               onClick={onRequestClose}
-              aria-label="Закрыть"
+              aria-label={t('categories.pickerAria.close')}
               className="flex h-10 w-10 items-center justify-center rounded-xl hover:bg-muted active:bg-muted"
             >
               <X className="h-5 w-5" />

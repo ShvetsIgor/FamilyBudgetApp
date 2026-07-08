@@ -1,4 +1,5 @@
 'use client';
+import { useT } from '@/shared/hooks/useT';
 
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { useChatTokens } from '@/features/chat/styles/useChatTokens';
@@ -16,6 +17,7 @@ interface SavedCardProps {
 }
 
 export function SavedCard({ icon, color, title, hint, amount, currency, isIncome, alert, onUndo }: SavedCardProps) {
+  const t = useT();
   const C = useChatTokens();
   const badgeColor = isIncome ? '#10b981' : C.sage;
   const amountColor = isIncome ? '#10b981' : C.fg;
@@ -77,7 +79,7 @@ export function SavedCard({ icon, color, title, hint, amount, currency, isIncome
             className="w-full px-3.5 py-2 text-left text-[12px] font-[700] transition-colors hover:bg-black/5"
             style={{ color: C.sub }}
           >
-            Отменить
+            {t('common.undo')}
           </button>
         </div>
       )}

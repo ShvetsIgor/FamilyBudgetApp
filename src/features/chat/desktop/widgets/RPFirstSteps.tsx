@@ -1,17 +1,19 @@
 'use client';
+import { useT } from '@/shared/hooks/useT';
 import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { RPCard } from './RPCard';
 
 export function RPFirstSteps() {
   const C = useChatTokens();
+  const t = useT();
   const steps = [
-    { done: true, label: 'Зарегистрировался' },
-    { done: false, label: 'Задай бюджет на месяц' },
-    { done: false, label: 'Пригласи семью' },
-    { done: false, label: 'Добавь первую запись в чат' },
+    { done: true, label: t('chat.desktop.stepRegistered') },
+    { done: false, label: t('chat.desktop.stepBudget') },
+    { done: false, label: t('chat.desktop.stepFamily') },
+    { done: false, label: t('chat.desktop.stepFirstEntry') },
   ];
   return (
-    <RPCard title="ПЕРВЫЕ ШАГИ" accentColor={C.primary}>
+    <RPCard title={t('chat.desktop.firstStepsTitle')} accentColor={C.primary}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
         {steps.map((s, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

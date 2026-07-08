@@ -2,6 +2,7 @@ import { store } from '@/store/store';
 import { addNotification } from '@/features/notifications/store/notificationsSlice';
 import { getPresetDisplayName } from '@/features/categories/config/categoryLabels';
 import type { BotContext } from './context';
+import { makeT } from '@/shared/utils/makeT';
 import type { MorningCardData } from '@/features/chat/components/BotCard/MorningCard';
 
 const STORAGE_KEY = 'chat_lastMorningAt';
@@ -26,6 +27,7 @@ export function markMorningGreetingSent(): void {
 }
 
 export async function sendMorningGreeting(ctx: BotContext): Promise<void> {
+  const bt = makeT(ctx.language);
   const { currency, categoriesById, todaySpent, language } = ctx;
 
   const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
@@ -45,7 +47,7 @@ export async function sendMorningGreeting(ctx: BotContext): Promise<void> {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 2)
     .map(([n]) => n)
-    .join(' и ');
+    .join(bt('chat.bot.andJoiner'));
 
   const dailyBudget = (ctx as unknown as Record<string, unknown>).dailyBudget as number ?? 0;
   const todayFree = Math.max(0, dailyBudget - todaySpent);
@@ -60,10 +62,10 @@ export async function sendMorningGreeting(ctx: BotContext): Promise<void> {
 
   store.dispatch(addNotification({
     kind: 'morning',
-    title: 'Доброе утро ✨',
+    title: bt('chat.bot.morningTitle'),
     text: yesterdayAmount > 0
-      ? `Вчера потрачено ${sym}\u202F${yesterdayAmount.toLocaleString()}. Сегодня свободно ${sym}\u202F${todayFree.toLocaleString()}.`
-      : `Сегодня свободно ${sym}\u202F${todayFree.toLocaleString()}.`,
+      ? bt('chat.bot.morningYesterday', { sym, amount: yesterdayAmount.toLocaleString(), free: todayFree.toLocaleString() })
+      : bt('chat.bot.morningFree', { sym, free: todayFree.toLocaleString() }),
     data: cardData,
     createdAt: new Date().toISOString(),
   }));

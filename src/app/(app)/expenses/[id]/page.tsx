@@ -3,7 +3,7 @@
 import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { format, parseISO } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { removeExpense } from '@/features/expenses/store/expensesSlice';
 import { deleteExpense } from '@/features/expenses/services/expensesService';
@@ -25,6 +25,7 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
   const categories = useAppSelector((s) => s.categories.expense);
   const goals = useAppSelector((s) => s.savings.list);
   const t = useT();
+  const dfLocale = useDateFnsLocale();
 
   const PAYMENT_LABELS: Record<string, string> = {
     card: `💳 ${t('expense.card')}`,
@@ -93,7 +94,7 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
           {expense.amount > 0 ? '-' : ''}{formatAmount(expense.amount, expense.currency)}
         </p>
         <p className="text-sm text-muted-foreground">
-          {format(parseISO(expense.date), 'EEEE, d MMMM yyyy', { locale: ru })}
+          {format(parseISO(expense.date), 'EEEE, d MMMM yyyy', { locale: dfLocale })}
         </p>
       </div>
 

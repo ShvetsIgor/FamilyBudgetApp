@@ -1,6 +1,7 @@
 'use client';
+import { useT } from '@/shared/hooks/useT';
 
-const STEPS = ['Категории', 'Уточнение', 'Бюджет', 'Готово'];
+const STEP_KEYS = ['stepsCategories', 'stepsRefine', 'stepsBudget', 'stepsDone'] as const;
 
 interface Props {
   step: number;
@@ -8,13 +9,14 @@ interface Props {
 }
 
 export function WizardHeader({ step, onClose }: Props) {
-  const progress = ((step + 1) / STEPS.length) * 100;
+  const t = useT();
+  const progress = ((step + 1) / STEP_KEYS.length) * 100;
 
   return (
     <div className="px-5 pt-5 pb-4 space-y-4 border-b border-[#EDE0CC]">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold text-[#3D2C1F]">
-          Шаг {step + 1} из {STEPS.length}
+          {t('categories.constructor.stepOf', { a: step + 1, b: STEP_KEYS.length })}
         </h2>
         <button
           onClick={onClose}
@@ -26,14 +28,14 @@ export function WizardHeader({ step, onClose }: Props) {
 
       {/* Step labels */}
       <div className="flex gap-1">
-        {STEPS.map((label, i) => (
-          <div key={label} className="flex-1 text-center">
+        {STEP_KEYS.map((k, i) => (
+          <div key={k} className="flex-1 text-center">
             <div
               className={`text-[10px] font-medium mb-1 ${
                 i === step ? 'text-[#E07A5F]' : i < step ? 'text-[#81B29A]' : 'text-[#B6A48E]'
               }`}
             >
-              {label}
+              {t(`categories.constructor.${k}`)}
             </div>
           </div>
         ))}

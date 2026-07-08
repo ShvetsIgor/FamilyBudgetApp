@@ -1,4 +1,5 @@
 'use client';
+import { useT } from '@/shared/hooks/useT';
 import type { WizardFolder } from '../../hooks/useConstructorState';
 import { StickerIcon } from '../CategoryIcon';
 import { BudgetField } from '../BudgetField';
@@ -11,14 +12,15 @@ interface Props {
 }
 
 export function StepBudget({ folders, onSetBudget, currency, locale = 'ru' }: Props) {
+  const t = useT();
   const total = folders.reduce((sum, f) => sum + (f.budget ?? 0), 0);
   const isOverBudget = total > 20_000;
 
   return (
     <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
       <div>
-        <h2 className="text-lg font-bold text-[#3D2C1F] mb-1">Сколько в месяц?</h2>
-        <p className="text-sm text-[#8E7A66]">Можно оставить пустым и установить позже.</p>
+        <h2 className="text-lg font-bold text-[#3D2C1F] mb-1">{t('categories.constructor.budgetTitle')}</h2>
+        <p className="text-sm text-[#8E7A66]">{t('categories.constructor.budgetSubtitle')}</p>
       </div>
 
       {/* Hero total card */}
@@ -27,13 +29,13 @@ export function StepBudget({ folders, onSetBudget, currency, locale = 'ru' }: Pr
           ? 'bg-gradient-to-br from-[#C9684E] to-[#A0522D]'
           : 'bg-gradient-to-br from-[#E07A5F] to-[#C9684E]'
       }`}>
-        <p className="text-sm font-medium opacity-80">Общий бюджет</p>
+        <p className="text-sm font-medium opacity-80">{t('categories.constructor.totalBudget')}</p>
         <p className="text-3xl font-bold mt-1">
           {currency}{total > 0 ? total.toLocaleString() : '—'}
         </p>
         {total > 0 && (
           <p className="text-xs opacity-70 mt-1">
-            {isOverBudget ? '⚠ Довольно большой бюджет' : 'в месяц по всем группам'}
+            {isOverBudget ? t('categories.constructor.bigBudget') : t('categories.constructor.perMonthAllGroups')}
           </p>
         )}
       </div>
@@ -85,7 +87,7 @@ export function StepBudget({ folders, onSetBudget, currency, locale = 'ru' }: Pr
       {/* Monthly warning */}
       {isOverBudget && (
         <div className="rounded-xl bg-[#FDF3EE] border border-[#F0C8B5] px-4 py-3 text-sm text-[#A0522D]">
-          Бюджет выглядит большим. Убедитесь, что суммы указаны в месяц, а не в год.
+          {t('categories.constructor.budgetWarning')}
         </div>
       )}
     </div>

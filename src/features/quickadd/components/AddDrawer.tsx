@@ -1,4 +1,5 @@
 'use client';
+import { useT } from '@/shared/hooks/useT';
 
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
@@ -11,12 +12,13 @@ import { IncomeDrawerForm } from './IncomeDrawerForm';
 import { SavingsDrawerForm } from './SavingsDrawerForm';
 
 const TABS = [
-  { key: 'expense' as const, label: 'Расход',     accent: 'hsl(var(--primary))' },
-  { key: 'income'  as const, label: 'Доход',      accent: 'hsl(var(--success))' },
-  { key: 'savings' as const, label: 'В копилку',  accent: 'hsl(var(--primary))' },
+  { key: 'expense' as const, label: 'quickadd.tabExpense',     accent: 'hsl(var(--primary))' },
+  { key: 'income'  as const, label: 'quickadd.tabIncome',      accent: 'hsl(var(--success))' },
+  { key: 'savings' as const, label: 'quickadd.tabSavings',  accent: 'hsl(var(--primary))' },
 ];
 
 export function AddDrawer() {
+  const t = useT();
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { open, tab } = useAppSelector((s) => s.quickAdd);
@@ -44,22 +46,22 @@ export function AddDrawer() {
           )}
           aria-describedby={undefined}
         >
-          {/* в”Ђв”Ђ Tab bar в”Ђв”Ђ */}
+          {/* ── Tab bar ── */}
           <div className="flex items-center gap-0 border-b border-border flex-shrink-0 px-2 pt-2">
-            {TABS.map((t) => {
-              const active = tab === t.key;
+            {TABS.map((tabItem) => {
+              const active = tab === tabItem.key;
               return (
                 <button
-                  key={t.key}
-                  onClick={() => switchTab(t.key)}
+                  key={tabItem.key}
+                  onClick={() => switchTab(tabItem.key)}
                   className="relative px-4 py-2.5 text-sm font-bold transition-colors rounded-t-xl"
-                  style={{ color: active ? t.accent : 'hsl(var(--muted-foreground))' }}
+                  style={{ color: active ? tabItem.accent : 'hsl(var(--muted-foreground))' }}
                 >
-                  {t.label}
+                  {t(tabItem.label)}
                   {active && (
                     <span
                       className="absolute bottom-0 left-2 right-2 h-[2.5px] rounded-full"
-                      style={{ background: t.accent }}
+                      style={{ background: tabItem.accent }}
                     />
                   )}
                 </button>
@@ -74,7 +76,7 @@ export function AddDrawer() {
             </div>
           </div>
 
-          {/* в”Ђв”Ђ Tab content в”Ђв”Ђ */}
+          {/* ── Tab content ── */}
           <div className="flex-1 overflow-y-auto min-h-0">
             {tab === 'expense' && <ExpenseDrawerForm accent={accent} />}
             {tab === 'income'  && <IncomeDrawerForm  accent={accent} />}

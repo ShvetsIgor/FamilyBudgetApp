@@ -30,6 +30,7 @@ export function FastGoalEntry() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
+  const language = useAppSelector((s) => s.ui.language);
   const t = useT();
   const symbol = getCurrencySymbol(currency);
   const nameRef = useRef<HTMLInputElement>(null);
@@ -80,7 +81,7 @@ export function FastGoalEntry() {
           <X className="h-4 w-4" />
         </button>
         <div className="flex-1 text-center text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">
-          Новая цель
+          {t('savings.goalNew')}
         </div>
         <button
           onClick={() => setShowDate(!showDate)}
@@ -98,13 +99,13 @@ export function FastGoalEntry() {
         onClick={() => nameRef.current?.focus()}
       >
         <div className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider mb-1">
-          Название цели
+          {t('savings.goalName')}
         </div>
         <input
           ref={nameRef}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Например, Отпуск или Машина…"
+          placeholder={t('savings.goalNamePlaceholder')}
           className="w-full bg-transparent text-[18px] font-black text-foreground outline-none placeholder:text-muted-foreground/40"
         />
       </div>
@@ -180,10 +181,10 @@ export function FastGoalEntry() {
             {icon}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-extrabold text-foreground">{name || 'Название цели'}</div>
+            <div className="text-sm font-extrabold text-foreground">{name || t('savings.goalName')}</div>
             {deadline && (
               <div className="text-[11px] text-muted-foreground mt-0.5">
-                До {new Date(deadline + 'T12:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                {t('savings.until')} {new Date(deadline + 'T12:00:00').toLocaleDateString(language === 'ru' ? 'ru-RU' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
               </div>
             )}
           </div>
@@ -198,7 +199,7 @@ export function FastGoalEntry() {
         className="mx-4 mb-1 px-4 py-1.5 rounded-[18px] flex items-baseline justify-between flex-shrink-0 border-[1.5px] transition-all"
         style={{ background: color + '10', borderColor: color + '44' }}
       >
-        <span className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">Цель</span>
+        <span className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">{t('savings.goalLabel')}</span>
         <div className="flex items-baseline gap-1">
           <span className="text-base font-bold text-muted-foreground">{symbol}</span>
           <span className="text-[32px] font-black text-foreground tracking-[-0.03em] leading-none tabular-nums">

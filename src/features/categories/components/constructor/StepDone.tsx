@@ -1,4 +1,5 @@
 'use client';
+import { useT } from '@/shared/hooks/useT';
 import type { WizardFolder, WizardCategory } from '../../hooks/useConstructorState';
 import { StickerIcon } from '../CategoryIcon';
 
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function StepDone({ folders, categories, onFinish, onQuickAdd, currency, locale = 'ru' }: Props) {
+  const t = useT();
   const enabledFolderIds = new Set(folders.map((f) => f.id));
   const totalCategories = categories.filter(
     (c) => c.enabled && enabledFolderIds.has(c.folderId)
@@ -25,9 +27,9 @@ export function StepDone({ folders, categories, onFinish, onQuickAdd, currency, 
         <div className="h-20 w-20 rounded-3xl bg-[#FAEAE2] flex items-center justify-center mb-4">
           <StickerIcon icon="piggy" color="#E07A5F" className="h-14 w-14" />
         </div>
-        <h2 className="text-2xl font-bold text-[#3D2C1F] mb-1">Всё готово!</h2>
+        <h2 className="text-2xl font-bold text-[#3D2C1F] mb-1">{t('categories.constructor.doneTitle')}</h2>
         <p className="text-sm text-[#8E7A66] max-w-xs">
-          Категории настроены. Начните добавлять расходы прямо сейчас.
+          {t('categories.constructor.doneSubtitle')}
         </p>
       </div>
 
@@ -35,17 +37,17 @@ export function StepDone({ folders, categories, onFinish, onQuickAdd, currency, 
       <div className="grid grid-cols-3 gap-3 mb-6">
         <div className="rounded-2xl bg-[#FAEAE2] p-4 text-center">
           <p className="text-2xl font-bold text-[#E07A5F]">{folders.length}</p>
-          <p className="text-[10px] text-[#8E7A66] font-medium mt-1">групп</p>
+          <p className="text-[10px] text-[#8E7A66] font-medium mt-1">{t('categories.constructor.statGroups')}</p>
         </div>
         <div className="rounded-2xl bg-[#F4ECDE] p-4 text-center">
           <p className="text-2xl font-bold text-[#D4A574]">{totalCategories}</p>
-          <p className="text-[10px] text-[#8E7A66] font-medium mt-1">категорий</p>
+          <p className="text-[10px] text-[#8E7A66] font-medium mt-1">{t('categories.constructor.statCategories')}</p>
         </div>
         <div className="rounded-2xl bg-[#EBF5EF] p-4 text-center">
           <p className="text-xl font-bold text-[#81B29A]">
-            {totalBudget > 0 ? `${currency}${Math.round(totalBudget / 1000)}к` : '—'}
+            {totalBudget > 0 ? `${currency}${Math.round(totalBudget / 1000)}${t('categories.constructor.thousandSuffix')}` : '—'}
           </p>
-          <p className="text-[10px] text-[#8E7A66] font-medium mt-1">в месяц</p>
+          <p className="text-[10px] text-[#8E7A66] font-medium mt-1">{t('categories.constructor.statPerMonth')}</p>
         </div>
       </div>
 
@@ -68,7 +70,7 @@ export function StepDone({ folders, categories, onFinish, onQuickAdd, currency, 
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-[#3D2C1F] truncate">{displayName}</p>
-                <p className="text-[10px] text-[#8E7A66]">{folderCats.length} категорий</p>
+                <p className="text-[10px] text-[#8E7A66]">{t('categories.constructor.nCategories', { n: folderCats.length })}</p>
               </div>
               {folder.budget ? (
                 <span className="shrink-0 text-xs font-semibold text-[#8E7A66]">
@@ -86,14 +88,14 @@ export function StepDone({ folders, categories, onFinish, onQuickAdd, currency, 
           onClick={onFinish}
           className="w-full rounded-2xl bg-[#E07A5F] py-4 text-base font-bold text-white hover:bg-[#C9684E] transition-colors"
         >
-          Начать вести бюджет
+          {t('categories.constructor.startBudgeting')}
         </button>
         {onQuickAdd && (
           <button
             onClick={() => { onFinish(); onQuickAdd(); }}
             className="w-full rounded-2xl border-2 border-[#E07A5F] py-3.5 text-sm font-semibold text-[#E07A5F] hover:bg-[#FAEAE2] transition-colors"
           >
-            Добавить первый расход
+            {t('categories.constructor.addFirstExpense')}
           </button>
         )}
       </div>

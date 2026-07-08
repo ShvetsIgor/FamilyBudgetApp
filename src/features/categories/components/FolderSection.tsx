@@ -1,4 +1,5 @@
 'use client';
+import { useT } from '@/shared/hooks/useT';
 import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { Category, CategoryFolder } from '@/shared/types';
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function FolderSection({ folder, categories, budgetLimits, onEditFolder, onEditCategory, onAddCategory }: Props) {
+  const t = useT();
   const [expanded, setExpanded] = useState(true);
   const lang = useAppSelector((s) => s.ui.language) ?? 'ru';
   const color = folder.color ?? '#E07A5F';
@@ -69,7 +71,7 @@ export function FolderSection({ folder, categories, budgetLimits, onEditFolder, 
               </span>
               {(budgetLimits[cat.id] ?? 0) > 0 && (
                 <span className="text-[10px] text-[#8E7A66]">
-                  ₪{budgetLimits[cat.id].toLocaleString()}/мес
+                  ₪{budgetLimits[cat.id].toLocaleString()}{t('categories.perMonthShort')}
                 </span>
               )}
               <span className="text-[#B6A48E] text-sm">›</span>
@@ -80,7 +82,7 @@ export function FolderSection({ folder, categories, budgetLimits, onEditFolder, 
             onClick={onAddCategory}
             className="w-full flex items-center gap-2 px-4 py-2.5 text-[#E07A5F] text-xs font-semibold hover:bg-[#FAEAE2] transition-colors"
           >
-            + Добавить категорию
+            {t('categories.add')}
           </button>
         </div>
       )}

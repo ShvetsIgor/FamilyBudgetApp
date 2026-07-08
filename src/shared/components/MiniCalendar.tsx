@@ -2,15 +2,15 @@
 
 import { useState } from 'react';
 import { format } from 'date-fns';
+import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 
 export function toDateInput(d: Date): string {
   return format(d, 'yyyy-MM-dd');
 }
 
-const MONTHS_RU = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-const DAYS_RU = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 
 export function MiniCalendar({ value, onChange, color }: { value: string; onChange: (d: string) => void; color: string }) {
+  const dfLocale = useDateFnsLocale();
   const selected = new Date(value + 'T12:00:00');
   const [view, setView] = useState(new Date(selected.getFullYear(), selected.getMonth(), 1));
 
@@ -33,14 +33,14 @@ export function MiniCalendar({ value, onChange, color }: { value: string; onChan
           onClick={() => setView(new Date(year, month - 1, 1))}
           className="w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted text-lg font-bold"
         >‹</button>
-        <span className="text-sm font-extrabold text-foreground">{MONTHS_RU[month]} {year}</span>
+        <span className="text-sm font-extrabold text-foreground">{(() => { const m = format(view, 'LLLL', { locale: dfLocale }); return m.charAt(0).toUpperCase() + m.slice(1); })()} {year}</span>
         <button
           onClick={() => setView(new Date(year, month + 1, 1))}
           className="w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted text-lg font-bold"
         >›</button>
       </div>
       <div className="grid grid-cols-7 mb-1">
-        {DAYS_RU.map((d) => (
+        {Array.from({ length: 7 }, (_, i) => format(new Date(2024, 0, i + 1), 'EEEEEE', { locale: dfLocale })).map((d) => (
           <div key={d} className="text-center text-[10px] font-bold text-muted-foreground py-0.5">{d}</div>
         ))}
       </div>

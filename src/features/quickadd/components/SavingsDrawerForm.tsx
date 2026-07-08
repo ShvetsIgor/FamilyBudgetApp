@@ -64,8 +64,8 @@ export function SavingsDrawerForm({ accent }: { accent: string }) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
         <span className="text-4xl">🎯</span>
-        <div className="text-sm font-bold text-foreground">Нет целей накопления</div>
-        <div className="text-xs text-muted-foreground">Создайте цель на странице «В копилку»</div>
+        <div className="text-sm font-bold text-foreground">{t('quickadd.noGoals')}</div>
+        <div className="text-xs text-muted-foreground">{t('quickadd.createGoalHint')}</div>
       </div>
     );
   }
@@ -77,10 +77,10 @@ export function SavingsDrawerForm({ accent }: { accent: string }) {
         {/* ── Goal picker ── */}
         <div>
           <div className="flex items-center justify-between mb-1.5 px-0.5">
-            <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">Цель</span>
+            <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">{t('savings.goalLabel')}</span>
             {selected && (
               <span className="text-[11px] font-bold" style={{ color: selected.color }}>
-                {Math.round(progress * 100)}% выполнено
+                {t('quickadd.percentDone', { p: Math.round(progress * 100) })}
               </span>
             )}
           </div>
@@ -150,7 +150,7 @@ export function SavingsDrawerForm({ accent }: { accent: string }) {
                   color: amount === String(p) ? color : 'hsl(var(--muted-foreground))',
                 }}
               >
-                {p >= 1000 ? `${p / 1000}к` : p}
+                {p >= 1000 ? `${p / 1000}${t('common.thousandSuffix')}` : p}
               </button>
             );
           })}
@@ -163,7 +163,7 @@ export function SavingsDrawerForm({ accent }: { accent: string }) {
             style={{ background: (selected.color) + '12', border: `1px solid ${selected.color}30` }}
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-extrabold text-foreground">Прогресс цели</span>
+              <span className="text-xs font-extrabold text-foreground">{t('quickadd.goalProgress')}</span>
               <span className="text-[11px] font-bold" style={{ color: selected.color }}>
                 {symbol}{selected.currentAmount.toLocaleString()} → {symbol}{(selected.currentAmount + amountNum).toLocaleString()}
               </span>
@@ -180,8 +180,8 @@ export function SavingsDrawerForm({ accent }: { accent: string }) {
               />
             </div>
             <div className="flex justify-between text-[10px] text-muted-foreground">
-              <span>Цель: {symbol}{selected.targetAmount.toLocaleString()}</span>
-              <span>Осталось: {symbol}{Math.max(0, selected.targetAmount - selected.currentAmount - amountNum).toLocaleString()}</span>
+              <span>{t('savings.goalLabel')}: {symbol}{selected.targetAmount.toLocaleString()}</span>
+              <span>{t('quickadd.left')}: {symbol}{Math.max(0, selected.targetAmount - selected.currentAmount - amountNum).toLocaleString()}</span>
             </div>
           </div>
         )}
@@ -189,12 +189,12 @@ export function SavingsDrawerForm({ accent }: { accent: string }) {
         {/* ── Note ── */}
         <div className="bg-card rounded-[14px] overflow-hidden" style={{ boxShadow: '0 1px 4px rgba(61,44,31,.06)' }}>
           <div className="flex items-center gap-3 px-4 py-3">
-            <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest w-[72px] shrink-0">Заметка</span>
+            <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest w-[72px] shrink-0">{t('quickadd.note')}</span>
             <input
               type="text"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Необязательно…"
+              placeholder={t('quickadd.optionalPlaceholder')}
               className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/40"
             />
           </div>

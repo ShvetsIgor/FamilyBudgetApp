@@ -1,4 +1,5 @@
 'use client';
+import { useT } from '@/shared/hooks/useT';
 import { useAppSelector } from '@/store/store';
 import type { Category } from '@/shared/types';
 import { StickerIcon } from './CategoryIcon';
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function CategoryRow({ category, budget, onEdit, fromLibrary, onActivate }: Props) {
+  const t = useT();
   const lang = useAppSelector((s) => s.ui.language) ?? 'ru';
 
   const displayName = getPresetDisplayName(category.id, lang) ?? category.name;
@@ -36,7 +38,7 @@ export function CategoryRow({ category, budget, onEdit, fromLibrary, onActivate 
           <span className="min-w-0 flex-1 text-sm font-semibold leading-tight text-[#3D2C1F] line-clamp-2 [overflow-wrap:anywhere]">{displayName}</span>
           {fromLibrary && (
             <span className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-[#8E7A66] bg-[#F4ECDE]">
-              в библиотеке
+              {t('categories.row.inLibrary')}
             </span>
           )}
         </div>
@@ -44,7 +46,7 @@ export function CategoryRow({ category, budget, onEdit, fromLibrary, onActivate 
         {/* Budget */}
         {budget && budget > 0 ? (
           <p className="text-[10px] text-[#8E7A66] mt-1">
-            ₪{budget.toLocaleString()}/мес
+            ₪{budget.toLocaleString()}{t('categories.perMonthShort')}
           </p>
         ) : null}
       </div>
@@ -55,7 +57,7 @@ export function CategoryRow({ category, budget, onEdit, fromLibrary, onActivate 
           onClick={(e) => { e.stopPropagation(); onActivate?.(); }}
           className="shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold text-[#E07A5F] border border-[#E07A5F]/30 hover:bg-[#FAEAE2] transition-colors"
         >
-          + Добавить
+          {t('categories.addPlus')}
         </button>
       ) : (
         <button

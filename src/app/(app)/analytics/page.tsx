@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { format, subMonths, parseISO, getDay, startOfWeek, addDays } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { useAppSelector } from '@/store/store';
 import { fetchLastNMonths, type MonthStats } from '@/features/stats/services/statsService';
 import { fetchMonthExpenses } from '@/features/expenses/services/expensesService';
@@ -32,6 +32,7 @@ export default function AnalyticsPage() {
   const [months, setMonths] = useState<MonthStats[]>([]);
   const [dowData, setDowData] = useState<DowPoint[]>([]);
   const t = useT();
+  const dfLocale = useDateFnsLocale();
   const [loading, setLoading] = useState(false);
 
   const load = useCallback(async () => {
@@ -60,15 +61,15 @@ export default function AnalyticsPage() {
           .filter((e) => e.date.startsWith(isoDate))
           .reduce((s, e) => s + e.amount, 0);
         return {
-          name: format(day, 'EEE', { locale: ru }),
-          shortDate: format(day, 'd MMM', { locale: ru }),
+          name: format(day, 'EEE', { locale: dfLocale }),
+          shortDate: format(day, 'd MMM', { locale: dfLocale }),
           isoDate,
           amount: Math.round(dayTotal),
         };
       });
       setDowData(points);
     } finally { setLoading(false); }
-  }, [user, period, weekStart]);
+  }, [user, period, weekStart, dfLocale]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -334,7 +335,7 @@ export default function AnalyticsPage() {
                 </div>
                 {peakDay && hasDowData && (
                   <p className="text-[12px] font-semibold text-muted-foreground text-center mt-3">
-                    Пик трат — {peakDay.name} ({peakDay.shortDate})
+                    {t('analytics.peakPrefix')} {peakDay.name} ({peakDay.shortDate})
                   </p>
                 )}
               </div>
@@ -376,7 +377,7 @@ export default function AnalyticsPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[15px] font-extrabold text-foreground">{t.cat(top.name)}</p>
-                  <p className="text-xs font-semibold text-muted-foreground mt-0.5">{pct.toFixed(0)}% от трат</p>
+                  <p className="text-xs font-semibold text-muted-foreground mt-0.5">{t('analytics.pctOfSpending', { p: pct.toFixed(0) })}</p>
                 </div>
                 <p className="text-[18px] font-black tabular-nums text-foreground">{formatAmount(top.total, currency)}</p>
               </div>

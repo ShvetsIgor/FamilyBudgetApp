@@ -1,4 +1,5 @@
 'use client';
+import { useT } from '@/shared/hooks/useT';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAppSelector } from '@/store/store';
@@ -40,6 +41,7 @@ export function CategoryEditorSheet({
   onBudgetChange,
   suggestions = [],
 }: Props) {
+  const t = useT();
   const lang = useAppSelector((s) => s.ui.language) ?? 'ru';
 
   const [name, setName] = useState('');
@@ -129,7 +131,7 @@ export function CategoryEditorSheet({
         <div className="space-y-5 px-5 pb-8">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-[#3D2C1F]">
-              {initial?.id ? 'Редактировать' : 'Новая категория'}
+              {initial?.id ? t('categories.editor.title') : t('categories.editor.titleNew')}
             </h2>
             <button onClick={onClose} className="text-xl leading-none text-[#8E7A66] hover:text-[#3D2C1F]">✕</button>
           </div>
@@ -139,13 +141,13 @@ export function CategoryEditorSheet({
               <StickerIcon icon={icon} color={color} className="h-8 w-8" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-[#3D2C1F]">{name || 'Название категории'}</p>
-              <p className="text-xs text-[#8E7A66]">{type === 'expense' ? 'Расходы' : 'Доходы'}</p>
+              <p className="text-sm font-semibold text-[#3D2C1F]">{name || t('categories.namePlaceholder')}</p>
+              <p className="text-xs text-[#8E7A66]">{type === 'expense' ? t('categories.expense') : t('categories.income')}</p>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">Название</label>
+            <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">{t('categories.editor.name')}</label>
             <input
               type="text"
               ref={nameInputRef}
@@ -158,7 +160,7 @@ export function CategoryEditorSheet({
                 setSelectedPresetId(undefined);
                 setSuggestionsOpen(true);
               }}
-              placeholder="Название категории"
+              placeholder={t('categories.namePlaceholder')}
               className="w-full rounded-xl border border-[#EDE0CC] bg-white px-3 py-2.5 text-sm text-[#3D2C1F] outline-none placeholder:text-[#B6A48E] focus:border-[#E07A5F]"
             />
             {suggestionsOpen && matchedSuggestions.length > 0 && (
@@ -167,7 +169,7 @@ export function CategoryEditorSheet({
                   <button
                     key={suggestion.id}
                     type="button"
-                    aria-label={`Выбрать подсказку ${suggestion.label}`}
+                    aria-label={t('categories.editor.suggestionAria', { label: suggestion.label })}
                     onPointerDown={(event) => {
                       event.preventDefault();
                       setName(suggestion.label);
@@ -187,19 +189,19 @@ export function CategoryEditorSheet({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">Иконка</label>
+            <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">{t('categories.editor.icon')}</label>
             <IconPickerGrid selected={icon} color={color} onSelect={setIcon} />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">Цвет</label>
+            <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">{t('categories.editor.color')}</label>
             <ColorPaletteRow value={color} onChange={setColor} />
           </div>
 
           {type === 'expense' && (
             <div className="space-y-1.5">
               <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">
-                Бюджет в месяц <span className="font-normal normal-case">(необязательно)</span>
+                {t('categories.editor.budget')} <span className="font-normal normal-case">({t('categories.editor.budgetOptional')})</span>
               </label>
               <BudgetField value={budgetVal} onChange={(value) => setBudgetVal(value)} />
             </div>
@@ -207,7 +209,7 @@ export function CategoryEditorSheet({
 
           {availableFolders.length > 0 && (
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">Раздел</label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">{t('categories.editor.section')}</label>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
@@ -219,7 +221,7 @@ export function CategoryEditorSheet({
                       : { backgroundColor: '#F4ECDE', color: '#8E7A66' }
                   }
                 >
-                  Без раздела
+                  {t('categories.editor.noSection')}
                 </button>
                 {availableFolders.map((folder) => (
                   <button
@@ -243,7 +245,7 @@ export function CategoryEditorSheet({
           {availableFolders.length > 1 && selectedFolderId && (
             <div className="space-y-1.5">
               <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">
-                Также в разделах <span className="font-normal normal-case text-[#B6A48E]">(необязательно)</span>
+                {t('categories.editor.alsoInSections')} <span className="font-normal normal-case text-[#B6A48E]">({t('categories.editor.budgetOptional')})</span>
               </label>
               <div className="flex flex-wrap gap-2">
                 {availableFolders.filter((folder) => folder.id !== selectedFolderId).map((folder) => {
@@ -274,7 +276,7 @@ export function CategoryEditorSheet({
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">
-              Теги <span className="font-normal normal-case text-[#B6A48E]">(для поиска)</span>
+              {t('categories.editor.tags')} <span className="font-normal normal-case text-[#B6A48E]">{t('categories.editor.tagsHint')}</span>
             </label>
             <div className="mb-1.5 flex flex-wrap gap-1.5">
               {tags.map((tag) => (
@@ -306,7 +308,7 @@ export function CategoryEditorSheet({
                     setTagInput('');
                   }
                 }}
-                placeholder="Добавить тег, Enter"
+                placeholder={t('categories.editor.addTagPlaceholder')}
                 className="flex-1 rounded-xl border border-[#EDE0CC] bg-white px-3 py-2 text-sm text-[#3D2C1F] outline-none placeholder:text-[#B6A48E] focus:border-[#E07A5F]"
               />
               <button
@@ -326,8 +328,8 @@ export function CategoryEditorSheet({
 
           <label className="flex cursor-pointer items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-[#3D2C1F]">Приватная</p>
-              <p className="text-xs text-[#8E7A66]">Скрыть от семьи</p>
+              <p className="text-sm font-medium text-[#3D2C1F]">{t('categories.editor.private')}</p>
+              <p className="text-xs text-[#8E7A66]">{t('categories.editor.privateHint')}</p>
             </div>
             <div
               onClick={() => setIsPrivate((value) => !value)}
@@ -345,7 +347,7 @@ export function CategoryEditorSheet({
             className="w-full rounded-2xl py-3 font-bold text-white transition-opacity disabled:opacity-40"
             style={{ backgroundColor: CC.primary }}
           >
-            {saving ? 'Сохранение...' : 'Сохранить'}
+            {saving ? t('categories.saving') : t('categories.save')}
           </button>
 
           {onDelete && (
@@ -355,13 +357,13 @@ export function CategoryEditorSheet({
                   onClick={() => { onDelete(); onClose(); }}
                   className="flex-1 rounded-2xl bg-red-500 py-2.5 text-sm font-semibold text-white"
                 >
-                  Удалить
+                  {t('categories.editor.delete')}
                 </button>
                 <button
                   onClick={() => setConfirmDelete(false)}
                   className="flex-1 rounded-2xl border border-[#EDE0CC] py-2.5 text-sm font-semibold text-[#8E7A66]"
                 >
-                  Отмена
+                  {t('categories.cancel')}
                 </button>
               </div>
             ) : (
@@ -369,7 +371,7 @@ export function CategoryEditorSheet({
                 onClick={() => setConfirmDelete(true)}
                 className="w-full rounded-2xl border border-red-100 py-2.5 text-sm font-semibold text-red-500"
               >
-                Удалить категорию
+                {t('categories.editor.deleteCategory')}
               </button>
             )
           )}

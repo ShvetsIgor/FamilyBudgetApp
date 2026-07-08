@@ -1,4 +1,5 @@
 'use client';
+import { useT } from '@/shared/hooks/useT';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -17,6 +18,7 @@ import { useRecurringNotifications } from '@/features/recurring/hooks/useRecurri
 import { OnboardingFlow } from '@/features/onboarding/components/OnboardingFlow';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const t = useT();
   const dispatch = useAppDispatch();
   const { user, initialized } = useAppSelector((s) => s.auth);
   const recurringStatus = useAppSelector((s) => s.recurring.status);
@@ -58,8 +60,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           if (!alreadyNotified) {
             dispatch(addNotification({
               kind: 'family_invite',
-              title: 'Приглашение в семью',
-              text: 'Вас пригласили присоединиться к семейному бюджету. Перейдите в Настройки → Семья.',
+              title: t('notifications.familyInviteTitle'),
+              text: t('notifications.familyInviteText'),
               createdAt: new Date().toISOString(),
             }));
           }

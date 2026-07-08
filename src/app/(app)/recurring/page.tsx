@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { format, parseISO, differenceInCalendarDays, isToday, isYesterday } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { X, Calendar, MessageSquare, Plus, ChevronRight } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import {
@@ -94,11 +94,13 @@ export default function RecurringPage() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
+  const language = useAppSelector((s) => s.ui.language);
   const categories = useAppSelector((s) => s.categories.expense);
   const { list, status } = useAppSelector((s) => s.recurring);
   const [formMode, setFormMode] = useState<FormMode | null>(null);
   const [loading, setLoading] = useState(false);
   const t = useT();
+  const dfLocale = useDateFnsLocale();
 
   const FREQ: { value: RecurringFrequency; label: string }[] = [
     { value: 'monthly', label: t('recurring.monthly') },
@@ -252,7 +254,7 @@ export default function RecurringPage() {
               ) : days <= 3 ? (
                 <span style={{ fontSize: 10, fontWeight: 700, color: 'hsl(38 80% 45%)' }}>{t('recurring.inDays').replace('{n}', String(days))}</span>
               ) : (
-                <span style={{ fontSize: 10, color: 'hsl(var(--muted-foreground))' }}>{format(parseISO(item.nextDueDate), 'd MMM', { locale: ru })}</span>
+                <span style={{ fontSize: 10, color: 'hsl(var(--muted-foreground))' }}>{format(parseISO(item.nextDueDate), 'd MMM', { locale: dfLocale })}</span>
               )}
             </p>
           </div>
@@ -402,14 +404,16 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
   freq: { value: RecurringFrequency; label: string }[];
 }) {
   const t = useT();
+  const language = useAppSelector((s) => s.ui.language);
+  const dfLocale = useDateFnsLocale();
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const allExpCats = useAppSelector((s) => s.categories.expense);
   const expenseFolders = useAppSelector((s) => s.categories.folders.expense ?? []);
   const { groups: expenseCatGroups, getCatsInGroup, getGroupOf } = useCategoryGroups('expense');
   const symbol = getCurrencySymbol(currency as Parameters<typeof getCurrencySymbol>[0]);
-  const folderSuggestions = getFolderLibraryBlueprints('expense').map(folderBlueprintToSuggestion);
-  const categorySuggestions = getCategoryLibraryBlueprints('expense').map(categoryBlueprintToSuggestion);
+  const folderSuggestions = getFolderLibraryBlueprints('expense').map((b) => folderBlueprintToSuggestion(b, language));
+  const categorySuggestions = getCategoryLibraryBlueprints('expense').map((b) => categoryBlueprintToSuggestion(b, language));
 
   const [name, setName] = useState(initial?.name ?? '');
   const [amount, setAmount] = useState(initial ? String(initial.amount) : '0');
@@ -640,7 +644,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
                   const d = parseISO(startDate);
                   if (isToday(d)) return t('common.today');
                   if (isYesterday(d)) return t('common.yesterday');
-                  return format(d, 'd MMMM yyyy', { locale: ru });
+                  return format(d, 'd MMMM yyyy', { locale: dfLocale });
                 })()}
               </span>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />

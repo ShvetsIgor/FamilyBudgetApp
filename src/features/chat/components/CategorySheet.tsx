@@ -122,7 +122,7 @@ export function CategorySheet({ onSelect, onClose, categories: categoriesOverrid
                   )}
                   {!folderId && sections.length > 1 && (
                     <p className="mb-1.5 text-[10px] font-[800] uppercase tracking-[.08em]" style={{ color: C.sub }}>
-                      Другие
+                      {t('chat.otherCategories')}
                     </p>
                   )}
                   <div className="flex flex-wrap gap-1.5">

@@ -120,7 +120,21 @@
     "numpadSaveEdit": "Сохранить {symbol}{total}",
     "numpadSaving": "Сохранение…",
     "numpadCancel": "Отмена",
-    "numpadPos": "{count} поз."
+    "numpadPos": "{count} поз.",
+    "splitDistributeAll": "Распредели всю сумму по категориям, без скрытого остатка.",
+    "singleMode": "Одна трата",
+    "splitMode": "Сплит",
+    "tapToPick": "Нажми, чтобы выбрать",
+    "remainderTitle": "Осталось распределить",
+    "addFromFolders": "Добавь категории из папок",
+    "sumMustMatch": "Сумма должна сойтись перед сохранением",
+    "overBy": "превышено на",
+    "addCategories": "Добавить категории",
+    "addCategory": "Добавить категорию",
+    "notePlaceholder": "Заметка…",
+    "receiptTotal": "Сумма чека",
+    "categoryAmount": "Сумма категории",
+    "closeAmountAria": "Закрыть ввод суммы"
   },
   "income": {
     "title": "Новый доход",
@@ -154,7 +168,10 @@
     "numpadSaving": "Сохранение…",
     "numpadCancel": "Отмена",
     "numpadToday": "Сегодня",
-    "chatLabel": "Доход"
+    "chatLabel": "Доход",
+    "notePlaceholder": "Заметка к доходу…",
+    "creditEvery": "Зачислять каждое",
+    "dayNum": "{day} число"
   },
   "expenses": {
     "title": "Расходы",
@@ -167,7 +184,9 @@
     "noResults": "Ничего не найдено",
     "tryOther": "Попробуйте другой запрос или фильтр",
     "budget": "Бюджет",
-    "budgetLeft": "осталось"
+    "budgetLeft": "осталось",
+    "deletedLabel": "Удалено",
+    "recurringBadge": "Регулярный"
   },
   "stats": {
     "title": "Статистика",
@@ -212,7 +231,9 @@
       "Чт",
       "Пт",
       "Сб"
-    ]
+    ],
+    "peakPrefix": "Пик трат —",
+    "pctOfSpending": "{p}% от трат"
   },
   "account": {
     "title": "Аккаунт",
@@ -254,7 +275,22 @@
     "family2": "семейный",
     "weekStart": "Начало недели",
     "weekMonday": "Понедельник",
-    "weekSunday": "Воскресенье"
+    "weekSunday": "Воскресенье",
+    "confirmLogout": "Выйти из аккаунта?",
+    "confirmResetData": "Удалить все траты, доходы, копилки, повторяющиеся платежи, историю чата и обучение?\n\nКатегории, папки и настройки будут сохранены. Это действие нельзя отменить.",
+    "familyCreateError": "Не удалось создать семью. Попробуйте ещё раз.",
+    "familyInviteError": "Не удалось отправить приглашение. Попробуйте ещё раз.",
+    "familyAcceptError": "Не удалось принять приглашение. Попробуйте ещё раз.",
+    "familyLeaveError": "Не удалось покинуть семью. Попробуйте ещё раз.",
+    "confirmLeaveOwner": "Вы владелец. Выход расформирует семью для всех участников. Продолжить?",
+    "confirmLeaveFamily": "Покинуть эту семью?",
+    "familyNamePlaceholder": "Название семьи",
+    "debug": "Отладка",
+    "resetHint": "Удалит траты, доходы, копилки, повторяющиеся платежи, чат и обучение. Категории, папки и настройки останутся.",
+    "resetDone": "Готово. Данные очищены.",
+    "resetClearing": "Очистка…",
+    "resetButton": "Сбросить всё остальное",
+    "appSection": "Приложение"
   },
   "recurring": {
     "title": "Регулярные платежи",
@@ -306,7 +342,10 @@
     "upcomingBills": "Ближайшие платежи",
     "seeAll": "Все",
     "noBills": "Нет ближайших платежей",
-    "total": "Итого в месяц"
+    "total": "Итого в месяц",
+    "overdue": "Просрочено",
+    "todayBang": "Сегодня!",
+    "daysShort": "{days} дн"
   },
   "savings": {
     "title": "Цели накоплений",
@@ -352,7 +391,12 @@
     "numpadCancel": "Отмена",
     "numpadCreate": "Создать · {name} · {symbol}{target}",
     "numpadCreateHint": "Введите название и сумму",
-    "chatLabel": "Копилка"
+    "chatLabel": "Копилка",
+    "goalNew": "Новая цель",
+    "goalName": "Название цели",
+    "goalNamePlaceholder": "Например, Отпуск или Машина…",
+    "until": "До",
+    "goalLabel": "Цель"
   },
   "categories": {
     "title": "Категории",
@@ -442,7 +486,35 @@
         "statSubs": "подкатегорий",
         "statBudget": "в месяц",
         "cta": "Начать вести бюджет"
-      }
+      },
+      "doneTitle": "Всё готово!",
+      "doneSubtitle": "Категории настроены. Начните добавлять расходы прямо сейчас.",
+      "statGroups": "групп",
+      "statCategories": "категорий",
+      "statPerMonth": "в месяц",
+      "thousandSuffix": "к",
+      "nCategories": "{n} категорий",
+      "startBudgeting": "Начать вести бюджет",
+      "addFirstExpense": "Добавить первый расход",
+      "pickTitle": "Какие расходы вы отслеживаете?",
+      "pickSubtitle": "Выберите всё подходящее. Всегда можно изменить.",
+      "searchGroups": "Поиск групп…",
+      "selectedCount": "Выбрано: {n}",
+      "customShort": "Своя",
+      "budgetTitle": "Сколько в месяц?",
+      "budgetSubtitle": "Можно оставить пустым и установить позже.",
+      "totalBudget": "Общий бюджет",
+      "bigBudget": "⚠ Довольно большой бюджет",
+      "perMonthAllGroups": "в месяц по всем группам",
+      "budgetWarning": "Бюджет выглядит большим. Убедитесь, что суммы указаны в месяц, а не в год.",
+      "refineTitle": "Уточните каждую категорию",
+      "refineSubtitle": "Больше категорий = лучшая статистика.",
+      "customPlaceholder": "+ Своя",
+      "stepsCategories": "Категории",
+      "stepsRefine": "Уточнение",
+      "stepsBudget": "Бюджет",
+      "stepsDone": "Готово",
+      "stepOf": "Шаг {a} из {b}"
     },
     "editor": {
       "title": "Редактировать",
@@ -456,7 +528,60 @@
       "privateHint": "Скрыть от семьи",
       "save": "Сохранить категорию",
       "delete": "Удалить",
-      "confirmDelete": "Удалить эту категорию?"
+      "confirmDelete": "Удалить эту категорию?",
+      "section": "Раздел",
+      "noSection": "Без раздела",
+      "alsoInSections": "Также в разделах",
+      "tags": "Теги",
+      "tagsHint": "(для поиска)",
+      "addTagPlaceholder": "Добавить тег, Enter",
+      "deleteCategory": "Удалить категорию",
+      "suggestionAria": "Выбрать подсказку {label}"
+    },
+    "confirmArchive": "Архивировать эту категорию?",
+    "confirmReset": "Сбросить все категории к стандартным? Ваши кастомные категории и разделы будут удалены.",
+    "confirmDeleteFolder": "Удалить раздел? Категории останутся, но потеряют группу.",
+    "deleteFolderNamed": "Удалить «{name}»? Категории потеряют группу.",
+    "menuEdit": "Изменить",
+    "menuExpand": "Развернуть",
+    "menuCollapse": "Свернуть",
+    "menuDeleteFolder": "Удалить раздел",
+    "menuMove": "Переместить",
+    "menuArchive": "Архивировать",
+    "resultsCount": "{n} результатов",
+    "nothingFound": "Ничего не найдено",
+    "tryAnotherQuery": "Попробуйте другой запрос",
+    "folderPickerTitle": "Папки категорий",
+    "libraryTitle": "Стандартная библиотека",
+    "librarySubtitle": "Готовые контексты — добавляйте при необходимости",
+    "addShort": "Добавить",
+    "addPlus": "+ Добавить",
+    "resetToDefaults": "Сбросить к умолчаниям",
+    "perMonthShort": "/мес",
+    "pickerPlaceholder": "Категория",
+    "folderEditor": {
+      "editTitle": "Редактировать раздел",
+      "newTitle": "Новый раздел",
+      "namePlaceholder": "Название раздела",
+      "typeExpense": "Группа расходов",
+      "typeIncome": "Группа доходов",
+      "parentSection": "Родительский раздел",
+      "noParent": "Без родителя",
+      "deleteFolder": "Удалить раздел"
+    },
+    "iconGroups": {
+      "all": "Все",
+      "food": "Еда",
+      "home": "Дом",
+      "transport": "Транспорт",
+      "fun": "Развл",
+      "kids": "Дети",
+      "health": "Здоровье",
+      "other": "Прочее"
+    },
+    "pickerAria": {
+      "back": "Назад к разделам",
+      "close": "Закрыть"
     }
   },
   "auth": {
@@ -492,7 +617,9 @@
     "denied": "Доступ запрещён в настройках браузера",
     "unsupported": "Браузер не поддерживает уведомления",
     "empty": "Пока всё тихо",
-    "clear": "Очистить"
+    "clear": "Очистить",
+    "familyInviteTitle": "Приглашение в семью",
+    "familyInviteText": "Вас пригласили присоединиться к семейному бюджету. Перейдите в Настройки → Семья."
   },
   "export": {
     "title": "Экспорт данных",
@@ -508,7 +635,23 @@
     "exportExcelBtn": "Скачать Excel",
     "exportCsvBtn": "Скачать CSV",
     "exporting": "Загрузка…",
-    "noData": "Нет данных за этот период"
+    "noData": "Нет данных за этот период",
+    "sheetExpenses": "Расходы",
+    "sheetIncome": "Доходы",
+    "sheetRecurring": "Регулярные платежи",
+    "sheetGoals": "Цели",
+    "colDate": "Дата",
+    "colSection": "Раздел",
+    "colCategory": "Категория",
+    "colAmount": "Сумма",
+    "colStoreTag": "Магазин/Тег",
+    "colComment": "Комментарий",
+    "colName": "Название",
+    "colFrequency": "Периодичность",
+    "colNextDate": "Следующая дата",
+    "colGoal": "Цель",
+    "colSaved": "Накоплено",
+    "colLeft": "Осталось"
   },
   "cats": {
     "Supermarket": "Супермаркет",
@@ -657,7 +800,14 @@
     "budget": "Бюджет",
     "family": "Семья",
     "regular": "Обычный",
-    "saving": "Сохранение…"
+    "saving": "Сохранение…",
+    "done": "Готово",
+    "thousandSuffix": "к",
+    "undo": "Отменить",
+    "logout": "Выйти",
+    "pageNotFound": "Страница не найдена",
+    "goHome": "На главную",
+    "entryNotFound": "Запись не найдена"
   },
   "chat": {
     "header": {
@@ -770,6 +920,64 @@
       "todaySpent": "сегодня потрачено",
       "online": "Семья онлайн · {n}",
       "onlyYou": "Только вы"
+    },
+    "confirmClearChat": "Очистить всю историю чата? Траты, доходы и копилки останутся.",
+    "clearChat": "Очистить чат",
+    "otherCategories": "Другие",
+    "weeklyWeekN": "Неделя {n}",
+    "bot": {
+      "helpText": "Как записывать траты:\n• «<b>хлеб 12</b>» — слово + сумма\n• «<b>65 кофе</b>» — сумма + слово\n• «<b>☕ 40</b>» — эмодзи + сумма\n\nКоманды:\n• <b>/баланс</b> — конверты за месяц\n• <b>/неделя</b> — итог недели\n• <b>/помощь</b> — это сообщение",
+      "envelopes": "Конверты",
+      "unknownCommand": "Не знаю команды <b>{cmd}</b>. Попробуй <b>/помощь</b>.",
+      "saved1": "Записал",
+      "saved2": "Добавил",
+      "saved3": "Готово",
+      "clarifyWhere": "Не понял, {currency}{amount} куда? 🤔",
+      "clarifyStore": "{currency}{amount} в {store} — что брал? 🛒",
+      "unknown": "Не понял 🤔 Попробуй: «кофе 65» или «☕ 30»",
+      "duplicate": "Это тот же чек или ещё один?",
+      "morningTitle": "Доброе утро ✨",
+      "morningYesterday": "Вчера потрачено {sym} {amount}. Сегодня свободно {sym} {free}.",
+      "morningFree": "Сегодня свободно {sym} {free}.",
+      "andJoiner": " и ",
+      "whereTo": "+{sym} {amount} — куда записать?",
+      "weeklyTitle": "Неделя {n} закрыта 💫",
+      "weeklySpent": "За {range} потрачено {sym} {total}",
+      "weeklySaved": ", сэкономлено {sym} {amount}"
+    },
+    "desktop": {
+      "searchPlaceholder": "Поиск по тратам, категориям…",
+      "commands": "Команды",
+      "paletteHint": "↵ открыть · ESC закрыть · поиск локально",
+      "personalBudget": "Личный бюджет",
+      "botLocal": "● бот считает локально · без сети",
+      "searchShortcut": "Поиск (⌘K)",
+      "cheatTitle": "КАК ПИСАТЬ",
+      "firstStepsTitle": "ПЕРВЫЕ ШАГИ",
+      "stepRegistered": "Зарегистрировался",
+      "stepBudget": "Задай бюджет на месяц",
+      "stepFamily": "Пригласи семью",
+      "stepFirstEntry": "Добавь первую запись в чат",
+      "todayTitle": "СЕГОДНЯ",
+      "details": "детали",
+      "leftShort": "осталось",
+      "overShort": "перебор",
+      "setDailyBudget": "Задать дневной бюджет →",
+      "billsTitle": "ПЛАТЕЖИ",
+      "noBills": "Нет ближайших платежей. ",
+      "addLink": "Добавить",
+      "all": "все",
+      "today": "сегодня",
+      "tomorrow": "завтра",
+      "inDays": "через {n} дн.",
+      "goalsTitle": "КОПИЛКИ",
+      "noGoalsShort": "Нет целей. ",
+      "createLink": "Создать",
+      "envelopesTitle": "КОНВЕРТЫ",
+      "envelopesEmpty": "Настройте бюджеты в ",
+      "categoriesLink": "Категориях",
+      "recentTitle": "ПОСЛЕДНИЕ",
+      "noExpensesShort": "Нет трат"
     }
   },
   "onboarding": {
@@ -801,5 +1009,25 @@
     "perMonth": "/ мес",
     "noIncome": "Нет дохода за этот месяц. Добавьте доход на вкладке Доходы — и бюджет посчитается автоматически.",
     "saveError": "Не удалось сохранить — проверьте соединение и попробуйте ещё раз."
+  },
+  "quickadd": {
+    "totalHint": "· общее",
+    "remainderAfterSplits": "остаток после уточнений",
+    "refineItem": "Уточнить позицию",
+    "date": "Дата",
+    "payment": "Оплата",
+    "note": "Заметка",
+    "optionalPlaceholder": "Необязательно…",
+    "source": "Источник",
+    "willAddToBalance": "будет добавлено к балансу",
+    "account": "Счёт",
+    "noGoals": "Нет целей накопления",
+    "createGoalHint": "Создайте цель на странице «В копилку»",
+    "percentDone": "{p}% выполнено",
+    "goalProgress": "Прогресс цели",
+    "left": "Осталось",
+    "tabExpense": "Расход",
+    "tabIncome": "Доход",
+    "tabSavings": "В копилку"
   }
 }

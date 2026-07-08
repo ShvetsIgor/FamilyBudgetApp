@@ -1,7 +1,7 @@
 'use client';
 
 import { format, parseISO } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { getDateFnsLocale } from '@/shared/utils/dateLocale';
 import { X } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { markAllRead, clearNotifications } from '../store/notificationsSlice';
@@ -85,7 +85,7 @@ export function NotificationsPanel({ onClose }: Props) {
             items.map((n) => {
               const dateLabel = (() => {
                 try {
-                  return format(parseISO(n.createdAt), 'd MMM, HH:mm', { locale: language === 'ru' ? ru : undefined });
+                  return format(parseISO(n.createdAt), 'd MMM, HH:mm', { locale: getDateFnsLocale(language) });
                 } catch { return ''; }
               })();
 

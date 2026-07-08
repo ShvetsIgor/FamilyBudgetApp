@@ -1,14 +1,14 @@
 import { getISOWeek, startOfWeek, endOfWeek, format, parseISO } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { getDateFnsLocale } from '@/shared/utils/dateLocale';
 import { store } from '@/store/store';
 import { addNotification } from '@/features/notifications/store/notificationsSlice';
 import { getPresetDisplayName } from '@/features/categories/config/categoryLabels';
 import type { BotContext } from './context';
+import { makeT } from '@/shared/utils/makeT';
 import type { WeeklyCardData, WeeklyEnvelope } from '@/features/chat/components/BotCard/WeeklyCard';
 import { toLocalDateKey } from '@/shared/utils/dateKey';
 
 const STORAGE_KEY = 'chat_lastWeeklyAt';
-const DAY_NAMES: Record<number, string> = { 0: 'Вс', 1: 'Пн', 2: 'Вт', 3: 'Ср', 4: 'Чт', 5: 'Пт', 6: 'Сб' };
 
 function thisWeekKey(): string {
   const now = new Date();
@@ -32,6 +32,11 @@ export function markWeeklySummarySent(): void {
 }
 
 export async function sendWeeklySummary(ctx: BotContext): Promise<void> {
+  const bt = makeT(ctx.language);
+  const dayName = (iso: string) => {
+    const d = format(parseISO(iso), 'EEEEEE', { locale: getDateFnsLocale(ctx.language) });
+    return d.charAt(0).toUpperCase() + d.slice(1);
+  };
   const { currency, categoriesById, language } = ctx;
   const catDisplayName = (catId: string, fallback?: string | null): string => {
     const preset = getPresetDisplayName(catId, language);
@@ -46,7 +51,7 @@ export async function sendWeeklySummary(ctx: BotContext): Promise<void> {
   const weekStart = startOfWeek(now, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
   const weekNum = getISOWeek(now);
-  const weekRange = `${format(weekStart, 'd', { locale: ru })}–${format(weekEnd, 'd MMMM', { locale: ru })}`;
+  const weekRange = `${format(weekStart, 'd', { locale: getDateFnsLocale(ctx.language) })}–${format(weekEnd, 'd MMMM', { locale: getDateFnsLocale(ctx.language) })}`;
 
   const allExpenses = (ctx as unknown as Record<string, unknown>).allExpenses as Array<{ amount: number; categoryId: string; date: string }> ?? [];
   const weekStartStr = toLocalDateKey(weekStart);
@@ -87,8 +92,8 @@ export async function sendWeeklySummary(ctx: BotContext): Promise<void> {
   if (dayEntries.length > 0) {
     const sorted = dayEntries.sort((a, b) => a[1] - b[1]);
     const best = sorted[0], worst = sorted[sorted.length - 1];
-    bestDay = `${DAY_NAMES[parseISO(best[0]).getDay()]} · ${sym}\u202F${best[1].toLocaleString()}`;
-    worstDay = `${DAY_NAMES[parseISO(worst[0]).getDay()]} · ${sym}\u202F${worst[1].toLocaleString()}`;
+    bestDay = `${dayName(best[0])} · ${sym}\u202F${best[1].toLocaleString()}`;
+    worstDay = `${dayName(worst[0])} · ${sym}\u202F${worst[1].toLocaleString()}`;
   }
 
   const catCount: Record<string, number> = {};
@@ -106,8 +111,8 @@ export async function sendWeeklySummary(ctx: BotContext): Promise<void> {
 
   store.dispatch(addNotification({
     kind: 'weekly',
-    title: `Неделя ${weekNum} закрыта 💫`,
-    text: `За ${weekRange} потрачено ${sym}\u202F${totalSpent.toLocaleString()}${totalBudget > 0 ? `, сэкономлено ${sym}\u202F${saved.toLocaleString()}` : ''}.`,
+    title: bt('chat.bot.weeklyTitle', { n: weekNum }),
+    text: `${bt('chat.bot.weeklySpent', { range: weekRange, sym, total: totalSpent.toLocaleString() })}${totalBudget > 0 ? bt('chat.bot.weeklySaved', { sym, amount: saved.toLocaleString() }) : ''}.`,
     data: cardData,
     createdAt: new Date().toISOString(),
   }));

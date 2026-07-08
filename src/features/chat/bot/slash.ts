@@ -1,8 +1,9 @@
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { getDateFnsLocale } from '@/shared/utils/dateLocale';
 import { addMessage } from '@/features/chat/services/messagesService';
 import { getPresetDisplayName } from '@/features/categories/config/categoryLabels';
 import type { BotContext } from './context';
+import { makeT } from '@/shared/utils/makeT';
 import type { EnvelopesCardData } from '@/features/chat/components/BotCard/EnvelopesCard';
 import type { WeeklyCardData } from '@/features/chat/components/BotCard/WeeklyCard';
 import { sendWeeklySummary } from './weekly';
@@ -10,16 +11,6 @@ import { sendWeeklySummary } from './weekly';
 export function isSlashCommand(text: string): boolean {
   return text.trim().startsWith('/');
 }
-
-const HELP_TEXT =
-  'Как записывать траты:\n' +
-  '• «<b>хлеб 12</b>» — слово + сумма\n' +
-  '• «<b>65 кофе</b>» — сумма + слово\n' +
-  '• «<b>☕ 40</b>» — эмодзи + сумма\n\n' +
-  'Команды:\n' +
-  '• <b>/баланс</b> — конверты за месяц\n' +
-  '• <b>/неделя</b> — итог недели\n' +
-  '• <b>/помощь</b> — это сообщение';
 
 export async function handleSlashCommand(
   text: string,
@@ -43,7 +34,7 @@ export async function handleSlashCommand(
       userId,
       senderId: 'bot',
       kind: 'bot',
-      text: HELP_TEXT,
+      text: makeT(ctx.language)('chat.bot.helpText'),
       status: 'saved',
     });
     return;
@@ -58,7 +49,7 @@ export async function handleSlashCommand(
   // /баланс — envelopes for current month
   if (cmd === '/баланс' || cmd === '/balance') {
     const monthStr = new Date().toISOString().slice(0, 7); // "2026-05"
-    const monthLabel = format(new Date(), 'LLLL yyyy', { locale: ru });
+    const monthLabel = format(new Date(), 'LLLL yyyy', { locale: getDateFnsLocale(ctx.language) });
 
     // Spending per category this month
     const catSpent: Record<string, number> = {};
@@ -91,7 +82,7 @@ export async function handleSlashCommand(
       userId,
       senderId: 'bot',
       kind: 'bot',
-      text: 'Конверты',
+      text: makeT(ctx.language)('chat.bot.envelopes'),
       status: 'saved',
       card: { kind: 'envelopes' as any, data: cardData },
     });
@@ -103,7 +94,7 @@ export async function handleSlashCommand(
     userId,
     senderId: 'bot',
     kind: 'bot',
-    text: `Не знаю команды <b>${text}</b>. Попробуй <b>/помощь</b>.`,
+    text: makeT(ctx.language)('chat.bot.unknownCommand', { cmd: text }),
     status: 'saved',
   });
 }

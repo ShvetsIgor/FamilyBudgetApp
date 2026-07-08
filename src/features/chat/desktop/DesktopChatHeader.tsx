@@ -1,4 +1,5 @@
 'use client';
+import { useT } from '@/shared/hooks/useT';
 import { Search, Trash2 } from 'lucide-react';
 import { useState, useCallback } from 'react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
@@ -9,6 +10,7 @@ import { clearAllMessages } from '@/features/chat/services/messagesService';
 import { setMessages } from '@/features/chat/store/chatSlice';
 
 export function DesktopChatHeader() {
+  const t = useT();
   const C = useChatTokens();
   const [cmdOpen, setCmdOpen] = useState(false);
   const userId = useAppSelector((s) => s.auth.user?.id);
@@ -16,13 +18,13 @@ export function DesktopChatHeader() {
 
   const handleClearChat = useCallback(async () => {
     if (!userId) return;
-    if (!window.confirm('Очистить всю историю чата? Траты, доходы и копилки останутся.')) return;
+    if (!window.confirm(t('chat.confirmClearChat'))) return;
     try {
       await clearAllMessages(userId);
     } finally {
       dispatch(setMessages([]));
     }
-  }, [userId, dispatch]);
+  }, [userId, dispatch, t]);
 
   return (
     <>
@@ -41,10 +43,10 @@ export function DesktopChatHeader() {
         {/* Title */}
         <div className="flex-1 min-w-0">
           <p className="text-[15px] font-[900] leading-tight" style={{ color: C.fg }}>
-            Личный бюджет
+            {t('chat.desktop.personalBudget')}
           </p>
           <p className="text-[11px] font-[700]" style={{ color: C.sage }}>
-            ● бот считает локально · без сети
+            {t('chat.desktop.botLocal')}
           </p>
         </div>
 
@@ -53,8 +55,8 @@ export function DesktopChatHeader() {
           onClick={handleClearChat}
           className="h-9 w-9 rounded-xl flex items-center justify-center transition-colors hover:bg-black/5"
           style={{ color: C.sub }}
-          title="Очистить чат"
-          aria-label="Очистить чат"
+          title={t('chat.clearChat')}
+          aria-label={t('chat.clearChat')}
         >
           <Trash2 className="h-[18px] w-[18px]" />
         </button>
@@ -64,7 +66,7 @@ export function DesktopChatHeader() {
           onClick={() => setCmdOpen(true)}
           className="h-9 w-9 rounded-xl flex items-center justify-center transition-colors hover:bg-black/5"
           style={{ color: C.sub }}
-          title="Поиск (⌘K)"
+          title={t('chat.desktop.searchShortcut')}
         >
           <Search className="h-[18px] w-[18px]" />
         </button>

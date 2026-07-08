@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { format, parseISO, isToday, isYesterday } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import type { Locale } from 'date-fns';
+import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { Plus } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setIncome, prependIncome, removeIncome, updateIncome as updateIncomeAction } from '@/features/income/store/incomeSlice';
@@ -27,11 +28,11 @@ function groupByDate(items: SerializableIncome[]): [string, SerializableIncome[]
   return Array.from(map.entries());
 }
 
-function dayLabel(dateStr: string, t: ReturnType<typeof useT>): string {
+function dayLabel(dateStr: string, t: ReturnType<typeof useT>, locale: Locale): string {
   const d = parseISO(dateStr);
   if (isToday(d)) return t('common.today');
   if (isYesterday(d)) return t('common.yesterday');
-  return format(d, 'EEEE, d MMMM', { locale: ru });
+  return format(d, 'EEEE, d MMMM', { locale });
 }
 
 function getYearMonths(): string[] {
@@ -51,6 +52,7 @@ export default function IncomePage() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const t = useT();
+  const dfLocale = useDateFnsLocale();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const { list: reduxIncomes, status: incStatus } = useAppSelector((s) => s.income);
@@ -129,7 +131,7 @@ export default function IncomePage() {
   }
 
   async function handleDelete(income: SerializableIncome) {
-    if (!user || !confirm('Удалить эту запись?')) return;
+    if (!user || !confirm(t('income.confirmDelete'))) return;
     await deleteIncome(user.id, income);
     dispatch(removeIncome(income.id));
   }
@@ -154,7 +156,7 @@ export default function IncomePage() {
         {/* Header — architectural */}
         <div className="px-4 pt-6 pb-4 lg:px-0 lg:pt-0" style={{ borderBottom: '2px solid hsl(var(--foreground))', background: 'hsl(var(--card))' }}>
           <p style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
-            {format(parseISO(selectedMonth + '-01'), 'LLLL yyyy', { locale: ru })}
+            {format(parseISO(selectedMonth + '-01'), 'LLLL yyyy', { locale: dfLocale })}
           </p>
           <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, color: '#18A957' }}>
             {monthTotal > 0 ? '+' : ''}{formatAmount(monthTotal, currency)}
@@ -169,7 +171,7 @@ export default function IncomePage() {
         >
           {yearMonths.map((m) => {
             const sel = m === selectedMonth;
-            const label = format(parseISO(m + '-01'), 'LLL', { locale: ru });
+            const label = format(parseISO(m + '-01'), 'LLL', { locale: dfLocale });
             return (
               <button
                 key={m}
@@ -210,7 +212,7 @@ export default function IncomePage() {
                 <div key={day} className="border-b border-border/30">
                   <div className="flex items-center justify-between px-4 py-2 lg:px-0" style={{ background: 'hsl(var(--muted)/0.4)' }}>
                     <span style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 800, color: 'hsl(var(--muted-foreground))' }}>
-                      {dayLabel(day, t)}
+                      {dayLabel(day, t, dfLocale)}
                     </span>
                     <span style={{ fontSize: 10, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: '#18A957' }}>
                       +{formatAmount(dayTotal, currency)}

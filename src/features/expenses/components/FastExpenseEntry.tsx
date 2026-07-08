@@ -4,7 +4,7 @@ import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, MessageSquare, Calendar, ChevronRight } from 'lucide-react';
 import { format, parseISO, isToday, isYesterday } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { getDateFnsLocale } from '@/shared/utils/dateLocale';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { removeMessage as removeChatMessage } from '@/features/chat/store/chatSlice';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
@@ -80,6 +80,7 @@ export function FastExpenseEntry({
   const { groups: folderGroups, getCatsInGroup } = useCategoryGroups('expense');
   const t = useT();
   const symbol = getCurrencySymbol(currency);
+  const dfLocale = getDateFnsLocale(language);
   const isEdit = !!initialExpense;
 
   // Plural receipt count — avoids broken t() key lookup for _one/_few/_many variants
@@ -104,12 +105,12 @@ export function FastExpenseEntry({
     [allCats]
   );
   const folderSuggestions = useMemo(
-    () => getFolderLibraryBlueprints('expense').map(folderBlueprintToSuggestion),
-    [],
+    () => getFolderLibraryBlueprints('expense').map((b) => folderBlueprintToSuggestion(b, language)),
+    [language],
   );
   const categorySuggestions = useMemo(
-    () => getCategoryLibraryBlueprints('expense').map(categoryBlueprintToSuggestion),
-    [],
+    () => getCategoryLibraryBlueprints('expense').map((b) => categoryBlueprintToSuggestion(b, language)),
+    [language],
   );
 
   function initSelectedCatId() {
@@ -403,7 +404,7 @@ export function FastExpenseEntry({
     if (entryMode === 'split') {
       const validSplitSum = splitItems.reduce((sum, item) => sum + item.amount, 0);
       if (splitItems.length === 0 || Math.abs(totalNum - validSplitSum) > 0.01) {
-        window.alert('Распредели всю сумму по категориям, без скрытого остатка.');
+        window.alert(t('expense.splitDistributeAll'));
         return;
       }
     }
@@ -479,7 +480,7 @@ export function FastExpenseEntry({
           if (!isToday(expenseDate)) {
             dateHint = isYesterday(expenseDate)
               ? t('common.yesterday')
-              : format(expenseDate, 'd MMMM', { locale: ru });
+              : format(expenseDate, 'd MMMM', { locale: dfLocale });
           }
           const splitHint = posCount > 1 ? `${t('expense.split2')} · ${fmtCount(posCount)}` : undefined;
           const combinedHint = [dateHint, splitHint].filter(Boolean).join(' · ') || undefined;
@@ -613,7 +614,7 @@ export function FastExpenseEntry({
                 selected ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground',
               )}
             >
-              {mode === 'single' ? 'Одна трата' : 'Сплит'}
+              {mode === 'single' ? t('expense.singleMode') : t('expense.splitMode')}
             </button>
           );
         })}
@@ -640,7 +641,7 @@ export function FastExpenseEntry({
                 {selectedCat ? t.cat(selectedCat.name) : t('categories.selectCategory')}
               </div>
               <div className="text-[11px] text-muted-foreground font-semibold mt-0.5 truncate">
-                {initialStore ? displayName : activeFolder ? t.cat(activeFolder.name) : 'Нажми, чтобы выбрать'}
+                {initialStore ? displayName : activeFolder ? t.cat(activeFolder.name) : t('expense.tapToPick')}
               </div>
             </div>
             <span className="text-lg font-black text-foreground tabular-nums">{symbol}{total}</span>
@@ -658,13 +659,13 @@ export function FastExpenseEntry({
                 <StickerIcon icon={displayIcon} color={catColor} className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-extrabold text-foreground">Осталось распределить</div>
+                <div className="text-sm font-extrabold text-foreground">{t('expense.remainderTitle')}</div>
                 <div className="text-[11px] text-muted-foreground font-semibold mt-0.5">
-                  {splits.length === 0 ? 'Добавь категории из папок' : 'Сумма должна сойтись перед сохранением'}
+                  {splits.length === 0 ? t('expense.addFromFolders') : t('expense.sumMustMatch')}
                 </div>
                 {splitsOverflow && (
                   <div className="text-[9px] font-bold text-destructive mt-0.5">
-                    превышено на {symbol}{(splitsSum - totalNum).toFixed(2)}
+                    {t('expense.overBy')} {symbol}{(splitsSum - totalNum).toFixed(2)}
                   </div>
                 )}
               </div>
@@ -719,7 +720,7 @@ export function FastExpenseEntry({
               style={{ borderColor: catColor + '77', color: catColor, background: 'transparent' }}
             >
               <span className="text-lg leading-none">＋</span>
-              {shouldSuggestSplit && splits.length === 0 ? 'Добавить категории' : 'Добавить категорию'}
+              {shouldSuggestSplit && splits.length === 0 ? t('expense.addCategories') : t('expense.addCategory')}
             </button>
           </>
         )}
@@ -737,9 +738,9 @@ export function FastExpenseEntry({
             <span className="flex-1 text-left text-[13px] font-bold text-foreground">
               {(() => {
                 const d = parseISO(dateStr);
-                if (isToday(d)) return 'Сегодня';
-                if (isYesterday(d)) return 'Вчера';
-                return format(d, 'd MMMM yyyy', { locale: ru });
+                if (isToday(d)) return t('common.today');
+                if (isYesterday(d)) return t('common.yesterday');
+                return format(d, 'd MMMM yyyy', { locale: dfLocale });
               })()}
             </span>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -762,7 +763,7 @@ export function FastExpenseEntry({
               <MessageSquare className="h-4 w-4" style={{ color: catColor }} />
             </div>
             <span className="flex-1 text-left text-[13px] font-bold" style={{ color: comment ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
-              {comment || 'Заметка…'}
+              {comment || t('expense.notePlaceholder')}
             </span>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </button>
@@ -772,7 +773,7 @@ export function FastExpenseEntry({
                 type="text"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder="Заметка…"
+                placeholder={t('expense.notePlaceholder')}
                 autoFocus
                 className="mt-2 block w-full px-3 py-2 rounded-xl text-sm bg-background border border-border outline-none focus:border-primary transition-colors"
               />
@@ -842,14 +843,14 @@ export function FastExpenseEntry({
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-black text-foreground">{amountEditorTitle}</div>
               <div className="text-[11px] font-bold text-muted-foreground">
-                {amountEditorTarget === 'total' ? 'Сумма чека' : 'Сумма категории'}
+                {amountEditorTarget === 'total' ? t('expense.receiptTotal') : t('expense.categoryAmount')}
               </div>
             </div>
             <button
               type="button"
               onClick={() => setAmountEditorTarget(null)}
               className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
-              aria-label="Закрыть ввод суммы"
+              aria-label={t('expense.closeAmountAria')}
             >
               <X className="h-5 w-5" />
             </button>
@@ -886,7 +887,7 @@ export function FastExpenseEntry({
             className="mt-3 w-full rounded-[16px] py-3 text-sm font-black text-primary-foreground"
             style={{ background: amountEditorColor }}
           >
-            Готово
+            {t('common.done')}
           </button>
         </div>
       </div>
@@ -894,7 +895,7 @@ export function FastExpenseEntry({
 
     <CategoryFolderPickerSheet
       open={categorySheetMode !== null}
-      title={categorySheetMode === 'split' ? 'Добавить категорию' : 'Выбрать категорию'}
+      title={categorySheetMode === 'split' ? t('expense.addCategory') : t('categories.selectCategory')}
       mode={categorySheetMode ?? 'single'}
       merchantLabel={initialStore}
       folders={topFolders}

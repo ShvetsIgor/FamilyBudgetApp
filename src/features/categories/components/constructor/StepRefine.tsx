@@ -1,4 +1,5 @@
 'use client';
+import { useT } from '@/shared/hooks/useT';
 import { useState } from 'react';
 import type { WizardFolder, WizardCategory } from '../../hooks/useConstructorState';
 import { StickerIcon } from '../CategoryIcon';
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function StepRefine({ folders, categories, onToggleCategory, onAddCustomCategory, locale = 'ru' }: Props) {
+  const t = useT();
   const [customInput, setCustomInput] = useState<Record<string, string>>({});
 
   const handleAddCustom = (folderId: string) => {
@@ -29,8 +31,8 @@ export function StepRefine({ folders, categories, onToggleCategory, onAddCustomC
   return (
     <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-[#3D2C1F] mb-1">Уточните каждую категорию</h2>
-        <p className="text-sm text-[#8E7A66]">Больше категорий = лучшая статистика.</p>
+        <h2 className="text-lg font-bold text-[#3D2C1F] mb-1">{t('categories.constructor.refineTitle')}</h2>
+        <p className="text-sm text-[#8E7A66]">{t('categories.constructor.refineSubtitle')}</p>
       </div>
 
       {folders.map((folder) => {
@@ -87,7 +89,7 @@ export function StepRefine({ folders, categories, onToggleCategory, onAddCustomC
               <div className="flex items-center gap-1">
                 <input
                   type="text"
-                  placeholder="+ Своя"
+                  placeholder={t('categories.constructor.customPlaceholder')}
                   value={customInput[folder.id] ?? ''}
                   onChange={(e) => setCustomInput((prev) => ({ ...prev, [folder.id]: e.target.value }))}
                   onKeyDown={(e) => e.key === 'Enter' && handleAddCustom(folder.id)}

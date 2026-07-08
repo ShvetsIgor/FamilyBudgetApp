@@ -1,4 +1,5 @@
 'use client';
+import { useT } from '@/shared/hooks/useT';
 
 import { useState, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
@@ -15,6 +16,7 @@ import { clearAllMessages } from '@/features/chat/services/messagesService';
 import { setMessages } from '@/features/chat/store/chatSlice';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  const t = useT();
   const pathname = usePathname();
   const isChat = pathname === '/home';
   const [menuOpen, setMenuOpen] = useState(false);
@@ -24,13 +26,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const handleClearChat = useCallback(async () => {
     if (!userId) return;
-    if (!window.confirm('Очистить всю историю чата? Траты, доходы и копилки останутся.')) return;
+    if (!window.confirm(t('chat.confirmClearChat'))) return;
     try {
       await clearAllMessages(userId);
     } finally {
       dispatch(setMessages([]));
     }
-  }, [userId, dispatch]);
+  }, [userId, dispatch, t]);
 
   return (
     <>

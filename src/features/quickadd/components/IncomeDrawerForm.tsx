@@ -16,10 +16,10 @@ import { normalizeName } from '@/shared/utils/normalizeName';
 import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
 
 const INCOME_METHODS = [
-  { value: 'bank'  as const, label: 'Перевод', icon: '🏦' },
-  { value: 'card'  as const, label: 'Карта',   icon: '💳' },
-  { value: 'cash'  as const, label: 'Наличные', icon: '💵' },
-  { value: 'other' as const, label: 'Другое',  icon: '🔄' },
+  { value: 'bank'  as const, label: 'income.bank', icon: '🏦' },
+  { value: 'card'  as const, label: 'expense.card',   icon: '💳' },
+  { value: 'cash'  as const, label: 'expense.cash', icon: '💵' },
+  { value: 'other' as const, label: 'expense.other',  icon: '🔄' },
 ];
 
 const AMOUNT_PRESETS = [10000, 25000, 50000, 100000];
@@ -89,7 +89,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
         {/* ── Category grid ── */}
         <div>
           <div className="flex items-center justify-between mb-1.5 px-0.5">
-            <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">Источник</span>
+            <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">{t('quickadd.source')}</span>
             <span className="text-[11px] font-bold" style={{ color: catColor }}>{selectedCat ? t.cat(selectedCat.name) : ''}</span>
           </div>
           <div className="grid gap-1.5" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
@@ -150,7 +150,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
                 color: amount === String(p) ? catColor : 'hsl(var(--muted-foreground))',
               }}
             >
-              {p >= 1000 ? `${p / 1000}к` : p}
+              {p >= 1000 ? `${p / 1000}${t('common.thousandSuffix')}` : p}
             </button>
           ))}
         </div>
@@ -167,7 +167,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
                 + {symbol}{amountNum.toLocaleString()}
               </div>
               <div className="text-[10px] text-muted-foreground mt-0.5">
-                будет добавлено к балансу
+                {t('quickadd.willAddToBalance')}
               </div>
             </div>
             <span className="text-sm font-black" style={{ color: catColor }}>
@@ -180,7 +180,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
         <div className="bg-card rounded-[14px] overflow-hidden divide-y divide-border" style={{ boxShadow: '0 1px 4px rgba(61,44,31,.06)' }}>
           {/* Date */}
           <div className="flex items-center gap-3 px-4 py-3 cursor-pointer" onClick={() => setShowDatePicker(!showDatePicker)}>
-            <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest w-[72px] shrink-0">Дата</span>
+            <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest w-[72px] shrink-0">{t('quickadd.date')}</span>
             <span className="flex-1 text-sm font-bold text-foreground">{dateLabel}</span>
             <kbd className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[9px] font-mono">D</kbd>
             <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
@@ -193,7 +193,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
 
           {/* Method */}
           <div className="flex items-center gap-3 px-4 py-3">
-            <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest w-[72px] shrink-0">Счёт</span>
+            <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest w-[72px] shrink-0">{t('quickadd.account')}</span>
             <div className="flex gap-1.5 flex-wrap flex-1">
               {INCOME_METHODS.map((m) => {
                 const sel = method === m.value;
@@ -208,7 +208,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
                       color: sel ? catColor : 'hsl(var(--muted-foreground))',
                     }}
                   >
-                    <span>{m.icon}</span><span>{m.label}</span>
+                    <span>{m.icon}</span><span>{t(m.label)}</span>
                   </button>
                 );
               })}
@@ -217,12 +217,12 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
 
           {/* Note */}
           <div className="flex items-center gap-3 px-4 py-3">
-            <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest w-[72px] shrink-0">Заметка</span>
+            <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest w-[72px] shrink-0">{t('quickadd.note')}</span>
             <input
               type="text"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Необязательно…"
+              placeholder={t('quickadd.optionalPlaceholder')}
               className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/40"
             />
           </div>

@@ -356,8 +356,9 @@ export function CategoriesHub() {
   const allActiveCats = useAppSelector((s) => selectAllActiveCategories(s, tab));
   const searchResults = filterCategoriesByQuery(searchQuery, allActiveCats, CATEGORY_ALIAS_MAP);
   const t = useT();
-  const categorySuggestions = getCategoryLibraryBlueprints(tab).map(categoryBlueprintToSuggestion);
-  const folderSuggestions = getFolderLibraryBlueprints(tab).map(folderBlueprintToSuggestion);
+  const language = useAppSelector((s) => s.ui.language);
+  const categorySuggestions = getCategoryLibraryBlueprints(tab).map((b) => categoryBlueprintToSuggestion(b, language));
+  const folderSuggestions = getFolderLibraryBlueprints(tab).map((b) => folderBlueprintToSuggestion(b, language));
 
   const existingCategoryIds = new Set(allCategories.map((c) => c.id));
   const existingFolderIds = new Set(folders.map((f) => f.id));
@@ -472,7 +473,7 @@ export function CategoriesHub() {
 
   const handleDeleteCategory = async (cat: Category) => {
     if (!user) return;
-    if (!confirm('Архивировать эту категорию?')) return;
+    if (!confirm(t('categories.confirmArchive'))) return;
     await archiveCategoryInFirestore(user.id, cat.id, cat.type);
     dispatch(archiveCategory({ id: cat.id, type: cat.type }));
   };
@@ -635,7 +636,7 @@ export function CategoriesHub() {
 
   const handleReset = async () => {
     if (!user) return;
-    if (!confirm('Сбросить все категории к стандартным? Ваши кастомные категории и разделы будут удалены.')) return;
+    if (!confirm(t('categories.confirmReset'))) return;
     const idMap = await resetCategoriesToDefaults(user.id);
     await Promise.all([
       clearStoreProfiles(user.id),
@@ -786,15 +787,15 @@ export function CategoriesHub() {
               <ContextMenu
                 options={[
                   {
-                    label: 'Изменить',
+                    label: t('categories.menuEdit'),
                     onClick: () => setFolderEditor({ open: true, folder }),
                   },
                   {
-                    label: isCollapsed ? 'Развернуть' : 'Свернуть',
+                    label: isCollapsed ? t('categories.menuExpand') : t('categories.menuCollapse'),
                     onClick: () => toggleFolder(folder.id),
                   },
                   {
-                    label: 'Удалить раздел',
+                    label: t('categories.menuDeleteFolder'),
                     danger: true,
                     onClick: () => setConfirmDeleteFolderId(folder.id),
                   },
@@ -823,7 +824,7 @@ export function CategoriesHub() {
             }}
           >
             <span style={{ flex: 1, fontSize: 12, color: '#E05050' }}>
-              Удалить «{t.cat(folder.name)}»? Категории потеряют группу.
+              {t('categories.deleteFolderNamed', { name: t.cat(folder.name) })}
             </span>
             <button
               onClick={() => handleFolderDelete(folder)}
@@ -838,7 +839,7 @@ export function CategoriesHub() {
                 cursor: 'pointer',
               }}
             >
-              Удалить
+              {t('categories.delete')}
             </button>
             <button
               onClick={() => setConfirmDeleteFolderId(null)}
@@ -853,7 +854,7 @@ export function CategoriesHub() {
                 cursor: 'pointer',
               }}
             >
-              Отмена
+              {t('categories.cancel')}
             </button>
           </div>
         )}
@@ -866,7 +867,7 @@ export function CategoriesHub() {
             {/* Inline new category input */}
             {inlineEdit?.kind === 'cat-new' && inlineEdit.id === folder.id ? (
               <InlineInputRow
-                placeholder="Название категории"
+                placeholder={t('categories.namePlaceholder')}
                 indent
                 onSave={(name) => handleInlineCreateCategory(folder.id, name, folder)}
                 onCancel={() => setInlineEdit(null)}
@@ -890,7 +891,7 @@ export function CategoriesHub() {
                   textAlign: 'left',
                 }}
               >
-                + Добавить категорию
+                {t('categories.add')}
               </button>
             )}
 
@@ -997,15 +998,15 @@ export function CategoriesHub() {
             <ContextMenu
               options={[
                 {
-                  label: 'Изменить',
+                  label: t('categories.menuEdit'),
                   onClick: () => openEditor(cat),
                 },
                 {
-                  label: 'Переместить',
+                  label: t('categories.menuMove'),
                   onClick: () => openEditor(cat),
                 },
                 {
-                  label: 'Архивировать',
+                  label: t('categories.menuArchive'),
                   danger: true,
                   onClick: () => handleDeleteCategory(cat),
                 },
@@ -1059,7 +1060,7 @@ export function CategoriesHub() {
                 boxShadow: tab === tp ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
               }}
             >
-              {tp === 'expense' ? 'Расходы' : 'Доходы'}
+              {tp === 'expense' ? t('categories.expense') : t('categories.income')}
             </button>
           ))}
         </div>
@@ -1078,7 +1079,7 @@ export function CategoriesHub() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Поиск…"
+              placeholder={t('categories.search')}
               style={{
                 width: '100%',
                 paddingLeft: 30,
@@ -1134,7 +1135,7 @@ export function CategoriesHub() {
               }}
             >
               <div style={{ padding: '8px 12px 4px', fontSize: 11, color: T.sub, fontWeight: 600 }}>
-                {searchResults.length} результатов
+                {t('categories.resultsCount', { n: searchResults.length })}
               </div>
               {searchResults.map((cat) => renderCategoryRow(cat))}
             </div>
@@ -1152,13 +1153,13 @@ export function CategoriesHub() {
                 gap: 6,
               }}
             >
-              <p style={{ fontSize: 14, fontWeight: 600, color: T.fg }}>Ничего не найдено</p>
-              <p style={{ fontSize: 12, color: T.sub }}>Попробуйте другой запрос</p>
+              <p style={{ fontSize: 14, fontWeight: 600, color: T.fg }}>{t('categories.nothingFound')}</p>
+              <p style={{ fontSize: 12, color: T.sub }}>{t('categories.tryAnotherQuery')}</p>
             </div>
           )
         ) : (
           <CategoryFolderPickerView
-            title="Папки категорий"
+            title={t('categories.folderPickerTitle')}
             mode="single"
             folders={folders}
             categories={allActiveCats}
@@ -1189,10 +1190,10 @@ export function CategoriesHub() {
             >
               <div>
                 <span style={{ fontSize: 11, fontWeight: 700, color: T.sub, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  Стандартная библиотека
+                  {t('categories.libraryTitle')}
                 </span>
                 <div style={{ fontSize: 11, color: T.subLight, marginTop: 1 }}>
-                  Готовые контексты — добавляйте при необходимости
+                  {t('categories.librarySubtitle')}
                 </div>
               </div>
               <span style={{ fontSize: 11, color: T.subLight, flexShrink: 0 }}>
@@ -1263,7 +1264,7 @@ export function CategoriesHub() {
                           cursor: 'pointer',
                         }}
                       >
-                        Добавить
+                        {t('categories.addShort')}
                       </button>
                     </div>
                   );
@@ -1288,7 +1289,7 @@ export function CategoriesHub() {
                 padding: '4px 8px',
               }}
             >
-              Сбросить к умолчаниям
+              {t('categories.resetToDefaults')}
             </button>
           </div>
         )}
@@ -1329,7 +1330,7 @@ export function CategoriesHub() {
         onSave={handleFolderSave}
         onDelete={folderEditor.folder ? async () => {
           if (!folderEditor.folder) return;
-          if (!confirm('Удалить раздел? Категории останутся, но потеряют группу.')) return;
+          if (!confirm(t('categories.confirmDeleteFolder'))) return;
           await handleFolderDelete(folderEditor.folder);
           setFolderEditor({ open: false });
         } : undefined}

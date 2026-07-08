@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { X, Calendar, MessageSquare, ChevronRight } from 'lucide-react';
 import { format, parseISO, isToday, isYesterday } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setGoals, updateGoalItem } from '@/features/savings/store/savingsSlice';
@@ -38,6 +38,7 @@ export function FastSavingsEntry() {
   const { list: goals, status } = useAppSelector((s) => s.savings);
   const expenseCategories = useAppSelector((s) => s.categories.expense);
   const t = useT();
+  const dfLocale = useDateFnsLocale();
   const symbol = getCurrencySymbol(currency);
 
   const [amount, setAmount] = useState('0');
@@ -102,7 +103,7 @@ export function FastSavingsEntry() {
       const expenseDate = parseISO(dateStr);
       let dateHint: string | undefined;
       if (!isToday(expenseDate)) {
-        dateHint = isYesterday(expenseDate) ? t('common.yesterday') : format(expenseDate, 'd MMMM', { locale: ru });
+        dateHint = isYesterday(expenseDate) ? t('common.yesterday') : format(expenseDate, 'd MMMM', { locale: dfLocale });
       }
       await addMessage({
         userId: user.id,
@@ -226,9 +227,9 @@ export function FastSavingsEntry() {
             <span className="flex-1 text-left text-[13px] font-bold text-foreground">
               {(() => {
                 const d = parseISO(dateStr);
-                if (isToday(d)) return 'Сегодня';
-                if (isYesterday(d)) return 'Вчера';
-                return format(d, 'd MMMM yyyy', { locale: ru });
+                if (isToday(d)) return t('common.today');
+                if (isYesterday(d)) return t('common.yesterday');
+                return format(d, 'd MMMM yyyy', { locale: dfLocale });
               })()}
             </span>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -251,7 +252,7 @@ export function FastSavingsEntry() {
               <MessageSquare className="h-4 w-4" style={{ color: goalColor }} />
             </div>
             <span className="flex-1 text-left text-[13px] font-bold" style={{ color: comment ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
-              {comment || 'Заметка…'}
+              {comment || t('expense.notePlaceholder')}
             </span>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </button>
@@ -261,7 +262,7 @@ export function FastSavingsEntry() {
                 type="text"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder="Заметка…"
+                placeholder={t('expense.notePlaceholder')}
                 autoFocus
                 className="mt-2 block w-full px-3 py-2 rounded-xl text-sm bg-background border border-border outline-none focus:border-primary transition-colors"
               />

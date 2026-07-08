@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Calendar, MessageSquare, ChevronRight } from 'lucide-react';
 import { format, parseISO, isToday, isYesterday } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { prependIncome, updateIncome } from '@/features/income/store/incomeSlice';
 import { addIncome, updateIncome as updateIncomeService } from '@/features/income/services/incomeService';
@@ -37,6 +37,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
   const allCats = useAppSelector((s) => s.categories.income);
   const displayCats = useAppSelector((s) => selectAllActiveCategories(s, 'income'));
   const t = useT();
+  const dfLocale = useDateFnsLocale();
   const symbol = getCurrencySymbol(currency);
 
   const [amount, setAmount] = useState(initialIncome ? String(initialIncome.amount) : '0');
@@ -119,7 +120,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
         });
         if (isFuture) {
           // Future-dated recurring income: no income row yet, but still confirm in chat
-          await recordIncomeInChat(`${t('income.recurring')} · ${format(recurDate, 'd MMMM', { locale: ru })}`);
+          await recordIncomeInChat(`${t('income.recurring')} · ${format(recurDate, 'd MMMM', { locale: dfLocale })}`);
           goBack();
           return;
         }
@@ -136,7 +137,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
       const incomeDate = parseISO(dateStr);
       let dateHint: string | undefined;
       if (!isToday(incomeDate)) {
-        dateHint = isYesterday(incomeDate) ? t('common.yesterday') : format(incomeDate, 'd MMMM', { locale: ru });
+        dateHint = isYesterday(incomeDate) ? t('common.yesterday') : format(incomeDate, 'd MMMM', { locale: dfLocale });
       }
       await recordIncomeInChat(dateHint);
 
@@ -235,9 +236,9 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
             <span className="flex-1 text-left text-[13px] font-bold text-foreground">
               {(() => {
                 const d = parseISO(dateStr);
-                if (isToday(d)) return 'Сегодня';
-                if (isYesterday(d)) return 'Вчера';
-                return format(d, 'd MMMM yyyy', { locale: ru });
+                if (isToday(d)) return t('common.today');
+                if (isYesterday(d)) return t('common.yesterday');
+                return format(d, 'd MMMM yyyy', { locale: dfLocale });
               })()}
             </span>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -260,7 +261,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
               <MessageSquare className="h-4 w-4" style={{ color: catColor }} />
             </div>
             <span className="flex-1 text-left text-[13px] font-bold" style={{ color: comment ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
-              {comment || 'Заметка…'}
+              {comment || t('expense.notePlaceholder')}
             </span>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </button>
@@ -270,7 +271,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
                 type="text"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder="Заметка к доходу…"
+                placeholder={t('income.notePlaceholder')}
                 autoFocus
                 className="mt-2 block w-full px-3 py-2 rounded-xl text-sm bg-background border border-border outline-none focus:border-primary transition-colors"
               />
@@ -314,9 +315,9 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
                 className="px-3.5 py-3 flex items-center justify-between"
                 style={{ background: catColor + '0a', borderTop: `1px solid ${catColor}22` }}
               >
-                <p className="text-[12px] font-[700] text-muted-foreground">Зачислять каждое</p>
+                <p className="text-[12px] font-[700] text-muted-foreground">{t('income.creditEvery')}</p>
                 <span className="text-[14px] font-extrabold tabular-nums" style={{ color: catColor }}>
-                  {new Date(dateStr).getDate()} число
+                  {t('income.dayNum', { day: new Date(dateStr).getDate() })}
                 </span>
               </div>
             )}

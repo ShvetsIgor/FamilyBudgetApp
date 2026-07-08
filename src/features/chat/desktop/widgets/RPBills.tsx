@@ -1,4 +1,5 @@
 'use client';
+import { useT } from '@/shared/hooks/useT';
 import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { RPCard } from './RPCard';
 import { useAppSelector } from '@/store/store';
@@ -7,6 +8,7 @@ import { parseISO, differenceInDays } from 'date-fns';
 
 export function RPBills() {
   const C = useChatTokens();
+  const t = useT();
   const recurring = useAppSelector((s) => s.recurring?.list ?? []);
   const currency = useAppSelector((s) => s.ui.currency);
   const sym = currency === 'ILS' ? '₪' : currency === 'USD' ? '$' : '€';
@@ -21,21 +23,21 @@ export function RPBills() {
 
   if (upcoming.length === 0) {
     return (
-      <RPCard title="ПЛАТЕЖИ" accentColor={C.lavender}>
-        <p style={{ margin: 0, fontSize: 12, color: C.sub }}>Нет ближайших платежей. <Link href="/recurring" style={{ color: C.primary }}>Добавить</Link></p>
+      <RPCard title={t('chat.desktop.billsTitle')} accentColor={C.lavender}>
+        <p style={{ margin: 0, fontSize: 12, color: C.sub }}>{t('chat.desktop.noBills')}<Link href="/recurring" style={{ color: C.primary }}>{t('chat.desktop.addLink')}</Link></p>
       </RPCard>
     );
   }
 
   return (
-    <RPCard title="ПЛАТЕЖИ" accentColor={C.lavender} action={{ label: 'все', href: '/recurring' }}>
+    <RPCard title={t('chat.desktop.billsTitle')} accentColor={C.lavender} action={{ label: t('chat.desktop.all'), href: '/recurring' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {upcoming.map((bill) => (
           <div key={bill.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <span style={{ fontSize: 12, fontWeight: 700, color: C.fg, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bill.name}</span>
               <span style={{ fontSize: 10, fontWeight: 600, color: bill.daysLeft <= 3 ? '#C97B84' : C.sub }}>
-                {bill.daysLeft === 0 ? 'сегодня' : bill.daysLeft === 1 ? 'завтра' : `через ${bill.daysLeft} дн.`}
+                {bill.daysLeft === 0 ? t('chat.desktop.today') : bill.daysLeft === 1 ? t('chat.desktop.tomorrow') : t('chat.desktop.inDays', { n: bill.daysLeft })}
               </span>
             </div>
             <span style={{ fontSize: 12, fontWeight: 800, color: C.fg, marginLeft: 8 }}>{sym}{bill.amount.toLocaleString()}</span>

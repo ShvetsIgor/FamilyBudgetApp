@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { setBudgetMode, setBudgetDailyLimit, setBudgetMonthlyLimit } from '@/features/ui/store/uiSlice';
 import type { BudgetMode } from '@/features/ui/store/uiSlice';
@@ -16,6 +16,7 @@ import { getDb } from '@/shared/lib/firebase';
 export default function BudgetPage() {
   const dispatch = useAppDispatch();
   const t = useT();
+  const dfLocale = useDateFnsLocale();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const mode = useAppSelector((s) => s.ui.budgetMode);
@@ -84,7 +85,7 @@ export default function BudgetPage() {
         {/* Architectural header */}
         <div className="px-4 pt-6 pb-4 lg:px-0 lg:pt-0" style={{ borderBottom: '2px solid hsl(var(--foreground))', background: 'hsl(var(--card))' }}>
           <p style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
-            {format(new Date(monthStr + '-01'), 'LLLL yyyy', { locale: ru })}
+            {format(new Date(monthStr + '-01'), 'LLLL yyyy', { locale: dfLocale })}
           </p>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
             <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1 }}>

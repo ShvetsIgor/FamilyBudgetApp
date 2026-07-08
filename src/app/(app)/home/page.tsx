@@ -3,7 +3,7 @@
 import { useCallback, useRef, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format, isToday, isYesterday, parseISO } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { getDateFnsLocale } from '@/shared/utils/dateLocale';
 
 import { useAppSelector, useAppDispatch, useAppStore } from '@/store/store';
 import { setTyping, removeMessage } from '@/features/chat/store/chatSlice';
@@ -79,7 +79,7 @@ export default function HomePage() {
   const typing = useAppSelector((s) => s.chat.typing);
   const language = useAppSelector((s) => s.ui.language);
 
-  const dateFnsLocale = language === 'ru' ? ru : undefined;
+  const dateFnsLocale = getDateFnsLocale(language);
 
   function dayLabel(iso: string): string {
     const d = parseISO(iso);

@@ -37,19 +37,19 @@ export function getCategoryLibraryBlueprints(type: CategoryType): readonly Categ
   ));
 }
 
-export function folderBlueprintToSuggestion(blueprint: FolderBlueprint): LibrarySuggestion {
+export function folderBlueprintToSuggestion(blueprint: FolderBlueprint, language: string = 'ru'): LibrarySuggestion {
   return {
     id: blueprint.id,
-    label: blueprint.ru ?? blueprint.name,
+    label: language === 'ru' ? blueprint.ru ?? blueprint.name : blueprint.name,
     icon: blueprint.icon,
     color: blueprint.color,
   };
 }
 
-export function categoryBlueprintToSuggestion(blueprint: CategoryBlueprint): LibrarySuggestion {
+export function categoryBlueprintToSuggestion(blueprint: CategoryBlueprint, language: string = 'ru'): LibrarySuggestion {
   return {
     id: blueprint.id,
-    label: blueprint.ru ?? blueprint.name,
+    label: language === 'ru' ? blueprint.ru ?? blueprint.name : blueprint.name,
     icon: blueprint.icon,
     color: blueprint.color,
   };
@@ -89,7 +89,7 @@ export function matchFolderSuggestions(type: CategoryType, query: string): Libra
   return getFolderLibraryBlueprints(type)
     .filter((folder) => folderCandidates(folder).some((candidate) => candidate.includes(normalized)))
     .slice(0, 6)
-    .map(folderBlueprintToSuggestion);
+    .map((b) => folderBlueprintToSuggestion(b));
 }
 
 export function matchCategorySuggestions(type: CategoryType, query: string): LibrarySuggestion[] {
@@ -98,5 +98,5 @@ export function matchCategorySuggestions(type: CategoryType, query: string): Lib
   return getCategoryLibraryBlueprints(type)
     .filter((category) => categoryCandidates(category).some((candidate) => candidate.includes(normalized)))
     .slice(0, 8)
-    .map(categoryBlueprintToSuggestion);
+    .map((b) => categoryBlueprintToSuggestion(b));
 }

@@ -1,4 +1,5 @@
 'use client';
+import { useT } from '@/shared/hooks/useT';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CategoryFolder, CategoryType } from '@/shared/types';
@@ -30,6 +31,7 @@ export function FolderEditorSheet({
   availableFolders,
   suggestions = [],
 }: Props) {
+  const t = useT();
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('box');
   const [color, setColor] = useState<string>(CC.primary);
@@ -100,7 +102,7 @@ export function FolderEditorSheet({
         <div className="space-y-5 px-5 pb-8">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-[#3D2C1F]">
-              {initial?.id ? 'Редактировать раздел' : 'Новый раздел'}
+              {initial?.id ? t('categories.folderEditor.editTitle') : t('categories.folderEditor.newTitle')}
             </h2>
             <button onClick={onClose} className="text-xl leading-none text-[#8E7A66] hover:text-[#3D2C1F]">✕</button>
           </div>
@@ -110,13 +112,13 @@ export function FolderEditorSheet({
               <StickerIcon icon={icon} color={color} className="h-8 w-8" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-[#3D2C1F]">{name || 'Название раздела'}</p>
-              <p className="text-xs text-[#8E7A66]">{type === 'expense' ? 'Группа расходов' : 'Группа доходов'}</p>
+              <p className="text-sm font-semibold text-[#3D2C1F]">{name || t('categories.folderEditor.namePlaceholder')}</p>
+              <p className="text-xs text-[#8E7A66]">{type === 'expense' ? t('categories.folderEditor.typeExpense') : t('categories.folderEditor.typeIncome')}</p>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">Название</label>
+            <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">{t('categories.editor.name')}</label>
             <input
               type="text"
               ref={nameInputRef}
@@ -129,7 +131,7 @@ export function FolderEditorSheet({
                 setSelectedPresetId(undefined);
                 setSuggestionsOpen(true);
               }}
-              placeholder="Название раздела"
+              placeholder={t('categories.folderEditor.namePlaceholder')}
               className="w-full rounded-xl border border-[#EDE0CC] bg-white px-3 py-2.5 text-sm text-[#3D2C1F] outline-none placeholder:text-[#B6A48E] focus:border-[#E07A5F]"
             />
             {suggestionsOpen && matchedSuggestions.length > 0 && (
@@ -138,7 +140,7 @@ export function FolderEditorSheet({
                   <button
                     key={suggestion.id}
                     type="button"
-                    aria-label={`Выбрать подсказку ${suggestion.label}`}
+                    aria-label={t('categories.editor.suggestionAria', { label: suggestion.label })}
                     onPointerDown={(event) => {
                       event.preventDefault();
                       setName(suggestion.label);
@@ -160,7 +162,7 @@ export function FolderEditorSheet({
           {availableFolders && availableFolders.length > 0 && (
             <div className="space-y-1.5">
               <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">
-                Родительский раздел <span className="font-normal normal-case text-[#B6A48E]">(необязательно)</span>
+                {t('categories.folderEditor.parentSection')} <span className="font-normal normal-case text-[#B6A48E]">({t('categories.editor.budgetOptional')})</span>
               </label>
               <div className="flex flex-wrap gap-2">
                 <button
@@ -173,7 +175,7 @@ export function FolderEditorSheet({
                       : { backgroundColor: '#F4ECDE', color: '#8E7A66' }
                   }
                 >
-                  Без родителя
+                  {t('categories.folderEditor.noParent')}
                 </button>
                 {availableFolders.map((folder) => (
                   <button
@@ -195,12 +197,12 @@ export function FolderEditorSheet({
           )}
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">Иконка</label>
+            <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">{t('categories.editor.icon')}</label>
             <IconPickerGrid selected={icon} color={color} onSelect={setIcon} />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">Цвет</label>
+            <label className="text-xs font-semibold uppercase tracking-wide text-[#8E7A66]">{t('categories.editor.color')}</label>
             <ColorPaletteRow value={color} onChange={setColor} />
           </div>
 
@@ -210,7 +212,7 @@ export function FolderEditorSheet({
             className="w-full rounded-2xl py-3 font-bold text-white transition-opacity disabled:opacity-40"
             style={{ backgroundColor: CC.primary }}
           >
-            {saving ? 'Сохранение...' : 'Сохранить'}
+            {saving ? t('categories.saving') : t('categories.save')}
           </button>
 
           {onDelete && (
@@ -220,13 +222,13 @@ export function FolderEditorSheet({
                   onClick={() => { onDelete(); onClose(); }}
                   className="flex-1 rounded-2xl bg-red-500 py-2.5 text-sm font-semibold text-white"
                 >
-                  Удалить
+                  {t('categories.editor.delete')}
                 </button>
                 <button
                   onClick={() => setConfirmDelete(false)}
                   className="flex-1 rounded-2xl border border-[#EDE0CC] py-2.5 text-sm font-semibold text-[#8E7A66]"
                 >
-                  Отмена
+                  {t('categories.cancel')}
                 </button>
               </div>
             ) : (
@@ -234,7 +236,7 @@ export function FolderEditorSheet({
                 onClick={() => setConfirmDelete(true)}
                 className="w-full rounded-2xl border border-red-100 py-2.5 text-sm font-semibold text-red-500"
               >
-                Удалить раздел
+                {t('categories.folderEditor.deleteFolder')}
               </button>
             )
           )}

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { format, parseISO, differenceInDays, endOfMonth } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { formatAmount } from '@/shared/utils/currency';
@@ -20,30 +20,31 @@ const TYPE_ICONS: Record<string, string> = {
 };
 
 function DayPill({ days }: { days: number }) {
+  const t = useT();
   if (days < 0) {
     return (
       <span className="rounded-full bg-destructive/15 text-destructive px-2 py-0.5 text-[10px] font-bold whitespace-nowrap">
-        Просрочено
+        {t('recurring.overdue')}
       </span>
     );
   }
   if (days === 0) {
     return (
       <span className="rounded-full bg-destructive/15 text-destructive px-2 py-0.5 text-[10px] font-bold whitespace-nowrap">
-        Сегодня!
+        {t('recurring.todayBang')}
       </span>
     );
   }
   if (days <= 7) {
     return (
       <span className="rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 px-2 py-0.5 text-[10px] font-bold whitespace-nowrap">
-        {days} дн
+        {t('recurring.daysShort', { days })}
       </span>
     );
   }
   return (
     <span className="rounded-full bg-muted text-muted-foreground px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap">
-      {days} дн
+      {t('recurring.daysShort', { days })}
     </span>
   );
 }
@@ -62,6 +63,7 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false, embe
   const categories = useAppSelector((s) => s.categories.expense);
   const { list } = useAppSelector((s) => s.recurring);
   const t = useT();
+  const dfLocale = useDateFnsLocale();
   const [payingId, setPayingId] = useState<string | null>(null);
 
   const monthEnd = endOfMonth(new Date());
@@ -114,7 +116,7 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false, embe
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold truncate">{item.name}</p>
           <p className="text-xs text-muted-foreground">
-            {format(parseISO(item.nextDueDate), 'd MMMM', { locale: ru })}
+            {format(parseISO(item.nextDueDate), 'd MMMM', { locale: dfLocale })}
           </p>
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">

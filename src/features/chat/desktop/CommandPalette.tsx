@@ -1,4 +1,5 @@
 'use client';
+import { useT } from '@/shared/hooks/useT';
 import { useState, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { useChatTokens } from '@/features/chat/styles/useChatTokens';
@@ -7,9 +8,11 @@ import { useAppSelector } from '@/store/store';
 interface Props { onClose: () => void; }
 
 export function CommandPalette({ onClose }: Props) {
+  const t = useT();
   const C = useChatTokens();
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const language = useAppSelector((s) => s.ui.language);
   const expenses = useAppSelector((s) => s.expenses.list ?? []);
   const categories = useAppSelector((s) => s.categories.expense);
 
@@ -61,7 +64,7 @@ export function CommandPalette({ onClose }: Props) {
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Поиск по тратам, категориям…"
+            placeholder={t('chat.desktop.searchPlaceholder')}
             className="flex-1 text-[15px] font-[700] bg-transparent outline-none"
             style={{ color: C.fg }}
           />
@@ -73,7 +76,7 @@ export function CommandPalette({ onClose }: Props) {
         {/* Results */}
         <div style={{ maxHeight: 360, overflowY: 'auto' }}>
           {q.length >= 2 && results.length === 0 && (
-            <p className="px-5 py-6 text-center text-sm font-semibold" style={{ color: C.sub }}>Ничего не найдено</p>
+            <p className="px-5 py-6 text-center text-sm font-semibold" style={{ color: C.sub }}>{t('categories.nothingFound')}</p>
           )}
           {results.map((e) => {
             const cat = categories.find((c) => c.id === e.categoryId);
@@ -84,7 +87,7 @@ export function CommandPalette({ onClose }: Props) {
                 style={{ borderBottom: `1px solid ${C.hairline}80` }}
               >
                 <div>
-                  <p className="text-sm font-bold" style={{ color: C.fg }}>{e.comment || cat?.name || 'Трата'}</p>
+                  <p className="text-sm font-bold" style={{ color: C.fg }}>{e.comment || cat?.name || t('quickadd.tabExpense')}</p>
                   <p className="text-xs font-semibold" style={{ color: C.sub }}>{cat?.name} · {new Date(e.date).toLocaleDateString('ru')}</p>
                 </div>
                 <span className="text-sm font-bold" style={{ color: C.fg }}>₪{e.amount.toLocaleString()}</span>
@@ -93,8 +96,8 @@ export function CommandPalette({ onClose }: Props) {
           })}
           {q.length < 2 && (
             <div className="px-5 py-4">
-              <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: C.sub }}>Команды</p>
-              {['/баланс', '/неделя', '/конверты'].map((cmd) => (
+              <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: C.sub }}>{t('chat.desktop.commands')}</p>
+              {(language === 'ru' ? ['/баланс', '/неделя', '/конверты'] : ['/balance', '/week', '/help']).map((cmd) => (
                 <div key={cmd} className="flex items-center gap-3 py-2 cursor-pointer">
                   <code className="text-sm font-bold" style={{ color: C.primary }}>{cmd}</code>
                 </div>
@@ -105,7 +108,7 @@ export function CommandPalette({ onClose }: Props) {
 
         {/* Footer */}
         <div className="flex items-center gap-4 px-5 py-2.5" style={{ borderTop: `1px solid ${C.hairline}`, background: C.bgSoft }}>
-          <span className="text-[10px] font-semibold" style={{ color: C.sub }}>↵ открыть · ESC закрыть · поиск локально</span>
+          <span className="text-[10px] font-semibold" style={{ color: C.sub }}>{t('chat.desktop.paletteHint')}</span>
         </div>
       </div>
     </>

@@ -188,7 +188,7 @@ export interface BudgetExportData {
   expenseFolders: CategoryFolder[];
 }
 
-export function budgetExportSheets(data: BudgetExportData): { name: string; rows: unknown[][] }[] {
+export function budgetExportSheets(t: (key: string) => string, data: BudgetExportData): { name: string; rows: unknown[][] }[] {
   const expenseCategoryById = new Map(data.expenseCategories.map((c) => [c.id, c]));
   const incomeCategoryById = new Map(data.incomeCategories.map((c) => [c.id, c]));
   const folderById = new Map(data.expenseFolders.map((f) => [f.id, f]));
@@ -201,9 +201,9 @@ export function budgetExportSheets(data: BudgetExportData): { name: string; rows
 
   return [
     {
-      name: 'Расходы',
+      name: t('export.sheetExpenses'),
       rows: [
-        ['Дата', 'Раздел', 'Категория', 'Сумма', 'Магазин/Тег', 'Комментарий'],
+        [t('export.colDate'), t('export.colSection'), t('export.colCategory'), t('export.colAmount'), t('export.colStoreTag'), t('export.colComment')],
         ...data.expenses.map((e) => [
           e.date.slice(0, 10),
           sectionName(e.categoryId),
@@ -215,9 +215,9 @@ export function budgetExportSheets(data: BudgetExportData): { name: string; rows
       ],
     },
     {
-      name: 'Доходы',
+      name: t('export.sheetIncome'),
       rows: [
-        ['Дата', 'Категория', 'Сумма', 'Комментарий'],
+        [t('export.colDate'), t('export.colCategory'), t('export.colAmount'), t('export.colComment')],
         ...data.incomes.map((i) => [
           i.date.slice(0, 10),
           categoryName(i.categoryId, incomeCategoryById),
@@ -227,16 +227,16 @@ export function budgetExportSheets(data: BudgetExportData): { name: string; rows
       ],
     },
     {
-      name: 'Регулярные платежи',
+      name: t('export.sheetRecurring'),
       rows: [
-        ['Название', 'Сумма', 'Периодичность', 'Следующая дата'],
+        [t('export.colName'), t('export.colAmount'), t('export.colFrequency'), t('export.colNextDate')],
         ...data.recurring.map((r) => [r.name, r.amount, r.frequency, r.nextDueDate.slice(0, 10)]),
       ],
     },
     {
-      name: 'Цели',
+      name: t('export.sheetGoals'),
       rows: [
-        ['Цель', 'Накоплено', 'Цель', 'Осталось'],
+        [t('export.colGoal'), t('export.colSaved'), t('export.colGoal'), t('export.colLeft')],
         ...data.goals.map((g) => [g.name, g.currentAmount, g.targetAmount, Math.max(0, g.targetAmount - g.currentAmount)]),
       ],
     },

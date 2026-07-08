@@ -49,14 +49,16 @@ export async function leaveFamily(userId: string, family: Family): Promise<void>
   const newMembers = family.memberIds.filter((id) => id !== userId);
 
   if (family.ownerId === userId) {
-    // Owner dissolves the family
-    await deleteDoc(doc(getDb(), 'families', family.id));
+    // Owner dissolves the family.
+    // Detach members BEFORE deleting the family doc: security rules verify
+    // the requester is this family's owner by reading the family doc.
     for (const memberId of family.memberIds) {
       await updateDoc(doc(getDb(), 'users', memberId), {
         familyId: null,
         accountType: 'personal',
       });
     }
+    await deleteDoc(doc(getDb(), 'families', family.id));
   } else {
     await updateDoc(doc(getDb(), 'families', family.id), { memberIds: newMembers });
     await updateDoc(doc(getDb(), 'users', userId), {

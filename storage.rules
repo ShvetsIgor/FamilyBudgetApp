@@ -1,0 +1,11 @@
+rules_version = '2';
+
+// Firebase Storage is initialized in the app but not used yet — keep it
+// fully locked until an upload feature actually ships.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

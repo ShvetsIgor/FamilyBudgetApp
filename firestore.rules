@@ -1,0 +1,160 @@
+rules_version = '2';
+
+// FamilyBudgetApp Firestore rules.
+//
+// Data model: almost everything is per-user, keyed by the owner's uid as the
+// first path segment (e.g. expenses/{uid}/items/{id}). The only cross-user
+// surfaces are: family profiles (users/{uid} readable by family members),
+// families/{id} membership, and invites/{id}.
+//
+// Deploy with: firebase deploy --only firestore:rules
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // ── Per-user collections ─────────────────────────────────────────────
+
+    match /budgets/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
+    match /categories/{uid}/{type}/{categoryId} {
+      allow read, write: if isOwner(uid);
+    }
+
+    match /categoryFolders/{uid}/{type}/{folderId} {
+      allow read, write: if isOwner(uid);
+    }
+
+    match /expenses/{uid}/items/{expenseId} {
+      allow read, write: if isOwner(uid);
+    }
+
+    match /incomes/{uid}/items/{incomeId} {
+      allow read, write: if isOwner(uid);
+    }
+
+    match /messages/{uid}/items/{messageId} {
+      allow read, write: if isOwner(uid);
+    }
+
+    match /monthlyStats/{uid}/months/{month} {
+      allow read, write: if isOwner(uid);
+    }
+
+    match /recurringIncome/{uid}/items/{itemId} {
+      allow read, write: if isOwner(uid);
+    }
+
+    match /recurringPayments/{uid}/items/{itemId} {
+      allow read, write: if isOwner(uid);
+    }
+
+    match /savingsGoals/{uid}/goals/{goalId} {
+      allow read, write: if isOwner(uid);
+    }
+
+    match /storeProfiles/{uid}/profiles/{storeId} {
+      allow read, write: if isOwner(uid);
+    }
+
+    // ── User profiles ────────────────────────────────────────────────────
+
+    // Members of the same family may read each other's profile
+    // (fetchFamilyMembers shows member names on the account page).
+    function inSameFamily() {
+      return resource.data.familyId != null
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.familyId
+             == resource.data.familyId;
+    }
+
+    // When the family owner dissolves the family, they detach every member:
+    // only familyId/accountType may change, and the family doc must still
+    // exist and name the requester as owner (so the service must delete the
+    // family doc last — see familyService.leaveFamily).
+    function isFamilyDetachByOwner() {
+      return resource.data.familyId != null
+        && get(/databases/$(database)/documents/families/$(resource.data.familyId)).data.ownerId
+             == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['familyId', 'accountType']);
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || (signedIn() && inSameFamily());
+      allow create, delete: if isOwner(uid);
+      allow update: if isOwner(uid) || (signedIn() && isFamilyDetachByOwner());
+
+      match /learnedKeywords/{keyword} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    // ── Families ─────────────────────────────────────────────────────────
+
+    function isMember() {
+      return request.auth.uid in resource.data.memberIds;
+    }
+
+    // Invite acceptance: the only change is memberIds, and the only added
+    // element is the requester themself. Family ids are unguessable
+    // auto-ids; invite legitimacy itself is enforced by the invites rules.
+    function isSelfJoin() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberIds'])
+        && request.resource.data.memberIds.toSet()
+             .difference(resource.data.memberIds.toSet()) == [request.auth.uid].toSet()
+        && resource.data.memberIds.toSet()
+             .difference(request.resource.data.memberIds.toSet()).size() == 0;
+    }
+
+    // Leaving: the only change is memberIds, and the only removed element
+    // is the requester themself.
+    function isSelfLeave() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberIds'])
+        && resource.data.memberIds.toSet()
+             .difference(request.resource.data.memberIds.toSet()) == [request.auth.uid].toSet()
+        && request.resource.data.memberIds.toSet()
+             .difference(resource.data.memberIds.toSet()).size() == 0;
+    }
+
+    match /families/{familyId} {
+      allow read: if signedIn() && isMember();
+      allow create: if signedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.memberIds == [request.auth.uid];
+      allow update: if signedIn() && (isSelfJoin() || (isMember() && isSelfLeave()));
+      allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    // ── Family invites ───────────────────────────────────────────────────
+
+    function isInvitee() {
+      return signedIn()
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() == resource.data.toEmail;
+    }
+
+    match /invites/{inviteId} {
+      allow read: if signedIn()
+        && (resource.data.fromUserId == request.auth.uid || isInvitee());
+      allow create: if signedIn()
+        && request.resource.data.fromUserId == request.auth.uid
+        && request.auth.uid in
+             get(/databases/$(database)/documents/families/$(request.resource.data.familyId)).data.memberIds;
+      // Invitee accepts/rejects, sender may cancel; only status may change
+      allow update: if (isInvitee() || (signedIn() && resource.data.fromUserId == request.auth.uid))
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
+      allow delete: if signedIn() && resource.data.fromUserId == request.auth.uid;
+    }
+
+    // Everything not matched above is denied by default.
+  }
+}

@@ -8,6 +8,10 @@ import { addContribution } from '@/features/savings/services/savingsService';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
+import { addCategory as addCategoryRedux } from '@/features/categories/store/categoriesSlice';
+import { prependExpense } from '@/features/expenses/store/expensesSlice';
+import { addSavingsExpenseForContribution } from '@/features/savings/services/savingsExpenseService';
+import { recordSavedCard } from '@/features/chat/services/savedCardService';
 import { normalizeName } from '@/shared/utils/normalizeName';
 
 const AMOUNT_PRESETS = [500, 1000, 5000, 10000];
@@ -18,6 +22,7 @@ export function SavingsDrawerForm({ accent }: { accent: string }) {
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const goals = useAppSelector((s) => s.savings.list);
+  const expenseCategories = useAppSelector((s) => s.categories.expense);
   const symbol = getCurrencySymbol(currency);
 
   const [goalId, setGoalId] = useState(goals[0]?.id ?? '');
@@ -54,6 +59,26 @@ export function SavingsDrawerForm({ accent }: { accent: string }) {
         note: normalizeName(comment) || undefined,
       });
       dispatch(updateGoalItem(updated));
+      // Mirror the mobile flow: the contribution also becomes an expense,
+      // so month totals match no matter where the user saved from
+      const { expense, createdCategory } = await addSavingsExpenseForContribution({
+        userId: user.id, goal: selected, amount: amountNum, date: new Date(),
+        label: t('savings.expenseLabel'), note: normalizeName(comment) || undefined,
+        expenseCategories,
+      });
+      if (createdCategory) dispatch(addCategoryRedux(createdCategory));
+      dispatch(prependExpense(expense));
+      const goalSym = getCurrencySymbol(selected.currency);
+      await recordSavedCard({
+        userId: user.id,
+        text: `${t('savings.chatLabel')} · ${selected.name} · ${goalSym} ${amountNum}`,
+        icon: 'coin',
+        color: selected.color ?? '#E8442A',
+        title: selected.name,
+        amount: amountNum,
+        currencySymbol: goalSym,
+        expenseId: expense.id,
+      });
       dispatch(closeQuickAdd());
     } catch {
       setSaving(false);

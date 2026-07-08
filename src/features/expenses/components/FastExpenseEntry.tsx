@@ -14,6 +14,7 @@ import { CategoryIcon, StickerIcon } from '@/features/categories/components/Cate
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
+import { recordSavedCard, buildEntryDateHint } from '@/features/chat/services/savedCardService';
 import { normalizeName, normalizeNameKey } from '@/shared/utils/normalizeName';
 import type { Category, SerializableExpense, SplitItem } from '@/shared/types';
 import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
@@ -467,45 +468,26 @@ export function FastExpenseEntry({
         }
         // Always record the save in chat so the history stays consistent
         {
-          const { addMessage, updateMessage } = await import('@/features/chat/services/messagesService');
           if (initialUserMsgId) {
+            const { updateMessage } = await import('@/features/chat/services/messagesService');
             try {
               await updateMessage(user.id, initialUserMsgId, { expenseId: exp.id, status: 'saved' });
             } catch { /* non-blocking */ }
           }
-          const sym = symbol;
           const storeLabel = initialStore ? ` · ${initialStore}` : '';
-          const expenseDate = parseISO(dateStr);
-          let dateHint: string | undefined;
-          if (!isToday(expenseDate)) {
-            dateHint = isYesterday(expenseDate)
-              ? t('common.yesterday')
-              : format(expenseDate, 'd MMMM', { locale: dfLocale });
-          }
           const splitHint = posCount > 1 ? `${t('expense.split2')} · ${fmtCount(posCount)}` : undefined;
-          const combinedHint = [dateHint, splitHint].filter(Boolean).join(' · ') || undefined;
-          await addMessage({
+          const combinedHint = [buildEntryDateHint(dateStr, t, dfLocale), splitHint].filter(Boolean).join(' · ') || undefined;
+          await recordSavedCard({
             userId: user.id,
-            senderId: 'bot',
-            kind: 'bot',
-            text: `${t('home.saved')}${storeLabel} · ${sym}\u202F${totalNum}`,
-            status: 'saved',
+            text: `${t('home.saved')}${storeLabel} · ${symbol}\u202F${totalNum}`,
+            icon: effectiveCat?.icon ?? activeFolder?.icon ?? 'box',
+            color: effectiveCat?.color ?? activeFolder?.color ?? '#E07A5F',
+            title: initialStore ?? t.cat(effectiveCat?.name ?? selectedCat?.name ?? activeFolder?.name ?? ''),
+            hint: combinedHint,
+            amount: totalNum,
+            currencySymbol: symbol,
             expenseId: exp.id,
-            card: {
-              kind: 'saved',
-              data: {
-                icon: effectiveCat?.icon ?? activeFolder?.icon ?? 'box',
-                color: effectiveCat?.color ?? activeFolder?.color ?? '#E07A5F',
-                title: initialStore ?? t.cat(effectiveCat?.name ?? selectedCat?.name ?? activeFolder?.name ?? ''),
-                catName: null,
-                groupName: null,
-                hint: combinedHint,
-                amount: totalNum,
-                currency: sym,
-                expenseId: exp.id,
-                ...(initialUserMsgId ? { userMsgId: initialUserMsgId } : {}),
-              },
-            },
+            ...(initialUserMsgId ? { userMsgId: initialUserMsgId } : {}),
           });
         }
         router.push(fromChat ? '/home' : '/expenses');

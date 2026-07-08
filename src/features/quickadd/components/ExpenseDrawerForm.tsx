@@ -11,6 +11,9 @@ import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import { useT } from '@/shared/hooks/useT';
+import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
+import { recordExpense, recordSplitExpense } from '@/features/expenses/store/suggestionMemorySlice';
+import { recordSavedCard, buildEntryDateHint } from '@/features/chat/services/savedCardService';
 import { cn } from '@/shared/utils/cn';
 import { normalizeName } from '@/shared/utils/normalizeName';
 import type { Category, SplitItem } from '@/shared/types';
@@ -37,6 +40,7 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
   const allCats = useAppSelector((s) => s.categories.expense);
   const { groups: expCatGroups, getCatsInGroup } = useCategoryGroups('expense');
   const symbol = getCurrencySymbol(currency);
+  const dfLocale = useDateFnsLocale();
 
   const groups = expCatGroups.filter((g) => g.name !== 'Savings');
 
@@ -124,6 +128,37 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
         amount: totalNum, categoryId: effectiveCategoryId, splits: splitItems,
       });
       dispatch(prependExpense(exp));
+      // Feed the shared deterministic memory, same as mobile fast entry
+      const effectiveCat = allCats.find((c) => c.id === effectiveCategoryId);
+      dispatch(recordExpense({
+        categoryId: effectiveCategoryId,
+        folderId: effectiveCat?.folderId ?? undefined,
+        date: dateStr,
+      }));
+      if (splitItems.length > 0) {
+        const allSplitCatIds = Array.from(new Set([effectiveCategoryId, ...splitItems.map((sp) => sp.categoryId)]));
+        dispatch(recordSplitExpense({
+          categoryIds: allSplitCatIds,
+          folderIds: allSplitCatIds.map((id) => allCats.find((c) => c.id === id)?.folderId ?? undefined),
+          date: dateStr,
+        }));
+      }
+      // Record in chat so the history stays consistent with chat/mobile saves
+      const hint = [
+        buildEntryDateHint(dateStr, t, dfLocale),
+        posCount > 1 ? `${t('expense.split2')} · ${posCount}` : undefined,
+      ].filter(Boolean).join(' · ') || undefined;
+      await recordSavedCard({
+        userId: user.id,
+        text: `${t('home.saved')} · ${symbol} ${totalNum}`,
+        icon: effectiveCat?.icon ?? 'box',
+        color: effectiveCat?.color ?? catColor,
+        title: t.cat(effectiveCat?.name ?? selectedGroup?.name ?? ''),
+        hint,
+        amount: totalNum,
+        currencySymbol: symbol,
+        expenseId: exp.id,
+      });
       dispatch(closeQuickAdd());
     } catch {
       setSaving(false);

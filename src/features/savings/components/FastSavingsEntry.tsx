@@ -11,11 +11,10 @@ import { setGoals, updateGoalItem } from '@/features/savings/store/savingsSlice'
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
 import { addCategory as addCategoryRedux } from '@/features/categories/store/categoriesSlice';
 import { addContribution, fetchGoals } from '@/features/savings/services/savingsService';
-import { addExpense } from '@/features/expenses/services/expensesService';
-import { addCategory } from '@/features/categories/services/categoriesService';
 import { getCurrencySymbol, formatAmount } from '@/shared/utils/currency';
-import { buildSavingsExpenseComment } from '@/features/savings/utils/savingsExpenseComment';
 import { useT } from '@/shared/hooks/useT';
+import { addSavingsExpenseForContribution } from '@/features/savings/services/savingsExpenseService';
+import { recordSavedCard, buildEntryDateHint } from '@/features/chat/services/savedCardService';
 import type { SavingsGoal } from '@/shared/types';
 
 const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 'C', 0, '⌫'] as const;
@@ -79,53 +78,26 @@ export function FastSavingsEntry() {
       const updated = await addContribution(user.id, selectedGoal, { amount: amountNum });
       dispatch(updateGoalItem(updated));
 
-      let catId = expenseCategories.find((c) => c.name === 'Savings' && !c.archived)?.id ?? '';
-      if (!catId) {
-        const created = await addCategory(user.id, {
-          name: 'Savings', icon: '🐷', color: '#10b981', type: 'expense',
-          isPrivate: false, order: 8,
-        });
-        dispatch(addCategoryRedux(created));
-        catId = created.id;
-      }
-      const exp = await addExpense({
-        userId: user.id, amount: amountNum, currency: selectedGoal.currency,
-        categoryId: catId, date: new Date(dateStr), paymentMethod: 'other',
-        comment: buildSavingsExpenseComment(t('savings.expenseLabel'), selectedGoal.name, comment.trim() || undefined),
-        tags: ['savings'], privacy: 'regular', splits: [], goalId: selectedGoal.id,
+      const { expense: exp, createdCategory } = await addSavingsExpenseForContribution({
+        userId: user.id, goal: selectedGoal, amount: amountNum, date: new Date(dateStr),
+        label: t('savings.expenseLabel'), note: comment.trim() || undefined,
+        expenseCategories,
       });
+      if (createdCategory) dispatch(addCategoryRedux(createdCategory));
       dispatch(prependExpense(exp));
 
-      // Record in chat
-      const { addMessage } = await import('@/features/chat/services/messagesService');
-      // The contribution is stored in the goal's currency, so the card must use it too
+      // Record in chat — the contribution is stored in the goal's currency
       const sym = getCurrencySymbol(selectedGoal.currency);
-      const expenseDate = parseISO(dateStr);
-      let dateHint: string | undefined;
-      if (!isToday(expenseDate)) {
-        dateHint = isYesterday(expenseDate) ? t('common.yesterday') : format(expenseDate, 'd MMMM', { locale: dfLocale });
-      }
-      await addMessage({
+      await recordSavedCard({
         userId: user.id,
-        senderId: 'bot',
-        kind: 'bot',
-        text: `${t('savings.chatLabel')} · ${selectedGoal.name} · ${sym} ${amountNum}`,
-        status: 'saved',
+        text: `${t('savings.chatLabel')} · ${selectedGoal.name} · ${sym} ${amountNum}`,
+        icon: 'coin',
+        color: goalColor,
+        title: selectedGoal.name,
+        hint: buildEntryDateHint(dateStr, t, dfLocale),
+        amount: amountNum,
+        currencySymbol: sym,
         expenseId: exp.id,
-        card: {
-          kind: 'saved',
-          data: {
-            icon: '🐷',
-            color: goalColor,
-            title: selectedGoal.name,
-            catName: null,
-            groupName: null,
-            hint: dateHint,
-            amount: amountNum,
-            currency: sym,
-            expenseId: exp.id,
-          },
-        },
       });
 
       router.back();

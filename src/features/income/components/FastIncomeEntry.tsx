@@ -13,6 +13,7 @@ import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { selectAllActiveCategories } from '@/features/categories/store/selectors';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
+import { recordSavedCard, buildEntryDateHint } from '@/features/chat/services/savedCardService';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import { normalizeName } from '@/shared/utils/normalizeName';
 import type { SerializableIncome } from '@/shared/types';
@@ -60,26 +61,15 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
 
   async function recordIncomeInChat(hint: string | undefined) {
     if (!user) return;
-    const { addMessage } = await import('@/features/chat/services/messagesService');
-    await addMessage({
+    await recordSavedCard({
       userId: user.id,
-      senderId: 'bot',
-      kind: 'bot',
       text: `${t('income.chatLabel')} · ${t.cat(category?.name ?? '')} · +${symbol} ${amountNum}`,
-      status: 'saved',
-      card: {
-        kind: 'saved',
-        data: {
-          icon: category?.icon ?? 'cash',
-          color: catColor,
-          title: t.cat(category?.name ?? t('income.title')),
-          catName: null,
-          groupName: null,
-          hint,
-          amount: amountNum,
-          currency: symbol,
-        },
-      },
+      icon: category?.icon ?? 'cash',
+      color: catColor,
+      title: t.cat(category?.name ?? t('income.title')),
+      hint,
+      amount: amountNum,
+      currencySymbol: symbol,
     });
   }
 
@@ -134,12 +124,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
       dispatch(prependIncome(income));
 
       // Record in chat
-      const incomeDate = parseISO(dateStr);
-      let dateHint: string | undefined;
-      if (!isToday(incomeDate)) {
-        dateHint = isYesterday(incomeDate) ? t('common.yesterday') : format(incomeDate, 'd MMMM', { locale: dfLocale });
-      }
-      await recordIncomeInChat(dateHint);
+      await recordIncomeInChat(buildEntryDateHint(dateStr, t, dfLocale));
 
       goBack();
     } catch {

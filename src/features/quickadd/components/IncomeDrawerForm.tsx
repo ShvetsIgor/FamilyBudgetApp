@@ -11,6 +11,8 @@ import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import { useT } from '@/shared/hooks/useT';
+import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
+import { recordSavedCard, buildEntryDateHint } from '@/features/chat/services/savedCardService';
 import { cn } from '@/shared/utils/cn';
 import { normalizeName } from '@/shared/utils/normalizeName';
 import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
@@ -32,6 +34,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
   const allCats = useAppSelector((s) => s.categories.income);
   const { groups } = useCategoryGroups('income');
   const symbol = getCurrencySymbol(currency);
+  const dfLocale = useDateFnsLocale();
 
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState(groups[0]?.id ?? '');
@@ -73,6 +76,17 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
         amount: amountNum, categoryId,
       });
       dispatch(prependIncome(inc));
+      // Record in chat so the history stays consistent with chat/mobile saves
+      await recordSavedCard({
+        userId: user.id,
+        text: `${t('income.chatLabel')} · ${t.cat(selectedCat?.name ?? '')} · +${symbol} ${amountNum}`,
+        icon: selectedCat?.icon ?? 'cash',
+        color: catColor,
+        title: t.cat(selectedCat?.name ?? t('income.title')),
+        hint: buildEntryDateHint(dateStr, t, dfLocale),
+        amount: amountNum,
+        currencySymbol: symbol,
+      });
       dispatch(closeQuickAdd());
     } catch {
       setSaving(false);

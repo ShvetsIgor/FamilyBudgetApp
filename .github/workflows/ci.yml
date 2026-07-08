@@ -4,6 +4,8 @@ on:
   push:
     branches: [master]
   pull_request:
+  # Manual trigger: Actions → CI → "Run workflow" button
+  workflow_dispatch:
 
 jobs:
   checks:

@@ -13,6 +13,7 @@ import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { selectAllActiveCategories } from '@/features/categories/store/selectors';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
+import { applyKey } from '@/features/expenses/hooks/useSplitEditor';
 import { recordSavedCard, buildEntryDateHint } from '@/features/chat/services/savedCardService';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import { normalizeName } from '@/shared/utils/normalizeName';
@@ -20,13 +21,6 @@ import type { SerializableIncome } from '@/shared/types';
 
 const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫'] as const;
 type NumKey = (typeof NUMPAD_KEYS)[number];
-
-function applyKey(cur: string, key: NumKey): string {
-  if (key === '.') { if (cur.includes('.')) return cur; return cur + '.'; }
-  if (key === '⌫') { const s = cur.slice(0, -1); return s === '' ? '0' : s; }
-  if (cur === '0') return String(key);
-  return cur + String(key);
-}
 
 type Method = 'card' | 'cash' | 'bank' | 'other';
 
@@ -55,7 +49,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
   const amountNum = parseFloat(amount) || 0;
   const catColor = category?.color ?? '#10b981';
 
-  function tap(key: NumKey) { setAmount((cur) => applyKey(cur, key)); }
+  function tap(key: NumKey) { setAmount((cur) => applyKey(cur, String(key))); }
 
   function goBack() { window.history.length > 1 ? router.back() : router.replace('/income'); }
 

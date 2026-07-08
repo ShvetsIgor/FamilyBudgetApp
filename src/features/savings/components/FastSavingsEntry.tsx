@@ -13,22 +13,18 @@ import { addCategory as addCategoryRedux } from '@/features/categories/store/cat
 import { addContribution, fetchGoals } from '@/features/savings/services/savingsService';
 import { getCurrencySymbol, formatAmount } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
+import { applyKey } from '@/features/expenses/hooks/useSplitEditor';
 import { addSavingsExpenseForContribution } from '@/features/savings/services/savingsExpenseService';
 import { recordSavedCard, buildEntryDateHint } from '@/features/chat/services/savedCardService';
 import type { SavingsGoal } from '@/shared/types';
 
-const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 'C', 0, '⌫'] as const;
+const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫'] as const;
 type NumKey = (typeof NUMPAD_KEYS)[number];
-
-function applyKey(cur: string, key: NumKey): string {
-  if (key === 'C') return '0';
-  if (key === '⌫') { const s = cur.slice(0, -1); return s === '' ? '0' : s; }
-  if (cur === '0') return String(key);
-  return cur + String(key);
-}
 
 export function FastSavingsEntry() {
   const router = useRouter();
+  // Direct URL entry has no history to go back to — fall back to /savings
+  const goBack = () => { if (window.history.length > 1) router.back(); else router.replace('/savings'); };
   const searchParams = useSearchParams();
   const preselectedGoalId = searchParams.get('goalId');
   const dispatch = useAppDispatch();
@@ -68,7 +64,7 @@ export function FastSavingsEntry() {
   const goalColor = selectedGoal?.color ?? '#E8442A';
 
   function tap(key: NumKey) {
-    setAmount((cur) => applyKey(cur, key));
+    setAmount((cur) => applyKey(cur, String(key)));
   }
 
   async function handleSave() {
@@ -100,7 +96,7 @@ export function FastSavingsEntry() {
         expenseId: exp.id,
       });
 
-      router.back();
+      goBack();
     } catch {
       setSaving(false);
     }
@@ -114,7 +110,7 @@ export function FastSavingsEntry() {
 
       {/* ── Top bar ── */}
       <div className="flex items-center gap-2 px-4 pt-1 pb-0.5 flex-shrink-0">
-        <button onClick={() => router.back()} className="p-1.5 rounded-full hover:bg-muted transition-colors">
+        <button onClick={goBack} className="p-1.5 rounded-full hover:bg-muted transition-colors">
           <X className="h-4 w-4" />
         </button>
         <div className="flex-1 text-center text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">
@@ -252,7 +248,7 @@ export function FastSavingsEntry() {
             className="bg-card rounded-xl font-extrabold transition-colors active:bg-muted border-0"
             style={{
               fontSize: typeof k === 'number' ? 20 : 16,
-              color: k === '⌫' || k === 'C' ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
+              color: k === '⌫' ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
               boxShadow: '0 1px 2px rgba(61,44,31,.05)',
             }}
           >

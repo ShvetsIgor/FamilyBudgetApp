@@ -47,6 +47,7 @@ import { MiniCalendar } from '@/shared/components/MiniCalendar';
 import { cn } from '@/shared/utils/cn';
 import { normalizeNameKey } from '@/shared/utils/normalizeName';
 import { useT } from '@/shared/hooks/useT';
+import { applyKey } from '@/features/expenses/hooks/useSplitEditor';
 import type {
   Category,
   CategoryFolder,
@@ -58,16 +59,6 @@ import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups
 
 const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫'] as const;
 type NumKey = (typeof NUMPAD_KEYS)[number];
-
-function applyKey(cur: string, key: NumKey): string {
-  if (key === '.') {
-    if (cur.includes('.')) return cur;
-    return cur + '.';
-  }
-  if (key === '⌫') { const s = cur.slice(0, -1); return s === '' ? '0' : s; }
-  if (cur === '0') return String(key);
-  return cur + String(key);
-}
 
 function daysUntil(dateStr: string): number {
   return differenceInCalendarDays(parseISO(dateStr), new Date());
@@ -446,7 +437,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
   const categoryValidationError = t('categories.selectCategory');
   const visibleError = categoryId && error === categoryValidationError ? '' : error;
 
-  function tap(key: NumKey) { setAmount((cur) => applyKey(cur, key)); }
+  function tap(key: NumKey) { setAmount((cur) => applyKey(cur, String(key))); }
 
   const selectCategory = useCallback((nextCategory: Category | undefined) => {
     const nextCategoryId = nextCategory?.id ?? '';

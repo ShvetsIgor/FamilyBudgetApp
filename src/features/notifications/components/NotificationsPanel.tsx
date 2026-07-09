@@ -3,8 +3,9 @@
 import { format, parseISO } from 'date-fns';
 import { getDateFnsLocale } from '@/shared/utils/dateLocale';
 import { X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/store/store';
-import { markAllRead, clearNotifications } from '../store/notificationsSlice';
+import { markRead, markAllRead, clearNotifications } from '../store/notificationsSlice';
 import { C, SHADOW, RAD } from '@/features/chat/styles/tokens';
 import { useT } from '@/shared/hooks/useT';
 
@@ -14,9 +15,18 @@ interface Props {
 
 export function NotificationsPanel({ onClose }: Props) {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const items = useAppSelector((s) => s.notifications.items);
   const t = useT();
   const language = useAppSelector((s) => s.ui.language);
+
+  const ROUTES: Record<string, string> = {
+    family_invite: '/account',
+    family: '/expenses',
+    weekly: '/analytics',
+    alert: '/budget',
+    morning: '/home',
+  };
 
   function handleOpen() {
     dispatch(markAllRead());
@@ -90,9 +100,15 @@ export function NotificationsPanel({ onClose }: Props) {
               })();
 
               return (
-                <div
+                <button
                   key={n.id}
-                  className="flex gap-3 px-4 py-3.5"
+                  onClick={() => {
+                    dispatch(markRead(n.id));
+                    onClose();
+                    const route = ROUTES[n.kind];
+                    if (route) router.push(route);
+                  }}
+                  className="flex w-full gap-3 px-4 py-3.5 text-left cursor-pointer border-0"
                   style={{
                     borderBottom: `1px solid ${C.hairline}`,
                     background: n.read ? 'transparent' : C.primaryTint + '22',
@@ -102,7 +118,7 @@ export function NotificationsPanel({ onClose }: Props) {
                     className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[11px] text-lg"
                     style={{ background: C.primaryTint + '44' }}
                   >
-                    {n.kind === 'morning' ? '🌅' : n.kind === 'weekly' ? '📊' : n.kind === 'family_invite' ? '👨‍👩‍👧' : '🔔'}
+                    {n.kind === 'morning' ? '🌅' : n.kind === 'weekly' ? '📊' : n.kind === 'family_invite' || n.kind === 'family' ? '👨‍👩‍👧' : n.kind === 'alert' ? '⚠️' : '🔔'}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="m-0 text-[13.5px] font-[800] leading-tight" style={{ color: C.fg }}>
@@ -120,7 +136,7 @@ export function NotificationsPanel({ onClose }: Props) {
                   {!n.read && (
                     <div className="flex-shrink-0 mt-1.5 h-2 w-2 rounded-full" style={{ background: C.primary }} />
                   )}
-                </div>
+                </button>
               );
             })
           )}

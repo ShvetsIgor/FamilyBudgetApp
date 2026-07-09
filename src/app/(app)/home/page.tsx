@@ -10,6 +10,7 @@ import { setTyping, removeMessage } from '@/features/chat/store/chatSlice';
 import { removeExpense, mergeExpenses } from '@/features/expenses/store/expensesSlice';
 import { prependIncome } from '@/features/income/store/incomeSlice';
 import { updateRecurringItem } from '@/features/recurring/store/recurringSlice';
+import { addNotification } from '@/features/notifications/store/notificationsSlice';
 
 import { useChatMessages } from '@/features/chat/hooks/useChatMessages';
 import { useLearnedKeywords } from '@/features/chat/hooks/useLearnedKeywords';
@@ -140,6 +141,31 @@ export default function HomePage() {
     : budgetMode === 'monthly' ? budgetMonthlyLimit
     : monthIncome;
   const displayLabel = budgetMode === 'daily' ? t('chat.today.budgetLabel') : t('chat.today.monthLabel');
+
+  // Budget threshold alerts (85% / 100%) → bell, once per month per threshold
+  useEffect(() => {
+    if (!userId) return;
+    const effectiveMonthBudget = budgetMode === 'monthly' ? budgetMonthlyLimit
+      : budgetMode === 'auto' ? monthIncome
+      : 0;
+    if (effectiveMonthBudget <= 0) return;
+    const pct = (monthSpent / effectiveMonthBudget) * 100;
+    const threshold = pct >= 100 ? 100 : pct >= 85 ? 85 : 0;
+    if (threshold === 0) return;
+    const key = `budget_alert_${userId}_${format(new Date(), 'yyyy-MM')}`;
+    try {
+      const prev = Number(localStorage.getItem(key) ?? 0);
+      if (threshold <= prev) return;
+      localStorage.setItem(key, String(threshold));
+    } catch { return; }
+    dispatch(addNotification({
+      kind: 'alert',
+      title: t('notifications.budgetTitle'),
+      text: threshold >= 100 ? t('notifications.budget100') : t('notifications.budget85'),
+      createdAt: new Date().toISOString(),
+    }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, monthSpent, monthIncome, budgetMode, budgetMonthlyLimit]);
 
   const allExpenses = useAppSelector((s) => s.expenses.list);
   const allIncomeCats = useAppSelector((s) => s.categories.income);

@@ -9,9 +9,10 @@ import { setRecurring } from '@/features/recurring/store/recurringSlice';
 import { fetchRecurring } from '@/features/recurring/services/recurringService';
 import { setFamily, setMembers, setPendingInvite } from '@/features/family/store/familySlice';
 import { setBudgets } from '@/features/budget/store/budgetSlice';
-import { addNotification } from '@/features/notifications/store/notificationsSlice';
+import { addNotification, hydrateNotifications } from '@/features/notifications/store/notificationsSlice';
 import { fetchBudgets } from '@/features/budget/services/budgetService';
 import { fetchFamily, fetchFamilyMembers, fetchPendingInvite } from '@/features/family/services/familyService';
+import { checkFamilyActivity } from '@/features/family/services/familyActivityService';
 import { AppShell } from '@/shared/components/AppShell';
 import { LoadingScreen } from '@/shared/components/LoadingScreen';
 import { requestNotificationPermission } from '@/shared/hooks/useNotifications';
@@ -22,10 +23,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const t = useT();
   const dispatch = useAppDispatch();
   const { user, initialized } = useAppSelector((s) => s.auth);
+  const currency = useAppSelector((s) => s.ui.currency);
   const recurringStatus = useAppSelector((s) => s.recurring.status);
   const family = useAppSelector((s) => s.family.family);
   const budgetStatus = useAppSelector((s) => s.budget.status);
-  const existingNotifications = useAppSelector((s) => s.notifications.items);
   const router = useRouter();
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -42,6 +43,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [user, recurringStatus, dispatch]);
 
+  // Per-user bell storage — must hydrate before anything adds notifications
+  useEffect(() => {
+    if (user?.id) dispatch(hydrateNotifications(user.id));
+  }, [user?.id, dispatch]);
+
   // Load family data once on app start
   useEffect(() => {
     if (!user) return;
@@ -51,6 +57,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         dispatch(setFamily(f));
         const members = await fetchFamilyMembers(f.memberIds);
         dispatch(setMembers(members));
+        // Family activity → bell (new members, new shared expenses)
+        checkFamilyActivity(user.id, members, t, currency).then((notes) => {
+          notes.forEach((n) => dispatch(addNotification(n)));
+        }).catch(() => {});
       }).catch(async () => {
         // Stale familyId (family dissolved elsewhere): rules deny reading a
         // missing family doc, so self-heal the profile instead of erroring
@@ -67,15 +77,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       fetchPendingInvite(user.email).then((invite) => {
         dispatch(setPendingInvite(invite));
         if (invite) {
-          const alreadyNotified = existingNotifications.some((n) => n.kind === 'family_invite');
-          if (!alreadyNotified) {
-            dispatch(addNotification({
-              kind: 'family_invite',
-              title: t('notifications.familyInviteTitle'),
-              text: t('notifications.familyInviteText'),
-              createdAt: new Date().toISOString(),
-            }));
-          }
+          dispatch(addNotification({
+            kind: 'family_invite',
+            title: t('notifications.familyInviteTitle'),
+            text: t('notifications.familyInviteText'),
+            createdAt: new Date().toISOString(),
+            dedupeUnreadKind: true,
+          }));
         }
       });
     }

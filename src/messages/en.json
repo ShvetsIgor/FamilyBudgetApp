@@ -630,7 +630,13 @@
     "empty": "All quiet here",
     "clear": "Clear all",
     "familyInviteTitle": "Family invitation",
-    "familyInviteText": "You have been invited to join a family budget. Go to Settings → Family."
+    "familyInviteText": "You have been invited to join a family budget. Go to Settings → Family.",
+    "familyTitle": "Family",
+    "memberJoined": "{name} joined the family 🎉",
+    "familyDigest": "New family expenses: {n} · {sum}",
+    "budgetTitle": "Budget",
+    "budget85": "85% of the monthly budget is spent",
+    "budget100": "The monthly budget is used up"
   },
   "export": {
     "title": "Export Data",

@@ -265,6 +265,7 @@ Runtime contract update:
 
 ## Known Gaps
 
+- **Firebase stays on the free Spark plan** — no Cloud Functions, no FCM server pushes, no server-side triggers. All notifications are pull-based on the client (bell digest on launch); any future feature must work without a backend.
 - Family budget is read-only sharing of expenses, incomes, savings goals and analytics (with member colors and per-goal privacy). Editing family members' entries is not implemented.
 - Split persistence is still one `Expense` document with `splits[]`.
   There is no separate `splitGroup` entity yet.

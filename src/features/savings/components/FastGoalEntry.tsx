@@ -8,36 +8,34 @@ import { addGoalItem } from '@/features/savings/store/savingsSlice';
 import { addGoal } from '@/features/savings/services/savingsService';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
-import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
+import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
+import { format } from 'date-fns';
+import { applyKey } from '@/features/expenses/hooks/useSplitEditor';
+import { ColorPaletteRow } from '@/features/categories/components/ColorPaletteRow';
+import { normalizeName } from '@/shared/utils/normalizeName';
 import type { Currency } from '@/shared/types';
 
-const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 'C', 0, '⌫'] as const;
+const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫'] as const;
 type NumKey = (typeof NUMPAD_KEYS)[number];
 
-function applyKey(cur: string, key: NumKey): string {
-  if (key === 'C') return '0';
-  if (key === '⌫') { const s = cur.slice(0, -1); return s === '' ? '0' : s; }
-  if (cur === '0') return String(key);
-  return cur + String(key);
-}
-
 const GOAL_ICONS = ['🎯','🏠','🚗','✈️','💻','📱','👶','💍','🎓','🏖️','💰','🛋️','🎮','🏋️','🐶','🎨','🏕️','💊'];
-const GOAL_COLORS = ['#6366f1','#f97316','#10b981','#3b82f6','#ec4899','#eab308','#8b5cf6','#06b6d4','#ef4444','#84cc16'];
 
 export function FastGoalEntry() {
   const router = useRouter();
+  // Direct URL entry has no history to go back to — fall back to /savings
+  const goBack = () => { if (window.history.length > 1) router.back(); else router.replace('/savings'); };
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
-  const language = useAppSelector((s) => s.ui.language);
   const t = useT();
+  const dfLocale = useDateFnsLocale();
   const symbol = getCurrencySymbol(currency);
   const nameRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState('');
   const [icon, setIcon] = useState(GOAL_ICONS[0]);
-  const [color, setColor] = useState(GOAL_COLORS[0]);
+  const [color, setColor] = useState('#5B6CFF');
   const [target, setTarget] = useState('0');
   const [showDate, setShowDate] = useState(false);
   const [deadline, setDeadline] = useState('');
@@ -48,7 +46,7 @@ export function FastGoalEntry() {
   const canSave = name.trim().length > 0 && targetNum > 0;
 
   function tap(key: NumKey) {
-    setTarget((cur) => applyKey(cur, key));
+    setTarget((cur) => applyKey(cur, String(key)));
   }
 
   async function handleSave() {
@@ -57,7 +55,7 @@ export function FastGoalEntry() {
     try {
       const goal = await addGoal({
         userId: user.id,
-        name: name.trim(),
+        name: normalizeName(name),
         icon,
         color,
         targetAmount: targetNum,
@@ -66,7 +64,7 @@ export function FastGoalEntry() {
         isPrivate,
       });
       dispatch(addGoalItem(goal));
-      router.back();
+      goBack();
     } catch {
       setSaving(false);
     }
@@ -79,7 +77,7 @@ export function FastGoalEntry() {
     <div className="flex flex-col bg-background w-full lg:max-w-[440px] lg:rounded-2xl lg:shadow-2xl overflow-hidden" style={{ height: '100dvh', maxHeight: '100dvh' }}>
       {/* ── Top bar ── */}
       <div className="flex items-center gap-2 px-4 pt-1 pb-0.5 flex-shrink-0">
-        <button onClick={() => router.back()} className="p-1.5 rounded-full hover:bg-muted transition-colors">
+        <button onClick={goBack} className="p-1.5 rounded-full hover:bg-muted transition-colors">
           <X className="h-4 w-4" />
         </button>
         <div className="flex-1 text-center text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">
@@ -156,28 +154,8 @@ export function FastGoalEntry() {
           </div>
         </div>
 
-        {/* Color row */}
-        <div className="overflow-x-auto [scrollbar-width:none]">
-          <div className="flex gap-2 pb-1">
-            {GOAL_COLORS.map((c) => {
-              const sel = c === color;
-              return (
-                <button
-                  key={c}
-                  onClick={() => setColor(c)}
-                  className="flex-shrink-0 rounded-full transition-all border-2"
-                  style={{
-                    background: c,
-                    width: sel ? 32 : 26,
-                    height: sel ? 32 : 26,
-                    borderColor: sel ? 'hsl(var(--foreground))' : 'transparent',
-                    boxShadow: sel ? `0 0 0 3px ${c}55` : 'none',
-                  }}
-                />
-              );
-            })}
-          </div>
-        </div>
+        {/* Color palette — same component as category/folder editors */}
+        <ColorPaletteRow value={color} onChange={setColor} />
 
         {/* Selected preview */}
         <div
@@ -194,7 +172,7 @@ export function FastGoalEntry() {
             <div className="text-sm font-extrabold text-foreground">{name || t('savings.goalName')}</div>
             {deadline && (
               <div className="text-[11px] text-muted-foreground mt-0.5">
-                {t('savings.until')} {new Date(deadline + 'T12:00:00').toLocaleDateString(language === 'ru' ? 'ru-RU' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+                {t('savings.until')} {format(new Date(deadline + 'T12:00:00'), 'd MMMM yyyy', { locale: dfLocale })}
               </div>
             )}
           </div>
@@ -227,7 +205,7 @@ export function FastGoalEntry() {
             className="bg-card rounded-xl font-extrabold transition-colors active:bg-muted border-0"
             style={{
               fontSize: typeof k === 'number' ? 20 : 16,
-              color: k === '⌫' || k === 'C' ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
+              color: k === '⌫' ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
               boxShadow: '0 1px 2px rgba(61,44,31,.05)',
             }}
           >
@@ -241,8 +219,8 @@ export function FastGoalEntry() {
         <button
           onClick={handleSave}
           disabled={saving || !canSave}
-          className="w-full py-[12px] rounded-[16px] flex items-center justify-center gap-2 text-[14px] font-black text-white transition-opacity disabled:opacity-50 border-0"
-          style={{ background: color, boxShadow: `0 12px 24px ${color}60` }}
+          className="w-full py-[14px] rounded-[16px] flex items-center justify-center gap-2 text-[15px] font-black text-white transition-opacity disabled:opacity-40 border-0"
+          style={{ background: saving ? '#18A957' : color }}
         >
           <span className="text-lg leading-none">{icon}</span>
           <span>{saving ? t('savings.numpadSaving') : canSave ? t('savings.numpadCreate', { name, symbol, target }) : t('savings.numpadCreateHint')}</span>

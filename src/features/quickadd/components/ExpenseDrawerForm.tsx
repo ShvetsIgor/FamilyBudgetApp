@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { format } from 'date-fns';
 import { ChevronDown } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
@@ -18,6 +18,11 @@ import { cn } from '@/shared/utils/cn';
 import { normalizeName } from '@/shared/utils/normalizeName';
 import type { Category, SplitItem } from '@/shared/types';
 import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
+import { CategoryEditorSheet } from '@/features/categories/components/CategoryEditorSheet';
+import { addCategory as addCategoryFirestore } from '@/features/categories/services/categoriesService';
+import { addCategory as addCategoryAction } from '@/features/categories/store/categoriesSlice';
+import { categoryBlueprintToSuggestion, getCategoryLibraryBlueprints } from '@/features/categories/utils/libraryLookup';
+import type { CategoryFolder } from '@/shared/types';
 
 interface SplitRow {
   categoryId: string;
@@ -55,6 +60,13 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
   const [dateStr, setDateStr] = useState(toDateInput(new Date()));
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showCategoryEditor, setShowCategoryEditor] = useState(false);
+  const [creatingCategory, setCreatingCategory] = useState(false);
+  const language = useAppSelector((st) => st.ui.language);
+  const categorySuggestions = useMemo(
+    () => getCategoryLibraryBlueprints('expense').map((b) => categoryBlueprintToSuggestion(b, language)),
+    [language],
+  );
 
   const amountRef = useRef<HTMLInputElement>(null);
 
@@ -81,7 +93,8 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
   const splitsOverflow = splits.length > 0 && splitsSum > totalNum + 0.01;
   const posCount = splits.filter((s) => parseFloat(s.amount) > 0).length + (remainder > 0 ? 1 : 0);
   const catColor = selectedGroup?.color ?? accent;
-  const selectedCategory = catsInGroup.find((cat) => cat.id === selectedCategoryId);
+  const selectedCategory = catsInGroup.find((cat) => cat.id === selectedCategoryId)
+    ?? allCats.find((cat) => cat.id === selectedCategoryId);
   const needsRemainderCategory = splits.length > 0 && remainder > 0.01 && !selectedCategory;
   const canSave = totalNum > 0 && !splitsOverflow && (
     selectedCategoryId !== '' || (splits.length > 0 && remainder <= 0.01)
@@ -178,8 +191,21 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
             <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">{t('categories.pickerPlaceholder')}</span>
             <span className="text-[11px] font-bold" style={{ color: catColor }}>{selectedGroup ? t.cat(selectedGroup.name) : ''}</span>
           </div>
+          {groups.length === 0 && (
+            <div className="flex flex-col items-center gap-2 rounded-[12px] border border-dashed border-border py-6 text-center">
+              <span className="text-2xl">🗂️</span>
+              <p className="text-sm font-bold text-foreground">{t('quickadd.emptyTitle')}</p>
+              <p className="text-xs text-muted-foreground px-6">{t('quickadd.emptyHint')}</p>
+              <button
+                onClick={() => setShowCategoryEditor(true)}
+                className="mt-1 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+              >
+                {t('categories.hub.createManual')}
+              </button>
+            </div>
+          )}
           <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-            {groups.slice(0, 12).map((cat) => {
+            {groups.map((cat) => {
               const sel = cat.id === selectedGroupId;
               const c = cat.color ?? '#E07A5F';
               return (
@@ -200,6 +226,15 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
                 </button>
               );
             })}
+            {groups.length > 0 && (
+              <button
+                onClick={() => setShowCategoryEditor(true)}
+                className="h-[68px] rounded-[12px] flex flex-col items-center justify-center gap-1 border border-dashed border-border bg-transparent text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <span className="text-lg font-black leading-none">＋</span>
+                <span className="text-[10px] font-extrabold leading-tight text-center px-1">{t('categories.newCategory')}</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -430,6 +465,43 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
           <kbd className="ml-1 px-1.5 py-0.5 rounded bg-white/20 text-[9px] font-mono">⌘↵</kbd>
         </button>
       </div>
+
+      {/* ── Inline category creation ── */}
+      <CategoryEditorSheet
+        open={showCategoryEditor}
+        onClose={() => setShowCategoryEditor(false)}
+        type="expense"
+        folderId={selectedGroupId || undefined}
+        initial={{ folderId: selectedGroupId || undefined }}
+        availableFolders={groups as unknown as CategoryFolder[]}
+        suggestions={categorySuggestions}
+        onSave={async (catData) => {
+          const name = catData.name?.trim();
+          if (!name || !user || creatingCategory) return;
+          setCreatingCategory(true);
+          try {
+            const primaryFolderId = catData.folderId ?? (selectedGroupId || undefined);
+            const targetFolder = groups.find((g) => g.id === primaryFolderId) ?? null;
+            const newCat = await addCategoryFirestore(user.id, {
+              name,
+              icon: catData.icon ?? 'box',
+              color: catData.color ?? targetFolder?.color ?? '#94A3B8',
+              folderId: primaryFolderId,
+              extraFolderIds: catData.extraFolderIds?.filter((id) => id !== primaryFolderId) ?? [],
+              isPrivate: catData.isPrivate ?? false,
+              order: 99,
+              type: 'expense',
+              ...(catData.tags ? { tags: catData.tags } : {}),
+            });
+            dispatch(addCategoryAction(newCat));
+            if (newCat.folderId) setSelectedGroupId(newCat.folderId);
+            setSelectedCategoryId(newCat.id);
+          } finally {
+            setCreatingCategory(false);
+            setShowCategoryEditor(false);
+          }
+        }}
+      />
     </div>
   );
 }

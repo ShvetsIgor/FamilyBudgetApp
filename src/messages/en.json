@@ -917,6 +917,8 @@
     "left": "Left",
     "tabExpense": "Expense",
     "tabIncome": "Income",
-    "tabSavings": "To savings"
+    "tabSavings": "To savings",
+    "emptyTitle": "No categories yet",
+    "emptyHint": "Create your first category to log an expense"
   }
 }

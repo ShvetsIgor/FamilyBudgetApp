@@ -309,8 +309,11 @@ export function FastExpenseEntry({
     const mainId = mainCatSuggestion && activeExpCats.some((c) => c.id === mainCatSuggestion.categoryId)
       ? mainCatSuggestion.categoryId
       : '';
-    setSelectedCatId(mainId || activeExpCats[0]?.id || '');
-  }, [initialExpense, initialStore, initialFolderId, fromChat, mainCatSuggestion, activeExpCats, getCatsInGroup]);
+    // Fall back to the most recently used category, not the first in list —
+    // a blind "amount → save" should land in the user's usual category
+    const recentId = suggestedCatIds.find((id) => activeExpCats.some((c) => c.id === id)) ?? '';
+    setSelectedCatId(mainId || recentId || activeExpCats[0]?.id || '');
+  }, [initialExpense, initialStore, initialFolderId, fromChat, mainCatSuggestion, suggestedCatIds, activeExpCats, getCatsInGroup]);
 
   function tap(key: NumKey) {
     if (editing === 'total') {
@@ -914,9 +917,19 @@ export function FastExpenseEntry({
         setNewCategoryFolderId(folderId);
         setActiveFolderId(folderId);
         setSelectedCatId('');
-        setCategorySheetMode(returnToCategorySheetMode ?? entryMode);
-        setReturnToCategorySheetMode(null);
         setShowFolderEditor(false);
+        const hasCategories = activeExpCats.some(
+          (c) => c.folderId === folderId || c.extraFolderIds?.includes(folderId),
+        );
+        if (hasCategories) {
+          // Existing folder reused — back to the picker scoped to it
+          setCategorySheetMode(returnToCategorySheetMode ?? entryMode);
+          setReturnToCategorySheetMode(null);
+        } else {
+          // Fresh empty folder — go straight to category creation inside it
+          // (returnToCategorySheetMode stays set for the editor's save/cancel)
+          setShowCategoryEditor(true);
+        }
       }}
     />
 

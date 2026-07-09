@@ -17,6 +17,8 @@ import { cn } from '@/shared/utils/cn';
 import type { SerializableIncome } from '@/shared/types';
 import type { AddIncomeInput } from '@/features/income/services/incomeService';
 import { useT } from '@/shared/hooks/useT';
+import { fetchFamilyMonthIncomes, type FamilyIncome, type FamilyIncomeData } from '@/features/family/services/familyBudgetService';
+import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 
 function groupByDate(items: SerializableIncome[]): [string, SerializableIncome[]][] {
   const map = new Map<string, SerializableIncome[]>();
@@ -65,6 +67,23 @@ export default function IncomePage() {
   const [loading, setLoading] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [localIncomes, setLocalIncomes] = useState<SerializableIncome[] | null>(null);
+  const incomeCategories = useAppSelector((st) => st.categories.income);
+  const family = useAppSelector((st) => st.family.family);
+  const members = useAppSelector((st) => st.family.members);
+  const [viewMode, setViewMode] = useState<'mine' | 'family'>('mine');
+  const [familyData, setFamilyData] = useState<FamilyIncomeData | null>(null);
+  const [familyLoading, setFamilyLoading] = useState(false);
+  const familyAvailable = !!family && members.length > 1;
+  const isFamilyView = viewMode === 'family' && familyAvailable;
+
+  useEffect(() => {
+    if (!isFamilyView || !user) { setFamilyData(null); return; }
+    setFamilyLoading(true);
+    fetchFamilyMonthIncomes(members, selectedMonth, user.id, incomeCategories)
+      .then(setFamilyData)
+      .catch(() => setFamilyData({ incomes: [], categoryMeta: {} }))
+      .finally(() => setFamilyLoading(false));
+  }, [isFamilyView, user, members, selectedMonth, incomeCategories]);
   const monthBarRef = useRef<HTMLDivElement>(null);
 
   const isCurrentMonth = selectedMonth === currentMonth;
@@ -136,7 +155,10 @@ export default function IncomePage() {
     dispatch(removeIncome(income.id));
   }
 
-  const monthTotal = incomes.reduce((s, i) => s + i.amount, 0);
+  const familyIncomes = familyData?.incomes ?? [];
+  const monthTotal = isFamilyView
+    ? familyIncomes.reduce((s, i) => s + i.amount, 0)
+    : incomes.reduce((s, i) => s + i.amount, 0);
   const groups = groupByDate(incomes);
 
   const formPanel = (
@@ -162,6 +184,23 @@ export default function IncomePage() {
             {monthTotal > 0 ? '+' : ''}{formatAmount(monthTotal, currency)}
           </div>
         </div>
+
+        {/* Mine / Family toggle */}
+        {familyAvailable && (
+          <div className="px-4 pt-3 lg:px-0" style={{ background: 'hsl(var(--card))' }}>
+            <div className="inline-flex rounded-full bg-muted p-0.5">
+              {(['mine', 'family'] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setViewMode(m)}
+                  className={`rounded-full px-4 py-1 text-xs font-bold transition-colors ${viewMode === m ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'}`}
+                >
+                  {m === 'mine' ? t('expenses.viewMine') : t('expenses.viewFamily')}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Month bar */}
         <div
@@ -189,14 +228,14 @@ export default function IncomePage() {
         </div>
 
         {/* Loading */}
-        {loading && (
+        {(loading || familyLoading) && (
           <div className="flex justify-center py-16">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-primary" />
           </div>
         )}
 
         {/* Empty state */}
-        {!loading && incomes.length === 0 && (
+        {!isFamilyView && !loading && incomes.length === 0 && (
           <div className="flex flex-col items-center py-16 px-8 text-center">
             <p className="text-4xl mb-3">💰</p>
             <p className="font-medium">{t('income.noIncome')}</p>
@@ -204,7 +243,7 @@ export default function IncomePage() {
         )}
 
         {/* Income groups */}
-        {!loading && incomes.length > 0 && (
+        {!isFamilyView && !loading && incomes.length > 0 && (
           <div className="flex flex-col pb-4">
             {groups.map(([day, items]) => {
               const dayTotal = items.reduce((s, i) => s + i.amount, 0);
@@ -230,6 +269,54 @@ export default function IncomePage() {
                         onDelete={() => handleDelete(i)}
                       />
                     ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Family income groups */}
+        {isFamilyView && !familyLoading && familyIncomes.length === 0 && (
+          <div className="flex flex-col items-center py-16 px-8 text-center">
+            <p className="text-4xl mb-3">👨‍👩‍👧</p>
+            <p className="font-medium">{t('income.familyEmpty')}</p>
+          </div>
+        )}
+        {isFamilyView && !familyLoading && familyIncomes.length > 0 && (
+          <div className="flex flex-col pb-4">
+            {groupByDate(familyIncomes).map(([day, items]) => {
+              const rows = items as FamilyIncome[];
+              const dayTotal = rows.reduce((s, i) => s + i.amount, 0);
+              return (
+                <div key={day} className="border-b border-border/30">
+                  <div className="flex items-center justify-between px-4 py-2 lg:px-0" style={{ background: 'hsl(var(--muted)/0.4)' }}>
+                    <span style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 800, color: 'hsl(var(--muted-foreground))' }}>
+                      {dayLabel(day, t, dfLocale)}
+                    </span>
+                    <span style={{ fontSize: 10, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: '#18A957' }}>
+                      +{formatAmount(dayTotal, currency)}
+                    </span>
+                  </div>
+                  <div className="divide-y divide-border/20">
+                    {rows.map((i) => {
+                      const meta = familyData?.categoryMeta[i.categoryId];
+                      const isMine = i.memberId === user?.id;
+                      return (
+                        <div key={`${i.memberId}-${i.id}`} className="flex items-center gap-3 px-4 py-3 lg:px-0">
+                          <StickerIcon icon={meta?.icon ?? 'cash'} color={meta?.color ?? '#18A957'} className="h-9 w-9 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-foreground truncate">
+                              {i.comment || (meta ? t.cat(meta.name) : t('nav.income'))}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {meta ? t.cat(meta.name) : '—'} · {isMine ? t('expenses.you') : i.memberName}
+                            </p>
+                          </div>
+                          <span className="text-sm font-extrabold tabular-nums" style={{ color: '#18A957' }}>+{formatAmount(i.amount, currency)}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );

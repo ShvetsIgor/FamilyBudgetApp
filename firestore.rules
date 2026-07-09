@@ -56,7 +56,11 @@ service cloud.firestore {
     }
 
     match /incomes/{uid}/items/{incomeId} {
-      allow read, write: if isOwner(uid);
+      // Family budget: members see each other's non-secret incomes.
+      // List queries must filter privacy == 'regular' so the rule is provable.
+      allow read: if isOwner(uid)
+        || (sameFamilyAs(uid) && resource.data.privacy == 'regular');
+      allow write: if isOwner(uid);
     }
 
     match /messages/{uid}/items/{messageId} {
@@ -76,7 +80,10 @@ service cloud.firestore {
     }
 
     match /savingsGoals/{uid}/goals/{goalId} {
-      allow read, write: if isOwner(uid);
+      // Family budget: goals (with progress) are visible to the family.
+      // Goals carry no privacy flag yet — see Known Gaps in CLAUDE.md.
+      allow read: if isOwner(uid) || sameFamilyAs(uid);
+      allow write: if isOwner(uid);
     }
 
     match /storeProfiles/{uid}/profiles/{storeId} {

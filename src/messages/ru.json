@@ -171,7 +171,8 @@
     "chatLabel": "Доход",
     "notePlaceholder": "Заметка к доходу…",
     "creditEvery": "Зачислять каждое",
-    "dayNum": "{day} число"
+    "dayNum": "{day} число",
+    "familyEmpty": "У семьи нет доходов в этом месяце"
   },
   "expenses": {
     "title": "Расходы",
@@ -401,7 +402,8 @@
     "goalName": "Название цели",
     "goalNamePlaceholder": "Например, Отпуск или Машина…",
     "until": "До",
-    "goalLabel": "Цель"
+    "goalLabel": "Цель",
+    "familyEmpty": "У семьи пока нет целей"
   },
   "categories": {
     "title": "Категории",

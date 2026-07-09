@@ -15,6 +15,7 @@ import { addCategory as addCategoryRedux } from '@/features/categories/store/cat
 import { addContributionWithExpense } from '@/features/savings/services/savingsExpenseService';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
+import { fetchFamilyGoals, type FamilyGoal } from '@/features/family/services/familyBudgetService';
 import type { SavingsGoal } from '@/shared/types';
 
 type Mode = 'list' | { goal: SavingsGoal; action: 'contribute' | 'detail' };
@@ -25,6 +26,13 @@ export default function SavingsPage() {
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const { list, status } = useAppSelector((s) => s.savings);
+  const family = useAppSelector((st) => st.family.family);
+  const members = useAppSelector((st) => st.family.members);
+  const [viewMode, setViewMode] = useState<'mine' | 'family'>('mine');
+  const [familyGoals, setFamilyGoals] = useState<FamilyGoal[] | null>(null);
+  const [familyLoading, setFamilyLoading] = useState(false);
+  const familyAvailable = !!family && members.length > 1;
+  const isFamilyView = viewMode === 'family' && familyAvailable;
   const expenseCategories = useAppSelector((s) => s.categories.expense);
   const [mode, setMode] = useState<Mode>('list');
   const [loading, setLoading] = useState(false);
@@ -64,6 +72,15 @@ export default function SavingsPage() {
     dispatch(removeGoalItem(goal.id));
     setMode('list');
   }
+
+  useEffect(() => {
+    if (!isFamilyView) { setFamilyGoals(null); return; }
+    setFamilyLoading(true);
+    fetchFamilyGoals(members)
+      .then(setFamilyGoals)
+      .catch(() => setFamilyGoals([]))
+      .finally(() => setFamilyLoading(false));
+  }, [isFamilyView, members]);
 
   const totalSaved = list.reduce((s, g) => s + g.currentAmount, 0);
 
@@ -164,15 +181,32 @@ export default function SavingsPage() {
   }
 
   // ── List content ─────────────────────────────────────────────────────────────
+  const familyList = familyGoals ?? [];
   const listContent = (
     <>
-      {loading && (
+      {familyAvailable && (
+        <div className="px-4 pt-3 pb-1 lg:px-0">
+          <div className="inline-flex rounded-full bg-muted p-0.5">
+            {(['mine', 'family'] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => setViewMode(m)}
+                className={`rounded-full px-4 py-1 text-xs font-bold transition-colors ${viewMode === m ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'}`}
+              >
+                {m === 'mine' ? t('expenses.viewMine') : t('expenses.viewFamily')}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {(loading || familyLoading) && (
         <div className="flex justify-center py-12">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-primary" />
         </div>
       )}
 
-      {!loading && list.length === 0 && (
+      {!isFamilyView && !loading && list.length === 0 && (
         <div className="flex flex-col items-center py-16 text-center">
           <p className="text-5xl mb-3">🎯</p>
           <p className="font-medium">{t('savings.noGoals')}</p>
@@ -180,7 +214,47 @@ export default function SavingsPage() {
         </div>
       )}
 
-      <div className="flex flex-col">
+      {isFamilyView && !familyLoading && familyList.length === 0 && (
+        <div className="flex flex-col items-center py-16 text-center">
+          <p className="text-5xl mb-3">👨‍👩‍👧</p>
+          <p className="font-medium">{t('savings.familyEmpty')}</p>
+        </div>
+      )}
+      {isFamilyView && !familyLoading && familyList.length > 0 && (
+        <div className="flex flex-col">
+          {familyList.map((goal) => {
+            const pct = Math.min(100, goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0);
+            const done = pct >= 100;
+            const isMine = goal.memberId === user?.id;
+            return (
+              <div key={`${goal.memberId}-${goal.id}`} className="border-b border-border/30">
+                <div
+                  className="w-full flex items-center gap-3 pl-3 pr-4 py-3.5 text-left"
+                  style={{ borderLeft: `4px solid ${done ? '#10b981' : goal.color}` }}
+                >
+                  <span className="text-2xl shrink-0">{goal.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[15px] font-semibold truncate leading-snug">{goal.name}</p>
+                    <p style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: done ? '#10b981' : goal.color }}>
+                      {formatAmount(goal.currentAmount, goal.currency)} / {formatAmount(goal.targetAmount, goal.currency)}
+                      {' · '}{isMine ? t('expenses.you') : goal.memberName}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p style={{ fontSize: 18, fontWeight: 900, fontVariantNumeric: 'tabular-nums', color: done ? '#10b981' : goal.color }}>{pct.toFixed(0)}%</p>
+                    {done && <p className="text-xs text-emerald-500">{t('savings.done')}</p>}
+                  </div>
+                </div>
+                <div style={{ height: 2, background: 'hsl(var(--muted))', marginLeft: 4 }}>
+                  <div style={{ height: '100%', width: `${pct}%`, backgroundColor: done ? '#10b981' : goal.color, transition: 'width 0.5s ease' }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {!isFamilyView && <div className="flex flex-col">
         {list.map((goal) => {
           const pct = Math.min(100, goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0);
           const done = pct >= 100;
@@ -211,7 +285,7 @@ export default function SavingsPage() {
             </div>
           );
         })}
-      </div>
+      </div>}
     </>
   );
 

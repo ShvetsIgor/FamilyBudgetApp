@@ -60,6 +60,27 @@ export async function fetchMonthIncome(userId: string, month: string): Promise<S
   return snap.docs.map((d) => toSerializable(d.id, d.data()));
 }
 
+/**
+ * Month incomes as visible to OTHER family members: only privacy ==
+ * 'regular'. The equality filter is mandatory — security rules prove
+ * family list queries against it.
+ */
+export async function fetchSharedMonthIncome(userId: string, month: string): Promise<SerializableIncome[]> {
+  const [year, m] = month.split('-').map(Number);
+  const from = Timestamp.fromDate(new Date(year, m - 1, 1));
+  const to = Timestamp.fromDate(new Date(year, m, 1));
+
+  const snap = await getDocs(
+    query(
+      incCol(userId),
+      where('privacy', '==', 'regular'),
+      where('date', '>=', from), where('date', '<', to),
+      orderBy('date', 'desc'),
+    )
+  );
+  return snap.docs.map((d) => toSerializable(d.id, d.data()));
+}
+
 export interface AddIncomeInput {
   userId: string;
   amount: number;

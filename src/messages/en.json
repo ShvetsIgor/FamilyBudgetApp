@@ -169,7 +169,8 @@
     "chatLabel": "Income",
     "notePlaceholder": "Income note…",
     "creditEvery": "Credited on the",
-    "dayNum": "day {day}"
+    "dayNum": "day {day}",
+    "familyEmpty": "No family income this month"
   },
   "expenses": {
     "title": "Expenses",
@@ -399,7 +400,8 @@
     "goalName": "Goal name",
     "goalNamePlaceholder": "E.g. Vacation or Car…",
     "until": "Until",
-    "goalLabel": "Goal"
+    "goalLabel": "Goal",
+    "familyEmpty": "The family has no goals yet"
   },
   "categories": {
     "title": "Categories",

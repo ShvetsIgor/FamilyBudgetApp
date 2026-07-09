@@ -6,7 +6,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { getFirebaseAuth, getDb, isFirebaseConfigured } from '@/shared/lib/firebase';
 import { useAppDispatch } from '@/store/store';
 import { setUser, setLoading } from '@/features/auth/store/authSlice';
-import { setCurrency, setDarkMode, setLanguage, setTheme, setWeekStart } from '@/features/ui/store/uiSlice';
+import { setCurrency, setDarkMode, setLanguage, setTheme, setWeekStart, hydrateBudgetPreferences } from '@/features/ui/store/uiSlice';
 import { setCategories, setFolders } from '@/features/categories/store/categoriesSlice';
 import { fetchCategories, seedDefaultCategories } from '@/features/categories/services/categoriesService';
 import { fetchFolders } from '@/features/categories/services/categoryFoldersService';
@@ -49,6 +49,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dispatch(setTheme(resolvedTheme));
         dispatch(setDarkMode(profile.darkMode ?? profileTheme === 'dark'));
         if (profile.weekStart) dispatch(setWeekStart(profile.weekStart));
+        // Budget settings follow the account across devices
+        dispatch(hydrateBudgetPreferences({
+          budgetMode: profile.budgetMode,
+          budgetDailyLimit: profile.budgetDailyLimit,
+          budgetMonthlyLimit: profile.budgetMonthlyLimit,
+          budgetByMonth: profile.budgetByMonth,
+        }));
 
         // Seed categories/folders if first login, then load all
         await seedDefaultCategories(firebaseUser.uid);

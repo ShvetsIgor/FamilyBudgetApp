@@ -34,6 +34,10 @@ export interface UserProfile {
   accountType: AccountType;
   /** Member accent color shown in family views */
   color?: string;
+  budgetMode?: 'auto' | 'daily' | 'monthly';
+  budgetDailyLimit?: number;
+  budgetMonthlyLimit?: number;
+  budgetByMonth?: Record<string, { mode: 'auto' | 'daily' | 'monthly'; dailyLimit: number; monthlyLimit: number }>;
   familyId?: string;
   onboarded?: boolean;
   createdAt: Timestamp;

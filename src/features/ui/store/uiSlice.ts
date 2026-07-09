@@ -118,6 +118,30 @@ const uiSlice = createSlice({
       state.budgetMonthlyLimit = action.payload;
       if (typeof window !== 'undefined') localStorage.setItem('budgetMonthlyLimit', String(action.payload));
     },
+    /**
+     * Applies budget settings read from the Firestore profile on login —
+     * Firestore is the cross-device source of truth, localStorage is a cache.
+     * Local-only snapshots (e.g. saved offline) are kept unless the profile
+     * has its own value for that month.
+     */
+    hydrateBudgetPreferences(state, action: PayloadAction<{
+      budgetMode?: BudgetMode;
+      budgetDailyLimit?: number;
+      budgetMonthlyLimit?: number;
+      budgetByMonth?: Record<string, BudgetSnapshot>;
+    }>) {
+      const { budgetMode, budgetDailyLimit, budgetMonthlyLimit, budgetByMonth } = action.payload;
+      if (budgetMode) state.budgetMode = budgetMode;
+      if (typeof budgetDailyLimit === 'number') state.budgetDailyLimit = budgetDailyLimit;
+      if (typeof budgetMonthlyLimit === 'number') state.budgetMonthlyLimit = budgetMonthlyLimit;
+      if (budgetByMonth) state.budgetByMonth = { ...state.budgetByMonth, ...budgetByMonth };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('budgetMode', state.budgetMode);
+        localStorage.setItem('budgetDailyLimit', String(state.budgetDailyLimit));
+        localStorage.setItem('budgetMonthlyLimit', String(state.budgetMonthlyLimit));
+        localStorage.setItem('budgetByMonth', JSON.stringify(state.budgetByMonth));
+      }
+    },
     setBudgetSnapshot(state, action: PayloadAction<{ month: string; snapshot: BudgetSnapshot }>) {
       state.budgetByMonth[action.payload.month] = action.payload.snapshot;
       if (typeof window !== 'undefined') {
@@ -130,6 +154,6 @@ const uiSlice = createSlice({
   },
 });
 
-export const { setTheme, setDarkMode, hydrateThemePreferences, setLanguage, setCurrency, setWeekStart, setOffline, setSyncing, setExpensesSearch, setBudgetMode, setBudgetDailyLimit, setBudgetMonthlyLimit, setBudgetSnapshot, setDesktopRightPanelOpen } =
+export const { setTheme, setDarkMode, hydrateThemePreferences, setLanguage, setCurrency, setWeekStart, setOffline, setSyncing, setExpensesSearch, setBudgetMode, setBudgetDailyLimit, setBudgetMonthlyLimit, setBudgetSnapshot, hydrateBudgetPreferences, setDesktopRightPanelOpen } =
   uiSlice.actions;
 export default uiSlice.reducer;

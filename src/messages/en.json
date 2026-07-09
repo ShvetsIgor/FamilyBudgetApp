@@ -297,7 +297,8 @@
     "resetClearing": "Clearing…",
     "resetButton": "Reset everything else",
     "appSection": "App",
-    "familyAlreadyInvited": "This email already has a pending invitation."
+    "familyAlreadyInvited": "This email already has a pending invitation.",
+    "memberColor": "Your color in the family"
   },
   "recurring": {
     "title": "Recurring Payments",
@@ -404,7 +405,9 @@
     "goalNamePlaceholder": "E.g. Vacation or Car…",
     "until": "Until",
     "goalLabel": "Goal",
-    "familyEmpty": "The family has no goals yet"
+    "familyEmpty": "The family has no goals yet",
+    "hideFromFamily": "Hide from family",
+    "showToFamily": "Show to family"
   },
   "categories": {
     "title": "Categories",

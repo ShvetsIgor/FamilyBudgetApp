@@ -17,6 +17,7 @@ import { cn } from '@/shared/utils/cn';
 import type { SerializableIncome } from '@/shared/types';
 import type { AddIncomeInput } from '@/features/income/services/incomeService';
 import { useT } from '@/shared/hooks/useT';
+import { buildMemberColorMap } from '@/features/family/utils/memberColors';
 import { fetchFamilyMonthIncomes, type FamilyIncome, type FamilyIncomeData } from '@/features/family/services/familyBudgetService';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 
@@ -73,6 +74,7 @@ export default function IncomePage() {
   const [viewMode, setViewMode] = useState<'mine' | 'family'>('mine');
   const [familyData, setFamilyData] = useState<FamilyIncomeData | null>(null);
   const [familyLoading, setFamilyLoading] = useState(false);
+  const memberColorMap = buildMemberColorMap(members);
   const familyAvailable = !!family && members.length > 1;
   const isFamilyView = viewMode === 'family' && familyAvailable;
 
@@ -310,7 +312,7 @@ export default function IncomePage() {
                               {i.comment || (meta ? t.cat(meta.name) : t('nav.income'))}
                             </p>
                             <p className="text-xs text-muted-foreground truncate">
-                              {meta ? t.cat(meta.name) : '—'} · {isMine ? t('expenses.you') : i.memberName}
+                              {meta ? t.cat(meta.name) : '—'} · <span style={{ color: memberColorMap[i.memberId] }}>●</span> <span style={{ color: memberColorMap[i.memberId], fontWeight: 700 }}>{isMine ? t('expenses.you') : i.memberName}</span>
                             </p>
                           </div>
                           <span className="text-sm font-extrabold tabular-nums" style={{ color: '#18A957' }}>+{formatAmount(i.amount, currency)}</span>

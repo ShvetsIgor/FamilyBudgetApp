@@ -80,9 +80,10 @@ service cloud.firestore {
     }
 
     match /savingsGoals/{uid}/goals/{goalId} {
-      // Family budget: goals (with progress) are visible to the family.
-      // Goals carry no privacy flag yet — see Known Gaps in CLAUDE.md.
-      allow read: if isOwner(uid) || sameFamilyAs(uid);
+      // Family budget: non-private goals are visible to the family.
+      // Family list queries must filter isPrivate == false to be provable.
+      allow read: if isOwner(uid)
+        || (sameFamilyAs(uid) && resource.data.isPrivate != true);
       allow write: if isOwner(uid);
     }
 

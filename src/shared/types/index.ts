@@ -32,6 +32,8 @@ export interface UserProfile {
   darkMode?: boolean;
   weekStart?: WeekStart;
   accountType: AccountType;
+  /** Member accent color shown in family views */
+  color?: string;
   familyId?: string;
   onboarded?: boolean;
   createdAt: Timestamp;
@@ -226,6 +228,8 @@ export interface SavingsGoal {
   monthlyContribution?: number;
   deadline?: string; // ISO string
   contributions: SavingsContribution[];
+  /** Hidden from family views when true */
+  isPrivate?: boolean;
   createdAt: string; // ISO string
 }
 

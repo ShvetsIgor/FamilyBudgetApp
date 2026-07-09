@@ -17,6 +17,7 @@ import { cn } from '@/shared/utils/cn';
 import type { SerializableExpense } from '@/shared/types';
 import { setExpensesSearch } from '@/features/ui/store/uiSlice';
 import { useT } from '@/shared/hooks/useT';
+import { buildMemberColorMap } from '@/features/family/utils/memberColors';
 import { fetchFamilyMonthExpenses, type FamilyExpense, type FamilyMonthData } from '@/features/family/services/familyBudgetService';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import {
@@ -81,6 +82,7 @@ export default function ExpensesPage() {
   const [viewMode, setViewMode] = useState<'mine' | 'family'>('mine');
   const [familyData, setFamilyData] = useState<FamilyMonthData | null>(null);
   const [familyLoading, setFamilyLoading] = useState(false);
+  const memberColorMap = buildMemberColorMap(members);
   const familyAvailable = !!family && members.length > 1;
   const isFamilyView = viewMode === 'family' && familyAvailable;
 
@@ -415,7 +417,7 @@ export default function ExpensesPage() {
                               {e.store || e.comment || (meta ? t.cat(meta.name) : t('quickadd.tabExpense'))}
                             </p>
                             <p className="text-xs text-muted-foreground truncate">
-                              {meta ? t.cat(meta.name) : '—'} · {isMine ? t('expenses.you') : e.memberName}
+                              {meta ? t.cat(meta.name) : '—'} · <span style={{ color: memberColorMap[e.memberId] }}>●</span> <span style={{ color: memberColorMap[e.memberId], fontWeight: 700 }}>{isMine ? t('expenses.you') : e.memberName}</span>
                             </p>
                           </div>
                           <span className="text-sm font-extrabold tabular-nums">-{formatAmount(e.amount, currency)}</span>

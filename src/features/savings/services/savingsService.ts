@@ -1,6 +1,6 @@
 import {
   collection, doc, addDoc, updateDoc, deleteDoc,
-  getDocs, query, orderBy, serverTimestamp, Timestamp,
+  getDocs, query, where, orderBy, serverTimestamp, Timestamp,
   writeBatch, type WriteBatch,
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
@@ -33,6 +33,7 @@ function toGoal(id: string, data: Record<string, unknown>): SavingsGoal {
       date: toISO(c.date),
       note: c.note as string | undefined,
     })),
+    isPrivate: data.isPrivate as boolean | undefined,
     createdAt: toISO(data.createdAt),
   };
 }
@@ -40,6 +41,32 @@ function toGoal(id: string, data: Record<string, unknown>): SavingsGoal {
 export async function fetchGoals(userId: string): Promise<SavingsGoal[]> {
   const snap = await getDocs(query(col(userId), orderBy('createdAt', 'desc')));
   return snap.docs.map((d) => toGoal(d.id, d.data()));
+}
+
+/**
+ * Goals as visible to OTHER family members: only isPrivate == false.
+ * The equality filter is mandatory — security rules prove family list
+ * queries against it. No orderBy to avoid a composite index; sorted here.
+ */
+export async function fetchSharedGoals(userId: string): Promise<SavingsGoal[]> {
+  const snap = await getDocs(query(col(userId), where('isPrivate', '==', false)));
+  return snap.docs.map((d) => toGoal(d.id, d.data()))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export async function updateGoalPrivacy(userId: string, goalId: string, isPrivate: boolean): Promise<void> {
+  await updateDoc(doc(getDb(), 'savingsGoals', userId, 'goals', goalId), { isPrivate });
+}
+
+/**
+ * Goals created before the privacy flag existed have no isPrivate field and
+ * would silently drop out of the family view (equality filters skip missing
+ * fields). Backfill them as shared once, on the owner's device.
+ */
+export async function backfillGoalPrivacy(userId: string, goals: SavingsGoal[]): Promise<void> {
+  const missing = goals.filter((g) => (g as unknown as Record<string, unknown>).isPrivate === undefined);
+  await Promise.all(missing.map((g) =>
+    updateDoc(doc(getDb(), 'savingsGoals', userId, 'goals', g.id), { isPrivate: false }).catch(() => {})));
 }
 
 export interface AddGoalInput {
@@ -52,6 +79,7 @@ export interface AddGoalInput {
   currency: Currency;
   monthlyContribution?: number;
   deadline?: Date;
+  isPrivate?: boolean;
 }
 
 export async function addGoal(input: AddGoalInput): Promise<SavingsGoal> {
@@ -61,6 +89,7 @@ export async function addGoal(input: AddGoalInput): Promise<SavingsGoal> {
       ...rest,
       userId,
       currentAmount: initialAmount ?? 0,
+      isPrivate: input.isPrivate ?? false,
       contributions: [],
       monthlyContribution,
       deadline: deadline ? Timestamp.fromDate(deadline) : undefined,

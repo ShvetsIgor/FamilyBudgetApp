@@ -2,7 +2,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import { fetchSharedMonthExpenses, fetchSharedExpensesInRange } from '@/features/expenses/services/expensesService';
 import { fetchSharedMonthIncome, fetchSharedIncomeInRange } from '@/features/income/services/incomeService';
-import { fetchGoals } from '@/features/savings/services/savingsService';
+import { fetchSharedGoals } from '@/features/savings/services/savingsService';
 import type { Category, SavingsGoal, SerializableExpense, SerializableIncome, UserProfile } from '@/shared/types';
 
 export interface FamilyExpense extends SerializableExpense {
@@ -128,7 +128,7 @@ export async function fetchFamilyGoals(members: UserProfile[]): Promise<FamilyGo
   const perMember = await Promise.all(
     members.map(async (m) => {
       try {
-        const goals = await fetchGoals(m.id);
+        const goals = await fetchSharedGoals(m.id);
         return goals.map((g) => ({ ...g, memberId: m.id, memberName: m.name }));
       } catch {
         return [] as FamilyGoal[];

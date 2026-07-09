@@ -7,11 +7,10 @@ import { useT } from '@/shared/hooks/useT';
 import { formatAmount } from '@/shared/utils/currency';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { fetchFamilyAnalytics, type FamilyAnalyticsData } from '@/features/family/services/familyBudgetService';
+import { buildMemberColorMap } from '@/features/family/utils/memberColors';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
-
-const MEMBER_COLORS = ['#E8442A', '#8AA9D6', '#81B29A', '#E9B384', '#C97B84', '#A8B89C'];
 
 /**
  * Family analytics for the given period (months). Aggregates every
@@ -47,6 +46,7 @@ export function FamilyAnalyticsView({ period }: { period: number }) {
     );
   }
 
+  const memberColorMap = buildMemberColorMap(members);
   const hasTrend = data.byMonth.some((d) => d.expenses > 0 || d.income > 0);
   const maxMember = Math.max(...data.byMember.map((m) => m.total), 1);
   const tooltipStyle = { borderRadius: 12, border: '1px solid hsl(var(--border))' };
@@ -98,9 +98,9 @@ export function FamilyAnalyticsView({ period }: { period: number }) {
         <div className={card} style={{ boxShadow: '0 2px 8px rgba(61,44,31,.04)' }}>
           <h2 className="text-sm font-bold mb-3">{t('analytics.byMember')}</h2>
           <div className="flex flex-col gap-2.5">
-            {data.byMember.map((m, idx) => {
+            {data.byMember.map((m) => {
               const pct = data.totalSpent > 0 ? (m.total / data.totalSpent) * 100 : 0;
-              const color = MEMBER_COLORS[idx % MEMBER_COLORS.length];
+              const color = memberColorMap[m.memberId] ?? 'hsl(var(--primary))';
               const isMe = m.memberId === user?.id;
               return (
                 <div key={m.memberId}>

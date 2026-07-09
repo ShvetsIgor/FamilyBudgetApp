@@ -7,7 +7,7 @@ import { Plus } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setGoals, addGoalItem, updateGoalItem, removeGoalItem } from '@/features/savings/store/savingsSlice';
 import {
-  fetchGoals, addContribution, deleteGoal,
+  fetchGoals, addContribution, deleteGoal, updateGoalPrivacy, backfillGoalPrivacy,
 } from '@/features/savings/services/savingsService';
 import { formatAmount, blockInvalidAmountKeys } from '@/shared/utils/currency';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
@@ -16,6 +16,7 @@ import { addContributionWithExpense } from '@/features/savings/services/savingsE
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
 import { fetchFamilyGoals, type FamilyGoal } from '@/features/family/services/familyBudgetService';
+import { buildMemberColorMap } from '@/features/family/utils/memberColors';
 import type { SavingsGoal } from '@/shared/types';
 
 type Mode = 'list' | { goal: SavingsGoal; action: 'contribute' | 'detail' };
@@ -41,7 +42,13 @@ export default function SavingsPage() {
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    try { dispatch(setGoals(await fetchGoals(user.id))); } finally { setLoading(false); }
+    try {
+      const goals = await fetchGoals(user.id);
+      dispatch(setGoals(goals));
+      // Pre-privacy goals lack the isPrivate field and would drop out of the
+      // family view (equality filters skip missing fields) — backfill once
+      backfillGoalPrivacy(user.id, goals);
+    } finally { setLoading(false); }
   }, [user, dispatch]);
 
   useEffect(() => { if (status === 'idle') load(); }, [status, load]);
@@ -144,6 +151,19 @@ export default function SavingsPage() {
               {t('savings.addContribution')}
             </button>
 
+            <button
+              onClick={async () => {
+                if (!user) return;
+                const next = !goal.isPrivate;
+                await updateGoalPrivacy(user.id, goal.id, next);
+                dispatch(updateGoalItem({ ...goal, isPrivate: next }));
+              }}
+              className="w-full rounded-xl border border-border py-2.5 text-sm font-semibold text-muted-foreground flex items-center justify-center gap-2"
+            >
+              <span>{goal.isPrivate ? '🔒' : '👨‍👩‍👧'}</span>
+              <span>{goal.isPrivate ? t('savings.showToFamily') : t('savings.hideFromFamily')}</span>
+            </button>
+
             {goal.contributions.length > 0 && (
               <div className="rounded-xl border border-border overflow-hidden">
                 <p className="px-4 pt-3 pb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('savings.history')}</p>
@@ -181,6 +201,7 @@ export default function SavingsPage() {
   }
 
   // ── List content ─────────────────────────────────────────────────────────────
+  const memberColorMap = buildMemberColorMap(members);
   const familyList = familyGoals ?? [];
   const listContent = (
     <>
@@ -234,10 +255,10 @@ export default function SavingsPage() {
                 >
                   <span className="text-2xl shrink-0">{goal.icon}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[15px] font-semibold truncate leading-snug">{goal.name}</p>
+                    <p className="text-[15px] font-semibold truncate leading-snug">{goal.isPrivate ? '🔒 ' : ''}{goal.name}</p>
                     <p style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: done ? '#10b981' : goal.color }}>
                       {formatAmount(goal.currentAmount, goal.currency)} / {formatAmount(goal.targetAmount, goal.currency)}
-                      {' · '}{isMine ? t('expenses.you') : goal.memberName}
+                      {' · '}<span style={{ color: memberColorMap[goal.memberId] }}>{isMine ? t('expenses.you') : goal.memberName}</span>
                     </p>
                   </div>
                   <div className="shrink-0 text-right">

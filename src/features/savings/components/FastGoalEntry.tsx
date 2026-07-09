@@ -42,6 +42,7 @@ export function FastGoalEntry() {
   const [showDate, setShowDate] = useState(false);
   const [deadline, setDeadline] = useState('');
   const [saving, setSaving] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(false);
 
   const targetNum = parseFloat(target) || 0;
   const canSave = name.trim().length > 0 && targetNum > 0;
@@ -62,6 +63,7 @@ export function FastGoalEntry() {
         targetAmount: targetNum,
         currency: currency as Currency,
         deadline: deadline ? new Date(deadline) : undefined,
+        isPrivate,
       });
       dispatch(addGoalItem(goal));
       router.back();
@@ -83,6 +85,14 @@ export function FastGoalEntry() {
         <div className="flex-1 text-center text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">
           {t('savings.goalNew')}
         </div>
+        <button
+          onClick={() => setIsPrivate((v) => !v)}
+          className="p-1.5 rounded-full transition-colors text-sm leading-none"
+          title={isPrivate ? t('savings.showToFamily') : t('savings.hideFromFamily')}
+          style={{ opacity: isPrivate ? 1 : 0.35 }}
+        >
+          🔒
+        </button>
         <button
           onClick={() => setShowDate(!showDate)}
           className="p-1.5 rounded-full transition-colors"

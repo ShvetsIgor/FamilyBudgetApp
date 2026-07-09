@@ -299,7 +299,8 @@
     "resetClearing": "Очистка…",
     "resetButton": "Сбросить всё остальное",
     "appSection": "Приложение",
-    "familyAlreadyInvited": "На этот email уже отправлено приглашение."
+    "familyAlreadyInvited": "На этот email уже отправлено приглашение.",
+    "memberColor": "Ваш цвет в семье"
   },
   "recurring": {
     "title": "Регулярные платежи",
@@ -406,7 +407,9 @@
     "goalNamePlaceholder": "Например, Отпуск или Машина…",
     "until": "До",
     "goalLabel": "Цель",
-    "familyEmpty": "У семьи пока нет целей"
+    "familyEmpty": "У семьи пока нет целей",
+    "hideFromFamily": "Скрыть от семьи",
+    "showToFamily": "Показать семье"
   },
   "categories": {
     "title": "Категории",

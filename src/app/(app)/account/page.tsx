@@ -25,6 +25,7 @@ import { fetchMonthIncome } from '@/features/income/services/incomeService';
 import { fetchRecurring } from '@/features/recurring/services/recurringService';
 import { fetchGoals } from '@/features/savings/services/savingsService';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
+import { buildMemberColorMap, MEMBER_PALETTE } from '@/features/family/utils/memberColors';
 import { budgetExportSheets, expensesToCsv, incomeTocsv, downloadCsv, downloadXlsx } from '@/shared/utils/exportCsv';
 import { resetUserDataExceptCategories } from '@/features/debug/services/resetUserDataService';
 import { setExpenses } from '@/features/expenses/store/expensesSlice';
@@ -58,6 +59,7 @@ export default function AccountPage() {
   const savingsGoals = useAppSelector((s) => s.savings.list);
   const family = useAppSelector((s) => s.family.family);
   const members = useAppSelector((s) => s.family.members);
+  const memberColorMap = buildMemberColorMap(members);
   const pendingInvite = useAppSelector((s) => s.family.pendingInvite);
 
   const [saving, setSaving] = useState(false);
@@ -221,6 +223,15 @@ export default function AccountPage() {
     try { await rejectInvite(pendingInvite.id); dispatch(setPendingInvite(null)); } finally { setFamilyLoading(false); }
   }
 
+  async function handleSetMemberColor(c: string) {
+    if (!user) return;
+    try {
+      await updateDoc(doc(getDb(), 'users', user.id), { color: c });
+      dispatch(setUser({ ...user, color: c }));
+      dispatch(setMembers(members.map((m) => (m.id === user.id ? { ...m, color: c } : m))));
+    } catch { /* offline — keep previous color */ }
+  }
+
   async function handleLeaveFamily() {
     if (!family) return;
     const msg = isOwner ? t('account.confirmLeaveOwner') : t('account.confirmLeaveFamily');
@@ -279,7 +290,7 @@ export default function AccountPage() {
           const ini = m.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2);
           return (
             <div key={m.id} className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold shrink-0">{ini}</div>
+              <div className="h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ background: memberColorMap[m.id] ?? 'hsl(var(--primary))' }}>{ini}</div>
               <div className="min-w-0">
                 <p className="text-sm font-medium truncate">{m.name}</p>
                 <p className="text-xs text-muted-foreground truncate">{m.email}</p>
@@ -288,6 +299,20 @@ export default function AccountPage() {
             </div>
           );
         })}
+      </div>
+      <div>
+        <p className="text-xs text-muted-foreground mb-1.5">{t('account.memberColor')}</p>
+        <div className="flex gap-2 flex-wrap">
+          {MEMBER_PALETTE.map((c) => (
+            <button
+              key={c}
+              onClick={() => handleSetMemberColor(c)}
+              className="h-7 w-7 rounded-full border-2 transition-transform active:scale-90"
+              style={{ background: c, borderColor: user?.color === c ? 'hsl(var(--foreground))' : 'transparent' }}
+              aria-label={c}
+            />
+          ))}
+        </div>
       </div>
       {isOwner && (
         <>

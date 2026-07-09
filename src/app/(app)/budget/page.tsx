@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { useAppDispatch, useAppSelector } from '@/store/store';
-import { setBudgetMode, setBudgetDailyLimit, setBudgetMonthlyLimit } from '@/features/ui/store/uiSlice';
+import { setBudgetMode, setBudgetDailyLimit, setBudgetMonthlyLimit, setBudgetSnapshot } from '@/features/ui/store/uiSlice';
 import type { BudgetMode } from '@/features/ui/store/uiSlice';
 import { formatAmount, blockInvalidAmountKeys } from '@/shared/utils/currency';
 import { getCurrencySymbol } from '@/shared/utils/currency';
@@ -48,13 +48,22 @@ export default function BudgetPage() {
 
   async function handleSave() {
     setSaveError(false);
+    const snapshot = {
+      mode: localMode,
+      dailyLimit: Number(localDaily) || 0,
+      monthlyLimit: Number(localMonthly) || 0,
+    };
     dispatch(setBudgetMode(localMode));
-    if (localMode === 'daily') dispatch(setBudgetDailyLimit(Number(localDaily) || 0));
-    if (localMode === 'monthly') dispatch(setBudgetMonthlyLimit(Number(localMonthly) || 0));
+    if (localMode === 'daily') dispatch(setBudgetDailyLimit(snapshot.dailyLimit));
+    if (localMode === 'monthly') dispatch(setBudgetMonthlyLimit(snapshot.monthlyLimit));
+    // Settings are stamped onto the current month: past months keep the
+    // snapshot that was active then, future months inherit this one
+    dispatch(setBudgetSnapshot({ month: monthStr, snapshot }));
     if (user) {
       const patch: Record<string, unknown> = { budgetMode: localMode };
-      if (localMode === 'daily') patch.budgetDailyLimit = Number(localDaily) || 0;
-      if (localMode === 'monthly') patch.budgetMonthlyLimit = Number(localMonthly) || 0;
+      if (localMode === 'daily') patch.budgetDailyLimit = snapshot.dailyLimit;
+      if (localMode === 'monthly') patch.budgetMonthlyLimit = snapshot.monthlyLimit;
+      patch[`budgetByMonth.${monthStr}`] = snapshot;
       try {
         await updateDoc(doc(getDb(), 'users', user.id), patch);
       } catch {

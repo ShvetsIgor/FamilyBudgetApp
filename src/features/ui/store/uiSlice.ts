@@ -2,6 +2,12 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { Theme, Language, Currency, WeekStart } from '@/shared/types';
 
 export type { WeekStart };
+export interface BudgetSnapshot {
+  mode: BudgetMode;
+  dailyLimit: number;
+  monthlyLimit: number;
+}
+
 export type BudgetMode = 'daily' | 'monthly' | 'auto';
 
 function ls(key: string): string | null {
@@ -20,6 +26,10 @@ interface UIState {
   budgetMode: BudgetMode;
   budgetDailyLimit: number;
   budgetMonthlyLimit: number;
+  /** Per-month snapshots (key 'yyyy-MM'): past months keep the settings
+   *  that were active then; months without a snapshot inherit the nearest
+   *  earlier one, falling back to the current global fields. */
+  budgetByMonth: Record<string, BudgetSnapshot>;
   desktopRightPanelOpen: boolean;
 }
 
@@ -42,6 +52,9 @@ const initialState: UIState = {
   budgetMode: (ls('budgetMode') as BudgetMode) ?? 'auto',
   budgetDailyLimit: Number(ls('budgetDailyLimit')) || 0,
   budgetMonthlyLimit: Number(ls('budgetMonthlyLimit')) || 0,
+  budgetByMonth: (() => {
+    try { return JSON.parse(ls('budgetByMonth') ?? '{}'); } catch { return {}; }
+  })(),
   desktopRightPanelOpen: true,
 };
 
@@ -105,12 +118,18 @@ const uiSlice = createSlice({
       state.budgetMonthlyLimit = action.payload;
       if (typeof window !== 'undefined') localStorage.setItem('budgetMonthlyLimit', String(action.payload));
     },
+    setBudgetSnapshot(state, action: PayloadAction<{ month: string; snapshot: BudgetSnapshot }>) {
+      state.budgetByMonth[action.payload.month] = action.payload.snapshot;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('budgetByMonth', JSON.stringify(state.budgetByMonth));
+      }
+    },
     setDesktopRightPanelOpen(state, action: PayloadAction<boolean>) {
       state.desktopRightPanelOpen = action.payload;
     },
   },
 });
 
-export const { setTheme, setDarkMode, hydrateThemePreferences, setLanguage, setCurrency, setWeekStart, setOffline, setSyncing, setExpensesSearch, setBudgetMode, setBudgetDailyLimit, setBudgetMonthlyLimit, setDesktopRightPanelOpen } =
+export const { setTheme, setDarkMode, hydrateThemePreferences, setLanguage, setCurrency, setWeekStart, setOffline, setSyncing, setExpensesSearch, setBudgetMode, setBudgetDailyLimit, setBudgetMonthlyLimit, setBudgetSnapshot, setDesktopRightPanelOpen } =
   uiSlice.actions;
 export default uiSlice.reducer;

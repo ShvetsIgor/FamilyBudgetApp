@@ -17,6 +17,7 @@ import { cn } from '@/shared/utils/cn';
 import type { SerializableExpense } from '@/shared/types';
 import { setExpensesSearch } from '@/features/ui/store/uiSlice';
 import { useT } from '@/shared/hooks/useT';
+import { getEffectiveBudget } from '@/features/budget/utils/effectiveBudget';
 import { buildMemberColorMap } from '@/features/family/utils/memberColors';
 import { fetchFamilyMonthExpenses, type FamilyExpense, type FamilyMonthData } from '@/features/family/services/familyBudgetService';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
@@ -204,9 +205,16 @@ export default function ExpensesPage() {
   );
 
   const budgetMode = useAppSelector((s) => s.ui.budgetMode);
+  const budgetDailyLimit = useAppSelector((s) => s.ui.budgetDailyLimit);
   const budgetMonthlyLimit = useAppSelector((s) => s.ui.budgetMonthlyLimit);
+  const budgetByMonth = useAppSelector((s) => s.ui.budgetByMonth);
+  // Budget effective for the month being viewed — past months keep the
+  // settings that were active then, not the current ones
+  const effBudget = getEffectiveBudget(budgetByMonth, selectedMonth, {
+    mode: budgetMode, dailyLimit: budgetDailyLimit, monthlyLimit: budgetMonthlyLimit,
+  });
   // Only show budget bar in monthly mode — auto/daily don't have a meaningful monthly limit here
-  const monthBudget = budgetMode === 'monthly' ? budgetMonthlyLimit : 0;
+  const monthBudget = effBudget.mode === 'monthly' ? effBudget.monthlyLimit : 0;
   const budgetPct = monthBudget > 0 ? Math.min(100, Math.round((monthTotal / monthBudget) * 100)) : 0;
 
   return (

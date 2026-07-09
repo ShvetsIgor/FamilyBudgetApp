@@ -1,6 +1,7 @@
 import {
   collection, doc, addDoc, updateDoc, deleteDoc,
   getDocs, getDoc, query, where, serverTimestamp, Timestamp, arrayUnion,
+  writeBatch,
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import type { Family, FamilyInvite, UserProfile } from '@/shared/types';
@@ -49,16 +50,18 @@ export async function leaveFamily(userId: string, family: Family): Promise<void>
   const newMembers = family.memberIds.filter((id) => id !== userId);
 
   if (family.ownerId === userId) {
-    // Owner dissolves the family.
-    // Detach members BEFORE deleting the family doc: security rules verify
-    // the requester is this family's owner by reading the family doc.
+    // Owner dissolves the family: detach every member and delete the family
+    // doc in ONE batch, so an interruption can't leave the family half-alive.
+    // (Rules' get() sees the pre-batch state, so the owner check still passes.)
+    const batch = writeBatch(getDb());
     for (const memberId of family.memberIds) {
-      await updateDoc(doc(getDb(), 'users', memberId), {
+      batch.update(doc(getDb(), 'users', memberId), {
         familyId: null,
         accountType: 'personal',
       });
     }
-    await deleteDoc(doc(getDb(), 'families', family.id));
+    batch.delete(doc(getDb(), 'families', family.id));
+    await batch.commit();
   } else {
     await updateDoc(doc(getDb(), 'families', family.id), { memberIds: newMembers });
     await updateDoc(doc(getDb(), 'users', userId), {
@@ -75,13 +78,31 @@ export async function sendInvite(
   fromUserId: string,
   toEmail: string
 ): Promise<FamilyInvite> {
+  const email = toEmail.toLowerCase().trim();
+
+  // One pending invite per email: re-sending would create dangling duplicates
+  // (the query is constrained to fromUserId so security rules can prove it)
+  const existing = await getDocs(query(
+    collection(getDb(), 'invites'),
+    where('fromUserId', '==', fromUserId),
+    where('toEmail', '==', email),
+    where('status', '==', 'pending'),
+  ));
+  const stillValid = existing.docs.find((d) => {
+    const exp = (d.data().expiresAt as Timestamp | undefined)?.toDate();
+    return !exp || exp > new Date();
+  });
+  if (stillValid) {
+    throw new Error('already-invited');
+  }
+
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 7);
 
   const ref = await addDoc(collection(getDb(), 'invites'), {
     familyId,
     fromUserId,
-    toEmail: toEmail.toLowerCase().trim(),
+    toEmail: email,
     status: 'pending',
     createdAt: serverTimestamp(),
     expiresAt: Timestamp.fromDate(expiresAt),
@@ -91,7 +112,7 @@ export async function sendInvite(
     id: ref.id,
     familyId,
     fromUserId,
-    toEmail: toEmail.toLowerCase().trim(),
+    toEmail: email,
     status: 'pending',
     createdAt: Timestamp.fromDate(new Date()),
     expiresAt: Timestamp.fromDate(expiresAt),
@@ -106,8 +127,15 @@ export async function fetchPendingInvite(email: string): Promise<FamilyInvite | 
   );
   const snap = await getDocs(q);
   if (snap.empty) return null;
-  const d = snap.docs[0];
-  return { id: d.id, ...d.data() } as FamilyInvite;
+  // Ignore invites past their expiresAt — they stay 'pending' in Firestore
+  // but must not resurface in the UI
+  const now = new Date();
+  const valid = snap.docs.find((d) => {
+    const exp = (d.data().expiresAt as Timestamp | undefined)?.toDate();
+    return !exp || exp > now;
+  });
+  if (!valid) return null;
+  return { id: valid.id, ...valid.data() } as FamilyInvite;
 }
 
 export async function acceptInvite(invite: FamilyInvite, userId: string): Promise<void> {

@@ -186,7 +186,11 @@
     "budget": "Бюджет",
     "budgetLeft": "осталось",
     "deletedLabel": "Удалено",
-    "recurringBadge": "Регулярный"
+    "recurringBadge": "Регулярный",
+    "viewMine": "Мои",
+    "viewFamily": "Семья",
+    "familyEmpty": "У семьи нет трат в этом месяце",
+    "you": "Вы"
   },
   "stats": {
     "title": "Статистика",
@@ -290,7 +294,8 @@
     "resetDone": "Готово. Данные очищены.",
     "resetClearing": "Очистка…",
     "resetButton": "Сбросить всё остальное",
-    "appSection": "Приложение"
+    "appSection": "Приложение",
+    "familyAlreadyInvited": "На этот email уже отправлено приглашение."
   },
   "recurring": {
     "title": "Регулярные платежи",

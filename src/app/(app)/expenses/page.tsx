@@ -17,6 +17,7 @@ import { cn } from '@/shared/utils/cn';
 import type { SerializableExpense } from '@/shared/types';
 import { setExpensesSearch } from '@/features/ui/store/uiSlice';
 import { useT } from '@/shared/hooks/useT';
+import { fetchFamilyMonthExpenses, type FamilyExpense, type FamilyMonthData } from '@/features/family/services/familyBudgetService';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import {
   getExpenseListMeta,
@@ -75,6 +76,13 @@ export default function ExpensesPage() {
   const monthBarRef = useRef<HTMLDivElement>(null);
   const t = useT();
   const dfLocale = useDateFnsLocale();
+  const family = useAppSelector((st) => st.family.family);
+  const members = useAppSelector((st) => st.family.members);
+  const [viewMode, setViewMode] = useState<'mine' | 'family'>('mine');
+  const [familyData, setFamilyData] = useState<FamilyMonthData | null>(null);
+  const [familyLoading, setFamilyLoading] = useState(false);
+  const familyAvailable = !!family && members.length > 1;
+  const isFamilyView = viewMode === 'family' && familyAvailable;
 
   // Undo-delete state. The delete is committed to Firestore *immediately* so
   // closing the tab can't strand a half-deleted item; the toast just offers a
@@ -110,6 +118,16 @@ export default function ExpensesPage() {
       .finally(() => setLoading(false));
   }, [selectedMonth, isCurrentMonth, user]);
 
+  // Family view: aggregate every member's shared expenses for the month
+  useEffect(() => {
+    if (!isFamilyView || !user) { setFamilyData(null); return; }
+    setFamilyLoading(true);
+    fetchFamilyMonthExpenses(members, selectedMonth, user.id, categories)
+      .then(setFamilyData)
+      .catch(() => setFamilyData({ expenses: [], categoryMeta: {} }))
+      .finally(() => setFamilyLoading(false));
+  }, [isFamilyView, user, members, selectedMonth, categories]);
+
   // Scroll month bar to selected chip
   useEffect(() => {
     const bar = monthBarRef.current;
@@ -143,7 +161,16 @@ export default function ExpensesPage() {
     [],
   );
 
-  const monthTotal = expenses.reduce((s, e) => s + e.amount, 0);
+  const familyExpenses = familyData?.expenses ?? [];
+  const familyFiltered = familyExpenses.filter((e) => {
+    const q = search.toLowerCase();
+    if (!q) return true;
+    const catName = familyData?.categoryMeta[e.categoryId]?.name;
+    return [e.store, e.comment, catName, e.memberName].some((v) => v?.toLowerCase().includes(q));
+  });
+  const monthTotal = isFamilyView
+    ? familyExpenses.reduce((s, e) => s + e.amount, 0)
+    : expenses.reduce((s, e) => s + e.amount, 0);
   const expenseGroups = groupByDate(filteredExpenses).sort(([a], [b]) => b.localeCompare(a));
 
   const monthBar = (
@@ -221,6 +248,23 @@ export default function ExpensesPage() {
           )}
         </div>
 
+        {/* Mine / Family toggle */}
+        {familyAvailable && (
+          <div className="px-4 pt-3 lg:px-0" style={{ background: 'hsl(var(--card))' }}>
+            <div className="inline-flex rounded-full bg-muted p-0.5">
+              {(['mine', 'family'] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setViewMode(m)}
+                  className={`rounded-full px-4 py-1 text-xs font-bold transition-colors ${viewMode === m ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'}`}
+                >
+                  {m === 'mine' ? t('expenses.viewMine') : t('expenses.viewFamily')}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Month bar */}
         {monthBar}
 
@@ -233,7 +277,7 @@ export default function ExpensesPage() {
             placeholder={t('expenses.search')}
             className="lg:hidden w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
           />
-          {expenses.length > 0 && (
+          {!isFamilyView && expenses.length > 0 && (
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
               <button
                 onClick={() => setFilterCatId('')}
@@ -256,21 +300,21 @@ export default function ExpensesPage() {
         </div>
 
         {/* Loading */}
-        {loading && (
+        {(loading || familyLoading) && (
           <div className="flex justify-center py-16">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-primary" />
           </div>
         )}
 
         {/* Empty states */}
-        {!loading && expenses.length === 0 && (
+        {!isFamilyView && !loading && expenses.length === 0 && (
           <div className="flex flex-col items-center py-16 px-8 text-center">
             <p className="text-4xl mb-3">📭</p>
             <p className="font-medium">{t('expenses.noExpenses')}</p>
             <p className="text-sm text-muted-foreground mt-1">{t('expenses.tapToAdd')}</p>
           </div>
         )}
-        {!loading && expenses.length > 0 && filteredExpenses.length === 0 && (
+        {!isFamilyView && !loading && expenses.length > 0 && filteredExpenses.length === 0 && (
           <div className="flex flex-col items-center py-12 px-8 text-center">
             <p className="text-4xl mb-3">🔍</p>
             <p className="font-medium">{t('expenses.noResults')}</p>
@@ -282,7 +326,7 @@ export default function ExpensesPage() {
         {isCurrentMonth && <div className="lg:hidden"><UpcomingBills withinDays={30} /></div>}
 
         {/* Expense groups */}
-        {!loading && (
+        {!isFamilyView && !loading && (
           <div className="flex flex-col pb-4">
             {expenseGroups.map(([day, items]) => {
               const dayTotal = (items as SerializableExpense[]).reduce((s, e) => s + e.amount, 0);
@@ -330,6 +374,54 @@ export default function ExpensesPage() {
                         }}
                       />
                     ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Family expense groups */}
+        {isFamilyView && !familyLoading && familyFiltered.length === 0 && (
+          <div className="flex flex-col items-center py-16 px-8 text-center">
+            <p className="text-4xl mb-3">👨‍👩‍👧</p>
+            <p className="font-medium">{t('expenses.familyEmpty')}</p>
+          </div>
+        )}
+        {isFamilyView && !familyLoading && familyFiltered.length > 0 && (
+          <div className="flex flex-col pb-4">
+            {groupByDate(familyFiltered).sort(([a], [b]) => b.localeCompare(a)).map(([day, items]) => {
+              const rows = items as FamilyExpense[];
+              const dayTotal = rows.reduce((s, e) => s + e.amount, 0);
+              return (
+                <div key={day} className="border-b border-border/30">
+                  <div className="flex items-center justify-between px-4 py-2 lg:px-0" style={{ background: 'hsl(var(--muted)/0.4)' }}>
+                    <span style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 800, color: 'hsl(var(--muted-foreground))' }}>
+                      {dateLabel(day, t, dfLocale)}
+                    </span>
+                    <span style={{ fontSize: 10, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: 'hsl(var(--muted-foreground))' }}>
+                      {dayTotal > 0 ? '-' : ''}{formatAmount(dayTotal, currency)}
+                    </span>
+                  </div>
+                  <div className="divide-y divide-border/20">
+                    {rows.map((e) => {
+                      const meta = familyData?.categoryMeta[e.categoryId];
+                      const isMine = e.memberId === user?.id;
+                      return (
+                        <div key={`${e.memberId}-${e.id}`} className="flex items-center gap-3 px-4 py-3 lg:px-0">
+                          <StickerIcon icon={meta?.icon ?? 'box'} color={meta?.color ?? '#8AA9D6'} className="h-9 w-9 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-foreground truncate">
+                              {e.store || e.comment || (meta ? t.cat(meta.name) : t('quickadd.tabExpense'))}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {meta ? t.cat(meta.name) : '—'} · {isMine ? t('expenses.you') : e.memberName}
+                            </p>
+                          </div>
+                          <span className="text-sm font-extrabold tabular-nums">-{formatAmount(e.amount, currency)}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );

@@ -184,7 +184,11 @@
     "budget": "Budget",
     "budgetLeft": "left",
     "deletedLabel": "Deleted",
-    "recurringBadge": "Recurring"
+    "recurringBadge": "Recurring",
+    "viewMine": "Mine",
+    "viewFamily": "Family",
+    "familyEmpty": "No family expenses this month",
+    "you": "You"
   },
   "stats": {
     "title": "Statistics",
@@ -288,7 +292,8 @@
     "resetDone": "Done. Data cleared.",
     "resetClearing": "Clearing…",
     "resetButton": "Reset everything else",
-    "appSection": "App"
+    "appSection": "App",
+    "familyAlreadyInvited": "This email already has a pending invitation."
   },
   "recurring": {
     "title": "Recurring Payments",

@@ -195,7 +195,11 @@ export default function AccountPage() {
     try {
       await sendInvite(family.id, user!.id, inviteEmail.trim());
       setInviteSent(true); setInviteEmail(''); setShowInvite(false);
-    } catch { setFamilyError(t('account.familyInviteError')); } finally { setFamilyLoading(false); }
+    } catch (e) {
+      setFamilyError(e instanceof Error && e.message === 'already-invited'
+        ? t('account.familyAlreadyInvited')
+        : t('account.familyInviteError'));
+    } finally { setFamilyLoading(false); }
   }
 
   async function handleAcceptInvite() {

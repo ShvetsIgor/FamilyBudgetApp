@@ -265,6 +265,7 @@ Runtime contract update:
 
 ## Known Gaps
 
+- Family budget is read-only expense sharing (list + month total). Shared incomes/savings/analytics, member colors/avatars, and editing family members' entries are not implemented yet.
 - Split persistence is still one `Expense` document with `splits[]`.
   There is no separate `splitGroup` entity yet.
 - Chat parser is still the legacy parser entrypoint.
@@ -277,6 +278,7 @@ Runtime contract update:
 
 ## Change Log
 
+- **2026-07-09** — Family budget MVP (общий семейный бюджет): family members now see each other's non-secret expenses. Firestore rules allow same-family `list/get` on `expenses/{uid}/items` **only** when the query filters `privacy == 'regular'` (provable rule) and per-doc `get` on non-private categories; composite index `items(privacy asc, date desc)` deployed. New `familyBudgetService.fetchFamilyMonthExpenses` aggregates members' shared month expenses + resolves foreign category names via per-doc reads (private ones fall back to a generic label). `/expenses` gets a «Мои / Семья» toggle (visible when family has 2+ members): merged date-grouped read-only list with member attribution, family month total in the header; the `privacy: 'secret'` flag is now actually enforced. Family fixes: expired invites filtered out on read, duplicate pending invites rejected (`already-invited` + UI message), owner dissolution runs in one WriteBatch, stale `familyId` self-heals on launch instead of erroring every time.
 - **2026-07-09** — CI: manual runs enabled via `workflow_dispatch` (Actions → CI → "Run workflow" button).
 - **2026-07-09** — Atomic savings contributions: goal update + linked expense + monthlyStats now land in ONE Firestore WriteBatch via `addContributionWithExpense` (`savingsExpenseService.ts`), so a partial failure can no longer diverge the goal balance from expense history. `expensesService` exposes `queueAddExpense(batch, input)` and `savingsService` exposes `queueContribution(batch, ...)` (both wrapped by the original `addExpense`/`addContribution`); all three contribution entry points (savings page incl. explicit-category choice, mobile fast entry, desktop quick-add) switched to the atomic path; 'Savings' category creation intentionally stays outside the batch (rare one-time setup, harmless alone).
 - **2026-07-09** — CI fix: workflow bumped to Node 24 — the npm 11-generated `package-lock.json` fails `npm ci` validation under npm 10 (Node 20) with "Missing: @swc/helpers from lock file"; CI now matches local dev.

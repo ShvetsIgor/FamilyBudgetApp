@@ -4,6 +4,7 @@ import { useT } from '@/shared/hooks/useT';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/store/store';
+import { setUser } from '@/features/auth/store/authSlice';
 import { setRecurring } from '@/features/recurring/store/recurringSlice';
 import { fetchRecurring } from '@/features/recurring/services/recurringService';
 import { setFamily, setMembers, setPendingInvite } from '@/features/family/store/familySlice';
@@ -50,6 +51,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         dispatch(setFamily(f));
         const members = await fetchFamilyMembers(f.memberIds);
         dispatch(setMembers(members));
+      }).catch(async () => {
+        // Stale familyId (family dissolved elsewhere): rules deny reading a
+        // missing family doc, so self-heal the profile instead of erroring
+        // on every launch
+        try {
+          const { doc, updateDoc } = await import('firebase/firestore');
+          const { getDb } = await import('@/shared/lib/firebase');
+          await updateDoc(doc(getDb(), 'users', user.id), { familyId: null, accountType: 'personal' });
+          dispatch(setUser({ ...user, familyId: undefined, accountType: 'personal' }));
+        } catch { /* offline — retry next launch */ }
       });
     }
     if (!user.familyId) {

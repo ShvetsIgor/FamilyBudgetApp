@@ -236,7 +236,10 @@
       "Sat"
     ],
     "peakPrefix": "Spending peak —",
-    "pctOfSpending": "{p}% of spending"
+    "pctOfSpending": "{p}% of spending",
+    "familySpent": "Family spent",
+    "familyIncome": "Family income",
+    "byMember": "By member"
   },
   "account": {
     "title": "Account",

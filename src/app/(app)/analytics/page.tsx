@@ -10,6 +10,7 @@ import { formatAmount } from '@/shared/utils/currency';
 import { aggregateTopCategories } from '@/features/categories/utils/statsAggregation';
 import { useT } from '@/shared/hooks/useT';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
+import { FamilyAnalyticsView } from '@/features/family/components/FamilyAnalyticsView';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -33,6 +34,11 @@ export default function AnalyticsPage() {
   const [dowData, setDowData] = useState<DowPoint[]>([]);
   const t = useT();
   const dfLocale = useDateFnsLocale();
+  const family = useAppSelector((st) => st.family.family);
+  const members = useAppSelector((st) => st.family.members);
+  const [viewMode, setViewMode] = useState<'mine' | 'family'>('mine');
+  const familyAvailable = !!family && members.length > 1;
+  const isFamilyView = viewMode === 'family' && familyAvailable;
   const [loading, setLoading] = useState(false);
 
   const load = useCallback(async () => {
@@ -104,6 +110,20 @@ export default function AnalyticsPage() {
       : new Date(parseInt(m.month.slice(0, 4)), parseInt(m.month.slice(5)), 0).getDate();
     return { name: m.month.slice(5), avgDay: daysInM > 0 ? Math.round(m.totalExpenses / daysInM) : 0 };
   });
+
+  const viewToggle = familyAvailable ? (
+    <div className="inline-flex self-start rounded-full bg-muted p-0.5">
+      {(['mine', 'family'] as const).map((m) => (
+        <button
+          key={m}
+          onClick={() => setViewMode(m)}
+          className={`rounded-full px-4 py-1 text-xs font-bold transition-colors ${viewMode === m ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'}`}
+        >
+          {m === 'mine' ? t('expenses.viewMine') : t('expenses.viewFamily')}
+        </button>
+      ))}
+    </div>
+  ) : null;
 
   // Period selector (shared)
   const periodSelector = (
@@ -257,6 +277,17 @@ export default function AnalyticsPage() {
     </div>
   );
 
+  if (isFamilyView) {
+    return (
+      <div className="flex flex-col gap-4 px-4 pt-5 pb-8 lg:px-0 lg:pt-0">
+        <h1 className="text-xl font-bold lg:hidden">{t('analytics.title')}</h1>
+        {viewToggle}
+        {periodSelector}
+        <FamilyAnalyticsView period={period} />
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center py-20">
@@ -269,6 +300,7 @@ export default function AnalyticsPage() {
     return (
       <div className="flex flex-col gap-4 px-4 pt-5 pb-8 lg:px-0 lg:pt-0">
         <h1 className="text-xl font-bold lg:hidden">{t('analytics.title')}</h1>
+        {viewToggle}
         {periodSelector}
         {statCards}
         <div className="flex flex-col items-center py-12 text-center">
@@ -283,6 +315,8 @@ export default function AnalyticsPage() {
   return (
     <div className="flex flex-col gap-4 px-4 pt-5 pb-8 lg:px-0 lg:pt-0">
       <h1 className="text-xl font-bold lg:hidden">{t('analytics.title')}</h1>
+
+      {viewToggle}
 
       {periodSelector}
 

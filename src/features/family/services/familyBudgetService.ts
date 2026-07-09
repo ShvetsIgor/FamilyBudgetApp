@@ -1,7 +1,7 @@
 import { doc, getDoc } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
-import { fetchSharedMonthExpenses } from '@/features/expenses/services/expensesService';
-import { fetchSharedMonthIncome } from '@/features/income/services/incomeService';
+import { fetchSharedMonthExpenses, fetchSharedExpensesInRange } from '@/features/expenses/services/expensesService';
+import { fetchSharedMonthIncome, fetchSharedIncomeInRange } from '@/features/income/services/incomeService';
 import { fetchGoals } from '@/features/savings/services/savingsService';
 import type { Category, SavingsGoal, SerializableExpense, SerializableIncome, UserProfile } from '@/shared/types';
 
@@ -136,4 +136,93 @@ export async function fetchFamilyGoals(members: UserProfile[]): Promise<FamilyGo
     }),
   );
   return perMember.flat();
+}
+
+export interface FamilyAnalyticsData {
+  byMonth: { name: string; expenses: number; income: number }[];
+  byMember: { memberId: string; memberName: string; total: number }[];
+  topCategories: { key: string; name: string; icon: string; color: string; total: number }[];
+  totalSpent: number;
+  totalIncome: number;
+}
+
+/**
+ * Family analytics over a month range, computed from the same shared
+ * (privacy == 'regular') queries as the list views — never from
+ * monthlyStats, which include secret entries and would leak their totals.
+ * Two range queries per member; category totals merge by category NAME so
+ * "Groceries" of different members lands in one bar.
+ */
+export async function fetchFamilyAnalytics(
+  members: UserProfile[],
+  monthKeys: string[],
+  selfId: string,
+  selfCategories: Category[],
+): Promise<FamilyAnalyticsData> {
+  const [fy, fm] = monthKeys[0].split('-').map(Number);
+  const [ly, lm] = monthKeys[monthKeys.length - 1].split('-').map(Number);
+  const from = new Date(fy, fm - 1, 1);
+  const to = new Date(ly, lm, 1);
+
+  const perMember = await Promise.all(members.map(async (m) => {
+    const [expenses, incomes] = await Promise.all([
+      fetchSharedExpensesInRange(m.id, from, to).catch(() => [] as SerializableExpense[]),
+      fetchSharedIncomeInRange(m.id, from, to).catch(() => [] as SerializableIncome[]),
+    ]);
+    return { member: m, expenses, incomes };
+  }));
+
+  const monthAgg = new Map(monthKeys.map((k) => [k, { name: k.slice(5), expenses: 0, income: 0 }]));
+  const byMember: FamilyAnalyticsData['byMember'] = [];
+  const catTotals = new Map<string, { total: number; memberId: string }>();
+  let totalSpent = 0;
+  let totalIncome = 0;
+
+  for (const { member, expenses, incomes } of perMember) {
+    let memberTotal = 0;
+    for (const e of expenses) {
+      monthAgg.get(e.date.slice(0, 7)) && (monthAgg.get(e.date.slice(0, 7))!.expenses += e.amount);
+      memberTotal += e.amount;
+      totalSpent += e.amount;
+      const cur = catTotals.get(e.categoryId);
+      if (cur) cur.total += e.amount;
+      else catTotals.set(e.categoryId, { total: e.amount, memberId: member.id });
+    }
+    for (const i of incomes) {
+      monthAgg.get(i.date.slice(0, 7)) && (monthAgg.get(i.date.slice(0, 7))!.income += i.amount);
+      totalIncome += i.amount;
+    }
+    byMember.push({ memberId: member.id, memberName: member.name, total: memberTotal });
+  }
+  byMember.sort((a, b) => b.total - a.total);
+
+  const meta: Record<string, FamilyCategoryMeta> = {};
+  for (const c of selfCategories) meta[c.id] = { name: c.name, icon: c.icon, color: c.color };
+  await Promise.all([...catTotals.entries()]
+    .filter(([catId]) => !meta[catId])
+    .map(async ([catId, v]) => {
+      try {
+        const snap = await getDoc(doc(getDb(), 'categories', v.memberId, 'expense', catId));
+        if (snap.exists()) {
+          const d = snap.data();
+          meta[catId] = { name: d.name, icon: d.icon, color: d.color };
+        }
+      } catch { /* private category — keep hidden */ }
+    }));
+
+  const byName = new Map<string, { name: string; icon: string; color: string; total: number }>();
+  for (const [catId, v] of catTotals) {
+    const m = meta[catId];
+    const name = m?.name ?? '—';
+    const key = name.toLowerCase();
+    const cur = byName.get(key);
+    if (cur) cur.total += v.total;
+    else byName.set(key, { name, icon: m?.icon ?? 'box', color: m?.color ?? '#8AA9D6', total: v.total });
+  }
+  const topCategories = [...byName.entries()]
+    .map(([key, v]) => ({ key, ...v }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 6);
+
+  return { byMonth: [...monthAgg.values()], byMember, topCategories, totalSpent, totalIncome };
 }

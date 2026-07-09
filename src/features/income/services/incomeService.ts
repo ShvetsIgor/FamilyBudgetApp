@@ -81,6 +81,19 @@ export async function fetchSharedMonthIncome(userId: string, month: string): Pro
   return snap.docs.map((d) => toSerializable(d.id, d.data()));
 }
 
+/** Shared (privacy == 'regular') incomes over an arbitrary date range — for family analytics. */
+export async function fetchSharedIncomeInRange(userId: string, from: Date, to: Date): Promise<SerializableIncome[]> {
+  const snap = await getDocs(
+    query(
+      incCol(userId),
+      where('privacy', '==', 'regular'),
+      where('date', '>=', Timestamp.fromDate(from)), where('date', '<', Timestamp.fromDate(to)),
+      orderBy('date', 'desc'),
+    )
+  );
+  return snap.docs.map((d) => toSerializable(d.id, d.data()));
+}
+
 export interface AddIncomeInput {
   userId: string;
   amount: number;

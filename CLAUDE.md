@@ -265,7 +265,7 @@ Runtime contract update:
 
 ## Known Gaps
 
-- Family budget is read-only sharing of expenses, incomes and savings goals. Family analytics, member colors/avatars, a per-goal privacy flag, and editing family members' entries are not implemented yet.
+- Family budget is read-only sharing of expenses, incomes, savings goals and analytics. Member colors/avatars, a per-goal privacy flag, and editing family members' entries are not implemented yet.
 - Split persistence is still one `Expense` document with `splits[]`.
   There is no separate `splitGroup` entity yet.
 - Chat parser is still the legacy parser entrypoint.
@@ -278,6 +278,7 @@ Runtime contract update:
 
 ## Change Log
 
+- **2026-07-09** — Family analytics: `/analytics` gets the «Мои / Семья» toggle. Family mode aggregates every member's shared entries via two range queries per member (`fetchSharedExpensesInRange`/`fetchSharedIncomeInRange`, deliberately NOT `monthlyStats` — those include secret entries and would leak their totals) into `fetchFamilyAnalytics`: family spent/income stat cards, month trend chart, per-member breakdown bars with share %, and top family categories merged by category NAME across members. New `FamilyAnalyticsView` component keeps the page manageable.
 - **2026-07-09** — Family budget, part 2 (incomes + savings): family members now also see each other's non-secret incomes and all savings goals. Rules: same-family `read` on `incomes/{uid}/items` gated on query filter `privacy == 'regular'` (the existing `items(privacy, date)` composite index covers incomes — same collection group); `savingsGoals/{uid}/goals` readable by the family (goals have no privacy flag yet). `familyBudgetService` gains `fetchFamilyMonthIncomes` (with per-doc income-category resolution) and `fetchFamilyGoals`. `/income` gets the same «Мои / Семья» toggle with merged month list + family total; `/savings` toggle shows every member's goals read-only with progress and owner attribution.
 - **2026-07-09** — Family budget MVP (общий семейный бюджет): family members now see each other's non-secret expenses. Firestore rules allow same-family `list/get` on `expenses/{uid}/items` **only** when the query filters `privacy == 'regular'` (provable rule) and per-doc `get` on non-private categories; composite index `items(privacy asc, date desc)` deployed. New `familyBudgetService.fetchFamilyMonthExpenses` aggregates members' shared month expenses + resolves foreign category names via per-doc reads (private ones fall back to a generic label). `/expenses` gets a «Мои / Семья» toggle (visible when family has 2+ members): merged date-grouped read-only list with member attribution, family month total in the header; the `privacy: 'secret'` flag is now actually enforced. Family fixes: expired invites filtered out on read, duplicate pending invites rejected (`already-invited` + UI message), owner dissolution runs in one WriteBatch, stale `familyId` self-heals on launch instead of erroring every time.
 - **2026-07-09** — CI: manual runs enabled via `workflow_dispatch` (Actions → CI → "Run workflow" button).

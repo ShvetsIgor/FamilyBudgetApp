@@ -121,6 +121,19 @@ export async function fetchSharedMonthExpenses(userId: string, month: string): P
   return snap.docs.map((d) => toSerializable(d.id, d.data()));
 }
 
+/** Shared (privacy == 'regular') expenses over an arbitrary date range — one query per member for family analytics. */
+export async function fetchSharedExpensesInRange(userId: string, from: Date, to: Date): Promise<SerializableExpense[]> {
+  const snap = await getDocs(
+    query(
+      expCol(userId),
+      where('privacy', '==', 'regular'),
+      where('date', '>=', Timestamp.fromDate(from)), where('date', '<', Timestamp.fromDate(to)),
+      orderBy('date', 'desc'),
+    ),
+  );
+  return snap.docs.map((d) => toSerializable(d.id, d.data()));
+}
+
 export interface AddExpenseInput {
   userId: string;
   amount: number;

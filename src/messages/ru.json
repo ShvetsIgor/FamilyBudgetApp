@@ -238,7 +238,10 @@
       "Сб"
     ],
     "peakPrefix": "Пик трат —",
-    "pctOfSpending": "{p}% от трат"
+    "pctOfSpending": "{p}% от трат",
+    "familySpent": "Потрачено семьёй",
+    "familyIncome": "Доход семьи",
+    "byMember": "По участникам"
   },
   "account": {
     "title": "Аккаунт",

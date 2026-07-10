@@ -51,3 +51,7 @@ claude-code-design-desktop.jpg
 
 # Design archive (reference only, not part of build)
 design-archive/
+
+# playwright
+/playwright-report/
+/test-results/

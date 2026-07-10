@@ -70,6 +70,7 @@ export const HOME_ITEMS: Record<string, ItemEntry> = {
 
   // ── Repairs ───────────────────────────────────────────────────────────────
   'ремонт':           { categoryId: 'repairs' },
+  'repair':            { categoryId: 'repairs' },
   'repairs':          { categoryId: 'repairs' },
   'renovation':       { categoryId: 'repairs' },
   'תיקון':            { categoryId: 'repairs' },

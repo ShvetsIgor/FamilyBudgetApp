@@ -4,6 +4,7 @@ export const HEALTH_ITEMS: Record<string, ItemEntry> = {
 
   // ── Pharmacy ──────────────────────────────────────────────────────────────
   'таблетки':         { categoryId: 'pharmacy' },
+  'pills':             { categoryId: 'pharmacy' },
   'лекарства':        { categoryId: 'pharmacy' },
   'лекарство':        { categoryId: 'pharmacy' },
   'витамины':         { categoryId: 'pharmacy' },

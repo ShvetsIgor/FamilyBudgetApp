@@ -30,6 +30,7 @@ export const TRANSPORT_ITEMS: Record<string, ItemEntry> = {
 
   // ── Fuel ──────────────────────────────────────────────────────────────────
   'бензин':           { categoryId: 'fuel' },
+  'gas':               { categoryId: 'fuel' },
   'топливо':          { categoryId: 'fuel' },
   'дизель':           { categoryId: 'fuel' },
   'заправка':         { categoryId: 'fuel' },

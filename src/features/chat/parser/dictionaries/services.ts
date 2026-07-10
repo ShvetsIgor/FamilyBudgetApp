@@ -4,6 +4,7 @@ export const SERVICES_ITEMS: Record<string, ItemEntry> = {
 
   // ── Entertainment ─────────────────────────────────────────────────────────
   'кино':             { categoryId: 'movies' },
+  'movie':             { categoryId: 'movies' },
   'cinema':           { categoryId: 'movies' },
   'movies':           { categoryId: 'movies' },
   'קולנוע':           { categoryId: 'movies' },

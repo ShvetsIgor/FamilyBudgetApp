@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Plus, Mic, Send } from 'lucide-react';
+import { useAppSelector } from '@/store/store';
 import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { useT } from '@/shared/hooks/useT';
 import { HelpSheet } from './HelpSheet';
@@ -16,9 +17,50 @@ interface ComposerProps {
 export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: ComposerProps) {
   const C = useChatTokens();
   const t = useT();
+  const language = useAppSelector((s) => s.ui.language);
   const [value, setValue] = useState('');
   const [helpOpen, setHelpOpen] = useState(false);
+  const [listening, setListening] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
+
+  // Web Speech API — client-side, free, no backend required
+  const speechSupported =
+    typeof window !== 'undefined' &&
+      Boolean((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+
+  useEffect(() => () => { recognitionRef.current?.stop?.(); }, []);
+
+  function toggleVoice() {
+    if (disabled) return;
+    if (listening) {
+      recognitionRef.current?.stop?.();
+      return;
+    }
+      const SR = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition;
+    if (!SR) return;
+    const rec = new SR();
+    rec.lang = language === 'ru' ? 'ru-RU' : 'en-US';
+    rec.interimResults = true;
+    rec.continuous = false;
+      rec.onresult = (e: any) => {
+      let text = '';
+      for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript;
+      setValue(text);
+    };
+    rec.onend = () => {
+      setListening(false);
+      recognitionRef.current = null;
+      inputRef.current?.focus();
+    };
+    rec.onerror = () => {
+      setListening(false);
+      recognitionRef.current = null;
+    };
+    recognitionRef.current = rec;
+    setListening(true);
+    rec.start();
+  }
 
   function handleSend() {
     const trimmed = value.trim();
@@ -36,6 +78,21 @@ export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: Compo
 
   const focused = value.length > 0;
   const isDesktop = variant === 'desktop';
+
+  const micButton = (
+    <button
+      onClick={speechSupported ? toggleVoice : onPlus}
+      aria-label={t('chat.composer.voice')}
+      title={t('chat.composer.voice')}
+      className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-xl transition-all active:scale-95"
+      style={{
+        color: listening ? '#fff' : C.sub,
+        background: listening ? 'hsl(var(--destructive))' : 'transparent',
+      }}
+    >
+      <Mic size={22} strokeWidth={2} className={listening ? 'animate-pulse' : ''} />
+    </button>
+  );
 
   return (
     <div className="flex-shrink-0" style={{ background: C.bg }}>
@@ -60,9 +117,9 @@ export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: Compo
             background: C.card,
             borderRadius: isDesktop ? 14 : 22,
             padding: '9px 14px',
-            border: `1.5px solid ${focused ? C.primary : C.hairline}`,
+            border: `1.5px solid ${listening ? 'hsl(var(--destructive))' : focused ? C.primary : C.hairline}`,
             minHeight: 40,
-            boxShadow: focused ? `0 0 0 4px ${C.primary}18` : 'none',
+            boxShadow: focused && !listening ? `0 0 0 4px ${C.primary}18` : 'none',
           }}
         >
           <input
@@ -71,7 +128,7 @@ export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: Compo
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={handleKey}
-            placeholder={t('chat.composer.placeholder')}
+            placeholder={listening ? t('chat.composer.listening') : t('chat.composer.placeholder')}
             disabled={disabled}
             className="flex-1 bg-transparent text-[14.5px] font-[700] outline-none"
             style={{ color: C.fg }}
@@ -85,7 +142,7 @@ export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: Compo
           </button>
         </div>
 
-        {focused ? (
+        {listening ? micButton : focused ? (
           <button
             onClick={handleSend}
             disabled={disabled}
@@ -97,15 +154,7 @@ export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: Compo
           >
             <Send size={18} color="white" strokeWidth={2.6} />
           </button>
-        ) : (
-          <button
-            className="flex h-[38px] w-[38px] items-center justify-center rounded-xl transition-colors"
-            style={{ color: C.sub }}
-            onClick={onPlus}
-          >
-            <Mic size={22} strokeWidth={2} />
-          </button>
-        )}
+        ) : micButton}
       </div>
 
       {helpOpen && <HelpSheet onClose={() => setHelpOpen(false)} />}

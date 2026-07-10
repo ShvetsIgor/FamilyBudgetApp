@@ -761,7 +761,9 @@
       "empty": "No budgets set"
     },
     "composer": {
-      "placeholder": "Add expense…"
+      "placeholder": "Add expense…",
+      "voice": "Voice input",
+      "listening": "Listening…"
     },
     "help": {
       "title": "How to use",

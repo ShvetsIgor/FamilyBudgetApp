@@ -668,7 +668,8 @@
     "colNextDate": "Next date",
     "colGoal": "Goal",
     "colSaved": "Saved",
-    "colLeft": "Left"
+    "colLeft": "Left",
+    "allJson": "Download all data (JSON)"
   },
   "common": {
     "loading": "Loading...",
@@ -897,7 +898,10 @@
     "perDayShort": "/d",
     "perMonth": "/ mo",
     "noIncome": "No income this month yet. Add income on the Income tab and the budget will be calculated automatically.",
-    "saveError": "Couldn't save — check your connection and try again."
+    "saveError": "Couldn't save — check your connection and try again.",
+    "envelopes": "Category envelopes",
+    "envelopesHint": "Set a monthly limit in a category editor — it becomes an envelope here",
+    "noLimit": "no limit"
   },
   "quickadd": {
     "totalHint": "· total",

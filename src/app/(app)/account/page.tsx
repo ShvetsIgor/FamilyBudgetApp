@@ -26,6 +26,7 @@ import { fetchRecurring } from '@/features/recurring/services/recurringService';
 import { fetchGoals } from '@/features/savings/services/savingsService';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { buildMemberColorMap, MEMBER_PALETTE } from '@/features/family/utils/memberColors';
+import { exportAllDataJson } from '@/features/debug/services/exportAllDataService';
 import { budgetExportSheets, expensesToCsv, incomeTocsv, downloadCsv, downloadXlsx } from '@/shared/utils/exportCsv';
 import { resetUserDataExceptCategories } from '@/features/debug/services/resetUserDataService';
 import { setExpenses } from '@/features/expenses/store/expensesSlice';
@@ -75,6 +76,7 @@ export default function AccountPage() {
   const [exportType, setExportType] = useState<'expenses' | 'income' | 'both'>('both');
   const [exportFormat, setExportFormat] = useState<'xlsx' | 'csv'>('xlsx');
   const [exporting, setExporting] = useState(false);
+  const [exportingAll, setExportingAll] = useState(false);
 
   const [showCreateFamily, setShowCreateFamily] = useState(false);
   const [familyName, setFamilyName] = useState('');
@@ -112,6 +114,21 @@ export default function AccountPage() {
       dispatch(setUser({ ...user!, name }));
       setEditingName(false);
     } finally { setNameSaving(false); }
+  }
+
+  async function handleExportAll() {
+    if (!user || exportingAll) return;
+    setExportingAll(true);
+    try {
+      const json = await exportAllDataJson(user.id);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `family-budget-backup-${format(new Date(), 'yyyy-MM-dd')}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally { setExportingAll(false); }
   }
 
   async function handleExport() {
@@ -550,6 +567,10 @@ export default function AccountPage() {
       <button onClick={handleExport} disabled={exporting}
         className="rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50 transition-opacity">
         {exporting ? t('export.exporting') : exportFormat === 'xlsx' ? t('export.exportExcelBtn') : t('export.exportCsvBtn')}
+      </button>
+      <button onClick={handleExportAll} disabled={exportingAll}
+        className="w-full rounded-xl border border-border py-2.5 text-sm font-semibold text-muted-foreground disabled:opacity-50 hover:text-foreground transition-colors">
+        {exportingAll ? t('export.exporting') : t('export.allJson')}
       </button>
     </div>
   );

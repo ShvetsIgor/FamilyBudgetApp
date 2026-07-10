@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { useAppDispatch, useAppSelector } from '@/store/store';
@@ -10,6 +10,7 @@ import { formatAmount, blockInvalidAmountKeys } from '@/shared/utils/currency';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { toLocalMonthKey } from '@/shared/utils/dateKey';
 import { useT } from '@/shared/hooks/useT';
+import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { doc, updateDoc } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 
@@ -39,6 +40,43 @@ export default function BudgetPage() {
   const autoDaily = monthIncome > 0
     ? Math.max(0, Math.round((monthIncome - monthSpent) / remainingDays))
     : 0;
+
+  const budgetLimits = useAppSelector((s) => s.budget.limits);
+  const expCategories = useAppSelector((s) => s.categories.expense);
+  const allExpensesList = useAppSelector((s) => s.expenses.list);
+
+  // Per-category envelopes for the current month; split rows count toward
+  // their own categories, the remainder toward the main one
+  const envelopes = useMemo(() => {
+    const spent: Record<string, number> = {};
+    for (const e of allExpensesList) {
+      if (!e.date.startsWith(monthStr)) continue;
+      if (e.splits?.length) {
+        let splitsSum = 0;
+        for (const sp of e.splits) {
+          spent[sp.categoryId] = (spent[sp.categoryId] ?? 0) + sp.amount;
+          splitsSum += sp.amount;
+        }
+        const rem = e.amount - splitsSum;
+        if (rem > 0.009) spent[e.categoryId] = (spent[e.categoryId] ?? 0) + rem;
+      } else {
+        spent[e.categoryId] = (spent[e.categoryId] ?? 0) + e.amount;
+      }
+    }
+    return Object.entries(budgetLimits)
+      .filter(([, limit]) => limit > 0)
+      .map(([catId, limit]) => {
+        const cat = expCategories.find((c) => c.id === catId);
+        return {
+          catId, limit,
+          spent: spent[catId] ?? 0,
+          name: cat?.name ?? '—',
+          icon: cat?.icon ?? 'box',
+          color: cat?.color ?? '#8AA9D6',
+        };
+      })
+      .sort((a, b) => b.spent / b.limit - a.spent / a.limit);
+  }, [allExpensesList, budgetLimits, expCategories, monthStr]);
 
   const [localMode, setLocalMode] = useState<BudgetMode>(mode);
   const [localDaily, setLocalDaily] = useState(dailyLimit > 0 ? String(dailyLimit) : '');
@@ -237,6 +275,37 @@ export default function BudgetPage() {
               )}
             </div>
           )}
+
+          {/* Category envelopes */}
+          <div className="border-b border-border/30 pb-4">
+            <p style={{ fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700, color: 'hsl(var(--muted-foreground))', marginBottom: 10 }}>
+              {t('budget.envelopes')}
+            </p>
+            {envelopes.length === 0 ? (
+              <p style={{ fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>{t('budget.envelopesHint')}</p>
+            ) : (
+              <div className="flex flex-col gap-2.5">
+                {envelopes.map((env) => {
+                  const pct = Math.min(100, (env.spent / env.limit) * 100);
+                  const over = env.spent > env.limit;
+                  return (
+                    <div key={env.catId}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <StickerIcon icon={env.icon} color={env.color} className="h-4 w-4 shrink-0" />
+                        <span className="flex-1 text-[13px] font-semibold truncate">{t.cat(env.name)}</span>
+                        <span className="text-[12px] font-bold tabular-nums" style={{ color: over ? 'hsl(var(--destructive))' : 'hsl(var(--foreground))' }}>
+                          {formatAmount(env.spent, currency)} / {formatAmount(env.limit, currency)}
+                        </span>
+                      </div>
+                      <div className="h-2 rounded-full bg-muted overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: over ? 'hsl(var(--destructive))' : env.color, transition: 'width .3s ease' }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           {/* Save button */}
           <button

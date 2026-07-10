@@ -19,7 +19,7 @@ import { setExpensesSearch } from '@/features/ui/store/uiSlice';
 import { useT } from '@/shared/hooks/useT';
 import { getEffectiveBudget } from '@/features/budget/utils/effectiveBudget';
 import { buildMemberColorMap } from '@/features/family/utils/memberColors';
-import { fetchFamilyMonthExpenses, type FamilyExpense, type FamilyMonthData } from '@/features/family/services/familyBudgetService';
+import { fetchFamilyMonthExpenses, setExpenseReaction, type FamilyExpense, type FamilyMonthData } from '@/features/family/services/familyBudgetService';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import {
   getExpenseListMeta,
@@ -83,6 +83,7 @@ export default function ExpensesPage() {
   const [viewMode, setViewMode] = useState<'mine' | 'family'>('mine');
   const [familyData, setFamilyData] = useState<FamilyMonthData | null>(null);
   const [familyLoading, setFamilyLoading] = useState(false);
+  const [reactTarget, setReactTarget] = useState<string | null>(null);
   const memberColorMap = buildMemberColorMap(members);
   const familyAvailable = !!family && members.length > 1;
   const isFamilyView = viewMode === 'family' && familyAvailable;
@@ -130,6 +131,27 @@ export default function ExpensesPage() {
       .catch(() => setFamilyData({ expenses: [], categoryMeta: {} }))
       .finally(() => setFamilyLoading(false));
   }, [isFamilyView, user, members, selectedMonth, categories]);
+
+  const REACTION_EMOJIS = ['👍', '❤️', '😮', '🤔'];
+
+  async function handleReact(exp: FamilyExpense, emoji: string) {
+    if (!user) return;
+    const next = exp.reactions?.[user.id] === emoji ? null : emoji;
+    // Optimistic local update; rules only allow touching the reactions field
+    setFamilyData((prev) => prev ? {
+      ...prev,
+      expenses: prev.expenses.map((x) => {
+        if (x.id !== exp.id || x.memberId !== exp.memberId) return x;
+        const reactions = { ...(x.reactions ?? {}) };
+        if (next) reactions[user.id] = next; else delete reactions[user.id];
+        return { ...x, reactions };
+      }),
+    } : prev);
+    setReactTarget(null);
+    try {
+      await setExpenseReaction(exp.memberId, exp.id, user.id, next);
+    } catch { /* stale view heals on next month switch */ }
+  }
 
   // Scroll month bar to selected chip
   useEffect(() => {
@@ -417,18 +439,42 @@ export default function ExpensesPage() {
                     {rows.map((e) => {
                       const meta = familyData?.categoryMeta[e.categoryId];
                       const isMine = e.memberId === user?.id;
+                      const rowKey = `${e.memberId}-${e.id}`;
+                      const reactionValues = Object.values(e.reactions ?? {});
                       return (
-                        <div key={`${e.memberId}-${e.id}`} className="flex items-center gap-3 px-4 py-3 lg:px-0">
-                          <StickerIcon icon={meta?.icon ?? 'box'} color={meta?.color ?? '#8AA9D6'} className="h-9 w-9 shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-foreground truncate">
-                              {e.store || e.comment || (meta ? t.cat(meta.name) : t('quickadd.tabExpense'))}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {meta ? t.cat(meta.name) : '—'} · <span style={{ color: memberColorMap[e.memberId] }}>●</span> <span style={{ color: memberColorMap[e.memberId], fontWeight: 700 }}>{isMine ? t('expenses.you') : e.memberName}</span>
-                            </p>
-                          </div>
-                          <span className="text-sm font-extrabold tabular-nums">-{formatAmount(e.amount, currency)}</span>
+                        <div key={rowKey}>
+                          <button
+                            type="button"
+                            onClick={() => setReactTarget((cur) => (cur === rowKey ? null : rowKey))}
+                            className="w-full flex items-center gap-3 px-4 py-3 lg:px-0 text-left"
+                          >
+                            <StickerIcon icon={meta?.icon ?? 'box'} color={meta?.color ?? '#8AA9D6'} className="h-9 w-9 shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-foreground truncate">
+                                {e.store || e.comment || (meta ? t.cat(meta.name) : t('quickadd.tabExpense'))}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {meta ? t.cat(meta.name) : '—'} · <span style={{ color: memberColorMap[e.memberId] }}>●</span> <span style={{ color: memberColorMap[e.memberId], fontWeight: 700 }}>{isMine ? t('expenses.you') : e.memberName}</span>
+                                {reactionValues.length > 0 && <span className="ml-1.5">{reactionValues.join(' ')}</span>}
+                              </p>
+                            </div>
+                            <span className="text-sm font-extrabold tabular-nums">-{formatAmount(e.amount, currency)}</span>
+                          </button>
+                          {reactTarget === rowKey && (
+                            <div className="flex gap-1.5 px-4 pb-2.5 pl-[64px] lg:px-0 lg:pl-[48px]">
+                              {REACTION_EMOJIS.map((em) => (
+                                <button
+                                  key={em}
+                                  type="button"
+                                  onClick={() => handleReact(e, em)}
+                                  className="h-9 w-9 rounded-full text-lg flex items-center justify-center transition-transform active:scale-90"
+                                  style={{ background: e.reactions?.[user?.id ?? ''] === em ? 'hsl(var(--primary) / 0.2)' : 'hsl(var(--muted))' }}
+                                >
+                                  {em}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       );
                     })}

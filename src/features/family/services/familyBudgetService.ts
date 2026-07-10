@@ -1,4 +1,4 @@
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, deleteField } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import { fetchSharedMonthExpenses, fetchSharedExpensesInRange } from '@/features/expenses/services/expensesService';
 import { fetchSharedMonthIncome, fetchSharedIncomeInRange } from '@/features/income/services/incomeService';
@@ -225,4 +225,19 @@ export async function fetchFamilyAnalytics(
     .slice(0, 6);
 
   return { byMonth: [...monthAgg.values()], byMember, topCategories, totalSpent, totalIncome };
+}
+
+/**
+ * Sets or clears the caller's emoji reaction on a family member's expense.
+ * Security rules restrict cross-user updates to the reactions field only.
+ */
+export async function setExpenseReaction(
+  ownerId: string,
+  expenseId: string,
+  reactorId: string,
+  emoji: string | null,
+): Promise<void> {
+  await updateDoc(doc(getDb(), 'expenses', ownerId, 'items', expenseId), {
+    [`reactions.${reactorId}`]: emoji ?? deleteField(),
+  });
 }

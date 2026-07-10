@@ -70,6 +70,7 @@ function toSerializable(id: string, data: Record<string, unknown>): Serializable
     isRecurring: (data.isRecurring as boolean) ?? false,
     recurringId: data.recurringId as string | undefined,
     goalId: data.goalId as string | undefined,
+    reactions: data.reactions as Record<string, string> | undefined,
     createdAt: toISO(data.createdAt),
     updatedAt: toISO(data.updatedAt),
   };

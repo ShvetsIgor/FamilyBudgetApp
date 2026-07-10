@@ -88,6 +88,9 @@ export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
             {isRecurring && <span title={t('expenses.recurringBadge')}>🔄</span>}
             {!isRecurring && !isSavings && <span className="opacity-50">{PAYMENT_ICONS[expense.paymentMethod]}</span>}
             {expense.privacy === 'secret' && <span>🔒</span>}
+            {expense.reactions && Object.keys(expense.reactions).length > 0 && (
+              <span title={Object.values(expense.reactions).join(' ')}>{Object.values(expense.reactions).join(' ')}</span>
+            )}
           </p>
         </div>
 

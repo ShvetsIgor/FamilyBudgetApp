@@ -270,6 +270,8 @@ export interface SerializableExpense {
   isRecurring: boolean;
   recurringId?: string;
   goalId?: string;
+  /** Family reactions: memberId → emoji */
+  reactions?: Record<string, string>;
   createdAt: string;
   updatedAt: string;
 }

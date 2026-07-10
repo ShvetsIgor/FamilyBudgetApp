@@ -52,7 +52,13 @@ service cloud.firestore {
       // List queries must filter privacy == 'regular' so the rule is provable.
       allow read: if isOwner(uid)
         || (sameFamilyAs(uid) && resource.data.privacy == 'regular');
-      allow write: if isOwner(uid);
+      allow create, delete: if isOwner(uid);
+      // Family members may react to a non-secret expense — and touch
+      // nothing else on it
+      allow update: if isOwner(uid)
+        || (sameFamilyAs(uid)
+            && resource.data.privacy == 'regular'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']));
     }
 
     match /incomes/{uid}/items/{incomeId} {

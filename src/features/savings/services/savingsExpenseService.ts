@@ -35,8 +35,11 @@ export async function addContributionWithExpense(params: {
   expenseCategories: Category[];
   /** Explicit category override (savings page lets the user pick one) */
   categoryId?: string;
+  /** Caller's display name — required for contributions to another member's goal */
+  contributorName?: string;
 }): Promise<ContributionWithExpenseResult> {
-  const { userId, goal, amount, date, label, note, expenseCategories, categoryId } = params;
+  const { userId, goal, amount, date, label, note, expenseCategories, categoryId, contributorName } = params;
+  const isForeignGoal = goal.userId !== userId;
 
   let createdCategory: Category | null = null;
   let catId = categoryId
@@ -51,7 +54,10 @@ export async function addContributionWithExpense(params: {
   }
 
   const batch = writeBatch(getDb());
-  const updatedGoal = queueContribution(batch, userId, goal, { amount, note });
+  const updatedGoal = queueContribution(batch, goal.userId, goal, {
+    amount, note,
+    ...(isForeignGoal ? { byId: userId, byName: contributorName } : {}),
+  });
   const expense = queueAddExpense(batch, {
     userId, amount, currency: goal.currency, categoryId: catId,
     date, paymentMethod: 'other',

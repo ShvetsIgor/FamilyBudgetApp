@@ -55,20 +55,35 @@ export default function SavingsPage() {
 
   async function handleContribute(goal: SavingsGoal, amount: number, note: string, recordAsExpense: boolean, expenseCategoryId: string) {
     if (!user) return;
+    const isForeignGoal = goal.userId !== user.id;
+    const attribution = isForeignGoal ? { byId: user.id, byName: user.name } : {};
 
+    let updated: SavingsGoal;
     if (recordAsExpense) {
-      // Contribution + expense land in one atomic WriteBatch
-      const { goal: updated, expense, createdCategory } = await addContributionWithExpense({
+      // Contribution + expense land in one atomic WriteBatch; the expense
+      // always belongs to the contributor, the goal may be a family member's
+      const res = await addContributionWithExpense({
         userId: user.id, goal, amount, date: new Date(),
         label: t('savings.expenseLabel'), note: note || undefined,
         expenseCategories,
         categoryId: expenseCategoryId || undefined,
+        contributorName: user.name,
       });
-      dispatch(updateGoalItem(updated));
-      if (createdCategory) dispatch(addCategoryRedux(createdCategory));
-      dispatch(prependExpense(expense));
+      updated = res.goal;
+      if (res.createdCategory) dispatch(addCategoryRedux(res.createdCategory));
+      dispatch(prependExpense(res.expense));
     } else {
-      dispatch(updateGoalItem(await addContribution(user.id, goal, { amount, note: note || undefined })));
+      updated = await addContribution(goal.userId, goal, { amount, note: note || undefined, ...attribution });
+    }
+
+    if (isForeignGoal) {
+      setFamilyGoals((prev) => prev
+        ? prev.map((g) => (g.id === updated.id && g.memberId === goal.userId
+            ? { ...g, currentAmount: updated.currentAmount, contributions: updated.contributions }
+            : g))
+        : prev);
+    } else {
+      dispatch(updateGoalItem(updated));
     }
     setMode('list');
   }
@@ -172,7 +187,7 @@ export default function SavingsPage() {
                     <div key={i} className="flex items-center justify-between px-4 py-2.5">
                       <div>
                         <p className="text-sm font-medium">{formatAmount(c.amount, goal.currency)}</p>
-                        {c.note && <p className="text-xs text-muted-foreground">{c.note}</p>}
+                        {(c.note || c.byName) && <p className="text-xs text-muted-foreground">{[c.note, c.byName].filter(Boolean).join(' · ')}</p>}
                       </div>
                       <p className="text-xs text-muted-foreground">{format(parseISO(c.date), 'MMM d, yyyy')}</p>
                     </div>
@@ -265,6 +280,18 @@ export default function SavingsPage() {
                     <p style={{ fontSize: 18, fontWeight: 900, fontVariantNumeric: 'tabular-nums', color: done ? '#10b981' : goal.color }}>{pct.toFixed(0)}%</p>
                     {done && <p className="text-xs text-emerald-500">{t('savings.done')}</p>}
                   </div>
+                  {!done && (
+                    <button
+                      type="button"
+                      onClick={() => setMode({ goal, action: 'contribute' })}
+                      aria-label={t('savings.addContribution')}
+                      title={t('savings.addContribution')}
+                      className="ml-1 h-9 w-9 shrink-0 rounded-full flex items-center justify-center text-white text-lg font-black transition-transform active:scale-90"
+                      style={{ background: goal.color }}
+                    >
+                      +
+                    </button>
+                  )}
                 </div>
                 <div style={{ height: 2, background: 'hsl(var(--muted))', marginLeft: 4 }}>
                   <div style={{ height: '100%', width: `${pct}%`, backgroundColor: done ? '#10b981' : goal.color, transition: 'width 0.5s ease' }} />
@@ -368,7 +395,7 @@ export default function SavingsPage() {
                       <div key={i} className="flex items-center justify-between py-3">
                         <div>
                           <p className="text-sm font-semibold">{formatAmount(c.amount, goal.currency)}</p>
-                          {c.note && <p className="text-xs text-muted-foreground">{c.note}</p>}
+                          {(c.note || c.byName) && <p className="text-xs text-muted-foreground">{[c.note, c.byName].filter(Boolean).join(' · ')}</p>}
                         </div>
                         <p className="text-xs text-muted-foreground">{format(parseISO(c.date), 'MMM d, yyyy')}</p>
                       </div>

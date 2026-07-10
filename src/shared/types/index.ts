@@ -218,6 +218,9 @@ export interface SavingsContribution {
   amount: number;
   date: string; // ISO string
   note?: string;
+  /** Contributor attribution for family goals; absent = goal owner */
+  byId?: string;
+  byName?: string;
 }
 
 export interface SavingsGoal {

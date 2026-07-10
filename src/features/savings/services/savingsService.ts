@@ -32,6 +32,8 @@ function toGoal(id: string, data: Record<string, unknown>): SavingsGoal {
       amount: c.amount as number,
       date: toISO(c.date),
       note: c.note as string | undefined,
+      byId: c.byId as string | undefined,
+      byName: c.byName as string | undefined,
     })),
     isPrivate: data.isPrivate as boolean | undefined,
     createdAt: toISO(data.createdAt),
@@ -107,24 +109,28 @@ export async function addGoal(input: AddGoalInput): Promise<SavingsGoal> {
  */
 export function queueContribution(
   batch: WriteBatch,
-  userId: string,
+  ownerId: string,
   goal: SavingsGoal,
-  contribution: { amount: number; note?: string }
+  contribution: { amount: number; note?: string; byId?: string; byName?: string }
 ): SavingsGoal {
   const newContrib: SavingsContribution = {
     amount: contribution.amount,
     date: new Date().toISOString(),
     note: contribution.note,
+    byId: contribution.byId,
+    byName: contribution.byName,
   };
   const updatedContribs = [...goal.contributions, newContrib];
   const newCurrent = goal.currentAmount + contribution.amount;
 
-  batch.update(doc(getDb(), 'savingsGoals', userId, 'goals', goal.id), {
+  batch.update(doc(getDb(), 'savingsGoals', ownerId, 'goals', goal.id), {
     currentAmount: newCurrent,
     contributions: updatedContribs.map((c) => ({
       amount: c.amount,
       date: c.date,
       ...(c.note ? { note: c.note } : {}),
+      ...(c.byId ? { byId: c.byId } : {}),
+      ...(c.byName ? { byName: c.byName } : {}),
     })),
   });
 
@@ -132,12 +138,12 @@ export function queueContribution(
 }
 
 export async function addContribution(
-  userId: string,
+  ownerId: string,
   goal: SavingsGoal,
-  contribution: { amount: number; note?: string }
+  contribution: { amount: number; note?: string; byId?: string; byName?: string }
 ): Promise<SavingsGoal> {
   const batch = writeBatch(getDb());
-  const updated = queueContribution(batch, userId, goal, contribution);
+  const updated = queueContribution(batch, ownerId, goal, contribution);
   await batch.commit();
   return updated;
 }

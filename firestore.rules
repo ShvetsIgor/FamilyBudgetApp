@@ -90,7 +90,13 @@ service cloud.firestore {
       // Family list queries must filter isPrivate == false to be provable.
       allow read: if isOwner(uid)
         || (sameFamilyAs(uid) && resource.data.isPrivate != true);
-      allow write: if isOwner(uid);
+      allow create, delete: if isOwner(uid);
+      // Family members may contribute to a non-private goal — the update
+      // may touch nothing but the balance and the contributions history
+      allow update: if isOwner(uid)
+        || (sameFamilyAs(uid)
+            && resource.data.isPrivate != true
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['currentAmount', 'contributions']));
     }
 
     match /storeProfiles/{uid}/profiles/{storeId} {

@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import * as Sentry from '@sentry/nextjs';
 
 export default function AppError({
   error,
@@ -11,6 +12,10 @@ export default function AppError({
   reset: () => void;
 }) {
   useEffect(() => {
+    // This nested boundary swallows the error before the root one — report
+    // here or authenticated-area crashes never reach Sentry. The Error
+    // object itself carries no expense/PII payload.
+    Sentry.captureException(error);
     console.error(error);
   }, [error]);
 

@@ -55,26 +55,48 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!user) return;
     if (user.familyId && !family) {
-      fetchFamily(user.familyId).then(async (f) => {
-        if (!f) return;
-        dispatch(setFamily(f));
-        const members = await fetchFamilyMembers(f.memberIds);
-        dispatch(setMembers(members));
-        // Family activity → bell (new members, new shared expenses)
-        checkFamilyActivity(user.id, members, t, currency).then((notes) => {
-          notes.forEach((n) => dispatch(addNotification(n)));
-        }).catch(() => {});
-      }).catch(async () => {
-        // Stale familyId (family dissolved elsewhere): rules deny reading a
-        // missing family doc, so self-heal the profile instead of erroring
-        // on every launch
+      const familyId = user.familyId;
+      (async () => {
+        let f;
         try {
-          const { doc, updateDoc } = await import('firebase/firestore');
-          const { getDb } = await import('@/shared/lib/firebase');
-          await updateDoc(doc(getDb(), 'users', user.id), { familyId: null, accountType: 'personal' });
-          dispatch(setUser({ ...user, familyId: undefined, accountType: 'personal' }));
-        } catch { /* offline — retry next launch */ }
-      });
+          f = await fetchFamily(familyId);
+        } catch (err) {
+          // Only a PROVEN stale pointer self-heals. A missing family doc (or
+          // being removed from it) denies the read → 'permission-denied':
+          // clear the pointer so we don't error on every launch. Any other
+          // error (network/'unavailable') is transient — keep state, retry.
+          const code = (err as { code?: string }).code;
+          if (code === 'permission-denied') {
+            try {
+              const { doc, updateDoc } = await import('firebase/firestore');
+              const { getDb } = await import('@/shared/lib/firebase');
+              await updateDoc(doc(getDb(), 'users', user.id), { familyId: null, accountType: 'personal' });
+              dispatch(setUser({ ...user, familyId: undefined, accountType: 'personal' }));
+            } catch { /* offline — retry next launch */ }
+          }
+          return;
+        }
+        // Read succeeded but the doc is absent (rules permitting): stale too.
+        if (!f) {
+          try {
+            const { doc, updateDoc } = await import('firebase/firestore');
+            const { getDb } = await import('@/shared/lib/firebase');
+            await updateDoc(doc(getDb(), 'users', user.id), { familyId: null, accountType: 'personal' });
+            dispatch(setUser({ ...user, familyId: undefined, accountType: 'personal' }));
+          } catch { /* offline — retry next launch */ }
+          return;
+        }
+        // Family is real — from here on, failures are NON-FATAL: a member
+        // fetch or activity check that fails must never dissolve the family.
+        dispatch(setFamily(f));
+        try {
+          const members = await fetchFamilyMembers(f.memberIds);
+          dispatch(setMembers(members));
+          checkFamilyActivity(user.id, members, t, currency).then((notes) => {
+            notes.forEach((n) => dispatch(addNotification(n)));
+          }).catch(() => {});
+        } catch { /* member load is best-effort; family stays intact */ }
+      })();
     }
     if (!user.familyId) {
       fetchPendingInvite(user.email).then((invite) => {

@@ -8,6 +8,7 @@ import { useAppDispatch } from '@/store/store';
 import { setUser, setLoading } from '@/features/auth/store/authSlice';
 import { setCurrency, setDarkMode, setLanguage, setTheme, setWeekStart, hydrateBudgetPreferences } from '@/features/ui/store/uiSlice';
 import { setCategories, setFolders } from '@/features/categories/store/categoriesSlice';
+import { hydrateSuggestionMemory } from '@/features/expenses/store/suggestionMemorySlice';
 import { fetchCategories, seedDefaultCategories } from '@/features/categories/services/categoriesService';
 import { fetchFolders } from '@/features/categories/services/categoryFoldersService';
 import { fetchStoreProfiles } from '@/features/chat/services/storeProfilesService';
@@ -49,13 +50,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dispatch(setTheme(resolvedTheme));
         dispatch(setDarkMode(profile.darkMode ?? profileTheme === 'dark'));
         if (profile.weekStart) dispatch(setWeekStart(profile.weekStart));
-        // Budget settings follow the account across devices
+        // Budget settings follow the account across devices; the uid scopes
+        // the localStorage cache so accounts on one browser stay isolated
         dispatch(hydrateBudgetPreferences({
+          uid: firebaseUser.uid,
           budgetMode: profile.budgetMode,
           budgetDailyLimit: profile.budgetDailyLimit,
           budgetMonthlyLimit: profile.budgetMonthlyLimit,
           budgetByMonth: profile.budgetByMonth,
         }));
+        // Merchant/split/recents memory is account-scoped as well
+        dispatch(hydrateSuggestionMemory({ uid: firebaseUser.uid }));
 
         // Seed categories/folders if first login, then load all
         await seedDefaultCategories(firebaseUser.uid);

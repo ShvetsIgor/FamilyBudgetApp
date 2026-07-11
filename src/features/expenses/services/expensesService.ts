@@ -13,6 +13,7 @@ import {
   serverTimestamp,
   Timestamp,
   type DocumentSnapshot,
+  type Transaction,
   type WriteBatch,
 } from 'firebase/firestore';
 import { format } from 'date-fns';
@@ -70,6 +71,8 @@ function toSerializable(id: string, data: Record<string, unknown>): Serializable
     isRecurring: (data.isRecurring as boolean) ?? false,
     recurringId: data.recurringId as string | undefined,
     goalId: data.goalId as string | undefined,
+    goalOwnerId: data.goalOwnerId as string | undefined,
+    contributionId: data.contributionId as string | undefined,
     reactions: data.reactions as Record<string, string> | undefined,
     createdAt: toISO(data.createdAt),
     updatedAt: toISO(data.updatedAt),
@@ -151,6 +154,10 @@ export interface AddExpenseInput {
   splits: SplitItem[];
   items?: ExpenseItem[];
   goalId?: string;
+  /** Owner of the linked goal (contributions to another member's goal) */
+  goalOwnerId?: string;
+  /** Id of the linked contribution — exact rollback key on delete */
+  contributionId?: string;
   recurringId?: string;
   isRecurring?: boolean;
 }
@@ -160,7 +167,7 @@ export interface AddExpenseInput {
  * batch without committing. Lets multi-entity flows (e.g. savings
  * contribution + expense) stay atomic in a single WriteBatch.
  */
-export function queueAddExpense(batch: WriteBatch, input: AddExpenseInput): SerializableExpense {
+export function queueAddExpense(batch: WriteBatch | Transaction, input: AddExpenseInput): SerializableExpense {
   validateExpenseInput(input);
   const { userId, date, store, storeId, storeGroup, comment, ...rest } = input;
   const ref = expenseDoc(userId);
@@ -179,7 +186,9 @@ export function queueAddExpense(batch: WriteBatch, input: AddExpenseInput): Seri
     }).filter(([, value]) => value !== undefined),
   );
 
-  batch.set(ref, data);
+  // WriteBatch.set and Transaction.set differ only in return type — TS cannot
+  // call the union directly, the runtime shape is identical.
+  (batch as WriteBatch).set(ref, data);
   queueMonthlyStatsUpdate(
     batch,
     userId,
@@ -341,7 +350,9 @@ export async function restoreExpense(userId: string, expense: SerializableExpens
   );
 
   const batch = writeBatch(getDb());
-  batch.set(ref, data);
+  // WriteBatch.set and Transaction.set differ only in return type — TS cannot
+  // call the union directly, the runtime shape is identical.
+  (batch as WriteBatch).set(ref, data);
   queueMonthlyStatsUpdate(
     batch,
     userId,
@@ -412,7 +423,7 @@ function mergeStatsDelta(
 }
 
 function queueMonthlyStatsUpdate(
-  batch: ReturnType<typeof writeBatch>,
+  batch: WriteBatch | Transaction,
   userId: string,
   month: string,
   delta: StatsDelta,
@@ -427,7 +438,7 @@ function queueMonthlyStatsUpdate(
     return;
   }
 
-  batch.set(
+  (batch as WriteBatch).set(
     statsDoc(userId, month),
     {
       userId,

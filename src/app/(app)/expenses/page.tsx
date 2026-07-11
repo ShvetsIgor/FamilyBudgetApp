@@ -14,7 +14,12 @@ import { ExpenseCard } from '@/features/expenses/components/ExpenseCard';
 import { UpcomingBills } from '@/features/recurring/components/UpcomingBills';
 import { formatAmount } from '@/shared/utils/currency';
 import { cn } from '@/shared/utils/cn';
-import type { SerializableExpense } from '@/shared/types';
+import type { SavingsContribution, SerializableExpense } from '@/shared/types';
+import {
+  applyContribution, newContributionId,
+  reverseContributionById, reverseContributionByAmount,
+} from '@/features/savings/services/savingsService';
+import { updateGoalItem } from '@/features/savings/store/savingsSlice';
 import { setExpensesSearch } from '@/features/ui/store/uiSlice';
 import { useT } from '@/shared/hooks/useT';
 import { getEffectiveBudget } from '@/features/budget/utils/effectiveBudget';
@@ -90,8 +95,14 @@ export default function ExpensesPage() {
 
   // Undo-delete state. The delete is committed to Firestore *immediately* so
   // closing the tab can't strand a half-deleted item; the toast just offers a
-  // 5-second window to restore via setDoc on the original id.
-  const [undoItem, setUndoItem] = useState<{ expense: SerializableExpense; timerId: ReturnType<typeof setTimeout> } | null>(null);
+  // 5-second window to restore via setDoc on the original id. For savings-
+  // linked expenses the rolled-back contribution rides along so Undo can
+  // re-apply it under the same id.
+  const [undoItem, setUndoItem] = useState<{
+    expense: SerializableExpense;
+    timerId: ReturnType<typeof setTimeout>;
+    reversed?: { goalOwnerId: string; contribution: SavingsContribution };
+  } | null>(null);
   const undoRef = useRef<typeof undoItem>(null);
   undoRef.current = undoItem;
 
@@ -393,8 +404,27 @@ export default function ExpensesPage() {
                           // closed before Undo fires, the row stays gone.
                           dispatch(removeExpense(e.id));
                           deleteExpense(user.id, e)
-                            .then((restored) => {
+                            .then(async (restored) => {
                               if (restored) dispatch(updateRecurringItem(restored));
+                              // Savings-linked expense: roll back exactly the
+                              // linked contribution (idempotent by id) and keep
+                              // it for Undo re-apply.
+                              if (!e.goalId) return;
+                              const goalOwnerId = e.goalOwnerId ?? user.id;
+                              try {
+                                const reversed = e.contributionId
+                                  ? await reverseContributionById(goalOwnerId, e.goalId, e.contributionId)
+                                  : goalOwnerId === user.id
+                                    ? await reverseContributionByAmount(user.id, e.goalId, e.amount)
+                                    : null;
+                                if (!reversed) return;
+                                if (goalOwnerId === user.id) dispatch(updateGoalItem(reversed.goal));
+                                setUndoItem((prev) => prev && prev.expense.id === e.id
+                                  ? { ...prev, reversed: { goalOwnerId, contribution: reversed.removed } }
+                                  : prev);
+                              } catch (err) {
+                                console.error('contribution rollback failed', err);
+                              }
                             })
                             .catch(() => {
                               // Network failure: surface the expense again so
@@ -510,7 +540,7 @@ export default function ExpensesPage() {
             onClick={() => {
               if (!user) { setUndoItem(null); return; }
               clearTimeout(undoItem.timerId);
-              const expense = undoItem.expense;
+              const { expense, reversed } = undoItem;
               setUndoItem(null);
               dispatch(prependExpense(expense));
               restoreExpense(user.id, expense).catch(() => {
@@ -518,6 +548,21 @@ export default function ExpensesPage() {
                 // user sees the actual server state.
                 dispatch(removeExpense(expense.id));
               });
+              // Re-apply the rolled-back contribution under its original id
+              // (idempotent — a duplicate id is a no-op).
+              if (reversed && expense.goalId) {
+                const c = reversed.contribution;
+                applyContribution(reversed.goalOwnerId, expense.goalId, {
+                  id: c.id ?? newContributionId(),
+                  amount: c.amount,
+                  note: c.note,
+                  byId: c.byId ?? user.id,
+                  byName: c.byName,
+                  date: c.date,
+                }).then((goal) => {
+                  if (reversed.goalOwnerId === user.id) dispatch(updateGoalItem(goal));
+                }).catch((err) => console.error('contribution re-apply failed', err));
+              }
             }}
             className="shrink-0 rounded-xl bg-background/20 px-3 py-1.5 text-sm font-bold text-background hover:bg-background/30 transition-colors"
           >

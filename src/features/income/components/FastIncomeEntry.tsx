@@ -53,7 +53,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
 
   function goBack() { window.history.length > 1 ? router.back() : router.replace('/income'); }
 
-  async function recordIncomeInChat(hint: string | undefined) {
+  async function recordIncomeInChat(hint: string | undefined, incomeId?: string) {
     if (!user) return;
     await recordSavedCard({
       userId: user.id,
@@ -64,6 +64,8 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
       hint,
       amount: amountNum,
       currencySymbol: symbol,
+      isIncome: true,
+      ...(incomeId ? { incomeId } : {}),
     });
   }
 
@@ -117,11 +119,17 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
       });
       dispatch(prependIncome(income));
 
-      // Record in chat
-      await recordIncomeInChat(buildEntryDateHint(dateStr, t, dfLocale));
+      // Secondary chat-history write — must not undo the saved income or
+      // block navigation (a retry would duplicate the income).
+      try {
+        await recordIncomeInChat(buildEntryDateHint(dateStr, t, dfLocale), income.id);
+      } catch (err) {
+        console.error('chat card write failed (income already saved)', err);
+      }
 
       goBack();
     } catch {
+      // Only the FINANCIAL write reaches here — re-enable retry.
       setSaving(false);
     }
   }

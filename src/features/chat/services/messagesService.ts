@@ -35,6 +35,7 @@ function toSerializable(id: string, data: Record<string, unknown>): Serializable
     status:    data.status    as MessageStatus,
     parsed:    data.parsed    as ParseResult | undefined,
     expenseId: data.expenseId as string | undefined,
+    incomeId:  data.incomeId  as string | undefined,
     card:      data.card      as BotCard | undefined,
     createdAt: toISO(data.createdAt),
     updatedAt: data.updatedAt ? toISO(data.updatedAt) : undefined,

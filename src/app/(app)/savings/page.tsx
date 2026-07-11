@@ -8,6 +8,7 @@ import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setGoals, addGoalItem, updateGoalItem, removeGoalItem } from '@/features/savings/store/savingsSlice';
 import {
   fetchGoals, addContribution, deleteGoal, updateGoalPrivacy, backfillGoalPrivacy,
+  backfillContributionsShape,
 } from '@/features/savings/services/savingsService';
 import { formatAmount, blockInvalidAmountKeys } from '@/shared/utils/currency';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
@@ -48,6 +49,9 @@ export default function SavingsPage() {
       // Pre-privacy goals lack the isPrivate field and would drop out of the
       // family view (equality filters skip missing fields) — backfill once
       backfillGoalPrivacy(user.id, goals);
+      // Legacy array-shaped contributions → map with stable ids (family
+      // contribution rules require the map shape) — owner-side, once
+      backfillContributionsShape(user.id, goals);
     } finally { setLoading(false); }
   }, [user, dispatch]);
 

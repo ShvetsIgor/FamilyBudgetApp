@@ -55,3 +55,4 @@ design-archive/
 # playwright
 /playwright-report/
 /test-results/
+firestore-debug.log

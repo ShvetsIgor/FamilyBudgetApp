@@ -7,6 +7,14 @@ rules_version = '2';
 // surfaces are: family profiles (users/{uid} readable by family members),
 // families/{id} membership, and invites/{id}.
 //
+// Membership model: users/{uid}.familyId is only a POINTER. The proof of
+// membership is always families/{familyId}.memberIds — a profile claiming a
+// familyId grants nothing unless the family doc lists that uid. Joining a
+// family is possible only through a valid pending invite (deterministic doc
+// id `{familyId}_{toEmail}` so rules can look it up), and the profile's
+// familyId may change only in the same batch that provably grants/removes
+// membership.
+//
 // Deploy with: firebase deploy --only firestore:rules
 
 service cloud.firestore {
@@ -20,13 +28,17 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
-    // Reader and {uid} belong to the same (non-null) family.
-    // Costs two document reads — use only where family sharing applies.
+    function readerFamilyId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.familyId;
+    }
+
+    // Reader and {uid} are BOTH listed in the members of the reader's family.
+    // Profile familyId alone is never trusted. Costs two cached reads.
     function sameFamilyAs(uid) {
       return signedIn()
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.familyId != null
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.familyId
-             == get(/databases/$(database)/documents/users/$(uid)).data.familyId;
+        && readerFamilyId() != null
+        && request.auth.uid in get(/databases/$(database)/documents/families/$(readerFamilyId())).data.memberIds
+        && uid in get(/databases/$(database)/documents/families/$(readerFamilyId())).data.memberIds;
     }
 
     // ── Per-user collections ─────────────────────────────────────────────
@@ -53,12 +65,19 @@ service cloud.firestore {
       allow read: if isOwner(uid)
         || (sameFamilyAs(uid) && resource.data.privacy == 'regular');
       allow create, delete: if isOwner(uid);
-      // Family members may react to a non-secret expense — and touch
-      // nothing else on it
+      // Family members may react to a non-secret expense: only the reactions
+      // map may change, only the reactor's OWN key inside it, and the value
+      // must be a short string (an emoji), or absent (reaction removed).
       allow update: if isOwner(uid)
         || (sameFamilyAs(uid)
             && resource.data.privacy == 'regular'
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']));
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions'])
+            && request.resource.data.get('reactions', {})
+                 .diff(resource.data.get('reactions', {}))
+                 .affectedKeys().hasOnly([request.auth.uid])
+            && (!(request.auth.uid in request.resource.data.get('reactions', {}))
+                || (request.resource.data.reactions[request.auth.uid] is string
+                    && request.resource.data.reactions[request.auth.uid].size() <= 8)));
     }
 
     match /incomes/{uid}/items/{incomeId} {
@@ -86,17 +105,63 @@ service cloud.firestore {
     }
 
     match /savingsGoals/{uid}/goals/{goalId} {
+      // Contributions live in a MAP keyed by contribution id; the update also
+      // stamps `lastContributionId` so the rule knows exactly which entry the
+      // write touched. Legacy array-shaped goals are owner-only until the
+      // owner's device migrates them to the map shape.
+      function cid() {
+        return request.resource.data.lastContributionId;
+      }
+      function oldContribs() {
+        return resource.data.get('contributions', {});
+      }
+      function newContribs() {
+        return request.resource.data.contributions;
+      }
+
+      // Append: exactly one new entry under cid(), attributed to the caller,
+      // positive amount, balance moved by exactly that amount.
+      function isOwnAppend() {
+        return newContribs().diff(oldContribs()).affectedKeys().hasOnly([cid()])
+          && !(cid() in oldContribs())
+          && cid() in newContribs()
+          && newContribs()[cid()].amount is number
+          && newContribs()[cid()].amount > 0
+          && newContribs()[cid()].byId == request.auth.uid
+          && request.resource.data.currentAmount
+               == resource.data.currentAmount + newContribs()[cid()].amount;
+      }
+
+      // Removal (expense rollback): exactly the caller's OWN entry under
+      // cid() disappears and the balance drops by its amount (clamped at 0
+      // for legacy-inconsistent data).
+      function isOwnRemoval() {
+        return newContribs().diff(oldContribs()).affectedKeys().hasOnly([cid()])
+          && cid() in oldContribs()
+          && !(cid() in newContribs())
+          && oldContribs()[cid()].byId == request.auth.uid
+          && (request.resource.data.currentAmount
+                == resource.data.currentAmount - oldContribs()[cid()].amount
+              || (request.resource.data.currentAmount == 0
+                  && resource.data.currentAmount < oldContribs()[cid()].amount));
+      }
+
       // Family budget: non-private goals are visible to the family.
       // Family list queries must filter isPrivate == false to be provable.
       allow read: if isOwner(uid)
         || (sameFamilyAs(uid) && resource.data.isPrivate != true);
       allow create, delete: if isOwner(uid);
-      // Family members may contribute to a non-private goal — the update
-      // may touch nothing but the balance and the contributions history
+      // Family members may contribute to (or roll back their own
+      // contribution on) a non-private goal. The owner keeps full control.
       allow update: if isOwner(uid)
         || (sameFamilyAs(uid)
             && resource.data.isPrivate != true
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['currentAmount', 'contributions']));
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['currentAmount', 'contributions', 'lastContributionId'])
+            && oldContribs() is map
+            && newContribs() is map
+            && request.resource.data.lastContributionId is string
+            && (isOwnAppend() || isOwnRemoval()));
     }
 
     match /storeProfiles/{uid}/profiles/{storeId} {
@@ -107,10 +172,11 @@ service cloud.firestore {
 
     // Members of the same family may read each other's profile
     // (fetchFamilyMembers shows member names on the account page).
-    function inSameFamily() {
-      return resource.data.familyId != null
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.familyId
-             == resource.data.familyId;
+    // The reader must be a PROVEN member of the family the profile claims.
+    function readerInFamilyOf(profileData) {
+      return profileData.familyId != null
+        && request.auth.uid
+             in get(/databases/$(database)/documents/families/$(profileData.familyId)).data.memberIds;
     }
 
     // When the family owner dissolves the family, they detach every member:
@@ -126,9 +192,27 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      allow read: if isOwner(uid) || (signedIn() && inSameFamily());
-      allow create, delete: if isOwner(uid);
-      allow update: if isOwner(uid) || (signedIn() && isFamilyDetachByOwner());
+      allow read: if isOwner(uid) || (signedIn() && readerInFamilyOf(resource.data));
+      // A fresh profile must not claim a family it was never admitted to.
+      allow create: if isOwner(uid)
+        && (!('familyId' in request.resource.data) || request.resource.data.familyId == null);
+      allow delete: if isOwner(uid);
+      // familyId transitions are only valid when the same atomic write makes
+      // them true in families/{id}.memberIds (getAfter sees the post-batch
+      // state): joining requires membership, clearing requires the family to
+      // be gone or the uid to be absent from it.
+      allow update: if (isOwner(uid) && (
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['familyId'])
+            || (request.resource.data.familyId != null
+                && request.auth.uid
+                     in getAfter(/databases/$(database)/documents/families/$(request.resource.data.familyId)).data.memberIds)
+            || (request.resource.data.familyId == null
+                && (resource.data.familyId == null
+                    || !existsAfter(/databases/$(database)/documents/families/$(resource.data.familyId))
+                    || !(request.auth.uid
+                          in getAfter(/databases/$(database)/documents/families/$(resource.data.familyId)).data.memberIds)))
+          ))
+        || (signedIn() && isFamilyDetachByOwner());
 
       match /learnedKeywords/{keyword} {
         allow read, write: if isOwner(uid);
@@ -141,28 +225,39 @@ service cloud.firestore {
       return request.auth.uid in resource.data.memberIds;
     }
 
-    // Invite acceptance: the only change is memberIds, and the only added
-    // element is the requester themself. Family ids are unguessable
-    // auto-ids; invite legitimacy itself is enforced by the invites rules.
-    function isSelfJoin() {
-      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberIds'])
-        && request.resource.data.memberIds.toSet()
-             .difference(resource.data.memberIds.toSet()) == [request.auth.uid].toSet()
-        && resource.data.memberIds.toSet()
-             .difference(request.resource.data.memberIds.toSet()).size() == 0;
-    }
-
-    // Leaving: the only change is memberIds, and the only removed element
-    // is the requester themself.
-    function isSelfLeave() {
-      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberIds'])
-        && resource.data.memberIds.toSet()
-             .difference(request.resource.data.memberIds.toSet()) == [request.auth.uid].toSet()
-        && request.resource.data.memberIds.toSet()
-             .difference(resource.data.memberIds.toSet()).size() == 0;
-    }
-
     match /families/{familyId} {
+      // Invite lookup for joining: invites use the deterministic doc id
+      // `{familyId}_{toEmail}` so the rule can verify the invite without a
+      // query. get() sees the PRE-batch state, so the same batch may already
+      // flip the invite to 'accepted'.
+      function joinInvite() {
+        return get(/databases/$(database)/documents/invites/$(familyId + '_' + request.auth.token.email.lower())).data;
+      }
+
+      // Joining: the only change is memberIds, the only added element is the
+      // requester, and a live pending invite for their email exists.
+      function isSelfJoin() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberIds'])
+          && request.resource.data.memberIds.toSet()
+               .difference(resource.data.memberIds.toSet()) == [request.auth.uid].toSet()
+          && resource.data.memberIds.toSet()
+               .difference(request.resource.data.memberIds.toSet()).size() == 0
+          && request.auth.token.email != null
+          && joinInvite().status == 'pending'
+          && joinInvite().familyId == familyId
+          && joinInvite().expiresAt > request.time;
+      }
+
+      // Leaving: the only change is memberIds, and the only removed element
+      // is the requester themself.
+      function isSelfLeave() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberIds'])
+          && resource.data.memberIds.toSet()
+               .difference(request.resource.data.memberIds.toSet()) == [request.auth.uid].toSet()
+          && request.resource.data.memberIds.toSet()
+               .difference(resource.data.memberIds.toSet()).size() == 0;
+      }
+
       allow read: if signedIn() && isMember();
       allow create: if signedIn()
         && request.resource.data.ownerId == request.auth.uid
@@ -182,13 +277,31 @@ service cloud.firestore {
     match /invites/{inviteId} {
       allow read: if signedIn()
         && (resource.data.fromUserId == request.auth.uid || isInvitee());
+      // Deterministic id `{familyId}_{toEmail}` — the families join rule
+      // depends on it. Sender must be a member of the family they invite to.
       allow create: if signedIn()
         && request.resource.data.fromUserId == request.auth.uid
         && request.auth.uid in
-             get(/databases/$(database)/documents/families/$(request.resource.data.familyId)).data.memberIds;
-      // Invitee accepts/rejects, sender may cancel; only status may change
-      allow update: if (isInvitee() || (signedIn() && resource.data.fromUserId == request.auth.uid))
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
+             get(/databases/$(database)/documents/families/$(request.resource.data.familyId)).data.memberIds
+        && request.resource.data.status == 'pending'
+        && request.resource.data.toEmail == request.resource.data.toEmail.lower()
+        && inviteId == request.resource.data.familyId + '_' + request.resource.data.toEmail;
+      // Invitee answers a live pending invite (accepting requires it to be
+      // unexpired); the sender may cancel a pending invite or re-issue an
+      // answered/expired one under the same id without changing who/where.
+      allow update: if (isInvitee()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+            && resource.data.status == 'pending'
+            && (request.resource.data.status == 'rejected'
+                || resource.data.expiresAt > request.time))
+        || (signedIn()
+            && resource.data.fromUserId == request.auth.uid
+            && request.resource.data.fromUserId == request.auth.uid
+            && request.resource.data.familyId == resource.data.familyId
+            && request.resource.data.toEmail == resource.data.toEmail
+            && (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+                || resource.data.status != 'pending'
+                || resource.data.expiresAt < request.time));
       allow delete: if signedIn() && resource.data.fromUserId == request.auth.uid;
     }
 

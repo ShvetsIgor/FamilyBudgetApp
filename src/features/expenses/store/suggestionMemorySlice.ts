@@ -58,13 +58,23 @@ export interface SuggestionMemoryState {
   tagAssociations: TagAssociation[];
   /** Merchant context stats — merchantKey → folderId → count */
   merchantContextStats?: Record<string, Record<string, number>>;
+  /** Account this memory belongs to; localStorage writes are keyed by it. */
+  uid?: string | null;
 }
 
 const MAX_RECENTS = 20;
 const MAX_PER_MERCHANT = 5;
 const MAX_SPLIT_COMBOS = 20;
 const MAX_TAG_ASSOCIATIONS = 200;
-const STORAGE_KEY = 'suggestionMemory_v2';
+const LEGACY_STORAGE_KEY = 'suggestionMemory_v2';
+
+/**
+ * Memory is cached in localStorage PER ACCOUNT so merchants/recents/split
+ * combos never leak between two accounts sharing one browser.
+ */
+export function suggestionMemoryStorageKey(uid: string): string {
+  return `${LEGACY_STORAGE_KEY}_${uid}`;
+}
 
 const EMPTY: SuggestionMemoryState = {
   merchants: {},
@@ -72,13 +82,22 @@ const EMPTY: SuggestionMemoryState = {
   splitCombos: [],
   tagAssociations: [],
   merchantContextStats: {},
+  uid: null,
 };
 
-function loadFromStorage(): SuggestionMemoryState {
-  if (typeof window === 'undefined') return EMPTY;
+function loadFromStorage(uid: string): SuggestionMemoryState {
+  if (typeof window === 'undefined') return { ...EMPTY, uid };
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return EMPTY;
+    // One-time claim of the pre-account global key by the first account
+    // that logs in here, then drop it so it can't leak to the next account.
+    if (localStorage.getItem(suggestionMemoryStorageKey(uid)) == null) {
+      const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+      if (legacy != null) localStorage.setItem(suggestionMemoryStorageKey(uid), legacy);
+    }
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
+
+    const raw = localStorage.getItem(suggestionMemoryStorageKey(uid));
+    if (!raw) return { ...EMPTY, uid };
     const parsed = JSON.parse(raw) as Partial<SuggestionMemoryState>;
     return {
       merchants: parsed.merchants ?? {},
@@ -86,15 +105,17 @@ function loadFromStorage(): SuggestionMemoryState {
       splitCombos: parsed.splitCombos ?? [],
       tagAssociations: parsed.tagAssociations ?? [], // backward-compatible default
       merchantContextStats: parsed.merchantContextStats ?? {},
+      uid,
     };
   } catch {
-    return EMPTY;
+    return { ...EMPTY, uid };
   }
 }
 
 function saveToStorage(state: SuggestionMemoryState) {
+  if (typeof window === 'undefined' || !state.uid) return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(suggestionMemoryStorageKey(state.uid), JSON.stringify(state));
   } catch {}
 }
 
@@ -121,8 +142,15 @@ export function extractTags(merchantOrText: string): string[] {
 
 const suggestionMemorySlice = createSlice({
   name: 'suggestionMemory',
-  initialState: loadFromStorage,
+  // Starts empty — the account-scoped cache loads via hydrateSuggestionMemory
+  // once the uid is known (AuthProvider, after login).
+  initialState: (): SuggestionMemoryState => ({ ...EMPTY }),
   reducers: {
+    /** Load the logged-in account's memory from its localStorage cache. */
+    hydrateSuggestionMemory(_state, action: PayloadAction<{ uid: string }>) {
+      return loadFromStorage(action.payload.uid);
+    },
+
     /** Record a single-category expense save. Updates merchant + recents memory. */
     recordExpense(
       state,
@@ -285,6 +313,7 @@ const suggestionMemorySlice = createSlice({
 });
 
 export const {
+  hydrateSuggestionMemory,
   recordExpense,
   recordSplitExpense,
   recordTagAssociation,

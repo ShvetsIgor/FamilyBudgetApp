@@ -156,24 +156,30 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
           date: dateStr,
         }));
       }
-      // Record in chat so the history stays consistent with chat/mobile saves
-      const hint = [
-        buildEntryDateHint(dateStr, t, dfLocale),
-        posCount > 1 ? `${t('expense.split2')} · ${posCount}` : undefined,
-      ].filter(Boolean).join(' · ') || undefined;
-      await recordSavedCard({
-        userId: user.id,
-        text: `${t('home.saved')} · ${symbol} ${totalNum}`,
-        icon: effectiveCat?.icon ?? 'box',
-        color: effectiveCat?.color ?? catColor,
-        title: t.cat(effectiveCat?.name ?? selectedGroup?.name ?? ''),
-        hint,
-        amount: totalNum,
-        currencySymbol: symbol,
-        expenseId: exp.id,
-      });
+      // Secondary chat-history write — must not undo the saved expense or
+      // block closing the drawer (a retry would duplicate the expense).
+      try {
+        const hint = [
+          buildEntryDateHint(dateStr, t, dfLocale),
+          posCount > 1 ? `${t('expense.split2')} · ${posCount}` : undefined,
+        ].filter(Boolean).join(' · ') || undefined;
+        await recordSavedCard({
+          userId: user.id,
+          text: `${t('home.saved')} · ${symbol} ${totalNum}`,
+          icon: effectiveCat?.icon ?? 'box',
+          color: effectiveCat?.color ?? catColor,
+          title: t.cat(effectiveCat?.name ?? selectedGroup?.name ?? ''),
+          hint,
+          amount: totalNum,
+          currencySymbol: symbol,
+          expenseId: exp.id,
+        });
+      } catch (err) {
+        console.error('chat card write failed (expense already saved)', err);
+      }
       dispatch(closeQuickAdd());
     } catch {
+      // Only the FINANCIAL write reaches here — re-enable retry.
       setSaving(false);
     }
   }

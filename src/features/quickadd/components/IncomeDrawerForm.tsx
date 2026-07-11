@@ -13,9 +13,8 @@ import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import { useT } from '@/shared/hooks/useT';
 import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { recordSavedCard, buildEntryDateHint } from '@/features/chat/services/savedCardService';
-import { cn } from '@/shared/utils/cn';
 import { normalizeName } from '@/shared/utils/normalizeName';
-import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
+import { selectAllActiveCategories } from '@/features/categories/store/selectors';
 
 const INCOME_METHODS = [
   { value: 'bank'  as const, label: 'income.bank', icon: '🏦' },
@@ -31,13 +30,19 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
   const t = useT();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
-  const allCats = useAppSelector((s) => s.categories.income);
-  const { groups } = useCategoryGroups('income');
+  // Selectable tiles are real income CATEGORIES — folders are UI grouping
+  // only and their ids must never end up in income.categoryId.
+  const activeCats = useAppSelector((s) => selectAllActiveCategories(s, 'income'));
   const symbol = getCurrencySymbol(currency);
   const dfLocale = useDateFnsLocale();
 
   const [amount, setAmount] = useState('');
-  const [categoryId, setCategoryId] = useState(groups[0]?.id ?? '');
+  const [categoryId, setCategoryId] = useState(activeCats[0]?.id ?? '');
+
+  // Categories may load after mount — pick the default once they arrive
+  useEffect(() => {
+    if (!categoryId && activeCats.length > 0) setCategoryId(activeCats[0].id);
+  }, [categoryId, activeCats]);
   const [method, setMethod] = useState<'cash' | 'card' | 'bank' | 'other'>('bank');
   const [comment, setComment] = useState('');
   const [dateStr, setDateStr] = useState(toDateInput(new Date()));
@@ -61,12 +66,13 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
     return () => window.removeEventListener('keydown', onKey);
   });
 
-  const selectedCat = allCats.find((c) => c.id === categoryId);
+  const selectedCat = activeCats.find((c) => c.id === categoryId);
   const catColor = selectedCat?.color ?? accent;
   const amountNum = parseFloat(amount) || 0;
 
   async function handleSave() {
-    if (!user || amountNum <= 0 || saving) return;
+    // A real active category is mandatory — never save a folder/blank id
+    if (!user || amountNum <= 0 || saving || !selectedCat) return;
     setSaving(true);
     try {
       const inc = await addIncome({
@@ -76,19 +82,27 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
         amount: amountNum, categoryId,
       });
       dispatch(prependIncome(inc));
-      // Record in chat so the history stays consistent with chat/mobile saves
-      await recordSavedCard({
-        userId: user.id,
-        text: `${t('income.chatLabel')} · ${t.cat(selectedCat?.name ?? '')} · +${symbol} ${amountNum}`,
-        icon: selectedCat?.icon ?? 'cash',
-        color: catColor,
-        title: t.cat(selectedCat?.name ?? t('income.title')),
-        hint: buildEntryDateHint(dateStr, t, dfLocale),
-        amount: amountNum,
-        currencySymbol: symbol,
-      });
+      // Secondary chat-history write — must not undo the saved income or
+      // block closing the drawer (a retry would duplicate the income).
+      try {
+        await recordSavedCard({
+          userId: user.id,
+          text: `${t('income.chatLabel')} · ${t.cat(selectedCat?.name ?? '')} · +${symbol} ${amountNum}`,
+          icon: selectedCat?.icon ?? 'cash',
+          color: catColor,
+          title: t.cat(selectedCat?.name ?? t('income.title')),
+          hint: buildEntryDateHint(dateStr, t, dfLocale),
+          amount: amountNum,
+          currencySymbol: symbol,
+          isIncome: true,
+          incomeId: inc.id,
+        });
+      } catch (err) {
+        console.error('chat card write failed (income already saved)', err);
+      }
       dispatch(closeQuickAdd());
     } catch {
+      // Only the FINANCIAL write reaches here — re-enable retry.
       setSaving(false);
     }
   }
@@ -107,7 +121,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
             <span className="text-[11px] font-bold" style={{ color: catColor }}>{selectedCat ? t.cat(selectedCat.name) : ''}</span>
           </div>
           <div className="grid gap-1.5" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-            {groups.slice(0, 8).map((cat, i) => {
+            {activeCats.slice(0, 8).map((cat, i) => {
               const sel = cat.id === categoryId;
               const c = cat.color ?? '#10b981';
               return (

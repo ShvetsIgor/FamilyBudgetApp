@@ -81,22 +81,28 @@ export function FastSavingsEntry() {
       if (createdCategory) dispatch(addCategoryRedux(createdCategory));
       dispatch(prependExpense(exp));
 
-      // Record in chat — the contribution is stored in the goal's currency
-      const sym = getCurrencySymbol(selectedGoal.currency);
-      await recordSavedCard({
-        userId: user.id,
-        text: `${t('savings.chatLabel')} · ${selectedGoal.name} · ${sym} ${amountNum}`,
-        icon: 'coin',
-        color: goalColor,
-        title: selectedGoal.name,
-        hint: buildEntryDateHint(dateStr, t, dfLocale),
-        amount: amountNum,
-        currencySymbol: sym,
-        expenseId: exp.id,
-      });
+      // Secondary chat-history write — must not undo the saved contribution
+      // or block navigation (a retry would duplicate it).
+      try {
+        const sym = getCurrencySymbol(selectedGoal.currency);
+        await recordSavedCard({
+          userId: user.id,
+          text: `${t('savings.chatLabel')} · ${selectedGoal.name} · ${sym} ${amountNum}`,
+          icon: 'coin',
+          color: goalColor,
+          title: selectedGoal.name,
+          hint: buildEntryDateHint(dateStr, t, dfLocale),
+          amount: amountNum,
+          currencySymbol: sym,
+          expenseId: exp.id,
+        });
+      } catch (err) {
+        console.error('chat card write failed (contribution already saved)', err);
+      }
 
       goBack();
     } catch {
+      // Only the FINANCIAL write reaches here — re-enable retry.
       setSaving(false);
     }
   }

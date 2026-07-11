@@ -4,6 +4,7 @@ import { fetchSharedMonthExpenses, fetchSharedExpensesInRange } from '@/features
 import { fetchSharedMonthIncome, fetchSharedIncomeInRange } from '@/features/income/services/incomeService';
 import { fetchSharedGoals } from '@/features/savings/services/savingsService';
 import type { Category, SavingsGoal, SerializableExpense, SerializableIncome, UserProfile } from '@/shared/types';
+import { toLocalMonthKey } from '@/shared/utils/dateKey';
 
 export interface FamilyExpense extends SerializableExpense {
   memberId: string;
@@ -181,7 +182,10 @@ export async function fetchFamilyAnalytics(
   for (const { member, expenses, incomes } of perMember) {
     let memberTotal = 0;
     for (const e of expenses) {
-      monthAgg.get(e.date.slice(0, 7)) && (monthAgg.get(e.date.slice(0, 7))!.expenses += e.amount);
+      // Bucket by the LOCAL calendar month — e.date is a UTC ISO string, and
+      // slicing it shifts entries recorded near local midnight into the
+      // wrong month (the range queries themselves are local-time based).
+      monthAgg.get(toLocalMonthKey(e.date)) && (monthAgg.get(toLocalMonthKey(e.date))!.expenses += e.amount);
       memberTotal += e.amount;
       totalSpent += e.amount;
       const cur = catTotals.get(e.categoryId);
@@ -189,7 +193,7 @@ export async function fetchFamilyAnalytics(
       else catTotals.set(e.categoryId, { total: e.amount, memberId: member.id });
     }
     for (const i of incomes) {
-      monthAgg.get(i.date.slice(0, 7)) && (monthAgg.get(i.date.slice(0, 7))!.income += i.amount);
+      monthAgg.get(toLocalMonthKey(i.date)) && (monthAgg.get(toLocalMonthKey(i.date))!.income += i.amount);
       totalIncome += i.amount;
     }
     byMember.push({ memberId: member.id, memberName: member.name, total: memberTotal });

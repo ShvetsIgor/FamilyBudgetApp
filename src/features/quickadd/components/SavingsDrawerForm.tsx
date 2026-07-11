@@ -64,19 +64,26 @@ export function SavingsDrawerForm({ accent }: { accent: string }) {
       dispatch(updateGoalItem(updated));
       if (createdCategory) dispatch(addCategoryRedux(createdCategory));
       dispatch(prependExpense(expense));
-      const goalSym = getCurrencySymbol(selected.currency);
-      await recordSavedCard({
-        userId: user.id,
-        text: `${t('savings.chatLabel')} · ${selected.name} · ${goalSym} ${amountNum}`,
-        icon: 'coin',
-        color: selected.color ?? '#E8442A',
-        title: selected.name,
-        amount: amountNum,
-        currencySymbol: goalSym,
-        expenseId: expense.id,
-      });
+      // Secondary chat-history write — must not undo the saved contribution
+      // or block closing the drawer (a retry would duplicate it).
+      try {
+        const goalSym = getCurrencySymbol(selected.currency);
+        await recordSavedCard({
+          userId: user.id,
+          text: `${t('savings.chatLabel')} · ${selected.name} · ${goalSym} ${amountNum}`,
+          icon: 'coin',
+          color: selected.color ?? '#E8442A',
+          title: selected.name,
+          amount: amountNum,
+          currencySymbol: goalSym,
+          expenseId: expense.id,
+        });
+      } catch (err) {
+        console.error('chat card write failed (contribution already saved)', err);
+      }
       dispatch(closeQuickAdd());
     } catch {
+      // Only the FINANCIAL write reaches here — re-enable retry.
       setSaving(false);
     }
   }

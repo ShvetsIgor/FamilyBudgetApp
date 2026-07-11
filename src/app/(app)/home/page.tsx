@@ -113,10 +113,10 @@ export default function HomePage() {
       .reduce((acc, e) => acc + e.amount, 0)
   );
   const monthSpent = useAppSelector((s) =>
-    s.expenses.list.filter((e) => e.date.startsWith(monthStr)).reduce((acc, e) => acc + e.amount, 0)
+    s.expenses.list.filter((e) => toLocalMonthKey(e.date) === monthStr).reduce((acc, e) => acc + e.amount, 0)
   );
   const monthIncome = useAppSelector((s) =>
-    s.income.list.filter((i) => i.date.startsWith(monthStr)).reduce((acc, i) => acc + i.amount, 0)
+    s.income.list.filter((i) => toLocalMonthKey(i.date) === monthStr).reduce((acc, i) => acc + i.amount, 0)
   );
 
   // Compute daily budget based on selected mode

@@ -215,6 +215,8 @@ export interface SerializableRecurringPayment {
 // ─── Savings ─────────────────────────────────────────────────────────────────
 
 export interface SavingsContribution {
+  /** Stable unique id — the Firestore map key; legacy array entries lack it */
+  id?: string;
   amount: number;
   date: string; // ISO string
   note?: string;
@@ -273,6 +275,10 @@ export interface SerializableExpense {
   isRecurring: boolean;
   recurringId?: string;
   goalId?: string;
+  /** Owner of the linked goal (contributions to another member's goal) */
+  goalOwnerId?: string;
+  /** Id of the linked contribution inside the goal — exact rollback key */
+  contributionId?: string;
   /** Family reactions: memberId → emoji */
   reactions?: Record<string, string>;
   createdAt: string;

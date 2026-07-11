@@ -16,7 +16,7 @@ import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
 import { recordSavedCard, buildEntryDateHint } from '@/features/chat/services/savedCardService';
 import { normalizeName, normalizeNameKey } from '@/shared/utils/normalizeName';
-import type { Category, SerializableExpense, SplitItem } from '@/shared/types';
+import type { Category, Privacy, SerializableExpense, SplitItem } from '@/shared/types';
 import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
 import { recordExpense, recordSplitExpense, recordTagAssociation, recordMerchantContext, extractTags, normalizeTag } from '@/features/expenses/store/suggestionMemorySlice';
 import { buildExpenseDraft } from '@/features/expenses/engine/buildExpenseDraft';
@@ -425,8 +425,10 @@ export function FastExpenseEntry({
       currency,
       date: new Date(dateStr),
       paymentMethod,
-      tags: [] as string[],
-      privacy: 'regular' as const,
+      // Editing must not silently rewrite privacy (a secret expense stays
+      // secret) or wipe tags like 'savings'/'recurring'.
+      tags: (isEdit && initialExpense?.tags ? initialExpense.tags : []) as string[],
+      privacy: (isEdit && initialExpense?.privacy ? initialExpense.privacy : 'regular') as Privacy,
       comment: normalizeName(comment) || undefined,
       amount: totalNum,
       categoryId: effectiveCatId,
@@ -469,13 +471,13 @@ export function FastExpenseEntry({
         if (initialStore && initialFolderId) {
           dispatch(recordMerchantContext({ merchant: initialStore, folderId: initialFolderId, date: dateStr }));
         }
-        // Always record the save in chat so the history stays consistent
-        {
+        // Secondary chat-history write: MUST NOT undo the saved expense or
+        // block navigation. A failure here is logged and swallowed, otherwise
+        // the form would stay open and a retry would duplicate the expense.
+        try {
           if (initialUserMsgId) {
             const { updateMessage } = await import('@/features/chat/services/messagesService');
-            try {
-              await updateMessage(user.id, initialUserMsgId, { expenseId: exp.id, status: 'saved' });
-            } catch { /* non-blocking */ }
+            await updateMessage(user.id, initialUserMsgId, { expenseId: exp.id, status: 'saved' });
           }
           const storeLabel = initialStore ? ` · ${initialStore}` : '';
           const splitHint = posCount > 1 ? `${t('expense.split2')} · ${fmtCount(posCount)}` : undefined;
@@ -492,10 +494,13 @@ export function FastExpenseEntry({
             expenseId: exp.id,
             ...(initialUserMsgId ? { userMsgId: initialUserMsgId } : {}),
           });
+        } catch (err) {
+          console.error('chat card write failed (expense already saved)', err);
         }
         router.push(fromChat ? '/home' : '/expenses');
       }
     } catch {
+      // Only the FINANCIAL write reaches here — re-enable retry.
       setSaving(false);
     }
   }

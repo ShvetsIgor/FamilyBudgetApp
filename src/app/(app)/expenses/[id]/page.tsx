@@ -8,7 +8,7 @@ import { useAppSelector, useAppDispatch } from '@/store/store';
 import { removeExpense } from '@/features/expenses/store/expensesSlice';
 import { deleteExpense } from '@/features/expenses/services/expensesService';
 import { updateRecurringItem } from '@/features/recurring/store/recurringSlice';
-import { reverseContribution } from '@/features/savings/services/savingsService';
+import { reverseContributionById, reverseContributionByAmount } from '@/features/savings/services/savingsService';
 import { updateGoalItem } from '@/features/savings/store/savingsSlice';
 import { localizeSavingsExpenseComment } from '@/features/savings/utils/savingsExpenseComment';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
@@ -62,10 +62,19 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
     if (restored) dispatch(updateRecurringItem(restored));
 
     if (expense!.goalId) {
-      const goal = goals.find((g) => g.id === expense!.goalId);
-      if (goal) {
-        const updated = await reverseContribution(user.id, goal, expense!.amount);
-        dispatch(updateGoalItem(updated));
+      // Roll back exactly the linked contribution (idempotent by id); the
+      // goal may belong to another family member. Legacy expenses without a
+      // contributionId fall back to amount-matching on OWN goals only.
+      const goalOwnerId = expense!.goalOwnerId ?? user.id;
+      try {
+        const reversed = expense!.contributionId
+          ? await reverseContributionById(goalOwnerId, expense!.goalId, expense!.contributionId)
+          : goalOwnerId === user.id
+            ? await reverseContributionByAmount(user.id, expense!.goalId, expense!.amount)
+            : null;
+        if (reversed && goals.some((g) => g.id === reversed.goal.id)) dispatch(updateGoalItem(reversed.goal));
+      } catch (err) {
+        console.error('contribution rollback failed', err);
       }
     }
 

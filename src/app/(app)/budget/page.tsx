@@ -1,9 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { useAppDispatch, useAppSelector } from '@/store/store';
+import { mergeExpenses } from '@/features/expenses/store/expensesSlice';
+import { fetchMonthExpenses } from '@/features/expenses/services/expensesService';
 import { setBudgetMode, setBudgetDailyLimit, setBudgetMonthlyLimit, setBudgetSnapshot } from '@/features/ui/store/uiSlice';
 import type { BudgetMode } from '@/features/ui/store/uiSlice';
 import { formatAmount, blockInvalidAmountKeys } from '@/shared/utils/currency';
@@ -30,11 +32,20 @@ export default function BudgetPage() {
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const remainingDays = daysInMonth - now.getDate() + 1;
 
+  // Direct navigation / refresh must not depend on /home having loaded the
+  // month first: fetch the current month here too (merge dedupes by id).
+  useEffect(() => {
+    if (!user?.id) return;
+    fetchMonthExpenses(user.id, toLocalMonthKey(new Date()))
+      .then((list) => dispatch(mergeExpenses(list)))
+      .catch(() => {});
+  }, [user?.id, dispatch]);
+
   const monthSpent = useAppSelector((s) =>
-    s.expenses.list.filter((e) => e.date.startsWith(monthStr)).reduce((acc, e) => acc + e.amount, 0)
+    s.expenses.list.filter((e) => toLocalMonthKey(e.date) === monthStr).reduce((acc, e) => acc + e.amount, 0)
   );
   const monthIncome = useAppSelector((s) =>
-    s.income.list.filter((i) => i.date.startsWith(monthStr)).reduce((acc, i) => acc + i.amount, 0)
+    s.income.list.filter((i) => toLocalMonthKey(i.date) === monthStr).reduce((acc, i) => acc + i.amount, 0)
   );
 
   const autoDaily = monthIncome > 0
@@ -50,7 +61,7 @@ export default function BudgetPage() {
   const envelopes = useMemo(() => {
     const spent: Record<string, number> = {};
     for (const e of allExpensesList) {
-      if (!e.date.startsWith(monthStr)) continue;
+      if (toLocalMonthKey(e.date) !== monthStr) continue;
       if (e.splits?.length) {
         let splitsSum = 0;
         for (const sp of e.splits) {

@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import * as Sentry from '@sentry/nextjs';
 
 export default function AuthError({
   error,
@@ -11,6 +12,8 @@ export default function AuthError({
   reset: () => void;
 }) {
   useEffect(() => {
+    // Nested boundary — report here or auth-route crashes never reach Sentry.
+    Sentry.captureException(error);
     console.error(error);
   }, [error]);
 

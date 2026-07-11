@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import { getDateFnsLocale } from '@/shared/utils/dateLocale';
+import { toLocalMonthKey } from '@/shared/utils/dateKey';
 import { addMessage } from '@/features/chat/services/messagesService';
 import { getPresetDisplayName } from '@/features/categories/config/categoryLabels';
 import type { BotContext } from './context';
@@ -48,13 +49,13 @@ export async function handleSlashCommand(
 
   // /баланс — envelopes for current month
   if (cmd === '/баланс' || cmd === '/balance') {
-    const monthStr = new Date().toISOString().slice(0, 7); // "2026-05"
+    const monthStr = toLocalMonthKey(new Date());
     const monthLabel = format(new Date(), 'LLLL yyyy', { locale: getDateFnsLocale(ctx.language) });
 
-    // Spending per category this month
+    // Spending per category this month (local calendar month, not UTC)
     const catSpent: Record<string, number> = {};
     allExpenses
-      .filter((e) => e.date.startsWith(monthStr))
+      .filter((e) => toLocalMonthKey(e.date) === monthStr)
       .forEach((e) => {
         catSpent[e.categoryId] = (catSpent[e.categoryId] ?? 0) + e.amount;
       });

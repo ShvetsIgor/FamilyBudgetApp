@@ -8,7 +8,15 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/__tests__/setup.ts'],
-    exclude: ['node_modules', '.claude/worktrees/**', 'e2e/**'],
+    exclude: [
+      'node_modules',
+      '.claude/worktrees/**',
+      'e2e/**',
+      'rules-tests/**',
+      // Local backup copies of the repo must not double-run the suite
+      'FamilyBudgetApp-migration-safe-*/**',
+      '**/FamilyBudgetApp-migration-safe-*/**',
+    ],
   },
   resolve: {
     alias: {

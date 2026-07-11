@@ -26,6 +26,10 @@ export interface SavedCardInput {
   amount: number;
   currencySymbol: string;
   expenseId?: string;
+  /** Links the card to an income doc so deleting the income removes it too. */
+  incomeId?: string;
+  /** Renders the amount as income (+) instead of expense. */
+  isIncome?: boolean;
   userMsgId?: string;
 }
 
@@ -43,6 +47,7 @@ export async function recordSavedCard(input: SavedCardInput): Promise<void> {
     text: input.text,
     status: 'saved',
     ...(input.expenseId ? { expenseId: input.expenseId } : {}),
+    ...(input.incomeId ? { incomeId: input.incomeId } : {}),
     card: {
       kind: 'saved',
       data: {
@@ -54,7 +59,9 @@ export async function recordSavedCard(input: SavedCardInput): Promise<void> {
         hint: input.hint,
         amount: input.amount,
         currency: input.currencySymbol,
+        ...(typeof input.isIncome === 'boolean' ? { isIncome: input.isIncome } : {}),
         ...(input.expenseId ? { expenseId: input.expenseId } : {}),
+        ...(input.incomeId ? { incomeId: input.incomeId } : {}),
         ...(input.userMsgId ? { userMsgId: input.userMsgId } : {}),
       },
     },

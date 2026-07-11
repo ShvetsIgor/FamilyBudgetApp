@@ -1,15 +1,14 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { format, parseISO, isToday, isYesterday } from 'date-fns';
 import type { Locale } from 'date-fns';
 import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { Plus } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
-import { setIncome, prependIncome, removeIncome, updateIncome as updateIncomeAction } from '@/features/income/store/incomeSlice';
+import { prependIncome, removeIncome, updateIncome as updateIncomeAction } from '@/features/income/store/incomeSlice';
 import { fetchMonthIncome, addIncome, updateIncome, deleteIncome } from '@/features/income/services/incomeService';
-import { fetchRecurringIncome, advanceRecurringIncomeNextDue } from '@/features/income/services/recurringIncomeService';
 import { IncomeCard } from '@/features/income/components/IncomeCard';
 import { IncomeForm } from '@/features/income/components/IncomeForm';
 import { formatAmount } from '@/shared/utils/currency';
@@ -58,7 +57,7 @@ export default function IncomePage() {
   const dfLocale = useDateFnsLocale();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
-  const { list: reduxIncomes, status: incStatus } = useAppSelector((s) => s.income);
+  const { list: reduxIncomes } = useAppSelector((s) => s.income);
 
   const currentMonth = format(new Date(), 'yyyy-MM');
   const yearMonths = getYearMonths();
@@ -92,36 +91,9 @@ export default function IncomePage() {
   const incomes = isCurrentMonth ? reduxIncomes : (localIncomes ?? []);
   const formOpen = showForm || !!editingIncome;
 
-  const loadCurrentIncomes = useCallback(async () => {
-    if (!user || incStatus !== 'idle') return;
-    dispatch(setIncome(await fetchMonthIncome(user.id, currentMonth)));
-
-    // Auto-apply any due recurring incomes
-    try {
-      const now = new Date();
-      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-      const recurring = await fetchRecurringIncome(user.id);
-      for (const item of recurring) {
-        if (!item.isActive || item.nextDueDate > todayStr) continue;
-        const [y, m, d] = item.nextDueDate.split('-').map(Number);
-        const income = await addIncome({
-          userId: user.id,
-          amount: item.amount,
-          currency: item.currency,
-          categoryId: item.categoryId,
-          date: new Date(y, m - 1, d, 12, 0, 0),
-          method: 'bank',
-          tags: ['recurring'],
-          privacy: 'regular',
-          comment: item.name,
-        });
-        dispatch(prependIncome(income));
-        await advanceRecurringIncomeNextDue(user.id, item);
-      }
-    } catch { /* silent */ }
-  }, [user, currentMonth, incStatus, dispatch]);
-
-  useEffect(() => { loadCurrentIncomes(); }, [loadCurrentIncomes]);
+  // Current-month incomes (incl. due recurring generation) are loaded once on
+  // app start by the (app) layout via loadCurrentMonthIncomes — no local fetch
+  // here, a second concurrent run would duplicate recurring occurrences.
 
   useEffect(() => {
     if (isCurrentMonth) { setLocalIncomes(null); return; }

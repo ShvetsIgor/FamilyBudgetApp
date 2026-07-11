@@ -8,6 +8,8 @@ import { setUser } from '@/features/auth/store/authSlice';
 import { setRecurring } from '@/features/recurring/store/recurringSlice';
 import { fetchRecurring } from '@/features/recurring/services/recurringService';
 import { setFamily, setMembers, setPendingInvite } from '@/features/family/store/familySlice';
+import { setIncome } from '@/features/income/store/incomeSlice';
+import { loadCurrentMonthIncomes } from '@/features/income/services/incomeStartupService';
 import { setBudgets } from '@/features/budget/store/budgetSlice';
 import { addNotification, hydrateNotifications } from '@/features/notifications/store/notificationsSlice';
 import { fetchBudgets } from '@/features/budget/services/budgetService';
@@ -27,6 +29,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const recurringStatus = useAppSelector((s) => s.recurring.status);
   const family = useAppSelector((s) => s.family.family);
   const budgetStatus = useAppSelector((s) => s.budget.status);
+  const incomeStatus = useAppSelector((s) => s.income.status);
   const router = useRouter();
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -96,6 +99,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       fetchBudgets(user.id).then((limits) => dispatch(setBudgets(limits)));
     }
   }, [user, budgetStatus, dispatch]);
+
+  // Load current-month incomes (and apply due recurring incomes) once on app
+  // start — the chat auto budget needs month income before /income is visited.
+  useEffect(() => {
+    if (user && incomeStatus === 'idle') {
+      loadCurrentMonthIncomes(user.id)
+        .then((list) => dispatch(setIncome(list)))
+        .catch(() => {});
+    }
+  }, [user, incomeStatus, dispatch]);
 
   // Show onboarding for new users (only when explicitly onboarded === false)
   useEffect(() => {

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-import { Check, ChevronLeft, Plus, Search, X } from 'lucide-react';
+import { Check, ChevronLeft, Pencil, Plus, Search, X } from 'lucide-react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { useT } from '@/shared/hooks/useT';
 import { cn } from '@/shared/utils/cn';
@@ -35,6 +35,8 @@ interface CategoryFolderPickerViewProps {
   onSelectCategory: (category: Category, folder?: CategoryPickerFolder | null) => void;
   onCreateFolder?: () => void;
   onCreateCategory?: (folderId: string | null) => void;
+  /** Rename / recolor / delete an existing folder (shows a pencil in the folder header). */
+  onEditFolder?: (folder: CategoryPickerFolder) => void;
   onRequestClose?: () => void;
   closeOnSingleSelect?: boolean;
   showSearch?: boolean;
@@ -87,6 +89,7 @@ export function CategoryFolderPickerView({
   onSelectCategory,
   onCreateFolder,
   onCreateCategory,
+  onEditFolder,
   onRequestClose,
   closeOnSingleSelect = false,
   showSearch = true,
@@ -100,6 +103,13 @@ export function CategoryFolderPickerView({
     setQuery('');
     setFolderId(initialFolderId);
   }, [initialFolderId]);
+
+  // If the open folder is deleted (e.g. via the folder editor), fall back to the root grid.
+  useEffect(() => {
+    if (folderId && folderId !== UNGROUPED_FOLDER_ID && !folders.some((folder) => folder.id === folderId)) {
+      setFolderId(null);
+    }
+  }, [folderId, folders]);
 
   const selectedIds = useMemo(() => new Set(selectedCategoryIds), [selectedCategoryIds]);
   const suggestedIds = useMemo(() => new Set(suggestedCategoryIds), [suggestedCategoryIds]);
@@ -194,6 +204,17 @@ export function CategoryFolderPickerView({
                   : t('categories.picker.foldersOnlyHint')}
             </div>
           </div>
+
+          {onEditFolder && folderId && folderId !== UNGROUPED_FOLDER_ID && currentFolder && (
+            <button
+              type="button"
+              onClick={() => onEditFolder(currentFolder)}
+              aria-label={t('categories.pickerAria.editFolder')}
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted active:bg-muted"
+            >
+              <Pencil className="h-[18px] w-[18px]" />
+            </button>
+          )}
 
           {onRequestClose ? (
             <button

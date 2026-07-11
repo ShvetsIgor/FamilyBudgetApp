@@ -374,6 +374,7 @@ export default function HomePage() {
         currency={currency}
         dayLabel={displayLabel}
         budgetMode={budgetMode}
+        dailyHint={budgetMode === 'daily' ? undefined : dailyBudget}
         onSettings={() => router.push('/budget')}
       />
 

@@ -1167,6 +1167,10 @@ export function CategoriesHub() {
             onSelectCategory={openCategoryFromFolderPicker}
             onCreateFolder={openFolderEditorFromPicker}
             onCreateCategory={openCategoryEditorFromPicker}
+            onEditFolder={(pickerFolder) => {
+              const folder = folders.find((f) => f.id === pickerFolder.id);
+              if (folder) setFolderEditor({ open: true, folder });
+            }}
             showSearch={false}
             variant="inline"
           />
@@ -1330,7 +1334,7 @@ export function CategoriesHub() {
         onSave={handleFolderSave}
         onDelete={folderEditor.folder ? async () => {
           if (!folderEditor.folder) return;
-          if (!confirm(t('categories.confirmDeleteFolder'))) return;
+          // The sheet itself shows a two-step confirm; no extra native dialog.
           await handleFolderDelete(folderEditor.folder);
           setFolderEditor({ open: false });
         } : undefined}

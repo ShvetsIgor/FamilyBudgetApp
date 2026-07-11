@@ -592,7 +592,8 @@
     },
     "pickerAria": {
       "back": "Back to sections",
-      "close": "Close"
+      "close": "Close",
+      "editFolder": "Edit section"
     }
   },
   "auth": {
@@ -708,7 +709,8 @@
       "monthLabel": "Monthly budget",
       "of": "of",
       "spent": "spent",
-      "spentPct": "already {pct}%"
+      "spentPct": "already {pct}%",
+      "perDay": "per day until month end"
     },
     "budget": {
       "over": "over budget",
@@ -806,6 +808,16 @@
         "title": "Recurring payments",
         "desc": "Set rent, subscription or mortgage once — the app will remind you of the due date and show upcoming bills on Home",
         "example": "Netflix · Rent · Mortgage"
+      },
+      "tip9": {
+        "title": "Family budget",
+        "desc": "Invite your family in Settings → Family. The My / Family toggle on expenses, income, savings and analytics shows the shared budget. React to family expenses and contribute to each other's goals. Secret entries and private goals stay visible only to you.",
+        "example": "Settings → Family → Invite"
+      },
+      "tip10": {
+        "title": "Voice input",
+        "desc": "Tap the mic in the chat bar and dictate an expense — the text types itself. Recognition follows the app language. Tap again to stop.",
+        "example": "🎤 “Dabbah 1000”"
       }
     },
     "menu": {
@@ -891,7 +903,9 @@
     "step2": "2. View statistics on the 📊 tab",
     "step3": "3. Set category budgets in account settings",
     "open": "Open app",
-    "saving": "Saving…"
+    "saving": "Saving…",
+    "chooseTheme": "Appearance",
+    "themeHint": "You can change the theme and dark mode later in settings"
   },
   "budget": {
     "autoCalc": "Auto calculation",

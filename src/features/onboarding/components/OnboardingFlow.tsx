@@ -4,10 +4,10 @@ import { useState } from 'react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import { useAppSelector, useAppDispatch } from '@/store/store';
-import { setCurrency, setLanguage } from '@/features/ui/store/uiSlice';
+import { setCurrency, setDarkMode, setLanguage, setTheme } from '@/features/ui/store/uiSlice';
 import { setUser } from '@/features/auth/store/authSlice';
 import { formatAmount } from '@/shared/utils/currency';
-import type { Currency, Language } from '@/shared/types';
+import type { Currency, Language, Theme } from '@/shared/types';
 import { useT } from '@/shared/hooks/useT';
 
 const LANGUAGES: { value: Language; flag: string; label: string }[] = [
@@ -22,7 +22,7 @@ const CURRENCIES: { value: Currency; label: string; example: string }[] = [
   { value: 'RUB', label: '₽ Ruble', example: formatAmount(1000, 'RUB') },
 ];
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 5;
 
 interface Props {
   onComplete: () => void;
@@ -34,6 +34,8 @@ export function OnboardingFlow({ onComplete }: Props) {
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const language = useAppSelector((s) => s.ui.language);
+  const theme = useAppSelector((s) => s.ui.theme);
+  const isDarkMode = useAppSelector((s) => s.ui.isDarkMode);
 
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -58,6 +60,16 @@ export function OnboardingFlow({ onComplete }: Props) {
   async function handleCurrencySelect(c: Currency) {
     dispatch(setCurrency(c));
     if (user) await updateDoc(doc(getDb(), 'users', user.id), { currency: c });
+  }
+
+  async function handleThemeSelect(th: Theme) {
+    dispatch(setTheme(th));
+    if (user) await updateDoc(doc(getDb(), 'users', user.id), { theme: th });
+  }
+
+  async function handleDarkModeToggle(enabled: boolean) {
+    dispatch(setDarkMode(enabled));
+    if (user) await updateDoc(doc(getDb(), 'users', user.id), { darkMode: enabled });
   }
 
   return (
@@ -180,8 +192,61 @@ export function OnboardingFlow({ onComplete }: Props) {
           </div>
         )}
 
-        {/* Step 3 — Ready */}
+        {/* Step 3 — Appearance */}
         {step === 3 && (
+          <div className="flex flex-col gap-4">
+            <div className="text-center">
+              <p className="text-4xl mb-3">🎨</p>
+              <h2 className="text-xl font-bold">{t('onboarding.chooseTheme')}</h2>
+              <p className="text-sm text-muted-foreground mt-1">{t('onboarding.themeHint')}</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                { value: 'mist' as Theme, title: t('account.themeMist'), desc: t('account.themeMistDesc'), swatch: '#5B6CFF' },
+                { value: 'press' as Theme, title: t('account.themePress'), desc: t('account.themePressDesc'), swatch: '#E8442A' },
+              ]).map((th) => (
+                <button
+                  key={th.value}
+                  onClick={() => handleThemeSelect(th.value)}
+                  className={`flex flex-col items-center gap-1.5 rounded-2xl border p-4 transition-all ${
+                    theme === th.value
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border text-foreground'
+                  }`}
+                >
+                  <span className="h-6 w-6 rounded-full" style={{ backgroundColor: th.swatch }} />
+                  <span className="text-base font-semibold">{th.title}</span>
+                  <span className="text-xs text-muted-foreground text-center">{th.desc}</span>
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => handleDarkModeToggle(!isDarkMode)}
+              className="flex items-center justify-between rounded-2xl border border-border p-4"
+            >
+              <span className="text-sm font-semibold">{t('account.darkMode')}</span>
+              <span
+                className={`relative h-6 w-11 rounded-full transition-colors ${isDarkMode ? 'bg-primary' : 'bg-muted'}`}
+              >
+                <span
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-transform ${isDarkMode ? 'translate-x-5' : 'translate-x-0.5'}`}
+                />
+              </span>
+            </button>
+
+            <button
+              onClick={() => setStep(4)}
+              className="w-full rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground"
+            >
+              {t('onboarding.continue')}
+            </button>
+          </div>
+        )}
+
+        {/* Step 4 — Ready */}
+        {step === 4 && (
           <div className="flex flex-col gap-4 items-center text-center">
             <p className="text-5xl">🎉</p>
             <div>

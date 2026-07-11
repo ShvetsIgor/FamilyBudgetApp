@@ -85,6 +85,20 @@ export function HelpSheet({ onClose }: HelpSheetProps) {
       desc: t('chat.help.tip8.desc'),
       example: t('chat.help.tip8.example'),
     },
+    {
+      icon: 'hands',
+      color: '#7BA6DE',
+      title: t('chat.help.tip9.title'),
+      desc: t('chat.help.tip9.desc'),
+      example: t('chat.help.tip9.example'),
+    },
+    {
+      icon: 'wifi',
+      color: '#D98CA6',
+      title: t('chat.help.tip10.title'),
+      desc: t('chat.help.tip10.desc'),
+      example: t('chat.help.tip10.example'),
+    },
   ];
 
   return (

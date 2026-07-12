@@ -12,6 +12,7 @@ export default defineConfig({
       'node_modules',
       '.claude/worktrees/**',
       'e2e/**',
+      'e2e-emulated/**',
       'rules-tests/**',
       // Local backup copies of the repo must not double-run the suite
       'FamilyBudgetApp-migration-safe-*/**',

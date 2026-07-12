@@ -56,3 +56,5 @@ design-archive/
 /playwright-report/
 /test-results/
 firestore-debug.log
+firebase-debug.log
+ui-debug.log

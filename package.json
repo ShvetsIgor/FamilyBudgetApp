@@ -11,7 +11,9 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "test:rules": "firebase emulators:exec --only firestore --project family-budget-rules-test \"vitest run --config vitest.rules.config.ts\""
+    "test:rules": "firebase emulators:exec --only firestore --project family-budget-rules-test \"vitest run --config vitest.rules.config.ts\"",
+    "build:e2e-emulated": "NEXT_PUBLIC_USE_FIREBASE_EMULATOR=1 NEXT_PUBLIC_FIREBASE_API_KEY=demo-key NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=demo-family-budget.firebaseapp.com NEXT_PUBLIC_FIREBASE_PROJECT_ID=demo-family-budget NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=demo-family-budget.appspot.com NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=000000000000 NEXT_PUBLIC_FIREBASE_APP_ID=1:000000000000:web:demo next build",
+    "test:e2e:emulated": "npm run build:e2e-emulated && npx firebase-tools emulators:exec --only auth,firestore --project demo-family-budget \"playwright test --config playwright.emulated.config.ts\""
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.11",

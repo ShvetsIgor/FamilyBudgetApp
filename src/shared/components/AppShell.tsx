@@ -41,7 +41,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex flex-col overflow-hidden lg:hidden" style={{ height: '100dvh' }}>
         <UpdateBanner />
         <ChatHeader
-          onMenu={() => setMenuOpen(true)}
           onBell={() => setBellOpen((v) => !v)}
           onClearChat={isChat ? handleClearChat : undefined}
         />

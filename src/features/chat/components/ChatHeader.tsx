@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Menu, Trash2 } from 'lucide-react';
+import { Bell, Trash2 } from 'lucide-react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { useT } from '@/shared/hooks/useT';
@@ -20,12 +20,11 @@ const MOBILE_PAGE_TITLES: Array<[string, string]> = [
 ];
 
 interface ChatHeaderProps {
-  onMenu: () => void;
   onBell?: () => void;
   onClearChat?: () => void;
 }
 
-export function ChatHeader({ onMenu, onBell, onClearChat }: ChatHeaderProps) {
+export function ChatHeader({ onBell, onClearChat }: ChatHeaderProps) {
   const C = useChatTokens();
   const t = useT();
   const pathname = usePathname();
@@ -35,27 +34,18 @@ export function ChatHeader({ onMenu, onBell, onClearChat }: ChatHeaderProps) {
 
   return (
     <div
-      className="sticky top-0 z-10 flex items-center gap-3 border-b px-3.5 pb-3 pt-3"
+      className="sticky top-0 z-10 flex items-center gap-2.5 border-b px-3 pb-2.5 pt-2.5"
       style={{ background: C.bg, borderColor: C.hairline }}
     >
-      <button
-        onClick={onMenu}
-        className="fb-touch-target flex h-11 w-11 items-center justify-center rounded-xl transition-colors"
-        style={{ color: C.fg }}
-        aria-label={t('nav.more')}
-      >
-        <Menu size={20} strokeWidth={2.4} />
-      </button>
-
       {isChat && <div className="relative flex-shrink-0">
         <div
-          className="flex h-10 w-10 items-center justify-center rounded-full"
+          className="flex h-9 w-9 items-center justify-center rounded-full"
           style={{
             background: `radial-gradient(circle at 30% 30%, ${C.primaryTint}, ${C.primary}22)`,
             boxShadow: 'inset 0 0 0 1.5px rgba(255,255,255,.7)',
           }}
         >
-          <StickerIcon icon="piggy" color={C.primary} className="h-[30px] w-[30px]" />
+          <StickerIcon icon="piggy" color={C.primary} className="h-7 w-7" />
         </div>
         <span
           className="absolute bottom-0 right-0 h-[11px] w-[11px] rounded-full border-[2.5px]"
@@ -66,17 +56,17 @@ export function ChatHeader({ onMenu, onBell, onClearChat }: ChatHeaderProps) {
       <div className="flex-1 min-w-0">
         {isChat ? (
           <>
-            <p className="m-0 text-[17px] font-[800] leading-tight" style={{ letterSpacing: -0.3, color: C.fg }}>
+            <p className="m-0 text-base font-[800] leading-tight" style={{ letterSpacing: -0.3, color: C.fg }}>
               <span style={{ color: C.primary }}>family</span>
               <span style={{ color: C.sub, fontWeight: 700 }}>.</span>
               budget
             </p>
-            <p className="m-0 mt-px text-xs font-[700]" style={{ color: C.sage }}>
+            <p className="m-0 mt-px text-[11px] font-[700]" style={{ color: C.sage }}>
               {t('chat.header.online')}
             </p>
           </>
         ) : (
-          <p className="m-0 text-[18px] font-[800] leading-tight" style={{ letterSpacing: -0.25, color: C.fg }}>
+          <p className="m-0 text-[17px] font-[800] leading-tight" style={{ letterSpacing: -0.25, color: C.fg }}>
             {t(pageTitleKey)}
           </p>
         )}
@@ -90,7 +80,7 @@ export function ChatHeader({ onMenu, onBell, onClearChat }: ChatHeaderProps) {
           aria-label={t('chat.clearChat')}
           title={t('chat.clearChat')}
         >
-          <Trash2 size={18} strokeWidth={2} />
+          <Trash2 size={17} strokeWidth={2} />
         </button>
       )}
 
@@ -100,7 +90,7 @@ export function ChatHeader({ onMenu, onBell, onClearChat }: ChatHeaderProps) {
         style={{ color: C.fg }}
         aria-label={t('notifications.title')}
       >
-        <Bell size={20} strokeWidth={2} />
+        <Bell size={18} strokeWidth={2} />
         {unread > 0 && (
           <span
             className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-[900] text-white"

@@ -10,6 +10,11 @@
   }
 }
 
+/* Mobile density: show a little more information without shrinking tap targets. */
+@media (max-width: 767px) {
+  html { font-size: 15px; }
+}
+
 
 /* ── Base + default theme (Mist) ─────────────────────────────── */
 :root,

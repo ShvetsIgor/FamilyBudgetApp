@@ -5,6 +5,7 @@ import { useState, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
+import { MobileBottomNav } from './MobileBottomNav';
 import { UpdateBanner } from './UpdateBanner';
 import { AddDrawer } from '@/features/quickadd/components/AddDrawer';
 import { ChatHeader } from '@/features/chat/components/ChatHeader';
@@ -36,7 +37,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {/* Mobile — unified chrome: ChatHeader + no BottomNav */}
+      {/* Mobile/tablet — contextual header + persistent primary navigation. */}
       <div className="flex flex-col overflow-hidden lg:hidden" style={{ height: '100dvh' }}>
         <UpdateBanner />
         <ChatHeader
@@ -44,15 +45,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           onBell={() => setBellOpen((v) => !v)}
           onClearChat={isChat ? handleClearChat : undefined}
         />
-        <main className={isChat ? 'flex-1 flex flex-col overflow-hidden' : 'flex-1 overflow-y-auto'}>
+        <main className={isChat
+          ? 'flex-1 flex flex-col overflow-hidden'
+          : 'flex-1 overflow-y-auto md:px-6 md:[&>*]:mx-auto md:[&>*]:w-full md:[&>*]:max-w-[760px]'}>
           {children}
         </main>
+        <MobileBottomNav onMore={() => setMenuOpen(true)} />
         {menuOpen && (
           <div className="fixed inset-0 z-50">
             <MenuOverlay onClose={() => setMenuOpen(false)} />
           </div>
         )}
-        {bellOpen && <NotificationsPanel onClose={() => setBellOpen(false)} />}
       </div>
 
       {/* Desktop (≥lg) */}
@@ -64,7 +67,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           ) : (
             <div className="flex flex-1 flex-col overflow-hidden">
               <UpdateBanner />
-              <TopBar />
+              <TopBar onBell={() => setBellOpen((v) => !v)} />
               <main className="flex-1 overflow-y-auto">
                 <div className="mx-auto max-w-[1280px] p-6">{children}</div>
               </main>
@@ -73,6 +76,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <AddDrawer />
       </div>
+      {bellOpen && <NotificationsPanel onClose={() => setBellOpen(false)} />}
     </>
   );
 }

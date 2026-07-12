@@ -32,6 +32,8 @@ export interface ParseResult {
   confidence: ParseConfidence;
   /** true when the parser is confident enough for auto-save but wants user to confirm */
   needsConfirmation?: boolean;
+  /** Set only after an explicit category choice in the clarification UI. */
+  confirmed?: boolean;
   /**
    * Candidate items extracted from input.
    * Empty for regular single-amount messages; populated by OCR/AI multi-item flow.

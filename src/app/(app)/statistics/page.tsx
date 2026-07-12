@@ -11,6 +11,7 @@ import { aggregateTopCategories } from '@/features/categories/utils/statsAggrega
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
+import Link from 'next/link';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -218,7 +219,8 @@ export default function StatisticsPage() {
           <button
             key={r.value}
             onClick={() => setRange(r.value)}
-            className="shrink-0 rounded-full px-4 py-2 text-[13px] font-extrabold transition-all border-0"
+            className="min-h-11 shrink-0 rounded-full px-4 text-sm font-extrabold transition-all border-0"
+            aria-pressed={range === r.value}
             style={{
               background: range === r.value ? 'hsl(var(--primary))' : 'hsl(var(--card))',
               color: range === r.value ? 'hsl(var(--primary-foreground))' : 'hsl(var(--foreground))',
@@ -269,6 +271,9 @@ export default function StatisticsPage() {
               <div className="flex flex-col items-center py-12 text-center">
                 <p className="text-4xl mb-3">📊</p>
                 <p className="font-medium">{t('stats.noData')}</p>
+                <Link href="/expenses/new" className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground">
+                  {t('home.addExpense')}
+                </Link>
               </div>
             )}
           </div>

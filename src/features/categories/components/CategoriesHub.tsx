@@ -672,7 +672,7 @@ export function CategoriesHub() {
             gap: 8,
             paddingLeft: 8 + indent * 20,
             paddingRight: 8,
-            minHeight: 48,
+            minHeight: 56,
             cursor: 'pointer',
             borderRadius: 14,
             backgroundColor: isHighlighted ? T.primary + '18' : isMenuOpen ? T.bgSoft : 'transparent',
@@ -684,9 +684,10 @@ export function CategoriesHub() {
           {/* Chevron — tap to collapse */}
           <button
             onClick={() => toggleFolder(folder.id)}
+            aria-label={isCollapsed ? t('categories.menuExpand') : t('categories.menuCollapse')}
             style={{
-              width: 24,
-              height: 24,
+              width: 44,
+              height: 44,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -768,8 +769,8 @@ export function CategoriesHub() {
                 setContextMenu(isMenuOpen ? null : { kind: 'folder', id: folder.id, rect: e.currentTarget.getBoundingClientRect() });
               }}
               style={{
-                width: 32,
-                height: 32,
+                width: 44,
+                height: 44,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -779,6 +780,7 @@ export function CategoriesHub() {
                 border: 'none',
                 cursor: 'pointer',
               }}
+              aria-label={t('categories.menuEdit')}
             >
               <DotsIcon />
             </button>
@@ -880,7 +882,7 @@ export function CategoriesHub() {
                   alignItems: 'center',
                   paddingLeft: 44,
                   paddingRight: 12,
-                  height: 32,
+                  height: 44,
                   fontSize: 12,
                   fontWeight: 600,
                   color: T.primary,
@@ -916,7 +918,7 @@ export function CategoriesHub() {
           gap: 8,
           paddingLeft: 44,
           paddingRight: 8,
-          minHeight: 40,
+          minHeight: 48,
           borderRadius: 12,
           backgroundColor: isMenuOpen ? T.bgSoft : 'transparent',
           position: 'relative',
@@ -979,8 +981,8 @@ export function CategoriesHub() {
               setContextMenu(isMenuOpen ? null : { kind: 'category', id: cat.id, rect: e.currentTarget.getBoundingClientRect() });
             }}
             style={{
-              width: 32,
-              height: 32,
+              width: 44,
+              height: 44,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -990,6 +992,7 @@ export function CategoriesHub() {
               border: 'none',
               cursor: 'pointer',
             }}
+            aria-label={t('categories.menuEdit')}
           >
             <DotsIcon />
           </button>
@@ -1050,6 +1053,7 @@ export function CategoriesHub() {
                 flex: 1,
                 borderRadius: 12,
                 padding: '8px 0',
+                minHeight: 44,
                 fontSize: 14,
                 fontWeight: 600,
                 border: 'none',
@@ -1083,7 +1087,7 @@ export function CategoriesHub() {
               style={{
                 width: '100%',
                 paddingLeft: 30,
-                paddingRight: searchQuery ? 28 : 10,
+                paddingRight: searchQuery ? 48 : 10,
                 paddingTop: 8,
                 paddingBottom: 8,
                 fontSize: 13,
@@ -1100,7 +1104,6 @@ export function CategoriesHub() {
                 onClick={() => setSearchQuery('')}
                 style={{
                   position: 'absolute',
-                  right: 8,
                   top: '50%',
                   transform: 'translateY(-50%)',
                   background: 'transparent',
@@ -1109,7 +1112,12 @@ export function CategoriesHub() {
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 44,
+                  height: 44,
+                  right: 0,
                 }}
+                aria-label={t('common.close')}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                   <path d="M18 6 6 18M6 6l12 12"/>

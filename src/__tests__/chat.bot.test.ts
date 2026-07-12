@@ -120,54 +120,35 @@ describe('parseMessage — bot flow inputs', () => {
   });
 });
 
-// ── respondToUserMessage — new contract: every recognized expense opens Split.
-//    Chat never auto-saves and never asks clarifying questions for expenses.
-describe('respondToUserMessage — expense flow always opens Split', () => {
+// ── Expense flow: merchant/amount/history may rank options, but only an
+// explicit user choice saves. Ambiguous purchases stay lightweight in chat.
+describe('respondToUserMessage — progressive expense classification', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
+    const { addExpense } = await import('@/features/expenses/services/expensesService');
+    (addExpense as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: 'exp-001', userId: 'u1', amount: 65, currency: 'ILS', categoryId: 'coffee',
+      date: new Date().toISOString(), paymentMethod: 'card', privacy: 'regular', splits: [], tags: [],
+    });
   });
 
-  it('«65 кофе» → openSplit signal, никакого автосохранения', async () => {
-    const parsed = parseMessage('65 кофе', { learned: {} });
-    const reply = await respondToUserMessage(makeUserMsg('65 кофе'), parsed, makeCtx());
-
-    expect(reply.openSplit).toBeDefined();
-    expect(reply.openSplit?.amount).toBe(65);
-    expect(reply.openSplit?.userMsgId).toBe('msg-user-001');
-    expect(reply.messages).toHaveLength(0);
-    expect(reply.expense).toBeUndefined();
-  });
-
-  it('«65 кофе» → addExpense НЕ вызывается из чата', async () => {
+  it('«65 кофе» → компактная clarify-карточка, без автосохранения', async () => {
     const { addExpense } = await import('@/features/expenses/services/expensesService');
     const parsed = parseMessage('65 кофе', { learned: {} });
-    await respondToUserMessage(makeUserMsg('65 кофе'), parsed, makeCtx());
+    const reply = await respondToUserMessage(makeUserMsg('65 кофе'), parsed, makeCtx());
+    expect(reply.messages[0].card?.kind).toBe('clarify');
+    expect((reply.messages[0].card?.data as { userMsgId: string }).userMsgId).toBe('msg-user-001');
+    expect(reply.openSplit).toBeUndefined();
     expect(addExpense).not.toHaveBeenCalled();
   });
 
-  it('«65 кофе» → updateMessage НЕ вызывается из чата (связь делает Split)', async () => {
-    const { updateMessage } = await import('@/features/chat/services/messagesService');
-    const parsed = parseMessage('65 кофе', { learned: {} });
-    await respondToUserMessage(makeUserMsg('65 кофе'), parsed, makeCtx());
-    expect(updateMessage).not.toHaveBeenCalled();
-  });
-
-  it('«150» (только число) → openSplit, без clarify-карточки', async () => {
+  it('«150» → тоже уточнение, потому что сумма не является категорией', async () => {
     const parsed = parseMessage('150', { learned: {} });
     const reply = await respondToUserMessage(makeUserMsg('150'), parsed, makeCtx());
-    expect(reply.openSplit?.amount).toBe(150);
-    expect(reply.messages).toHaveLength(0);
+    expect(reply.messages[0].card?.kind).toBe('clarify');
   });
 
-  it('«бла-бла 99» (неизвестный тег) → openSplit с тегом в storeName', async () => {
-    const parsed = parseMessage('бла-бла 99', { learned: {} });
-    const reply = await respondToUserMessage(makeUserMsg('бла-бла 99'), parsed, makeCtx());
-    expect(reply.openSplit?.amount).toBe(99);
-    expect(reply.openSplit?.storeName).toBeDefined();
-  });
-
-  it('известный магазин → openSplit с storeId/storeName/storeGroup', async () => {
-    // simulate parser output for a known merchant
+  it('известный супермаркет сохраняется в данных карточки, но не определяет категорию молча', async () => {
     const parsed = {
       amount: 350,
       categoryId: 'groceries',
@@ -177,20 +158,25 @@ describe('respondToUserMessage — expense flow always opens Split', () => {
       storeGroup: 'supermarket',
     };
     const reply = await respondToUserMessage(makeUserMsg('Рами Леви 350'), parsed, makeCtx());
-    expect(reply.openSplit?.storeId).toBe('rami_levy');
-    expect(reply.openSplit?.storeName).toBe('Рами Леви');
-    expect(reply.openSplit?.storeGroup).toBe('supermarket');
+    const data = reply.messages[0].card?.data as Record<string, unknown>;
+    expect(data.storeId).toBe('rami_levy');
+    expect(data.storeName).toBe('Рами Леви');
+    expect(data.storeGroup).toBe('supermarket');
   });
 
-  it('будущая дата → openSplit с этой датой (без отдельного подтверждения)', async () => {
-    const parsed = {
-      amount: 50,
-      categoryId: null,
-      confidence: 'failed' as const,
-      date: '2099-12-31',
-    };
-    const reply = await respondToUserMessage(makeUserMsg('завтра 50'), parsed, makeCtx());
-    expect(reply.openSplit?.date).toBe('2099-12-31');
+  it('после явного выбора categoryId расход сохраняется и связывается с user message', async () => {
+    const { addExpense } = await import('@/features/expenses/services/expensesService');
+    const { updateMessage } = await import('@/features/chat/services/messagesService');
+    const reply = await respondToUserMessage(makeUserMsg('65 кофе'), {
+      amount: 65,
+      categoryId: 'coffee',
+      confidence: 'high',
+      confirmed: true,
+    }, makeCtx());
+    expect(addExpense).toHaveBeenCalledOnce();
+    expect(updateMessage).toHaveBeenCalledWith('u1', 'msg-user-001', { status: 'saved', expenseId: 'exp-001' });
+    expect(reply.expense?.id).toBe('exp-001');
+    expect(reply.messages[0].card?.kind).toBe('saved');
   });
 
   it('текст без числа → unknown text (нет карточки, нет openSplit)', async () => {

@@ -9,6 +9,7 @@ import { fetchMonthExpenses } from '@/features/expenses/services/expensesService
 import { formatAmount } from '@/shared/utils/currency';
 import { aggregateTopCategories } from '@/features/categories/utils/statsAggregation';
 import { useT } from '@/shared/hooks/useT';
+import { useRouter } from 'next/navigation';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { FamilyAnalyticsView } from '@/features/family/components/FamilyAnalyticsView';
 import {
@@ -33,6 +34,7 @@ export default function AnalyticsPage() {
   const [months, setMonths] = useState<MonthStats[]>([]);
   const [dowData, setDowData] = useState<DowPoint[]>([]);
   const t = useT();
+  const router = useRouter();
   const dfLocale = useDateFnsLocale();
   const family = useAppSelector((st) => st.family.family);
   const members = useAppSelector((st) => st.family.members);
@@ -117,7 +119,8 @@ export default function AnalyticsPage() {
         <button
           key={m}
           onClick={() => setViewMode(m)}
-          className={`rounded-full px-4 py-1 text-xs font-bold transition-colors ${viewMode === m ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'}`}
+          className={`min-h-11 rounded-full px-4 text-sm font-bold transition-colors ${viewMode === m ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'}`}
+          aria-pressed={viewMode === m}
         >
           {m === 'mine' ? t('expenses.viewMine') : t('expenses.viewFamily')}
         </button>
@@ -132,7 +135,8 @@ export default function AnalyticsPage() {
         <button
           key={p}
           onClick={() => setPeriod(p)}
-          className="rounded-full px-3.5 py-1.5 text-[13px] font-extrabold transition-all border-0"
+          className="min-h-11 rounded-full px-4 text-sm font-extrabold transition-all border-0"
+          aria-pressed={period === p}
           style={{
             background: period === p ? 'hsl(var(--primary))' : 'hsl(var(--card))',
             color: period === p ? 'hsl(var(--primary-foreground))' : 'hsl(var(--foreground))',
@@ -147,7 +151,7 @@ export default function AnalyticsPage() {
 
   const mobileHeroCard = (
     <div className="rounded-[22px] bg-card p-5" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
-      <p className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">{t('analytics.avgDay')}</p>
+      <p className="text-xs font-extrabold text-muted-foreground uppercase tracking-[.08em]">{t('analytics.avgDay')}</p>
       <p className="text-[36px] font-black tabular-nums text-foreground mt-1 leading-none tracking-[-0.025em]">
         {formatAmount(avgDaily, currency)}
       </p>
@@ -307,6 +311,9 @@ export default function AnalyticsPage() {
           <p className="text-4xl mb-3">📈</p>
           <p className="font-medium">{t('analytics.noData')}</p>
           <p className="text-sm text-muted-foreground mt-1">{t('analytics.addMore')}</p>
+          <button type="button" onClick={() => router.push('/expenses/new')} className="mt-5 min-h-11 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground">
+            {t('home.addExpense')}
+          </button>
         </div>
       </div>
     );
@@ -331,7 +338,7 @@ export default function AnalyticsPage() {
           return (
             <div>
               <p className="text-[17px] font-extrabold text-foreground mb-2.5">{t('analytics.trend')}</p>
-              <div className="rounded-[22px] bg-card px-4 py-5" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
+              <div role="img" aria-label={t('analytics.trendSummary', { n: trendData.length })} className="rounded-[22px] bg-card px-4 py-5" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
                 <div className="flex items-flex-end gap-2.5" style={{ height: 130, alignItems: 'flex-end' }}>
                   {trendData.map((d, i) => (
                     <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
@@ -339,7 +346,7 @@ export default function AnalyticsPage() {
                         className="w-full rounded-[10px_10px_6px_6px]"
                         style={{ height: Math.max(6, (d.expenses / maxV) * 110), background: i === trendData.length - 1 ? 'hsl(var(--primary))' : 'hsl(var(--primary) / .3)' }}
                       />
-                      <span className="text-[10px] font-bold text-muted-foreground">{d.name}</span>
+                      <span className="text-xs font-bold text-muted-foreground">{d.name}</span>
                     </div>
                   ))}
                 </div>
@@ -354,7 +361,7 @@ export default function AnalyticsPage() {
           return (
             <div>
               <p className="text-[17px] font-extrabold text-foreground mb-2.5">{t('analytics.byDow')}</p>
-              <div className="rounded-[22px] bg-card px-4 py-5" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
+              <div role="img" aria-label={t('analytics.weekSummary')} className="rounded-[22px] bg-card px-4 py-5" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
                 <div className="flex items-flex-end gap-2" style={{ height: 100, alignItems: 'flex-end' }}>
                   {dowData.map((d, i) => (
                     <div key={i} className="flex-1 flex flex-col items-center gap-1">
@@ -362,8 +369,8 @@ export default function AnalyticsPage() {
                         className="w-full rounded-[8px_8px_4px_4px]"
                         style={{ height: Math.max(4, (d.amount / maxV) * 80), background: '#81B29A' }}
                       />
-                      <span className="text-[9px] font-extrabold text-muted-foreground leading-none">{d.name}</span>
-                      <span className="text-[8px] text-muted-foreground/60 leading-none">{format(parseISO(d.isoDate), 'd')}</span>
+                      <span className="text-xs font-extrabold text-muted-foreground leading-none">{d.name}</span>
+                      <span className="text-[11px] text-muted-foreground leading-none">{format(parseISO(d.isoDate), 'd')}</span>
                     </div>
                   ))}
                 </div>
@@ -382,7 +389,7 @@ export default function AnalyticsPage() {
           return (
             <div>
               <p className="text-[17px] font-extrabold text-foreground mb-2.5">{t('analytics.avgDayByMonth')}</p>
-              <div className="rounded-[22px] bg-card px-4 py-5" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
+              <div role="img" aria-label={t('analytics.averageSummary')} className="rounded-[22px] bg-card px-4 py-5" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
                 <div className="flex items-flex-end gap-2.5" style={{ height: 100, alignItems: 'flex-end' }}>
                   {avgDailyByMonth.map((d, i) => (
                     <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
@@ -390,7 +397,7 @@ export default function AnalyticsPage() {
                         className="w-full rounded-[10px_10px_6px_6px]"
                         style={{ height: Math.max(4, (d.avgDay / maxV) * 80), background: i === avgDailyByMonth.length - 1 ? '#81B29A' : '#81B29A55' }}
                       />
-                      <span className="text-[9px] font-bold text-muted-foreground leading-none">{d.name}</span>
+                      <span className="text-xs font-bold text-muted-foreground leading-none">{d.name}</span>
                     </div>
                   ))}
                 </div>
@@ -398,26 +405,32 @@ export default function AnalyticsPage() {
             </div>
           );
         })()}
-        {/* Top category */}
-        {topCats[0] && (() => {
-          const top = topCats[0];
-          const pct = totalSpend > 0 ? (top.total / totalSpend) * 100 : 0;
-          return (
-            <div>
-              <p className="text-[17px] font-extrabold text-foreground mb-2.5">{t('analytics.topCategories')}</p>
-              <div className="rounded-[22px] bg-card px-4 py-4 flex items-center gap-3.5" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
-                <div className="h-[52px] w-[52px] rounded-[18px] flex items-center justify-center shrink-0" style={{ background: top.color + '22' }}>
-                  <StickerIcon icon={top.icon} color={top.color} className="h-7 w-7" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[15px] font-extrabold text-foreground">{t.cat(top.name)}</p>
-                  <p className="text-xs font-semibold text-muted-foreground mt-0.5">{t('analytics.pctOfSpending', { p: pct.toFixed(0) })}</p>
-                </div>
-                <p className="text-[18px] font-black tabular-nums text-foreground">{formatAmount(top.total, currency)}</p>
-              </div>
+        {/* Top categories: enough context to compare, without turning the card into a report. */}
+        {topCats.length > 0 && (
+          <div>
+            <p className="text-[17px] font-extrabold text-foreground mb-2.5">{t('analytics.topCategories')}</p>
+            <div className="rounded-[22px] bg-card px-4 py-2" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
+              {[...topCats]
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 3)
+                .map((top, index) => {
+                  const pct = totalSpend > 0 ? (top.total / totalSpend) * 100 : 0;
+                  return (
+                    <div key={top.catId} className={`flex items-center gap-3 py-3 ${index > 0 ? 'border-t border-border/70' : ''}`}>
+                      <div className="h-11 w-11 rounded-[15px] flex items-center justify-center shrink-0" style={{ background: top.color + '22' }}>
+                        <StickerIcon icon={top.icon} color={top.color} className="h-6 w-6" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-extrabold text-foreground truncate">{t.cat(top.name)}</p>
+                        <p className="text-xs font-semibold text-muted-foreground mt-0.5">{t('analytics.pctOfSpending', { p: pct.toFixed(0) })}</p>
+                      </div>
+                      <p className="text-base font-black tabular-nums text-foreground">{formatAmount(top.total, currency)}</p>
+                    </div>
+                  );
+                })}
             </div>
-          );
-        })()}
+          </div>
+        )}
       </div>
 
       {/* ── DESKTOP layout ── */}

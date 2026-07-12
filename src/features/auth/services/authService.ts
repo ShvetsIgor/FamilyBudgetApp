@@ -4,6 +4,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { getFirebaseAuth, getDb } from '@/shared/lib/firebase';
@@ -46,6 +47,10 @@ export async function signInWithGoogle(): Promise<UserProfile> {
 
 export async function signInWithEmail(email: string, password: string): Promise<void> {
   await signInWithEmailAndPassword(getFirebaseAuth(), email, password);
+}
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  await sendPasswordResetEmail(getFirebaseAuth(), email.trim());
 }
 
 export async function registerWithEmail(name: string, email: string, password: string): Promise<UserProfile> {

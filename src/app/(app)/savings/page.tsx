@@ -19,6 +19,8 @@ import { useT } from '@/shared/hooks/useT';
 import { fetchFamilyGoals, type FamilyGoal } from '@/features/family/services/familyBudgetService';
 import { buildMemberColorMap } from '@/features/family/utils/memberColors';
 import type { SavingsGoal } from '@/shared/types';
+import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
+import { getReadableForeground } from '@/shared/utils/colors';
 
 type Mode = 'list' | { goal: SavingsGoal; action: 'contribute' | 'detail' };
 
@@ -26,7 +28,6 @@ export default function SavingsPage() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const user = useAppSelector((s) => s.auth.user);
-  const currency = useAppSelector((s) => s.ui.currency);
   const { list, status } = useAppSelector((s) => s.savings);
   const family = useAppSelector((st) => st.family.family);
   const members = useAppSelector((st) => st.family.members);
@@ -39,6 +40,7 @@ export default function SavingsPage() {
   const [mode, setMode] = useState<Mode>('list');
   const [loading, setLoading] = useState(false);
   const t = useT();
+  const dfLocale = useDateFnsLocale();
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -108,18 +110,16 @@ export default function SavingsPage() {
       .finally(() => setFamilyLoading(false));
   }, [isFamilyView, members]);
 
-  const totalSaved = list.reduce((s, g) => s + g.currentAmount, 0);
-
   // ── Right panel content ──────────────────────────────────────────────────────
   function RightPanel() {
     if (typeof mode === 'object' && mode.action === 'contribute') return (
       <div className="rounded-2xl border border-border bg-card overflow-hidden">
         <div className="border-b border-border px-4 py-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold">{t('savings.addContribution')}</h2>
-          <button onClick={() => setMode('list')} className="text-muted-foreground text-xs hover:text-foreground">✕</button>
+          <button type="button" onClick={() => setMode('list')} className="fb-touch-target flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={t('common.close')}>✕</button>
         </div>
         <ContributeForm
-          goal={mode.goal} currency={currency}
+          goal={mode.goal} currency={mode.goal.currency}
           onSave={(amount, note, recordAsExpense, catId) => handleContribute(mode.goal, amount, note, recordAsExpense, catId)}
           onCancel={() => setMode('list')} t={t}
         />
@@ -138,7 +138,7 @@ export default function SavingsPage() {
         <div className="rounded-2xl border border-border bg-card overflow-hidden">
           <div className="border-b border-border px-4 py-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold">{goal.name}</h2>
-            <button onClick={() => setMode('list')} className="text-muted-foreground text-xs hover:text-foreground">✕</button>
+            <button type="button" onClick={() => setMode('list')} className="fb-touch-target flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={t('common.close')}>✕</button>
           </div>
           <div className="flex flex-col gap-4 p-4">
             <div className="flex flex-col items-center gap-2 py-2">
@@ -155,7 +155,7 @@ export default function SavingsPage() {
               {done && <p className="text-sm text-emerald-500 font-semibold">{t('savings.achieved')}</p>}
               {daysLeft !== null && !done && (
                 <p className="text-xs text-muted-foreground">
-                  {daysLeft > 0 ? `${daysLeft} ${t('savings.remaining')} · ${format(parseISO(goal.deadline!), 'MMM d, yyyy')}` : t('savings.remaining')}
+                  {daysLeft > 0 ? `${daysLeft} ${t('savings.remaining')} · ${format(parseISO(goal.deadline!), 'd MMMM yyyy', { locale: dfLocale })}` : t('savings.remaining')}
                 </p>
               )}
               {monthsLeft !== null && !done && monthsLeft > 0 && remaining > 0 && (
@@ -193,7 +193,7 @@ export default function SavingsPage() {
                         <p className="text-sm font-medium">{formatAmount(c.amount, goal.currency)}</p>
                         {(c.note || c.byName) && <p className="text-xs text-muted-foreground">{[c.note, c.byName].filter(Boolean).join(' · ')}</p>}
                       </div>
-                      <p className="text-xs text-muted-foreground">{format(parseISO(c.date), 'MMM d, yyyy')}</p>
+                      <p className="text-xs text-muted-foreground">{format(parseISO(c.date), 'd MMM yyyy', { locale: dfLocale })}</p>
                     </div>
                   ))}
                 </div>
@@ -231,7 +231,8 @@ export default function SavingsPage() {
               <button
                 key={m}
                 onClick={() => setViewMode(m)}
-                className={`rounded-full px-4 py-1 text-xs font-bold transition-colors ${viewMode === m ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'}`}
+                className={`min-h-11 rounded-full px-4 text-sm font-bold transition-colors ${viewMode === m ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'}`}
+                aria-pressed={viewMode === m}
               >
                 {m === 'mine' ? t('expenses.viewMine') : t('expenses.viewFamily')}
               </button>
@@ -290,8 +291,8 @@ export default function SavingsPage() {
                       onClick={() => setMode({ goal, action: 'contribute' })}
                       aria-label={t('savings.addContribution')}
                       title={t('savings.addContribution')}
-                      className="ml-1 h-9 w-9 shrink-0 rounded-full flex items-center justify-center text-white text-lg font-black transition-transform active:scale-90"
-                      style={{ background: goal.color }}
+                      className="fb-touch-target ml-1 h-11 w-11 shrink-0 rounded-full flex items-center justify-center text-lg font-black transition-transform active:scale-90"
+                      style={{ background: goal.color, color: getReadableForeground(goal.color) }}
                     >
                       +
                     </button>
@@ -347,7 +348,7 @@ export default function SavingsPage() {
       <div className="lg:hidden flex flex-col gap-0 pt-5 pb-8">
         {mode !== 'list' && (
           <div className="px-4 pb-3 flex justify-end">
-            <button onClick={() => setMode('list')} className="text-sm text-muted-foreground">{t('savings.back')}</button>
+            <button onClick={() => setMode('list')} className="fb-touch-target min-h-11 rounded-xl px-3 text-sm font-semibold text-muted-foreground hover:bg-muted">{t('savings.back')}</button>
           </div>
         )}
 
@@ -379,7 +380,7 @@ export default function SavingsPage() {
               {done && <p className="text-sm text-emerald-500 font-semibold">{t('savings.achieved')}</p>}
               {daysLeft !== null && !done && (
                 <p className="text-xs text-muted-foreground">
-                  {daysLeft > 0 ? `${daysLeft} ${t('savings.remaining')} · ${format(parseISO(goal.deadline!), 'MMM d, yyyy')}` : t('savings.remaining')}
+                  {daysLeft > 0 ? `${daysLeft} ${t('savings.remaining')} · ${format(parseISO(goal.deadline!), 'd MMMM yyyy', { locale: dfLocale })}` : t('savings.remaining')}
                 </p>
               )}
               {monthsLeft !== null && !done && monthsLeft > 0 && remaining > 0 && (
@@ -401,7 +402,7 @@ export default function SavingsPage() {
                           <p className="text-sm font-semibold">{formatAmount(c.amount, goal.currency)}</p>
                           {(c.note || c.byName) && <p className="text-xs text-muted-foreground">{[c.note, c.byName].filter(Boolean).join(' · ')}</p>}
                         </div>
-                        <p className="text-xs text-muted-foreground">{format(parseISO(c.date), 'MMM d, yyyy')}</p>
+                        <p className="text-xs text-muted-foreground">{format(parseISO(c.date), 'd MMM yyyy', { locale: dfLocale })}</p>
                       </div>
                     ))}
                   </div>
@@ -413,6 +414,16 @@ export default function SavingsPage() {
             </div>
           );
         })()}
+
+        {typeof mode === 'object' && mode.action === 'contribute' && (
+          <ContributeForm
+            goal={mode.goal}
+            currency={mode.goal.currency}
+            onSave={(amount, note, recordAsExpense, catId) => handleContribute(mode.goal, amount, note, recordAsExpense, catId)}
+            onCancel={() => setMode('list')}
+            t={t}
+          />
+        )}
       </div>
 
       {/* ── DESKTOP — 2-col ── */}
@@ -493,9 +504,9 @@ function ContributeForm({ goal, currency, onSave, onCancel, t }: {
           <p className="text-sm font-medium">{t('savings.recordAsExpense')}</p>
           <p className="text-xs text-muted-foreground">🐷 {t('savings.savingsCategory')} · {t('savings.showsInStats')}</p>
         </div>
-        <button type="button" onClick={() => setRecordAsExpense(!recordAsExpense)}
-          className={`relative h-6 w-11 rounded-full transition-colors flex-shrink-0 ${recordAsExpense ? 'bg-primary' : 'bg-muted'}`}>
-          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${recordAsExpense ? 'left-[22px]' : 'left-0.5'}`} />
+        <button type="button" role="switch" aria-checked={recordAsExpense} onClick={() => setRecordAsExpense(!recordAsExpense)}
+          className={`relative h-11 w-14 rounded-full transition-colors flex-shrink-0 ${recordAsExpense ? 'bg-primary' : 'bg-muted'}`}>
+          <span className={`absolute top-2.5 h-6 w-6 rounded-full bg-white shadow transition-all ${recordAsExpense ? 'left-7' : 'left-1.5'}`} />
         </button>
       </div>
       {error && <p className="text-xs text-destructive px-1">{error}</p>}

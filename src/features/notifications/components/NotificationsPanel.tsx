@@ -53,6 +53,9 @@ export function NotificationsPanel({ onClose }: Props) {
           animation: 'fadeSlideDown 0.18s cubic-bezier(0.25,0.46,0.45,0.94)',
         }}
         onAnimationStart={handleOpen}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('notifications.title')}
       >
         {/* Header */}
         <div
@@ -66,7 +69,7 @@ export function NotificationsPanel({ onClose }: Props) {
             {items.length > 0 && (
               <button
                 onClick={() => dispatch(clearNotifications())}
-                className="text-[11px] font-[700] px-2 py-1 rounded-lg"
+                className="min-h-11 text-xs font-[700] px-3 py-1 rounded-lg"
                 style={{ color: C.sub, background: C.card }}
               >
                 {t('notifications.clear')}
@@ -74,8 +77,9 @@ export function NotificationsPanel({ onClose }: Props) {
             )}
             <button
               onClick={() => { handleOpen(); onClose(); }}
-              className="flex h-7 w-7 items-center justify-center rounded-full"
+              className="flex h-11 w-11 items-center justify-center rounded-full"
               style={{ background: C.card, color: C.sub }}
+              aria-label={t('common.close')}
             >
               <X size={14} strokeWidth={2.5} />
             </button>

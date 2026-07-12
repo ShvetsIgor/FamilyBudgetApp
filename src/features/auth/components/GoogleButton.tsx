@@ -66,7 +66,7 @@ export function GoogleButton({ label }: Props) {
         </svg>
         {loading ? t('auth.signingIn') : buttonLabel}
       </button>
-      {error && <p className="mt-2 text-center text-xs text-destructive">{error}</p>}
+      {error && <p role="alert" aria-live="assertive" className="mt-2 text-center text-sm text-destructive">{error}</p>}
     </div>
   );
 }

@@ -57,6 +57,9 @@ export function CategorySheet({ onSelect, onClose, categories: categoriesOverrid
         className="flex flex-col rounded-t-2xl overflow-hidden"
         style={{ background: C.bg, maxHeight: '75vh' }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('categories.search')}
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-4 pt-4 pb-2">
@@ -64,7 +67,7 @@ export function CategorySheet({ onSelect, onClose, categories: categoriesOverrid
             className="flex flex-1 items-center gap-2 rounded-xl px-3 py-2"
             style={{ background: C.card, border: `1px solid ${C.hairline}` }}
           >
-            <Search size={15} style={{ color: C.sub }} />
+            <Search size={16} style={{ color: C.sub }} aria-hidden="true" />
             <input
               autoFocus
               value={query}
@@ -74,14 +77,14 @@ export function CategorySheet({ onSelect, onClose, categories: categoriesOverrid
               style={{ color: C.fg }}
             />
             {query && (
-              <button onClick={() => setQuery('')}>
+              <button type="button" onClick={() => setQuery('')} aria-label={t('common.clear')} className="flex min-h-11 min-w-11 items-center justify-center">
                 <X size={14} style={{ color: C.sub }} />
               </button>
             )}
           </div>
           <button
             onClick={onClose}
-            className="text-[13px] font-[700]"
+            className="min-h-11 px-2 text-[13px] font-[700]"
             style={{ color: C.sub }}
           >
             {t('common.cancel')}
@@ -96,7 +99,7 @@ export function CategorySheet({ onSelect, onClose, categories: categoriesOverrid
                 <button
                   key={cat.id}
                   onClick={() => onSelect({ id: cat.id, name: cat.name, icon: cat.icon, color: cat.color })}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 active:opacity-60 transition-opacity text-left"
+                  className="flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 active:opacity-60 transition-opacity text-left"
                   style={{ background: C.card }}
                 >
                   <StickerIcon icon={cat.icon} color={cat.color} className="h-8 w-8 shrink-0" />
@@ -130,7 +133,7 @@ export function CategorySheet({ onSelect, onClose, categories: categoriesOverrid
                       <button
                         key={cat.id}
                         onClick={() => onSelect({ id: cat.id, name: cat.name, icon: cat.icon, color: cat.color })}
-                        className="inline-flex items-center gap-1.5 text-[12.5px] font-[700] active:scale-95 transition-transform"
+                        className="inline-flex min-h-11 items-center gap-1.5 text-[12.5px] font-[700] active:scale-95 transition-transform"
                         style={{
                           padding: '7px 12px 7px 7px',
                           borderRadius: 999,

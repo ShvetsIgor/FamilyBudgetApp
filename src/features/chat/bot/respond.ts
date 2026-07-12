@@ -9,6 +9,7 @@ import type { SerializableChatMessage, ParseResult } from '@/shared/types/messag
 import type { BotContext } from './context';
 import { makeT } from '@/shared/utils/makeT';
 import { unknownPhrase } from './templates';
+import { buildExpenseDraft } from '@/features/expenses/engine/buildExpenseDraft';
 
 function nowTimestamp(): string {
   return new Date().toISOString();
@@ -69,7 +70,7 @@ export async function respondToUserMessage(
   parsed: ParseResult,
   ctx: BotContext
 ): Promise<BotReply> {
-  const { userId, currency, incomeCategoriesById, topIncomeCategoryIds } = ctx;
+  const { userId, currency, categoriesById, foldersById, topCategoryIds, incomeCategoriesById, topIncomeCategoryIds } = ctx;
   const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
   const sym = symMap[currency] ?? currency;
 
@@ -180,18 +181,130 @@ export async function respondToUserMessage(
     return { messages: [makeBotMsg(userId, { text: unknownPhrase(ctx.language) })] };
   }
 
-  // ── Any expense with recognized amount → always open Split.
-  //    No intermediate clarify cards, no auto-save in chat.
+  // ── Explicit category confirmation → save one-category expense.
+  // Merchant/amount alone never reaches this branch: confirmed is set only by
+  // the clarification UI after the user makes an intentional choice.
+  if (parsed.confirmed && parsed.categoryId) {
+    const category = categoriesById.get(parsed.categoryId);
+    if (!category || category.archived) {
+      return { messages: [makeBotMsg(userId, { text: unknownPhrase(ctx.language) })] };
+    }
+    const date = expenseDate(parsed);
+    let expense: Awaited<ReturnType<typeof addExpense>> | undefined;
+    try {
+      expense = await addExpense({
+        userId,
+        amount: parsed.amount,
+        currency,
+        categoryId: category.id,
+        date,
+        paymentMethod: 'card',
+        store: parsed.storeName,
+        storeId: parsed.storeId,
+        storeGroup: parsed.storeGroup,
+        tags: [],
+        comment: parsed.storeName ? undefined : parsed.note,
+        privacy: category.isPrivate ? 'secret' : 'regular',
+        splits: [],
+      });
+    } catch {
+      return { messages: [makeBotMsg(userId, { text: saveErrorPhrase(ctx.language) })] };
+    }
+
+    await updateMessage(userId, userMsg.id, { status: 'saved', expenseId: expense.id });
+    const categoryName = getPresetDisplayName(category.id, ctx.language) ?? category.name;
+    const folder = category.folderId ? foldersById.get(category.folderId) : undefined;
+    const folderName = folder ? (getPresetDisplayName(folder.id, ctx.language) ?? folder.name) : null;
+    const todayStr = toLocalDateKey(new Date());
+    const dateHint = parsed.date && parsed.date !== todayStr
+      ? format(parseISO(parsed.date), 'd MMMM', { locale: getDateFnsLocale(ctx.language) })
+      : undefined;
+    const hint = category.id === 'unsorted'
+      ? makeT(ctx.language)('chat.clarify.deferHint')
+      : dateHint;
+
+    return {
+      messages: [
+        makeBotMsg(userId, {
+          text: `${sym}\u202F${parsed.amount} · ${parsed.storeName ?? categoryName}`,
+          expenseId: expense.id,
+          card: {
+            kind: 'saved',
+            data: {
+              icon: category.icon,
+              color: category.color,
+              title: parsed.storeName ?? categoryName,
+              catName: categoryName,
+              groupName: folderName,
+              hint,
+              amount: parsed.amount,
+              currency: sym,
+              expenseId: expense.id,
+              userMsgId: userMsg.id,
+            },
+          },
+          status: 'saved',
+        }),
+      ],
+      expense,
+      userMsgUpdate: { messageId: userMsg.id, expenseId: expense.id },
+    };
+  }
+
+  // ── Ambiguous expense → lightweight in-chat classification.
+  // A merchant can sell unrelated goods, so merchant + amount is never enough
+  // for silent categorisation. History only ranks suggestions; the user still
+  // chooses single category, Split, all categories, or "sort later".
+  const categories = [...categoriesById.values()].filter((category) => !category.archived);
+  const draft = buildExpenseDraft(
+    { raw: userMsg.text, merchant: parsed.storeName, amount: parsed.amount },
+    categories,
+    ctx.suggestionMemory,
+  );
+  const candidateIds = [
+    parsed.categoryId,
+    parsed.learnedCategoryId,
+    ...draft.suggestedCategories.map((suggestion) => suggestion.categoryId),
+    ...draft.splitPresets.flatMap((preset) => preset.categoryIds),
+    ...topCategoryIds,
+  ].filter((id): id is string => Boolean(id));
+  const seen = new Set<string>();
+  const chips = candidateIds
+    .filter((id) => {
+      if (seen.has(id) || !categoriesById.has(id)) return false;
+      seen.add(id);
+      return true;
+    })
+    .slice(0, 5)
+    .map((id) => categoriesById.get(id)!)
+    .map((category) => ({
+      id: category.id,
+      name: getPresetDisplayName(category.id, ctx.language) ?? category.name,
+      icon: category.icon,
+      color: category.color,
+    }));
+
   return {
-    messages: [],
-    openSplit: {
-      amount: parsed.amount,
-      userMsgId: userMsg.id,
-      ...(parsed.storeId ? { storeId: parsed.storeId } : {}),
-      ...(parsed.storeName ? { storeName: parsed.storeName } : parsed.note ? { storeName: parsed.note } : {}),
-      ...(parsed.storeGroup ? { storeGroup: parsed.storeGroup } : {}),
-      ...(parsed.date ? { date: parsed.date } : {}),
-    },
+    messages: [makeBotMsg(userId, {
+      text: makeT(ctx.language)('chat.bot.classifyExpense', { sym, amount: parsed.amount }),
+      card: {
+        kind: 'clarify',
+        data: {
+          amount: parsed.amount,
+          chips,
+          isIncome: false,
+          userMsgId: userMsg.id,
+          storeId: parsed.storeId,
+          storeName: parsed.storeName ?? parsed.note,
+          storeGroup: parsed.storeGroup,
+          parsedDate: parsed.date,
+          parsedDateLabel: parsed.dateLabel,
+          parsedNote: parsed.note,
+          isRepeat: draft.hasMerchantHistory,
+          hasSplitPreset: draft.splitPresets.length > 0,
+        },
+      },
+      status: 'clarifying',
+    })],
   };
 }
-

@@ -24,14 +24,15 @@
   --popover-foreground: 225 41% 9%;
 
   /* Brand */
-  --primary: 232 100% 68%;             /* #5B6CFF indigo */
+  /* Dark enough for white 14px button text to pass WCAG AA. */
+  --primary: 233 57% 48%;              /* #3546C0 trust indigo */
   --primary-foreground: 0 0% 100%;
 
   --secondary: 225 17% 94%;            /* muted slate */
   --secondary-foreground: 225 41% 9%;
 
   --muted: 225 17% 94%;                /* #ECEEF3 */
-  --muted-foreground: 220 11% 53%;     /* #7A8294 */
+  --muted-foreground: 220 12% 40%;     /* readable secondary slate */
 
   --accent: 232 100% 68%;              /* same as primary in Mist */
   --accent-foreground: 0 0% 100%;
@@ -45,7 +46,7 @@
   /* Lines + inputs */
   --border: 225 17% 94%;               /* #ECEEF3 hairline */
   --input: 225 17% 94%;
-  --ring: 232 100% 68%;
+  --ring: 233 57% 48%;
 
   --radius: 1.125rem;                  /* 18px base */
   --radius-sm: 0.5rem;                 /* 8px chips */
@@ -101,14 +102,15 @@
   --popover: 0 0% 100%;
   --popover-foreground: 30 19% 12%;
 
-  --primary: 8 81% 54%;                /* #E8442A hot red */
+  /* Press keeps its warm character without sacrificing button contrast. */
+  --primary: 8 69% 41%;                /* deep warm red */
   --primary-foreground: 0 0% 100%;
 
   --secondary: 42 30% 90%;             /* warm sand */
   --secondary-foreground: 30 19% 12%;
 
   --muted: 41 30% 90%;                 /* #F0E9DC */
-  --muted-foreground: 36 12% 53%;      /* #948B7C */
+  --muted-foreground: 34 12% 39%;
 
   --accent: 8 81% 54%;
   --accent-foreground: 0 0% 100%;
@@ -121,7 +123,7 @@
   /* Press signature: warm BEIGE hairlines (not black) + soft shadow */
   --border: 38 33% 88%;                /* #ECE5D8 */
   --input: 36 33% 86%;                 /* #E7E0D4 */
-  --ring: 8 81% 54%;
+  --ring: 8 69% 41%;
 
   /* Monzo-style radii — generous corners, floating card feel */
   --radius: 1.125rem;          /* 18px base */
@@ -177,6 +179,9 @@
   --muted-foreground: 220 11% 65%;
   --border: 225 18% 20%;
   --input: 225 18% 20%;
+  --card-border: 1px solid hsl(225 18% 24%);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .24), 0 0 0 1px rgba(255, 255, 255, .025);
+  --shadow-md: 0 10px 28px rgba(0, 0, 0, .28), 0 0 0 1px rgba(255, 255, 255, .035);
 }
 :root[data-theme="press"].dark,
 .dark[data-theme="press"] {
@@ -188,6 +193,9 @@
   --muted-foreground: 36 10% 60%;
   --border: 30 8% 22%;                 /* soft warm line, NOT white */
   --input: 30 8% 24%;
+  --card-border: 1px solid hsl(30 8% 25%);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .26), 0 0 0 1px rgba(255, 244, 226, .025);
+  --shadow-md: 0 10px 28px rgba(0, 0, 0, .30), 0 0 0 1px rgba(255, 244, 226, .035);
 }
 
 .fb-bg-page  { background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: var(--font-sans); }
@@ -289,6 +297,29 @@ input[type='email'],
 input[type='password'],
 select,
 textarea { font-size: 16px; }
+
+/* Keyboard access is a product feature, not a browser-default afterthought. */
+:where(a, button, input, select, textarea, [role='button'], [tabindex]):focus-visible {
+  outline: 3px solid hsl(var(--ring) / 0.42);
+  outline-offset: 3px;
+}
+
+/* Shared minimum for controls that are rendered as icon-only touch targets. */
+.fb-touch-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 
 /* Safe area for mobile bottom nav */
 .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }

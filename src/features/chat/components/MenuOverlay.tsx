@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { LogOut } from 'lucide-react';
+import { LogOut, X } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { SHADOW, RAD } from '@/features/chat/styles/tokens';
 import { useChatTokens } from '@/features/chat/styles/useChatTokens';
@@ -41,6 +42,8 @@ function memberInitial(name?: string | null, email?: string | null): string {
 
 export function MenuOverlay({ onClose }: MenuOverlayProps) {
   const C = useChatTokens();
+  const pathname = usePathname();
+  const panelRef = useRef<HTMLDivElement>(null);
   const MEMBER_COLORS = [C.primary, C.sage, C.lavender, C.caramel, C.blueSoft];
   const t = useT();
   const user = useAppSelector((s) => s.auth.user);
@@ -60,11 +63,33 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
   const onlineCount = displayMembers.length || 1;
 
   useEffect(() => {
+    const panel = panelRef.current;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    panel?.focus();
+
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose();
+      if (e.key !== 'Tab' || !panel) return;
+      const focusable = Array.from(panel.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     }
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus();
+    };
   }, [onClose]);
 
   return (
@@ -76,6 +101,11 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
       />
 
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('nav.more')}
+        tabIndex={-1}
         className="absolute bottom-0 left-0 top-0 z-20 flex flex-col overflow-hidden"
         style={{
           width: '83%',
@@ -86,6 +116,15 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
           animation: 'slideInLeft 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         }}
       >
+        <button
+          type="button"
+          onClick={onClose}
+          className="fb-touch-target absolute right-2 top-2 z-10 flex h-11 w-11 items-center justify-center rounded-xl"
+          style={{ color: C.sub, background: C.card }}
+          aria-label={t('common.close')}
+        >
+          <X size={20} />
+        </button>
         {/* Profile hero */}
         <div className="mx-3.5 overflow-hidden" style={{ borderRadius: RAD.hero, boxShadow: SHADOW.pinned }}>
           <div
@@ -128,8 +167,13 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
               key={item.href}
               href={item.href}
               onClick={onClose}
-              className="flex items-center gap-3 rounded-[14px] px-3 py-1.5 transition-colors hover:bg-black/5 active:bg-black/8"
-              style={{ color: C.fg, textDecoration: 'none' }}
+              className="flex min-h-11 items-center gap-3 rounded-[14px] px-3 py-1.5 transition-colors hover:bg-black/5 active:bg-black/8"
+              style={{
+                color: pathname === item.href || pathname.startsWith(`${item.href}/`) ? C.primary : C.fg,
+                textDecoration: 'none',
+                background: pathname === item.href || pathname.startsWith(`${item.href}/`) ? `${C.primary}12` : undefined,
+              }}
+              aria-current={pathname === item.href || pathname.startsWith(`${item.href}/`) ? 'page' : undefined}
             >
               <div
                 className="flex h-8 w-8 items-center justify-center rounded-[10px]"
@@ -182,9 +226,10 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
           </p>
           <button
             onClick={() => signOut().catch(() => {})}
-            className="flex items-center gap-1 rounded-lg p-1.5 transition-colors hover:bg-black/5"
+            className="fb-touch-target flex h-11 w-11 items-center justify-center rounded-xl transition-colors hover:bg-black/5"
             style={{ color: C.sub }}
             title={t('common.logout')}
+            aria-label={t('common.logout')}
           >
             <LogOut size={16} />
           </button>

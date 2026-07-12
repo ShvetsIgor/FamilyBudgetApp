@@ -56,6 +56,7 @@ interface UIState {
 
 const storedTheme = ls('ui.theme');
 const storedDarkMode = ls('ui.darkMode');
+const storedLanguage = ls('ui.language');
 // Migrate legacy 'paper' → 'press' so previously saved preferences map to the
 // new warm-paper editorial theme rather than silently falling back to mist.
 const normalizedTheme: 'mist' | 'press' =
@@ -64,7 +65,7 @@ const normalizedTheme: 'mist' | 'press' =
 const initialState: UIState = {
   theme: normalizedTheme,
   isDarkMode: storedDarkMode === 'true' || storedTheme === 'dark',
-  language: 'en',
+  language: storedLanguage === 'ru' ? 'ru' : 'en',
   currency: 'ILS',
   weekStart: 'monday',
   isOffline: false,
@@ -112,6 +113,7 @@ const uiSlice = createSlice({
     },
     setLanguage(state, action: PayloadAction<Language>) {
       state.language = action.payload;
+      if (typeof window !== 'undefined') localStorage.setItem('ui.language', action.payload);
     },
     setCurrency(state, action: PayloadAction<Currency>) {
       state.currency = action.payload;

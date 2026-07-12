@@ -89,11 +89,13 @@ export function PinnedToday({ spent, total, currency, dayLabel, budgetMode, dail
             )}
           </div>
           <button
+            type="button"
             onClick={onSettings}
-            className="flex h-6 w-6 items-center justify-center transition-opacity active:opacity-60 hover:opacity-70"
+            className="fb-touch-target -my-2 -mr-2 flex h-11 w-11 items-center justify-center rounded-xl transition-opacity active:opacity-60 hover:bg-muted hover:opacity-80"
             style={{ color: 'hsl(var(--muted-foreground))', flexShrink: 0 }}
+            aria-label={t('chat.budget.settings.title')}
           >
-            <Settings2 size={13} strokeWidth={2.2} />
+            <Settings2 size={18} strokeWidth={2.2} />
           </button>
         </div>
 

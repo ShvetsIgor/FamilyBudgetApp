@@ -29,6 +29,24 @@ export function adjustColor(hex: string, index: number, total: number): string {
   return hslToHex(newH, s, newL);
 }
 
+/**
+ * Returns an accessible foreground for a user/category supplied hex colour.
+ * Category colours are intentionally pastel, so white text is frequently
+ * unreadable on them. The threshold follows WCAG AA for normal text.
+ */
+export function getReadableForeground(hex: string): '#FFFFFF' | '#111827' {
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return '#111827';
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const luminance = [r, g, b]
+    .map((channel) => {
+      const value = channel / 255;
+      return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+    })
+    .reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0);
+  const whiteContrast = 1.05 / (luminance + 0.05);
+  return whiteContrast >= 4.5 ? '#FFFFFF' : '#111827';
+}
+
 function hslToHex(h: number, s: number, l: number): string {
   let r: number, g: number, b: number;
   if (s === 0) {

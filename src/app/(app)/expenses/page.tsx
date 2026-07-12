@@ -224,7 +224,7 @@ export default function ExpensesPage() {
             data-month={m}
             onClick={() => { setSelectedMonth(m); dispatch(setExpensesSearch('')); setFilterCatId(''); }}
             className={cn(
-              'shrink-0 rounded-full px-3.5 py-1 text-xs font-bold capitalize transition-colors',
+              'min-h-11 shrink-0 rounded-full px-3.5 text-sm font-bold capitalize transition-colors',
               sel
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'bg-muted text-muted-foreground hover:text-foreground'
@@ -299,7 +299,8 @@ export default function ExpensesPage() {
                 <button
                   key={m}
                   onClick={() => setViewMode(m)}
-                  className={`rounded-full px-4 py-1 text-xs font-bold transition-colors ${viewMode === m ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'}`}
+                  className={`min-h-11 rounded-full px-4 text-sm font-bold transition-colors ${viewMode === m ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'}`}
+                  aria-pressed={viewMode === m}
                 >
                   {m === 'mine' ? t('expenses.viewMine') : t('expenses.viewFamily')}
                 </button>
@@ -324,7 +325,7 @@ export default function ExpensesPage() {
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
               <button
                 onClick={() => setFilterCatId('')}
-                className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${!filterCatId ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
+                className={`min-h-11 shrink-0 rounded-full px-3 text-sm font-medium transition-colors ${!filterCatId ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
               >
                 {t('expenses.all')}
               </button>
@@ -332,7 +333,7 @@ export default function ExpensesPage() {
                   <button
                     key={option.key}
                     onClick={() => setFilterCatId(filterCatId === option.key ? '' : option.key)}
-                    className={`shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${filterCatId === option.key ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
+                    className={`min-h-11 shrink-0 flex items-center gap-1.5 rounded-full px-3 text-sm font-medium transition-colors ${filterCatId === option.key ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
                   >
                     <StickerIcon icon={option.icon} color={option.color} className="h-3.5 w-3.5" />
                     <span>{option.label}</span>
@@ -497,7 +498,7 @@ export default function ExpensesPage() {
                                   key={em}
                                   type="button"
                                   onClick={() => handleReact(e, em)}
-                                  className="h-9 w-9 rounded-full text-lg flex items-center justify-center transition-transform active:scale-90"
+                                  className="fb-touch-target h-11 w-11 rounded-full text-lg flex items-center justify-center transition-transform active:scale-90"
                                   style={{ background: e.reactions?.[user?.id ?? ''] === em ? 'hsl(var(--primary) / 0.2)' : 'hsl(var(--muted))' }}
                                 >
                                   {em}

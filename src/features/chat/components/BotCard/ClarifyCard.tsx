@@ -28,12 +28,13 @@ interface ClarifyCardProps {
   onAllCategories: () => void;
   onOtherText?: (text: string) => void;
   onSplit?: () => void;
+  onDefer?: () => void;
   onCreateFolder?: (name: string) => void;
 }
 
 export function ClarifyCard({
   amount, currency, chips, unknownNote, storeName, isRepeat, isTagLearning, categories,
-  onSelectChip, onAllCategories, onOtherText, onSplit, onCreateFolder,
+  onSelectChip, onAllCategories, onOtherText, onSplit, onDefer, onCreateFolder,
 }: ClarifyCardProps) {
   const C = useChatTokens();
   const t = useT();
@@ -122,14 +123,16 @@ export function ClarifyCard({
       <div className="mb-2 flex items-center gap-1.5">
         {(selectedParent || otherMode || createFolderMode) && (
           <button
+            type="button"
             onClick={handleBack}
-            className="flex items-center active:opacity-50 transition-opacity"
+            className="fb-touch-target -ml-2 flex h-11 w-11 items-center justify-center rounded-xl active:opacity-50 transition-opacity"
             style={{ color: C.sub }}
+            aria-label={t('common.back')}
           >
             <ChevronLeft size={14} strokeWidth={2.5} />
           </button>
         )}
-        <p className="m-0 text-[10px] font-[800] uppercase tracking-[.08em]" style={{ color: C.sub }}>
+        <p className="m-0 text-xs font-[800] uppercase tracking-[.08em]" style={{ color: C.sub }}>
           {otherMode ? t('chat.clarify.whatBought') : headerText}
         </p>
       </div>
@@ -150,18 +153,20 @@ export function ClarifyCard({
             }}
           />
           <button
+            type="button"
             onClick={handleOtherSubmit}
             disabled={!otherText.trim()}
             className="flex items-center justify-center active:scale-95 transition-transform disabled:opacity-30"
             style={{
-              width: 28,
-              height: 28,
+              width: 44,
+              height: 44,
               borderRadius: 999,
               background: C.primary,
               color: '#fff',
               border: 'none',
               flexShrink: 0,
             }}
+            aria-label={t('chat.composer.send')}
           >
             <ArrowRight size={14} strokeWidth={2.5} />
           </button>
@@ -182,18 +187,20 @@ export function ClarifyCard({
             }}
           />
           <button
+            type="button"
             onClick={handleFolderSubmit}
             disabled={!folderName.trim()}
             className="flex items-center justify-center active:scale-95 transition-transform disabled:opacity-30"
             style={{
-              width: 28,
-              height: 28,
+              width: 44,
+              height: 44,
               borderRadius: 999,
               background: C.primary,
               color: '#fff',
               border: 'none',
               flexShrink: 0,
             }}
+            aria-label={t('chat.composer.send')}
           >
             <ArrowRight size={14} strokeWidth={2.5} />
           </button>
@@ -202,9 +209,10 @@ export function ClarifyCard({
         <div className="flex flex-wrap gap-1.5">
           {currentChips.map((chip) => (
             <button
+              type="button"
               key={chip.id}
               onClick={() => handleChipClick(chip)}
-              className="inline-flex items-center gap-1.5 text-[12.5px] font-[800] transition-all active:scale-95"
+              className="inline-flex min-h-11 items-center gap-1.5 text-sm font-[800] transition-all active:scale-95"
               style={{
                 padding: '7px 12px 7px 7px',
                 borderRadius: 999,
@@ -219,10 +227,11 @@ export function ClarifyCard({
             </button>
           ))}
 
-          {!selectedParent && (
+          {!selectedParent && onOtherText && (
             <button
+              type="button"
               onClick={() => setOtherMode(true)}
-              className="inline-flex items-center gap-1.5 text-[12.5px] font-[800] transition-all active:scale-95"
+              className="inline-flex min-h-11 items-center gap-1.5 text-sm font-[800] transition-all active:scale-95"
               style={{
                 padding: '7px 12px',
                 borderRadius: 999,
@@ -238,8 +247,9 @@ export function ClarifyCard({
 
           {!selectedParent && onSplit && (
             <button
+              type="button"
               onClick={onSplit}
-              className="inline-flex items-center gap-1.5 text-[12.5px] font-[800] transition-all active:scale-95"
+              className="inline-flex min-h-11 items-center gap-1.5 text-sm font-[800] transition-all active:scale-95"
               style={{
                 padding: '7px 12px 7px 10px',
                 borderRadius: 999,
@@ -254,10 +264,28 @@ export function ClarifyCard({
             </button>
           )}
 
+          {!selectedParent && onDefer && (
+            <button
+              type="button"
+              onClick={onDefer}
+              className="inline-flex min-h-11 items-center gap-1.5 text-sm font-[800] transition-all active:scale-95"
+              style={{
+                padding: '7px 12px',
+                borderRadius: 999,
+                background: `${C.primary}10`,
+                border: `1.5px solid ${C.primary}33`,
+                color: C.primary,
+              }}
+            >
+              {t('chat.clarify.defer')}
+            </button>
+          )}
+
           {isTagLearning && !selectedParent && !otherMode && onCreateFolder && (
             <button
+              type="button"
               onClick={() => setCreateFolderMode(true)}
-              className="inline-flex items-center gap-1.5 text-[12.5px] font-[800] transition-all active:scale-95"
+              className="inline-flex min-h-11 items-center gap-1.5 text-sm font-[800] transition-all active:scale-95"
               style={{
                 padding: '7px 12px 7px 10px',
                 borderRadius: 999,
@@ -277,8 +305,9 @@ export function ClarifyCard({
       {!selectedParent && !otherMode && !createFolderMode && (
         <>
           <button
+            type="button"
             onClick={onAllCategories}
-            className="mt-2 inline-flex items-center gap-1.5 text-[12px] font-[800]"
+            className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-[800]"
             style={{
               padding: '8px 14px',
               borderRadius: 999,
@@ -292,7 +321,7 @@ export function ClarifyCard({
           </button>
 
           {!isRepeat && (
-            <p className="m-0 mt-2.5 text-[11px] font-[700]" style={{ color: C.sub }}>
+            <p className="m-0 mt-2.5 text-xs font-[700]" style={{ color: C.sub }}>
               {t('chat.clarify.promise')}
             </p>
           )}

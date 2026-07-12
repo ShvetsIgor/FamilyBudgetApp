@@ -81,10 +81,12 @@ export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: Compo
 
   const micButton = (
     <button
-      onClick={speechSupported ? toggleVoice : onPlus}
-      aria-label={t('chat.composer.voice')}
-      title={t('chat.composer.voice')}
-      className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-xl transition-all active:scale-95"
+      type="button"
+      onClick={toggleVoice}
+      disabled={!speechSupported || disabled}
+      aria-label={speechSupported ? t('chat.composer.voice') : t('chat.composer.voiceUnsupported')}
+      title={speechSupported ? t('chat.composer.voice') : t('chat.composer.voiceUnsupported')}
+      className="fb-touch-target flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl transition-all active:scale-95 disabled:opacity-35"
       style={{
         color: listening ? '#fff' : C.sub,
         background: listening ? 'hsl(var(--destructive))' : 'transparent',
@@ -104,9 +106,11 @@ export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: Compo
         }}
       >
         <button
-          className="flex h-[38px] w-[38px] items-center justify-center rounded-xl transition-colors active:opacity-60"
+          type="button"
+          className="fb-touch-target flex h-11 w-11 items-center justify-center rounded-xl transition-colors active:opacity-60"
           style={{ color: C.sub }}
           onClick={onPlus}
+          aria-label={t('topbar.addTransaction')}
         >
           <Plus size={22} strokeWidth={2.2} />
         </button>
@@ -118,7 +122,7 @@ export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: Compo
             borderRadius: isDesktop ? 14 : 22,
             padding: '9px 14px',
             border: `1.5px solid ${listening ? 'hsl(var(--destructive))' : focused ? C.primary : C.hairline}`,
-            minHeight: 40,
+            minHeight: 48,
             boxShadow: focused && !listening ? `0 0 0 4px ${C.primary}18` : 'none',
           }}
         >
@@ -134,9 +138,11 @@ export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: Compo
             style={{ color: C.fg }}
           />
           <button
+            type="button"
             onClick={() => setHelpOpen(true)}
-            className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-[900] transition-all active:scale-90"
+            className="fb-touch-target -mr-2 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-xs font-[900] transition-all active:scale-90"
             style={{ background: C.hairline, color: C.sub }}
+            aria-label={t('chat.composer.help')}
           >
             ?
           </button>
@@ -144,13 +150,15 @@ export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: Compo
 
         {listening ? micButton : focused ? (
           <button
+            type="button"
             onClick={handleSend}
             disabled={disabled}
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-0 transition-all active:scale-95 disabled:opacity-50"
+            className="fb-touch-target flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border-0 transition-all active:scale-95 disabled:opacity-50"
             style={{
               background: `linear-gradient(135deg, ${C.primary}, ${C.primaryDeep})`,
               boxShadow: `0 6px 14px ${C.primaryDeep}55`,
             }}
+            aria-label={t('chat.composer.send')}
           >
             <Send size={18} color="white" strokeWidth={2.6} />
           </button>

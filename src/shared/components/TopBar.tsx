@@ -10,6 +10,7 @@ import { useT } from '@/shared/hooks/useT';
 const PAGE_TITLE_KEYS: Record<string, string> = {
   '/home': 'nav.overview',
   '/expenses': 'nav.transactions',
+  '/budget': 'nav.budget',
   '/statistics': 'nav.statistics',
   '/analytics': 'nav.analytics',
   '/categories': 'nav.categories',
@@ -25,7 +26,11 @@ function getPageTitleKey(pathname: string): string {
   return 'nav.overview';
 }
 
-export function TopBar() {
+interface TopBarProps {
+  onBell: () => void;
+}
+
+export function TopBar({ onBell }: TopBarProps) {
   const dispatch = useAppDispatch();
   const pathname = usePathname();
   const router = useRouter();
@@ -74,8 +79,9 @@ export function TopBar() {
         )}
 
         <button
-          className="rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground relative"
-          aria-label="Notifications"
+          onClick={onBell}
+          className="rounded-full p-2.5 transition-colors hover:bg-muted text-muted-foreground relative"
+          aria-label={t('notifications.title')}
         >
           <Bell className="h-5 w-5" />
         </button>

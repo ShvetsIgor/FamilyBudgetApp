@@ -10,6 +10,7 @@ import { setCurrency, setLanguage, setTheme } from '@/features/ui/store/uiSlice'
 import { GoogleButton } from './GoogleButton';
 import { useT } from '@/shared/hooks/useT';
 import { cn } from '@/shared/utils/cn';
+import { Eye, EyeOff } from 'lucide-react';
 
 export function RegisterForm() {
   const [name, setName] = useState('');
@@ -17,6 +18,7 @@ export function RegisterForm() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
   const t = useT();
@@ -55,8 +57,9 @@ export function RegisterForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-foreground">{t('auth.name')}</label>
+        <label htmlFor="register-name" className="text-sm font-medium text-foreground">{t('auth.name')}</label>
         <input
+          id="register-name"
           type="text"
           autoComplete="name"
           value={name}
@@ -71,8 +74,9 @@ export function RegisterForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-foreground">{t('auth.email')}</label>
+        <label htmlFor="register-email" className="text-sm font-medium text-foreground">{t('auth.email')}</label>
         <input
+          id="register-email"
           type="email"
           autoComplete="email"
           value={email}
@@ -87,24 +91,37 @@ export function RegisterForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-foreground">{t('auth.password')}</label>
-        <input
-          type="password"
-          autoComplete="new-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder={t('auth.passwordHint')}
-          className={cn(
-            'w-full rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none',
-            'placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20'
-          )}
-          required
-          minLength={6}
-        />
+        <label htmlFor="register-password" className="text-sm font-medium text-foreground">{t('auth.password')}</label>
+        <div className="relative">
+          <input
+            id="register-password"
+            type={showPassword ? 'text' : 'password'}
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder={t('auth.passwordHint')}
+            className={cn(
+              'w-full rounded-xl border border-border bg-card py-3 pl-4 pr-14 text-sm outline-none',
+              'placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20'
+            )}
+            required
+            minLength={6}
+            aria-describedby="register-password-hint"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((value) => !value)}
+            className="fb-touch-target absolute right-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+            aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+          >
+            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          </button>
+        </div>
+        <p id="register-password-hint" className="text-sm text-muted-foreground">{t('auth.passwordHint')}</p>
       </div>
 
       {error && (
-        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
+        <p role="alert" aria-live="assertive" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error}
         </p>
       )}
@@ -131,7 +148,7 @@ export function RegisterForm() {
 
       <p className="text-center text-sm text-muted-foreground">
         {t('auth.alreadyAccount')}{' '}
-        <Link href="/auth/login" className="font-medium text-primary hover:underline">
+        <Link href="/auth/login" className="inline-flex min-h-11 items-center rounded-lg px-2 font-semibold text-primary hover:bg-primary/5">
           {t('auth.signInLink')}
         </Link>
       </p>

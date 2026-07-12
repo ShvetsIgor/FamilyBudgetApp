@@ -1,27 +1,34 @@
 import en from '@/messages/en.json';
 import ru from '@/messages/ru.json';
+import he from '@/messages/he.json';
 
-const messages = { en, ru } as Record<string, Record<string, unknown>>;
+const messages = { en, ru, he } as Record<string, Record<string, unknown>>;
 
 export type TFunc = ((key: string, params?: Record<string, string | number>) => string) & {
   cat: (name: string) => string;
 };
 
 /**
- * Non-hook translator for a given language ('en' | 'ru').
+ * Non-hook translator for a given language ('en' | 'ru' | 'he').
  * Use in non-React code (bot replies, services) where useT() is unavailable;
  * components should keep using useT().
  */
 export function makeT(language: string): TFunc {
   const msgs = messages[language] ?? messages.en;
 
+  function lookup(source: Record<string, unknown>, parts: string[]): unknown {
+    let value: unknown = source;
+    for (const part of parts) {
+      if (value == null || typeof value !== 'object') return undefined;
+      value = (value as Record<string, unknown>)[part];
+    }
+    return value;
+  }
+
   const t = function (key: string, params?: Record<string, string | number>): string {
     const parts = key.split('.');
-    let val: unknown = msgs;
-    for (const p of parts) {
-      if (val == null || typeof val !== 'object') return key;
-      val = (val as Record<string, unknown>)[p];
-    }
+    const localized = lookup(msgs, parts);
+    const val = typeof localized === 'string' ? localized : lookup(messages.en, parts);
     let result = typeof val === 'string' ? val : key;
     if (params) {
       for (const [k, v] of Object.entries(params)) {

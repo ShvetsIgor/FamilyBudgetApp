@@ -15,6 +15,7 @@ import { useT } from '@/shared/hooks/useT';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { doc, updateDoc } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
+import Link from 'next/link';
 
 export default function BudgetPage() {
   const dispatch = useAppDispatch();
@@ -142,7 +143,7 @@ export default function BudgetPage() {
 
         {/* Architectural header */}
         <div className="px-4 pt-6 pb-4 lg:px-0 lg:pt-0" style={{ borderBottom: '2px solid hsl(var(--foreground))', background: 'hsl(var(--card))' }}>
-          <p style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
+          <p style={{ fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
             {format(new Date(monthStr + '-01'), 'LLLL yyyy', { locale: dfLocale })}
           </p>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
@@ -151,7 +152,7 @@ export default function BudgetPage() {
             </div>
             {effectiveBudget > 0 && (
               <div style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))' }}>
+                <p style={{ fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))' }}>
                   {t('expenses.budget')}
                 </p>
                 <p style={{ fontSize: 16, fontWeight: 800 }}>
@@ -162,14 +163,14 @@ export default function BudgetPage() {
           </div>
           {effectiveBudget > 0 && (
             <div style={{ marginTop: 12 }}>
-              <div style={{ height: 3, background: 'hsl(var(--muted))' }}>
+              <div role="progressbar" aria-label={t('expenses.budget')} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} style={{ height: 4, background: 'hsl(var(--muted))' }}>
                 <div style={{
                   height: '100%', width: `${pct}%`,
                   background: pct > 85 ? 'hsl(var(--destructive))' : 'hsl(var(--foreground))',
                   transition: 'width 0.4s ease',
                 }} />
               </div>
-              <p style={{ marginTop: 4, fontSize: 10, color: 'hsl(var(--muted-foreground))' }}>
+              <p style={{ marginTop: 6, fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>
                 {pct}% · {t('expenses.budgetLeft')} {formatAmount(Math.max(0, effectiveBudget - monthSpent), currency)}
               </p>
             </div>
@@ -179,13 +180,15 @@ export default function BudgetPage() {
         <div className="flex flex-col gap-4 px-4 pt-4 pb-8 lg:px-0">
 
           {/* Mode selector */}
-          <div className="flex flex-col">
+          <div className="flex flex-col" role="radiogroup" aria-label={t('chat.budget.settings.title')}>
             {modes.map(({ key, label, desc }) => {
               const active = localMode === key;
               return (
                 <button
                   key={key}
                   onClick={() => setLocalMode(key)}
+                  role="radio"
+                  aria-checked={active}
                   className="flex items-center gap-4 pl-3 pr-4 py-3.5 text-left transition-colors"
                   style={{
                     borderLeft: `4px solid ${active ? 'hsl(var(--primary))' : 'transparent'}`,
@@ -196,7 +199,7 @@ export default function BudgetPage() {
                     <p className="text-[15px] font-semibold leading-snug" style={{ color: active ? 'hsl(var(--primary))' : 'hsl(var(--foreground))' }}>
                       {label}
                     </p>
-                    <p style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 700, color: active ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }}>
+                    <p style={{ fontSize: 12, lineHeight: 1.4, fontWeight: 600, color: active ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }}>
                       {desc}
                     </p>
                   </div>
@@ -293,7 +296,12 @@ export default function BudgetPage() {
               {t('budget.envelopes')}
             </p>
             {envelopes.length === 0 ? (
-              <p style={{ fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>{t('budget.envelopesHint')}</p>
+              <div className="flex flex-col items-start gap-3">
+                <p className="text-sm text-muted-foreground">{t('budget.envelopesHint')}</p>
+                <Link href="/statistics" className="inline-flex min-h-11 items-center rounded-xl bg-primary/10 px-4 text-sm font-bold text-primary hover:bg-primary/15">
+                  {t('budget.manageEnvelopes')}
+                </Link>
+              </div>
             ) : (
               <div className="flex flex-col gap-2.5">
                 {envelopes.map((env) => {
@@ -327,7 +335,7 @@ export default function BudgetPage() {
             {saved ? `✓ ${t('home.saved')}` : t('chat.budget.settings.save')}
           </button>
           {saveError && (
-            <p style={{ fontSize: 12, color: 'hsl(var(--destructive))', textAlign: 'center' }}>
+            <p role="alert" aria-live="assertive" style={{ fontSize: 14, color: 'hsl(var(--destructive))', textAlign: 'center' }}>
               {t('budget.saveError')}
             </p>
           )}

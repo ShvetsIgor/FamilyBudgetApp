@@ -57,6 +57,8 @@ interface Props {
    *  Used to (a) link the saved expense back to the originating chat bubble,
    *  (b) clean up the chat bubble if the user dismisses Split without saving. */
   initialUserMsgId?: string;
+  /** Opens the compact flow directly in split mode after explicit user choice. */
+  initialMode?: EntryMode;
 }
 
 export function FastExpenseEntry({
@@ -70,6 +72,7 @@ export function FastExpenseEntry({
   initialFolderName,
   initialDate,
   initialUserMsgId,
+  initialMode,
 }: Props) {
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -152,7 +155,7 @@ export function FastExpenseEntry({
 
   const [total, setTotal] = useState(startTotal);
   const [entryMode, setEntryMode] = useState<EntryMode>(
-    initialExpense?.splits?.length ? 'split' : 'single',
+    initialExpense?.splits?.length ? 'split' : initialMode ?? 'single',
   );
   const [selectedCatId, setSelectedCatId] = useState(initSelectedCatId);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash' | 'other'>(
@@ -177,7 +180,9 @@ export function FastExpenseEntry({
   const [showFolderEditor, setShowFolderEditor] = useState(false);
   const [showCategoryEditor, setShowCategoryEditor] = useState(false);
   const [inlineCreating, setInlineCreating] = useState(false);
-  const [categorySheetMode, setCategorySheetMode] = useState<EntryMode | null>(null);
+  const [categorySheetMode, setCategorySheetMode] = useState<EntryMode | null>(
+    fromChat && initialMode === 'split' ? 'split' : null,
+  );
   const [newCategoryFolderId, setNewCategoryFolderId] = useState<string | null>(null);
   const [returnToCategorySheetMode, setReturnToCategorySheetMode] = useState<EntryMode | null>(null);
   const [amountEditorTarget, setAmountEditorTarget] = useState<'total' | number | null>(null);
@@ -428,7 +433,13 @@ export function FastExpenseEntry({
       // Editing must not silently rewrite privacy (a secret expense stays
       // secret) or wipe tags like 'savings'/'recurring'.
       tags: (isEdit && initialExpense?.tags ? initialExpense.tags : []) as string[],
-      privacy: (isEdit && initialExpense?.privacy ? initialExpense.privacy : 'regular') as Privacy,
+      privacy: (
+        isEdit && initialExpense?.privacy
+          ? initialExpense.privacy
+          : selectedCat?.isPrivate || splitItems.some((item) => activeExpCats.find((cat) => cat.id === item.categoryId)?.isPrivate)
+            ? 'secret'
+            : 'regular'
+      ) as Privacy,
       comment: normalizeName(comment) || undefined,
       amount: totalNum,
       categoryId: effectiveCatId,
@@ -556,8 +567,8 @@ export function FastExpenseEntry({
 
       {/* ── Top bar ── */}
       <div className="flex items-center gap-2 px-4 pt-1 pb-0.5 flex-shrink-0">
-        <button onClick={handleClose} className="p-1.5 rounded-full hover:bg-muted transition-colors">
-          <X className="h-4 w-4" />
+        <button type="button" onClick={handleClose} className="fb-touch-target flex h-11 w-11 items-center justify-center rounded-xl hover:bg-muted transition-colors" aria-label={t('common.close')}>
+          <X className="h-5 w-5" />
         </button>
         <div className="flex-1 text-center text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">
           {isEdit
@@ -570,10 +581,11 @@ export function FastExpenseEntry({
       </div>
 
       {/* ── Total ── */}
-      <div
+      <button
+        type="button"
         onClick={() => openAmountEditor('total')}
         className={cn(
-          'mx-4 px-4 py-1.5 rounded-[18px] cursor-pointer flex items-baseline justify-between flex-shrink-0 transition-all border-[1.5px]',
+          'mx-4 min-h-11 px-4 py-1.5 rounded-[18px] cursor-pointer flex items-baseline justify-between flex-shrink-0 transition-all border-[1.5px] text-left',
           amountEditorTarget === 'total' ? 'bg-primary/10 border-primary' : 'bg-transparent border-transparent'
         )}
       >
@@ -584,7 +596,7 @@ export function FastExpenseEntry({
             {total}
           </span>
         </div>
-      </div>
+      </button>
 
       {/* ── Mode ── */}
       <div className="mx-4 mb-2 grid grid-cols-2 rounded-[16px] bg-muted p-1 flex-shrink-0">
@@ -600,7 +612,7 @@ export function FastExpenseEntry({
                 setAmountEditorTarget(null);
               }}
               className={cn(
-                'min-h-[38px] rounded-[12px] text-[12px] font-black transition-all',
+                'min-h-11 rounded-[12px] text-sm font-black transition-all',
                 selected ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground',
               )}
             >
@@ -783,12 +795,13 @@ export function FastExpenseEntry({
             <button
               key={m}
               onClick={() => setPaymentMethod(m)}
-              className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-xl text-[11px] font-bold transition-all border"
+              className="flex-1 min-h-11 flex items-center justify-center gap-1 rounded-xl text-xs font-bold transition-all border"
               style={{
                 background: sel ? catColor + '18' : 'hsl(var(--card))',
                 borderColor: sel ? catColor : 'transparent',
                 color: sel ? catColor : 'hsl(var(--muted-foreground))',
               }}
+              aria-pressed={sel}
             >
               <span>{icons[m]}</span>
               <span>{labels[m]}</span>
@@ -804,8 +817,8 @@ export function FastExpenseEntry({
           disabled={saveDisabled}
           className="w-full py-[12px] rounded-[16px] flex items-center justify-center gap-2 text-[14px] font-black text-primary-foreground transition-opacity disabled:opacity-50 border-0"
           style={{
-            background: catColor,
-            boxShadow: `0 12px 24px ${catColor}60`,
+            background: 'hsl(var(--primary))',
+            boxShadow: 'var(--shadow-primary)',
           }}
         >
           <StickerIcon icon={displayIcon} color="#fff" className="h-5 w-5" />
@@ -822,6 +835,9 @@ export function FastExpenseEntry({
         onClick={() => setAmountEditorTarget(null)}
       >
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={amountEditorTitle}
           className="w-full rounded-t-[24px] bg-background px-4 pb-safe pt-4 shadow-2xl lg:max-w-[360px] lg:rounded-[24px]"
           style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 14px)' }}
           onClick={(e) => e.stopPropagation()}

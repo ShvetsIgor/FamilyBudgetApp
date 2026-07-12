@@ -5,6 +5,19 @@ import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { useT } from '@/shared/hooks/useT';
 import { useAppSelector } from '@/store/store';
+import { usePathname } from 'next/navigation';
+
+const MOBILE_PAGE_TITLES: Array<[string, string]> = [
+  ['/expenses', 'nav.transactions'],
+  ['/income', 'nav.income'],
+  ['/budget', 'nav.budget'],
+  ['/statistics', 'nav.statistics'],
+  ['/analytics', 'nav.analytics'],
+  ['/savings', 'nav.savings'],
+  ['/recurring', 'nav.recurring'],
+  ['/categories', 'nav.categories'],
+  ['/account', 'nav.settings'],
+];
 
 interface ChatHeaderProps {
   onMenu: () => void;
@@ -15,7 +28,10 @@ interface ChatHeaderProps {
 export function ChatHeader({ onMenu, onBell, onClearChat }: ChatHeaderProps) {
   const C = useChatTokens();
   const t = useT();
+  const pathname = usePathname();
+  const isChat = pathname === '/home';
   const unread = useAppSelector((s) => s.notifications.items.filter((n) => !n.read).length);
+  const pageTitleKey = MOBILE_PAGE_TITLES.find(([prefix]) => pathname === prefix || pathname.startsWith(`${prefix}/`))?.[1] ?? 'nav.overview';
 
   return (
     <div
@@ -24,13 +40,14 @@ export function ChatHeader({ onMenu, onBell, onClearChat }: ChatHeaderProps) {
     >
       <button
         onClick={onMenu}
-        className="flex h-9 w-9 items-center justify-center rounded-xl transition-colors"
+        className="fb-touch-target flex h-11 w-11 items-center justify-center rounded-xl transition-colors"
         style={{ color: C.fg }}
+        aria-label={t('nav.more')}
       >
         <Menu size={20} strokeWidth={2.4} />
       </button>
 
-      <div className="relative flex-shrink-0">
+      {isChat && <div className="relative flex-shrink-0">
         <div
           className="flex h-10 w-10 items-center justify-center rounded-full"
           style={{
@@ -44,23 +61,31 @@ export function ChatHeader({ onMenu, onBell, onClearChat }: ChatHeaderProps) {
           className="absolute bottom-0 right-0 h-[11px] w-[11px] rounded-full border-[2.5px]"
           style={{ background: C.sage, borderColor: C.bg }}
         />
-      </div>
+      </div>}
 
       <div className="flex-1 min-w-0">
-        <p className="m-0 text-[17px] font-[800] leading-tight" style={{ letterSpacing: -0.3, color: C.fg }}>
-          <span style={{ color: C.primary }}>family</span>
-          <span style={{ color: C.sub, fontWeight: 700 }}>.</span>
-          budget
-        </p>
-        <p className="m-0 mt-px text-[11px] font-[700]" style={{ color: C.sage }}>
-          {t('chat.header.online')}
-        </p>
+        {isChat ? (
+          <>
+            <p className="m-0 text-[17px] font-[800] leading-tight" style={{ letterSpacing: -0.3, color: C.fg }}>
+              <span style={{ color: C.primary }}>family</span>
+              <span style={{ color: C.sub, fontWeight: 700 }}>.</span>
+              budget
+            </p>
+            <p className="m-0 mt-px text-xs font-[700]" style={{ color: C.sage }}>
+              {t('chat.header.online')}
+            </p>
+          </>
+        ) : (
+          <p className="m-0 text-[18px] font-[800] leading-tight" style={{ letterSpacing: -0.25, color: C.fg }}>
+            {t(pageTitleKey)}
+          </p>
+        )}
       </div>
 
       {onClearChat && (
         <button
           onClick={onClearChat}
-          className="flex h-9 w-9 items-center justify-center rounded-xl transition-colors"
+          className="fb-touch-target flex h-11 w-11 items-center justify-center rounded-xl transition-colors"
           style={{ color: C.sub }}
           aria-label={t('chat.clearChat')}
           title={t('chat.clearChat')}
@@ -71,8 +96,9 @@ export function ChatHeader({ onMenu, onBell, onClearChat }: ChatHeaderProps) {
 
       <button
         onClick={onBell}
-        className="relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors"
+        className="fb-touch-target relative flex h-11 w-11 items-center justify-center rounded-xl transition-colors"
         style={{ color: C.fg }}
+        aria-label={t('notifications.title')}
       >
         <Bell size={20} strokeWidth={2} />
         {unread > 0 && (

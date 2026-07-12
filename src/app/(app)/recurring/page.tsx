@@ -237,16 +237,16 @@ export default function RecurringPage() {
           <div className="flex-1 min-w-0">
             <p className="text-[15px] font-semibold truncate leading-snug">{item.name}</p>
             <p className="flex items-center gap-1.5 mt-0.5">
-              <span style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: borderColor }}>
+              <span style={{ fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700, color: borderColor }}>
                 {FREQ.find((f) => f.value === item.frequency)?.label}
               </span>
               <span className="text-muted-foreground/40">·</span>
               {days <= 0 ? (
-                <span style={{ fontSize: 10, fontWeight: 700, color: 'hsl(var(--destructive))' }}>{t('recurring.dueToday')}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'hsl(var(--destructive))' }}>{t('recurring.dueToday')}</span>
               ) : days <= 3 ? (
-                <span style={{ fontSize: 10, fontWeight: 700, color: 'hsl(38 80% 45%)' }}>{t('recurring.inDays').replace('{n}', String(days))}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'hsl(38 80% 36%)' }}>{t('recurring.inDays').replace('{n}', String(days))}</span>
               ) : (
-                <span style={{ fontSize: 10, color: 'hsl(var(--muted-foreground))' }}>{format(parseISO(item.nextDueDate), 'd MMM', { locale: dfLocale })}</span>
+                <span style={{ fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>{format(parseISO(item.nextDueDate), 'd MMM', { locale: dfLocale })}</span>
               )}
             </p>
           </div>
@@ -258,18 +258,20 @@ export default function RecurringPage() {
           {item.isActive && days <= 0 && (
             <button
               onClick={() => handleMarkPaid(item)}
-              className="rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-1 text-xs font-semibold hover:bg-emerald-500/20 transition-colors"
+              className="min-h-11 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 px-3 text-sm font-semibold hover:bg-emerald-500/20 transition-colors"
             >
               {t('recurring.markPaid')}
             </button>
           )}
           <button
             onClick={() => handleToggle(item)}
-            className={`relative h-5 w-9 rounded-full transition-colors flex-shrink-0 ${item.isActive ? 'bg-primary' : 'bg-muted'}`}
+            role="switch"
+            aria-checked={item.isActive}
+            className={`relative h-11 w-14 rounded-full transition-colors flex-shrink-0 ${item.isActive ? 'bg-primary' : 'bg-muted'}`}
           >
-            <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${item.isActive ? 'left-[18px]' : 'left-0.5'}`} />
+            <span className={`absolute top-2.5 h-6 w-6 rounded-full bg-white shadow transition-all ${item.isActive ? 'left-7' : 'left-1.5'}`} />
           </button>
-          <button onClick={() => handleDelete(item)} className="text-muted-foreground hover:text-destructive text-xs">✕</button>
+          <button onClick={() => handleDelete(item)} className="fb-touch-target flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive" aria-label={t('common.delete')}>✕</button>
         </div>
       </div>
     );
@@ -279,7 +281,7 @@ export default function RecurringPage() {
     <div className="rounded-2xl border border-border bg-card overflow-hidden">
       <div className="border-b border-border px-4 py-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">{formMode.mode === 'edit' ? t('recurring.editTitle') : t('recurring.newTitle')}</h2>
-        <button onClick={() => setFormMode(null)} className="text-muted-foreground text-xs hover:text-foreground">✕</button>
+        <button onClick={() => setFormMode(null)} className="fb-touch-target flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={t('common.close')}>✕</button>
       </div>
       <RecurringForm
         initial={formMode.mode === 'edit' ? formMode.item : undefined}
@@ -609,8 +611,8 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
       >
         {/* Top bar */}
         <div className="flex items-center gap-2 px-4 pt-1 pb-0.5 flex-shrink-0">
-          <button onClick={onCancel} className="p-1.5 rounded-full hover:bg-muted transition-colors">
-            <X className="h-4 w-4" />
+          <button onClick={onCancel} className="fb-touch-target flex h-11 w-11 items-center justify-center rounded-xl hover:bg-muted transition-colors" aria-label={t('common.close')}>
+            <X className="h-5 w-5" />
           </button>
           <div className="flex-1 text-center text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">
             {initial ? t('recurring.editTitle') : t('recurring.newTitle')}
@@ -704,7 +706,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
 
           {/* Frequency chips */}
           <div>
-            <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider mb-1.5 px-0.5">
+            <p className="text-xs font-extrabold text-muted-foreground uppercase tracking-wider mb-1.5 px-0.5">
               {t('recurring.frequency')}
             </p>
             <div className="flex gap-1.5">
@@ -714,7 +716,7 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
                   <button
                     key={f.value}
                     onClick={() => setFrequency(f.value)}
-                    className="flex-1 py-1.5 rounded-xl text-[11px] font-bold transition-all border"
+                    className="min-h-11 flex-1 rounded-xl text-xs font-bold transition-all border"
                     style={{
                       background: sel ? catColor + '18' : 'hsl(var(--card))',
                       borderColor: sel ? catColor : 'transparent',
@@ -745,21 +747,21 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setReminderDays(Math.max(0, reminderDays - 1))}
-                className="h-7 w-7 rounded-lg bg-muted text-muted-foreground text-lg font-bold flex items-center justify-center"
+                className="fb-touch-target h-11 w-11 rounded-xl bg-muted text-muted-foreground text-lg font-bold flex items-center justify-center"
               >−</button>
               <span className="w-12 text-center text-sm font-extrabold tabular-nums">
                 {t('recurring.remindDays').replace('{n}', String(reminderDays))}
               </span>
               <button
                 onClick={() => setReminderDays(Math.min(14, reminderDays + 1))}
-                className="h-7 w-7 rounded-lg bg-muted text-muted-foreground text-lg font-bold flex items-center justify-center"
+                className="fb-touch-target h-11 w-11 rounded-xl bg-muted text-muted-foreground text-lg font-bold flex items-center justify-center"
               >+</button>
             </div>
           </div>
         </div>
 
         {/* Numpad */}
-        <div className="px-3 pt-0.5 grid grid-cols-3 flex-shrink-0" style={{ gridAutoRows: '40px', gap: '4px' }}>
+        <div className="px-3 pt-0.5 grid grid-cols-3 flex-shrink-0" style={{ gridAutoRows: '44px', gap: '4px' }}>
           {NUMPAD_KEYS.map((k) => (
             <button
               key={String(k)}

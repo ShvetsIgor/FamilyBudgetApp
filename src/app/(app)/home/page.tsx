@@ -7,7 +7,7 @@ import { getDateFnsLocale } from '@/shared/utils/dateLocale';
 
 import { useAppSelector, useAppDispatch, useAppStore } from '@/store/store';
 import { setTyping, removeMessage } from '@/features/chat/store/chatSlice';
-import { removeExpense, mergeExpenses } from '@/features/expenses/store/expensesSlice';
+import { removeExpense, mergeExpenses, prependExpense } from '@/features/expenses/store/expensesSlice';
 import { prependIncome } from '@/features/income/store/incomeSlice';
 import { updateRecurringItem } from '@/features/recurring/store/recurringSlice';
 import { addNotification } from '@/features/notifications/store/notificationsSlice';
@@ -47,9 +47,14 @@ import { Typing } from '@/features/chat/components/Typing';
 import { useT } from '@/shared/hooks/useT';
 import type { EnvelopesCardData } from '@/features/chat/components/BotCard/EnvelopesCard';
 import type { Currency } from '@/shared/types';
+import { getCurrencySymbol } from '@/shared/utils/currency';
 import { toLocalDateKey, toLocalMonthKey } from '@/shared/utils/dateKey';
 
 import type { SerializableChatMessage } from '@/shared/types/message';
+import type { ParseResult } from '@/shared/types/message';
+import { addCategoryWithId } from '@/features/categories/services/categoriesService';
+import { addCategory as addCategoryAction } from '@/features/categories/store/categoriesSlice';
+import { recordExpense } from '@/features/expenses/store/suggestionMemorySlice';
 
 function msgTime(iso: string): string {
   return format(parseISO(iso), 'HH:mm');
@@ -168,6 +173,7 @@ export default function HomePage() {
   }, [userId, monthSpent, monthIncome, budgetMode, budgetMonthlyLimit]);
 
   const allExpenses = useAppSelector((s) => s.expenses.list);
+  const allExpenseCats = useAppSelector((s) => s.categories.expense.filter((category) => !category.archived));
   const allIncomeCats = useAppSelector((s) => s.categories.income);
   const savingsGoals = useAppSelector((s) => s.savings.list);
 
@@ -222,7 +228,19 @@ export default function HomePage() {
     parsedDateLabel?: string;
     parsedNote?: string;
   };
+  type ExpenseClarifyContext = {
+    botMsgId: string;
+    userMsgId: string;
+    amount: number;
+    storeId?: string;
+    storeName?: string;
+    storeGroup?: string;
+    parsedDate?: string;
+    parsedDateLabel?: string;
+    parsedNote?: string;
+  };
   const [incomeCategorySheet, setIncomeCategorySheet] = useState<IncomeClarifyContext | null>(null);
+  const [expenseCategorySheet, setExpenseCategorySheet] = useState<ExpenseClarifyContext | null>(null);
 
   const buildEnrichedCtx = useCallback(() => {
     const ctx = collectBotContext(appStore.getState());
@@ -274,7 +292,8 @@ export default function HomePage() {
       }
       if (reply.income) dispatch(prependIncome(reply.income));
 
-      // Expense path: always navigate to Split — no clarify cards, no auto-save in chat.
+      // Explicit Split requests can still be forwarded by specialized bot flows.
+      // Normal merchant + amount input now stays in chat for user classification.
       if (reply.openSplit) {
         const params = new URLSearchParams({
           fromChat: 'true',
@@ -337,6 +356,88 @@ export default function HomePage() {
       sendingRef.current = false;
     }
   }, [userId, buildEnrichedCtx, dispatch]);
+
+  const handleExpenseClarifyChip = useCallback(async (
+    context: ExpenseClarifyContext,
+    chip: { id: string; name: string; icon: string; color: string },
+  ) => {
+    if (!userId || sendingRef.current) return;
+    const originalMessage = messages.find((message) => message.id === context.userMsgId);
+    if (!originalMessage) return;
+    sendingRef.current = true;
+    dispatch(setTyping(true));
+    try {
+      const enrichedCtx = buildEnrichedCtx();
+      if (!enrichedCtx) return;
+      const parsed: ParseResult = {
+        amount: context.amount,
+        categoryId: chip.id,
+        confidence: 'high',
+        confirmed: true,
+        storeId: context.storeId,
+        storeName: context.storeName,
+        storeGroup: context.storeGroup,
+        date: context.parsedDate,
+        dateLabel: context.parsedDateLabel,
+        note: context.parsedNote,
+      };
+      const reply = await respondToUserMessage(originalMessage, parsed, enrichedCtx);
+      for (const botMsg of reply.messages) await addMessage(botMsg);
+      if (!reply.expense) return;
+      dispatch(prependExpense(reply.expense));
+      dispatch(recordExpense({
+        merchant: context.storeName,
+        categoryId: chip.id,
+        folderId: appStore.getState().categories.expense.find((category) => category.id === chip.id)?.folderId ?? undefined,
+        date: context.parsedDate ?? toLocalDateKey(new Date()),
+      }));
+      dispatch(removeMessage(context.botMsgId));
+      await deleteMessage(userId, context.botMsgId).catch(() => {});
+      setExpenseCategorySheet(null);
+    } finally {
+      dispatch(setTyping(false));
+      sendingRef.current = false;
+    }
+  }, [userId, messages, buildEnrichedCtx, dispatch, appStore]);
+
+  const handleDeferExpense = useCallback(async (context: ExpenseClarifyContext) => {
+    if (!userId) return;
+    let category = appStore.getState().categories.expense.find((item) => item.id === 'unsorted' && !item.archived);
+    if (!category) {
+      category = await addCategoryWithId(userId, 'unsorted', {
+        name: 'Unsorted',
+        icon: 'box',
+        color: '#475569',
+        isPrivate: false,
+        order: 999,
+        type: 'expense',
+      });
+      dispatch(addCategoryAction(category));
+    }
+    await handleExpenseClarifyChip(context, {
+      id: category.id,
+      name: category.name,
+      icon: category.icon,
+      color: category.color,
+    });
+  }, [userId, appStore, dispatch, handleExpenseClarifyChip]);
+
+  const handleOpenExpenseSplit = useCallback((context: ExpenseClarifyContext) => {
+    if (!userId) return;
+    dispatch(removeMessage(context.botMsgId));
+    deleteMessage(userId, context.botMsgId).catch(() => {});
+    const params = new URLSearchParams({
+      fromChat: 'true',
+      mode: 'split',
+      amount: String(context.amount),
+      userMsgId: context.userMsgId,
+    });
+    if (context.storeId) params.set('storeId', context.storeId);
+    if (context.storeName) params.set('storeName', context.storeName);
+    if (context.storeGroup) params.set('storeGroup', context.storeGroup);
+    if (context.parsedDate) params.set('date', context.parsedDate);
+    router.push(`/expenses/new?${params.toString()}`);
+  }, [userId, dispatch, router]);
 
   const handleUndo = useCallback(async (
     botMsgId: string,
@@ -461,8 +562,36 @@ export default function HomePage() {
             if (msg.card?.kind === 'clarify') {
               const d = msg.card.data as Record<string, unknown>;
               const cardIsIncome = !!(d.isIncome as boolean | undefined);
-              // Clarify cards are kept only for income.
-              if (!cardIsIncome) return null;
+              if (!cardIsIncome) {
+                const context: ExpenseClarifyContext = {
+                  botMsgId: msg.id,
+                  userMsgId: d.userMsgId as string,
+                  amount: d.amount as number,
+                  storeId: d.storeId as string | undefined,
+                  storeName: d.storeName as string | undefined,
+                  storeGroup: d.storeGroup as string | undefined,
+                  parsedDate: d.parsedDate as string | undefined,
+                  parsedDateLabel: d.parsedDateLabel as string | undefined,
+                  parsedNote: d.parsedNote as string | undefined,
+                };
+                return (
+                  <BotCardBubble key={msg.id} tail={tail}>
+                    <ClarifyCard
+                      amount={context.amount}
+                      currency={(d.currency as string | undefined) ?? getCurrencySymbol(currency)}
+                      chips={d.chips as { id: string; name: string; icon: string; color: string }[]}
+                      unknownNote={context.parsedNote}
+                      storeName={context.storeName}
+                      isRepeat={Boolean(d.isRepeat)}
+                      categories={allExpenseCats}
+                      onSelectChip={(chip) => handleExpenseClarifyChip(context, chip)}
+                      onAllCategories={() => setExpenseCategorySheet(context)}
+                      onSplit={() => handleOpenExpenseSplit(context)}
+                      onDefer={() => handleDeferExpense(context)}
+                    />
+                  </BotCardBubble>
+                );
+              }
               return (
                 <BotCardBubble key={msg.id} tail={tail}>
                   <ClarifyCard
@@ -520,7 +649,14 @@ export default function HomePage() {
       />
     )}
 
+    {expenseCategorySheet && (
+      <CategorySheet
+        categories={allExpenseCats}
+        onSelect={(chip) => handleExpenseClarifyChip(expenseCategorySheet, chip)}
+        onClose={() => setExpenseCategorySheet(null)}
+      />
+    )}
+
 </>
   );
 }
-

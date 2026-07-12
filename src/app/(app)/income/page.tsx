@@ -167,7 +167,8 @@ export default function IncomePage() {
                 <button
                   key={m}
                   onClick={() => setViewMode(m)}
-                  className={`rounded-full px-4 py-1 text-xs font-bold transition-colors ${viewMode === m ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'}`}
+                  className={`min-h-11 rounded-full px-4 text-sm font-bold transition-colors ${viewMode === m ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'}`}
+                  aria-pressed={viewMode === m}
                 >
                   {m === 'mine' ? t('expenses.viewMine') : t('expenses.viewFamily')}
                 </button>
@@ -191,7 +192,7 @@ export default function IncomePage() {
                 data-month={m}
                 onClick={() => setSelectedMonth(m)}
                 className={cn(
-                  'shrink-0 rounded-full px-3.5 py-1 text-xs font-bold capitalize transition-colors',
+                  'min-h-11 shrink-0 rounded-full px-3.5 text-sm font-bold capitalize transition-colors',
                   sel ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted text-muted-foreground hover:text-foreground'
                 )}
               >

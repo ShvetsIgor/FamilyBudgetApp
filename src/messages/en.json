@@ -16,6 +16,9 @@
     "members": "Members",
     "settings": "Settings",
     "budget": "Budget",
+    "plan": "Plan",
+    "more": "More",
+    "mobileNavigation": "Primary navigation",
     "themeExamples": "Theme Examples"
   },
   "sidebar": {
@@ -239,7 +242,10 @@
     "pctOfSpending": "{p}% of spending",
     "familySpent": "Family spent",
     "familyIncome": "Family income",
-    "byMember": "By member"
+    "byMember": "By member",
+    "trendSummary": "Spending trend across {n} months",
+    "weekSummary": "Spending for each day of the current week",
+    "averageSummary": "Average daily spending by month"
   },
   "account": {
     "title": "Account",
@@ -619,7 +625,20 @@
     "googleFailed": "Google sign-in failed. Try again.",
     "emailExists": "An account with this email already exists.",
     "weakPassword": "Password is too weak. Use at least 6 characters.",
-    "registerFailed": "Registration failed. Try again."
+    "registerFailed": "Registration failed. Try again.",
+    "language": "Language",
+    "tagline": "A calm place for everyday spending, savings goals, and the family budget.",
+    "featureTracking": "Track purchases without spreadsheet work",
+    "featureSavings": "See savings progress at a glance",
+    "featureRecurring": "Keep upcoming payments in view",
+    "featureFamily": "Share only what belongs in the family budget",
+    "invalidCredentials": "Email or password is incorrect.",
+    "loginFailed": "Could not sign in. Check your connection and try again.",
+    "resetEmailRequired": "Enter your email first, then request a reset link.",
+    "resetEmailSent": "Password reset link sent. Check your inbox.",
+    "resetEmailFailed": "Could not send the reset link. Check the email and try again.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "notifications": {
     "title": "Notifications",
@@ -696,6 +715,8 @@
     "thousandSuffix": "k",
     "undo": "Undo",
     "logout": "Log out",
+    "close": "Close",
+    "clear": "Clear",
     "pageNotFound": "Page not found",
     "goHome": "Go home",
     "entryNotFound": "Entry not found"
@@ -741,6 +762,8 @@
       "other": "Other",
       "whatBought": "What did you buy?",
       "split": "Split",
+      "defer": "Sort later",
+      "deferHint": "Saved to Unsorted — you can classify it later",
       "promise": "tell me — I'll remember this word forever",
       "undo": "Undo",
       "newFolder": "New folder",
@@ -765,6 +788,9 @@
     "composer": {
       "placeholder": "Add expense…",
       "voice": "Voice input",
+      "voiceUnsupported": "Voice input is not supported in this browser",
+      "help": "Show input examples",
+      "send": "Send",
       "listening": "Listening…"
     },
     "help": {
@@ -776,9 +802,9 @@
         "example": "Dabbah 1000 · Coffee 80 · Taxi 350"
       },
       "tip2": {
-        "title": "Pick a section once — it's remembered",
-        "desc": "If the merchant is new, the bot will ask for a section. Next time Dabbah goes straight into Supermarket without asking",
-        "example": "Dabbah → Supermarket"
+        "title": "History suggests — you decide",
+        "desc": "For a familiar merchant, the bot puts your usual categories first but never assumes that every receipt contains the same things.",
+        "example": "Dabbah → Groceries / Home / Split"
       },
       "tip3": {
         "title": "Split a receipt by categories",
@@ -838,6 +864,7 @@
       "saved3": "Done",
       "clarifyWhere": "Got it — {currency}{amount} for what? 🤔",
       "clarifyStore": "{currency}{amount} at {store} — what did you buy? 🛒",
+      "classifyExpense": "{sym} {amount} — choose one category or split the purchase",
       "unknown": "Didn’t get that 🤔 Try: «coffee 65» or «☕ 30»",
       "duplicate": "Same receipt or a new one?",
       "morningTitle": "Good morning ✨",
@@ -917,6 +944,7 @@
     "saveError": "Couldn't save — check your connection and try again.",
     "envelopes": "Category envelopes",
     "envelopesHint": "Set a monthly limit in a category editor — it becomes an envelope here",
+    "manageEnvelopes": "Set category limits",
     "noLimit": "no limit"
   },
   "quickadd": {

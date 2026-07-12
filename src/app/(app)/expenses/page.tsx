@@ -8,7 +8,7 @@ import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { Plus } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { mergeExpenses, removeExpense, prependExpense } from '@/features/expenses/store/expensesSlice';
-import { fetchMonthExpenses, deleteExpense, restoreExpense } from '@/features/expenses/services/expensesService';
+import { fetchMonthExpenses, deleteExpense, restoreExpense, backfillPrivateCategoryExpenses } from '@/features/expenses/services/expensesService';
 import { updateRecurringItem } from '@/features/recurring/store/recurringSlice';
 import { ExpenseCard } from '@/features/expenses/components/ExpenseCard';
 import { UpcomingBills } from '@/features/recurring/components/UpcomingBills';
@@ -25,6 +25,7 @@ import { useT } from '@/shared/hooks/useT';
 import { getEffectiveBudget } from '@/features/budget/utils/effectiveBudget';
 import { buildMemberColorMap } from '@/features/family/utils/memberColors';
 import { fetchFamilyMonthExpenses, setExpenseReaction, type FamilyExpense, type FamilyMonthData } from '@/features/family/services/familyBudgetService';
+import { groupByCurrency, formatCurrencyTotals } from '@/features/family/utils/familyCurrency';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import {
   getExpenseListMeta,
@@ -123,6 +124,26 @@ export default function ExpensesPage() {
 
   useEffect(() => { loadCurrentExpenses(); }, [loadCurrentExpenses]);
 
+  // №9 migration: flip any loaded expense whose category is private (but was
+  // saved before the rule) to secret, so the family stops seeing its amount.
+  // Owner-side, idempotent; covers the months the user actually views.
+  useEffect(() => {
+    if (!user) return;
+    const privateIds = new Set(categories.filter((c) => c.isPrivate).map((c) => c.id));
+    if (privateIds.size === 0) return;
+    const pool = isCurrentMonth ? reduxExpenses : (localExpenses ?? []);
+    if (pool.length === 0) return;
+    backfillPrivateCategoryExpenses(user.id, pool, privateIds)
+      .then((fixedIds) => {
+        if (fixedIds.length === 0) return;
+        const fixed = new Set(fixedIds);
+        dispatch(mergeExpenses(pool
+          .filter((e) => fixed.has(e.id))
+          .map((e) => ({ ...e, privacy: 'secret' as const }))));
+      })
+      .catch(() => {});
+  }, [user, categories, reduxExpenses, localExpenses, isCurrentMonth, dispatch]);
+
   useEffect(() => {
     if (isCurrentMonth) { setLocalExpenses(null); return; }
     setLocalExpenses(null);
@@ -207,6 +228,9 @@ export default function ExpensesPage() {
   const monthTotal = isFamilyView
     ? familyExpenses.reduce((s, e) => s + e.amount, 0)
     : expenses.reduce((s, e) => s + e.amount, 0);
+  // Family members may use different currencies — never sum them into one
+  // number. The header shows each currency's total separately.
+  const familyTotals = groupByCurrency(familyExpenses);
   const expenseGroups = groupByDate(filteredExpenses).sort(([a], [b]) => b.localeCompare(a));
 
   const monthBar = (
@@ -246,8 +270,10 @@ export default function ExpensesPage() {
   const effBudget = getEffectiveBudget(budgetByMonth, selectedMonth, {
     mode: budgetMode, dailyLimit: budgetDailyLimit, monthlyLimit: budgetMonthlyLimit,
   });
-  // Only show budget bar in monthly mode — auto/daily don't have a meaningful monthly limit here
-  const monthBudget = effBudget.mode === 'monthly' ? effBudget.monthlyLimit : 0;
+  // Only show budget bar in monthly mode — auto/daily don't have a meaningful
+  // monthly limit here. Never in family view: the personal budget must not be
+  // compared against a family (possibly multi-currency) total.
+  const monthBudget = !isFamilyView && effBudget.mode === 'monthly' ? effBudget.monthlyLimit : 0;
   const budgetPct = monthBudget > 0 ? Math.min(100, Math.round((monthTotal / monthBudget) * 100)) : 0;
 
   return (
@@ -260,8 +286,10 @@ export default function ExpensesPage() {
             {format(parseISO(selectedMonth + '-01'), 'LLLL yyyy', { locale: dfLocale })}
           </p>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-            <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1 }}>
-              {monthTotal > 0 ? '-' : ''}{formatAmount(monthTotal, currency)}
+            <div style={{ fontSize: isFamilyView && familyTotals.length > 1 ? 26 : 44, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.05 }}>
+              {isFamilyView
+                ? (familyTotals.length > 0 ? formatCurrencyTotals(familyTotals, { sign: '-', fallback: currency }) : formatAmount(0, currency))
+                : `${monthTotal > 0 ? '-' : ''}${formatAmount(monthTotal, currency)}`}
             </div>
             {monthBudget > 0 && (
               <button onClick={() => router.push('/budget')} style={{ textAlign: 'right' }}>
@@ -455,7 +483,8 @@ export default function ExpensesPage() {
           <div className="flex flex-col pb-4">
             {groupByDate(familyFiltered).sort(([a], [b]) => b.localeCompare(a)).map(([day, items]) => {
               const rows = items as FamilyExpense[];
-              const dayTotal = rows.reduce((s, e) => s + e.amount, 0);
+              // Per-currency day total — members may spend in different currencies
+              const dayTotals = groupByCurrency(rows);
               return (
                 <div key={day} className="border-b border-border/30">
                   <div className="flex items-center justify-between px-4 py-2 lg:px-0" style={{ background: 'hsl(var(--muted)/0.4)' }}>
@@ -463,7 +492,7 @@ export default function ExpensesPage() {
                       {dateLabel(day, t, dfLocale)}
                     </span>
                     <span style={{ fontSize: 10, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: 'hsl(var(--muted-foreground))' }}>
-                      {dayTotal > 0 ? '-' : ''}{formatAmount(dayTotal, currency)}
+                      {formatCurrencyTotals(dayTotals, { sign: '-', fallback: currency })}
                     </span>
                   </div>
                   <div className="divide-y divide-border/20">
@@ -489,7 +518,7 @@ export default function ExpensesPage() {
                                 {reactionValues.length > 0 && <span className="ml-1.5">{reactionValues.join(' ')}</span>}
                               </p>
                             </div>
-                            <span className="text-sm font-extrabold tabular-nums">-{formatAmount(e.amount, currency)}</span>
+                            <span className="text-sm font-extrabold tabular-nums">-{formatAmount(e.amount, e.currency)}</span>
                           </button>
                           {reactTarget === rowKey && (
                             <div className="flex gap-1.5 px-4 pb-2.5 pl-[64px] lg:px-0 lg:pl-[48px]">

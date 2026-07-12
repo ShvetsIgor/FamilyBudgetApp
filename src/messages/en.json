@@ -245,7 +245,8 @@
     "byMember": "By member",
     "trendSummary": "Spending trend across {n} months",
     "weekSummary": "Spending for each day of the current week",
-    "averageSummary": "Average daily spending by month"
+    "averageSummary": "Average daily spending by month",
+    "mixedCurrencyNote": "Breakdowns below are shown in {currency}; other currencies appear in the totals above."
   },
   "account": {
     "title": "Account",

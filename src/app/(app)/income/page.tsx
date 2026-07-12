@@ -18,6 +18,7 @@ import type { AddIncomeInput } from '@/features/income/services/incomeService';
 import { useT } from '@/shared/hooks/useT';
 import { buildMemberColorMap } from '@/features/family/utils/memberColors';
 import { fetchFamilyMonthIncomes, type FamilyIncome, type FamilyIncomeData } from '@/features/family/services/familyBudgetService';
+import { groupByCurrency, formatCurrencyTotals } from '@/features/family/utils/familyCurrency';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 
 function groupByDate(items: SerializableIncome[]): [string, SerializableIncome[]][] {
@@ -133,6 +134,9 @@ export default function IncomePage() {
   const monthTotal = isFamilyView
     ? familyIncomes.reduce((s, i) => s + i.amount, 0)
     : incomes.reduce((s, i) => s + i.amount, 0);
+  // Family members may earn in different currencies — never sum them into one
+  // number; show each currency's total separately.
+  const familyTotals = groupByCurrency(familyIncomes);
   const groups = groupByDate(incomes);
 
   const formPanel = (
@@ -154,8 +158,10 @@ export default function IncomePage() {
           <p style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
             {format(parseISO(selectedMonth + '-01'), 'LLLL yyyy', { locale: dfLocale })}
           </p>
-          <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, color: '#18A957' }}>
-            {monthTotal > 0 ? '+' : ''}{formatAmount(monthTotal, currency)}
+          <div style={{ fontSize: isFamilyView && familyTotals.length > 1 ? 26 : 44, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.05, color: '#18A957' }}>
+            {isFamilyView
+              ? (familyTotals.length > 0 ? formatCurrencyTotals(familyTotals, { sign: '+', fallback: currency }) : formatAmount(0, currency))
+              : `${monthTotal > 0 ? '+' : ''}${formatAmount(monthTotal, currency)}`}
           </div>
         </div>
 
@@ -262,7 +268,8 @@ export default function IncomePage() {
           <div className="flex flex-col pb-4">
             {groupByDate(familyIncomes).map(([day, items]) => {
               const rows = items as FamilyIncome[];
-              const dayTotal = rows.reduce((s, i) => s + i.amount, 0);
+              // Per-currency day total — members may earn in different currencies
+              const dayTotals = groupByCurrency(rows);
               return (
                 <div key={day} className="border-b border-border/30">
                   <div className="flex items-center justify-between px-4 py-2 lg:px-0" style={{ background: 'hsl(var(--muted)/0.4)' }}>
@@ -270,7 +277,7 @@ export default function IncomePage() {
                       {dayLabel(day, t, dfLocale)}
                     </span>
                     <span style={{ fontSize: 10, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: '#18A957' }}>
-                      +{formatAmount(dayTotal, currency)}
+                      {formatCurrencyTotals(dayTotals, { sign: '+', fallback: currency })}
                     </span>
                   </div>
                   <div className="divide-y divide-border/20">
@@ -288,7 +295,7 @@ export default function IncomePage() {
                               {meta ? t.cat(meta.name) : '—'} · <span style={{ color: memberColorMap[i.memberId] }}>●</span> <span style={{ color: memberColorMap[i.memberId], fontWeight: 700 }}>{isMine ? t('expenses.you') : i.memberName}</span>
                             </p>
                           </div>
-                          <span className="text-sm font-extrabold tabular-nums" style={{ color: '#18A957' }}>+{formatAmount(i.amount, currency)}</span>
+                          <span className="text-sm font-extrabold tabular-nums" style={{ color: '#18A957' }}>+{formatAmount(i.amount, i.currency)}</span>
                         </div>
                       );
                     })}

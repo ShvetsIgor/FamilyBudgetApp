@@ -7,6 +7,7 @@ import { useT } from '@/shared/hooks/useT';
 import { formatAmount } from '@/shared/utils/currency';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { fetchFamilyAnalytics, type FamilyAnalyticsData } from '@/features/family/services/familyBudgetService';
+import { formatCurrencyTotals } from '@/features/family/utils/familyCurrency';
 import { buildMemberColorMap } from '@/features/family/utils/memberColors';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -32,11 +33,11 @@ export function FamilyAnalyticsView({ period }: { period: number }) {
     const monthKeys = Array.from({ length: period }, (_, i) =>
       format(subMonths(new Date(), period - 1 - i), 'yyyy-MM'));
     setLoading(true);
-    fetchFamilyAnalytics(members, monthKeys, user.id, categories)
+    fetchFamilyAnalytics(members, monthKeys, user.id, categories, currency)
       .then(setData)
       .catch(() => setData(null))
       .finally(() => setLoading(false));
-  }, [user, members, period, categories]);
+  }, [user, members, period, categories, currency]);
 
   if (loading || !data) {
     return (
@@ -51,6 +52,17 @@ export function FamilyAnalyticsView({ period }: { period: number }) {
   const maxMember = Math.max(...data.byMember.map((m) => m.total), 1);
   const tooltipStyle = { borderRadius: 12, border: '1px solid hsl(var(--border))' };
   const card = 'rounded-[22px] border border-border bg-card p-4';
+  // Multiple currencies can't be summed into one number — show each
+  // separately in the stat cards; the comparative breakdowns below are in
+  // the primary currency only.
+  const isMixed = data.otherCurrencies.length > 0;
+  const spentLabel = isMixed
+    ? formatCurrencyTotals(data.spentByCurrency, { fallback: data.primaryCurrency })
+    : formatAmount(data.totalSpent, data.primaryCurrency);
+  const incomeLabel = isMixed
+    ? formatCurrencyTotals(data.incomeByCurrency, { fallback: data.primaryCurrency })
+    : formatAmount(data.totalIncome, data.primaryCurrency);
+  const statFontClass = isMixed ? 'text-[17px]' : 'text-[24px]';
 
   return (
     <div className="flex flex-col gap-4">
@@ -58,13 +70,20 @@ export function FamilyAnalyticsView({ period }: { period: number }) {
       <div className="grid grid-cols-2 gap-3">
         <div className={card} style={{ boxShadow: '0 2px 8px rgba(61,44,31,.06)' }}>
           <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[.08em]">{t('analytics.familySpent')}</p>
-          <p className="text-[24px] font-black tabular-nums mt-1 leading-none tracking-tight">{formatAmount(data.totalSpent, currency)}</p>
+          <p className={`${statFontClass} font-black tabular-nums mt-1 leading-tight tracking-tight`}>{spentLabel}</p>
         </div>
         <div className={card} style={{ boxShadow: '0 2px 8px rgba(61,44,31,.06)' }}>
           <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[.08em]">{t('analytics.familyIncome')}</p>
-          <p className="text-[24px] font-black tabular-nums mt-1 leading-none tracking-tight text-emerald-500">{formatAmount(data.totalIncome, currency)}</p>
+          <p className={`${statFontClass} font-black tabular-nums mt-1 leading-tight tracking-tight text-emerald-500`}>{incomeLabel}</p>
         </div>
       </div>
+
+      {/* Mixed-currency note: breakdowns below are shown in the primary currency */}
+      {isMixed && (
+        <p className="text-[11px] text-muted-foreground -mt-1 px-1">
+          {t('analytics.mixedCurrencyNote', { currency: data.primaryCurrency })}
+        </p>
+      )}
 
       {/* Trend */}
       {hasTrend && (
@@ -85,7 +104,7 @@ export function FamilyAnalyticsView({ period }: { period: number }) {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="name" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} width={45} />
-              <Tooltip formatter={(value) => formatAmount(value as number, currency)} contentStyle={tooltipStyle} />
+              <Tooltip formatter={(value) => formatAmount(value as number, data.primaryCurrency)} contentStyle={tooltipStyle} />
               <Area dataKey="income" name={t('stats.income')} stroke="#10b981" strokeWidth={2} fill="url(#famIncomeGrad)" dot={false} />
               <Area dataKey="expenses" name={t('stats.expenses')} stroke="#ef4444" strokeWidth={2} fill="url(#famExpenseGrad)" dot={false} />
             </AreaChart>
@@ -109,7 +128,7 @@ export function FamilyAnalyticsView({ period }: { period: number }) {
                       {(m.memberName || '?').charAt(0).toUpperCase()}
                     </div>
                     <span className="flex-1 text-[13px] font-semibold truncate">{isMe ? t('expenses.you') : m.memberName}</span>
-                    <span className="text-[13px] font-black tabular-nums">{formatAmount(m.total, currency)}</span>
+                    <span className="text-[13px] font-black tabular-nums">{formatAmount(m.total, data.primaryCurrency)}</span>
                     <span className="text-[11px] font-bold text-muted-foreground w-8 text-right">{pct.toFixed(0)}%</span>
                   </div>
                   <div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -136,7 +155,7 @@ export function FamilyAnalyticsView({ period }: { period: number }) {
                       <StickerIcon icon={icon} color={color} className="h-4 w-4" />
                     </div>
                     <span className="flex-1 text-[13px] font-semibold truncate">{t.cat(name)}</span>
-                    <span className="text-[13px] font-black tabular-nums">{formatAmount(total, currency)}</span>
+                    <span className="text-[13px] font-black tabular-nums">{formatAmount(total, data.primaryCurrency)}</span>
                     <span className="text-[11px] font-bold text-muted-foreground w-8 text-right">{pct.toFixed(0)}%</span>
                   </div>
                   <div className="h-2 rounded-full bg-muted overflow-hidden">

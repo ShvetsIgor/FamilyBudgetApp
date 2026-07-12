@@ -14,6 +14,7 @@ import {
   type AddRecurringInput,
 } from '@/features/recurring/services/recurringService';
 import { addExpense } from '@/features/expenses/services/expensesService';
+import { resolveExpensePrivacy } from '@/features/expenses/utils/expensePrivacy';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
 import { CategoryEditorSheet } from '@/features/categories/components/CategoryEditorSheet';
 import { CategoryFolderPickerSheet } from '@/features/categories/components/CategoryFolderPickerSheet';
@@ -150,7 +151,8 @@ export default function RecurringPage() {
             const exp = await addExpense({
               userId: user.id, amount: data.amount, currency: data.currency,
               categoryId: data.categoryId, date: toLocalNoon(data.startDate),
-              paymentMethod: 'card', splits: [], tags: ['recurring'], privacy: 'regular',
+              paymentMethod: 'card', splits: [], tags: ['recurring'],
+              privacy: resolveExpensePrivacy({ categories, categoryId: data.categoryId }),
               store: data.name, comment: data.comment || undefined,
               recurringId: added.id,
               isRecurring: true,
@@ -183,7 +185,8 @@ export default function RecurringPage() {
         const exp = await addExpense({
           userId: user.id, amount: item.amount, currency: item.currency,
           categoryId: item.categoryId, date: parseISO(item.nextDueDate),
-          paymentMethod: 'card', splits: [], tags: ['recurring'], privacy: 'regular',
+          paymentMethod: 'card', splits: [], tags: ['recurring'],
+          privacy: resolveExpensePrivacy({ categories, categoryId: item.categoryId }),
           store: item.name,
           comment: item.comment || undefined,
           recurringId: item.id,

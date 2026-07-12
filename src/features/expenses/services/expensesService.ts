@@ -464,4 +464,31 @@ function isoToTimestamp(iso: string): Timestamp {
   return Timestamp.fromDate(new Date(iso));
 }
 
+/**
+ * №9 migration: expenses whose category (or any split category) is private
+ * but were saved before the private→secret rule must be flipped to secret,
+ * or the family would still see their amounts. Owner-side, idempotent, runs
+ * on the months the user loads. Only the `privacy` field changes — amounts
+ * and monthlyStats are untouched. Returns the ids that were updated.
+ */
+export async function backfillPrivateCategoryExpenses(
+  userId: string,
+  expenses: SerializableExpense[],
+  privateCategoryIds: Set<string>,
+): Promise<string[]> {
+  if (privateCategoryIds.size === 0) return [];
+  const toFix = expenses.filter((e) =>
+    e.privacy !== 'secret'
+    && (privateCategoryIds.has(e.categoryId)
+        || (e.splits ?? []).some((s) => privateCategoryIds.has(s.categoryId))),
+  );
+  if (toFix.length === 0) return [];
+  const batch = writeBatch(getDb());
+  for (const e of toFix) {
+    batch.update(expenseDoc(userId, e.id), { privacy: 'secret', updatedAt: serverTimestamp() });
+  }
+  await batch.commit();
+  return toFix.map((e) => e.id);
+}
+
 export type { Expense };

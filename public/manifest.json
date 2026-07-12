@@ -29,8 +29,8 @@
   ],
   "shortcuts": [
     {
-      "name": "Новая трата",
-      "short_name": "Трата",
+      "name": "New expense",
+      "short_name": "Expense",
       "url": "/expenses/new",
       "icons": [
         {
@@ -40,8 +40,8 @@
       ]
     },
     {
-      "name": "Новый доход",
-      "short_name": "Доход",
+      "name": "New income",
+      "short_name": "Income",
       "url": "/income/new",
       "icons": [
         {
@@ -51,8 +51,8 @@
       ]
     },
     {
-      "name": "В копилку",
-      "short_name": "Копилка",
+      "name": "Add to savings",
+      "short_name": "Savings",
       "url": "/savings/contribute",
       "icons": [
         {

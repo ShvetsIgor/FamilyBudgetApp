@@ -7,6 +7,7 @@ import { useAppSelector, useAppDispatch } from '@/store/store';
 import { closeQuickAdd } from '@/features/quickadd/store/quickAddSlice';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
 import { addExpense } from '@/features/expenses/services/expensesService';
+import { resolveExpensePrivacy } from '@/features/expenses/utils/expensePrivacy';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
@@ -136,7 +137,13 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
     try {
       const exp = await addExpense({
         userId: user.id, currency, date: new Date(dateStr),
-        paymentMethod, tags: [], privacy: 'regular',
+        paymentMethod, tags: [],
+        // Private category (main or split) → owner-only secret
+        privacy: resolveExpensePrivacy({
+          categories: allCats,
+          categoryId: effectiveCategoryId,
+          splitCategoryIds: splitItems.map((sp) => sp.categoryId),
+        }),
         comment: normalizeName(comment) || undefined,
         amount: totalNum, categoryId: effectiveCategoryId, splits: splitItems,
       });

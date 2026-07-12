@@ -10,13 +10,14 @@ import { removeMessage as removeChatMessage } from '@/features/chat/store/chatSl
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import { prependExpense, updateExpense as updateExpenseAction } from '@/features/expenses/store/expensesSlice';
 import { addExpense, updateExpense } from '@/features/expenses/services/expensesService';
+import { resolveExpensePrivacy } from '@/features/expenses/utils/expensePrivacy';
 import { CategoryIcon, StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
 import { recordSavedCard, buildEntryDateHint } from '@/features/chat/services/savedCardService';
 import { normalizeName, normalizeNameKey } from '@/shared/utils/normalizeName';
-import type { Category, Privacy, SerializableExpense, SplitItem } from '@/shared/types';
+import type { Category, SerializableExpense, SplitItem } from '@/shared/types';
 import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
 import { recordExpense, recordSplitExpense, recordTagAssociation, recordMerchantContext, extractTags, normalizeTag } from '@/features/expenses/store/suggestionMemorySlice';
 import { buildExpenseDraft } from '@/features/expenses/engine/buildExpenseDraft';
@@ -430,16 +431,16 @@ export function FastExpenseEntry({
       currency,
       date: new Date(dateStr),
       paymentMethod,
-      // Editing must not silently rewrite privacy (a secret expense stays
-      // secret) or wipe tags like 'savings'/'recurring'.
+      // Editing must not wipe tags like 'savings'/'recurring'.
       tags: (isEdit && initialExpense?.tags ? initialExpense.tags : []) as string[],
-      privacy: (
-        isEdit && initialExpense?.privacy
-          ? initialExpense.privacy
-          : selectedCat?.isPrivate || splitItems.some((item) => activeExpCats.find((cat) => cat.id === item.categoryId)?.isPrivate)
-            ? 'secret'
-            : 'regular'
-      ) as Privacy,
+      // Private category (main or any split) → owner-only secret; an existing
+      // secret is never silently downgraded on edit.
+      privacy: resolveExpensePrivacy({
+        categories: activeExpCats,
+        categoryId: effectiveCatId,
+        splitCategoryIds: splitItems.map((item) => item.categoryId),
+        previousPrivacy: isEdit ? initialExpense?.privacy : undefined,
+      }),
       comment: normalizeName(comment) || undefined,
       amount: totalNum,
       categoryId: effectiveCatId,

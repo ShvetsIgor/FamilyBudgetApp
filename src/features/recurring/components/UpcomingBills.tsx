@@ -11,6 +11,7 @@ import { useT } from '@/shared/hooks/useT';
 import { markAsPaid } from '@/features/recurring/services/recurringService';
 import { updateRecurringItem } from '@/features/recurring/store/recurringSlice';
 import { addExpense } from '@/features/expenses/services/expensesService';
+import { resolveExpensePrivacy } from '@/features/expenses/utils/expensePrivacy';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
 import type { SerializableRecurringPayment } from '@/shared/types';
 
@@ -89,7 +90,8 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false, embe
         const exp = await addExpense({
           userId: user.id, amount: item.amount, currency: item.currency,
           categoryId: item.categoryId, date: parseISO(item.nextDueDate),
-          paymentMethod: 'card', splits: [], tags: ['recurring'], privacy: 'regular',
+          paymentMethod: 'card', splits: [], tags: ['recurring'],
+          privacy: resolveExpensePrivacy({ categories, categoryId: item.categoryId }),
           store: item.name,
           comment: item.comment || undefined,
           recurringId: item.id,

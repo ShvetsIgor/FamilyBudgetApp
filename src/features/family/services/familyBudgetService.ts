@@ -3,8 +3,9 @@ import { getDb } from '@/shared/lib/firebase';
 import { fetchSharedMonthExpenses, fetchSharedExpensesInRange } from '@/features/expenses/services/expensesService';
 import { fetchSharedMonthIncome, fetchSharedIncomeInRange } from '@/features/income/services/incomeService';
 import { fetchSharedGoals } from '@/features/savings/services/savingsService';
-import type { Category, SavingsGoal, SerializableExpense, SerializableIncome, UserProfile } from '@/shared/types';
+import type { Category, Currency, SavingsGoal, SerializableExpense, SerializableIncome, UserProfile } from '@/shared/types';
 import { toLocalMonthKey } from '@/shared/utils/dateKey';
+import { groupByCurrency, type CurrencyTotal } from '@/features/family/utils/familyCurrency';
 
 export interface FamilyExpense extends SerializableExpense {
   memberId: string;
@@ -145,6 +146,13 @@ export interface FamilyAnalyticsData {
   topCategories: { key: string; name: string; icon: string; color: string; total: number }[];
   totalSpent: number;
   totalIncome: number;
+  /** Per-currency spent/income — never summed across currencies. */
+  spentByCurrency: CurrencyTotal[];
+  incomeByCurrency: CurrencyTotal[];
+  /** Currency the breakdowns (byMonth/byMember/topCategories) are computed in. */
+  primaryCurrency: Currency;
+  /** Other currencies present, shown separately in the stat cards. */
+  otherCurrencies: Currency[];
 }
 
 /**
@@ -159,6 +167,7 @@ export async function fetchFamilyAnalytics(
   monthKeys: string[],
   selfId: string,
   selfCategories: Category[],
+  viewerCurrency: Currency,
 ): Promise<FamilyAnalyticsData> {
   const [fy, fm] = monthKeys[0].split('-').map(Number);
   const [ly, lm] = monthKeys[monthKeys.length - 1].split('-').map(Number);
@@ -173,32 +182,46 @@ export async function fetchFamilyAnalytics(
     return { member: m, expenses, incomes };
   }));
 
+  const allExpenses = perMember.flatMap((p) => p.expenses);
+  const allIncomes = perMember.flatMap((p) => p.incomes);
+
+  // Per-currency totals — the honest headline numbers, never summed across
+  // currencies. The comparative breakdowns below are computed in a single
+  // primary currency (the largest spend) so bars stay comparable.
+  const spentByCurrency = groupByCurrency(allExpenses);
+  const incomeByCurrency = groupByCurrency(allIncomes);
+  const primaryCurrency = spentByCurrency[0]?.currency ?? incomeByCurrency[0]?.currency ?? viewerCurrency;
+  const otherCurrencies = [
+    ...new Set([...spentByCurrency, ...incomeByCurrency].map((g) => g.currency)),
+  ].filter((c) => c !== primaryCurrency);
+
   const monthAgg = new Map(monthKeys.map((k) => [k, { name: k.slice(5), expenses: 0, income: 0 }]));
   const byMember: FamilyAnalyticsData['byMember'] = [];
   const catTotals = new Map<string, { total: number; memberId: string }>();
-  let totalSpent = 0;
-  let totalIncome = 0;
 
   for (const { member, expenses, incomes } of perMember) {
     let memberTotal = 0;
     for (const e of expenses) {
+      if (e.currency !== primaryCurrency) continue; // breakdowns stay single-currency
       // Bucket by the LOCAL calendar month — e.date is a UTC ISO string, and
       // slicing it shifts entries recorded near local midnight into the
       // wrong month (the range queries themselves are local-time based).
       monthAgg.get(toLocalMonthKey(e.date)) && (monthAgg.get(toLocalMonthKey(e.date))!.expenses += e.amount);
       memberTotal += e.amount;
-      totalSpent += e.amount;
       const cur = catTotals.get(e.categoryId);
       if (cur) cur.total += e.amount;
       else catTotals.set(e.categoryId, { total: e.amount, memberId: member.id });
     }
     for (const i of incomes) {
+      if (i.currency !== primaryCurrency) continue;
       monthAgg.get(toLocalMonthKey(i.date)) && (monthAgg.get(toLocalMonthKey(i.date))!.income += i.amount);
-      totalIncome += i.amount;
     }
     byMember.push({ memberId: member.id, memberName: member.name, total: memberTotal });
   }
   byMember.sort((a, b) => b.total - a.total);
+
+  const totalSpent = spentByCurrency.find((g) => g.currency === primaryCurrency)?.total ?? 0;
+  const totalIncome = incomeByCurrency.find((g) => g.currency === primaryCurrency)?.total ?? 0;
 
   const meta: Record<string, FamilyCategoryMeta> = {};
   for (const c of selfCategories) meta[c.id] = { name: c.name, icon: c.icon, color: c.color };
@@ -228,7 +251,10 @@ export async function fetchFamilyAnalytics(
     .sort((a, b) => b.total - a.total)
     .slice(0, 6);
 
-  return { byMonth: [...monthAgg.values()], byMember, topCategories, totalSpent, totalIncome };
+  return {
+    byMonth: [...monthAgg.values()], byMember, topCategories, totalSpent, totalIncome,
+    spentByCurrency, incomeByCurrency, primaryCurrency, otherCurrencies,
+  };
 }
 
 /**

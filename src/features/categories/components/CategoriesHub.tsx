@@ -7,7 +7,7 @@ import {
   addFolder, updateFolder as updateFolderAction, removeFolder,
   setCategories, setFolders,
 } from '@/features/categories/store/categoriesSlice';
-import { setBudgetLimit } from '@/features/budget/store/budgetSlice';
+import { setBudgetLimit, setBudgets } from '@/features/budget/store/budgetSlice';
 import { normalizeNameKey } from '@/shared/utils/normalizeName';
 import {
   addCategory as addCategoryToDb,
@@ -31,7 +31,7 @@ import {
   updateFolder as updateFolderInDb,
   deleteFolder as deleteFolderFromDb,
 } from '@/features/categories/services/categoryFoldersService';
-import { saveBudget } from '@/features/budget/services/budgetService';
+import { saveBudget, fetchBudgets } from '@/features/budget/services/budgetService';
 import type { Category, CategoryFolder, CategoryType } from '@/shared/types';
 import { CategoryEditorSheet } from './CategoryEditorSheet';
 import { CategoryFolderPickerView } from './CategoryFolderPickerSheet';
@@ -649,6 +649,9 @@ export function CategoriesHub() {
     if (Object.keys(idMap).length > 0) dispatch(remapExpenseCategories(idMap));
     dispatch(clearMemory());
     dispatch(clearProfiles());
+    // Reset also remapped/pruned budgets/{uid} limits — re-read the doc
+    const limits = await fetchBudgets(user.id);
+    dispatch(setBudgets(limits));
   };
 
   // ── Render helpers ─────────────────────────────────────────────────────────

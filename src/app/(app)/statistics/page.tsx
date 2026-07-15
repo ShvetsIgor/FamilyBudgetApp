@@ -126,6 +126,9 @@ export default function StatisticsPage() {
         const pct = limit > 0 ? Math.min(100, (d.amount / limit) * 100) : 0;
         const overBudget = limit > 0 && d.amount > limit;
         const isEditing = editingCatId === d.catId;
+        // Deleted categories still appear here via monthlyStats (as 'Other');
+        // setting a limit on them would only create an orphaned envelope
+        const isLive = categories.some((c) => c.id === d.catId);
 
         return (
           <div key={d.catId}>
@@ -133,7 +136,7 @@ export default function StatisticsPage() {
               <CategoryIcon icon={d.icon} color={d.color} size="sm" />
               <span className="min-w-0 flex-1 basis-[48%] text-sm leading-tight line-clamp-2 [overflow-wrap:anywhere]">{d.name}</span>
               <span className="text-sm font-semibold tabular-nums shrink-0">{formatAmount(d.amount, currency)}</span>
-              {showBudget && (
+              {showBudget && isLive && (
                 <button
                   onClick={() => isEditing ? setEditingCatId(null) : openBudgetEdit(d.catId)}
                   className={cn(

@@ -360,7 +360,21 @@
     "total": "Monthly total",
     "overdue": "Overdue",
     "todayBang": "Today!",
-    "daysShort": "{days} d"
+    "daysShort": "{days} d",
+    "termPayments": "Number of payments",
+    "lastPaymentOn": "Last payment: {date}",
+    "paymentNofM": "payment {n} of {m}",
+    "completed": "Completed",
+    "customTypePlaceholder": "Your label…",
+    "overdueDays": "Overdue {n}d",
+    "skip": "Skip",
+    "finish": "End payments",
+    "confirmFinish": "Stop this payment? It stays in the list marked as completed.",
+    "ofIncome": "of monthly income",
+    "detectedTitle": "Looks like subscriptions",
+    "detectedAdd": "Add",
+    "perMonthShort": "/mo",
+    "payDifferent": "Different amount"
   },
   "savings": {
     "title": "Savings Goals",
@@ -657,7 +671,9 @@
     "familyDigest": "New family expenses: {n} · {sum}",
     "budgetTitle": "Budget",
     "budget85": "85% of the monthly budget is spent",
-    "budget100": "The monthly budget is used up"
+    "budget100": "The monthly budget is used up",
+    "subsReviewTitle": "Subscription check",
+    "subsReviewText": "You have {n} subscriptions costing {sum} a month — check you still need them all."
   },
   "export": {
     "title": "Export Data",

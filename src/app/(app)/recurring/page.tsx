@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { format, parseISO, differenceInCalendarDays, isToday, isYesterday } from 'date-fns';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { format, parseISO, differenceInCalendarDays, isToday, isYesterday, subMonths } from 'date-fns';
 import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { X, Calendar, MessageSquare, Plus, ChevronRight } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
@@ -10,12 +10,15 @@ import {
 } from '@/features/recurring/store/recurringSlice';
 import {
   fetchRecurring, addRecurring, updateRecurring, deleteRecurring, toggleRecurring,
-  markAsPaid, advanceToNextFutureDue,
+  markAsPaid, advanceToNextFutureDue, completeRecurring, updateRecurringAmount,
   type AddRecurringInput,
 } from '@/features/recurring/services/recurringService';
-import { addExpense } from '@/features/expenses/services/expensesService';
+import { groupByCurrency, formatCurrencyTotals } from '@/features/family/utils/familyCurrency';
+import { toLocalMonthKey } from '@/shared/utils/dateKey';
+import { detectSubscriptionCandidates, type SubscriptionCandidate } from '@/features/recurring/utils/subscriptionDetect';
+import { addExpense, fetchMonthExpenses } from '@/features/expenses/services/expensesService';
 import { resolveExpensePrivacy } from '@/features/expenses/utils/expensePrivacy';
-import { prependExpense } from '@/features/expenses/store/expensesSlice';
+import { prependExpense, mergeExpenses } from '@/features/expenses/store/expensesSlice';
 import { CategoryEditorSheet } from '@/features/categories/components/CategoryEditorSheet';
 import { CategoryFolderPickerSheet } from '@/features/categories/components/CategoryFolderPickerSheet';
 import { FolderEditorSheet } from '@/features/categories/components/FolderEditorSheet';
@@ -50,6 +53,9 @@ import { cn } from '@/shared/utils/cn';
 import { normalizeNameKey } from '@/shared/utils/normalizeName';
 import { useT } from '@/shared/hooks/useT';
 import { applyKey } from '@/features/expenses/hooks/useSplitEditor';
+import {
+  countOccurrences, isScheduleCompleted, monthlyEquivalent, occurrenceDate, paymentsLeft,
+} from '@/features/recurring/utils/schedule';
 import type {
   Category,
   CategoryFolder,
@@ -61,6 +67,8 @@ import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups
 
 const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫'] as const;
 type NumKey = (typeof NUMPAD_KEYS)[number];
+
+const CURRENCIES: Currency[] = ['ILS', 'USD', 'CAD', 'RUB'];
 
 function daysUntil(dateStr: string): number {
   return differenceInCalendarDays(parseISO(dateStr), new Date());
@@ -81,7 +89,21 @@ function toLocalNoon(date: Date): Date {
 }
 
 
-type FormMode = { mode: 'add' } | { mode: 'edit'; item: SerializableRecurringPayment };
+/** Seed values when the add form opens from a detected-subscription card */
+export interface RecurringPrefill {
+  name: string;
+  amount: number;
+  currency: Currency;
+  categoryId: string;
+  frequency: RecurringFrequency;
+  type: RecurringType;
+  /** ISO — strictly future, so saving never backfills an already-logged charge */
+  startDate: string;
+}
+
+type FormMode =
+  | { mode: 'add'; prefill?: RecurringPrefill }
+  | { mode: 'edit'; item: SerializableRecurringPayment };
 
 export default function RecurringPage() {
   const dispatch = useAppDispatch();
@@ -92,6 +114,10 @@ export default function RecurringPage() {
   const { list, status } = useAppSelector((s) => s.recurring);
   const [formMode, setFormMode] = useState<FormMode | null>(null);
   const [loading, setLoading] = useState(false);
+  // «Оплачено, но сумма изменилась» — inline amount editor per row
+  const [payEdit, setPayEdit] = useState<{ id: string; value: string } | null>(null);
+  const [dismissedKeys, setDismissedKeys] = useState<string[]>([]);
+  const [pendingCandidateKey, setPendingCandidateKey] = useState<string | null>(null);
   const t = useT();
   const dfLocale = useDateFnsLocale();
 
@@ -112,39 +138,92 @@ export default function RecurringPage() {
     { value: 'custom', label: t('recurring.custom'), icon: '🔄' },
   ];
 
+  // Overdue items are NOT silently advanced anymore: a missed payment stays
+  // visible as «Просрочено» until the user explicitly pays or skips it.
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const items = await fetchRecurring(user.id);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const advanced = await Promise.all(
-        items.map((item) =>
-          item.isActive && parseISO(item.nextDueDate) < today
-            ? advanceToNextFutureDue(user.id, item)
-            : item
-        )
-      );
-      dispatch(setRecurring(advanced));
+      dispatch(setRecurring(await fetchRecurring(user.id)));
     } finally { setLoading(false); }
   }, [user, dispatch]);
 
   useEffect(() => { if (status === 'idle') load(); }, [status, load]);
 
+  // Subscription detection needs a few months of history, not just the
+  // current month that /home already loads (merge dedupes by id)
+  useEffect(() => {
+    if (!user) return;
+    for (let i = 0; i < 4; i++) {
+      fetchMonthExpenses(user.id, toLocalMonthKey(subMonths(new Date(), i)))
+        .then((items) => dispatch(mergeExpenses(items)))
+        .catch(() => {});
+    }
+  }, [user, dispatch]);
+
+  // Per-user dismissed suggestion keys («не подписка / не предлагать»)
+  useEffect(() => {
+    if (!user) return;
+    try {
+      setDismissedKeys(JSON.parse(localStorage.getItem(`subs_suggest_dismissed_${user.id}`) ?? '[]'));
+    } catch { setDismissedKeys([]); }
+  }, [user]);
+
+  const allExpenses = useAppSelector((s) => s.expenses.list);
+  const candidates = useMemo(
+    () => detectSubscriptionCandidates({ expenses: allExpenses, templates: list, dismissedKeys }).slice(0, 3),
+    [allExpenses, list, dismissedKeys]
+  );
+
+  function dismissCandidate(key: string) {
+    if (!user) return;
+    const next = [...dismissedKeys, key];
+    setDismissedKeys(next);
+    try { localStorage.setItem(`subs_suggest_dismissed_${user.id}`, JSON.stringify(next)); } catch {}
+  }
+
+  function openCandidateForm(c: SubscriptionCandidate) {
+    setPendingCandidateKey(c.key);
+    setFormMode({
+      mode: 'add',
+      prefill: {
+        name: c.displayName, amount: c.amount, currency: c.currency,
+        categoryId: c.categoryId, frequency: 'monthly', type: 'subscription',
+        startDate: c.suggestedStartDate,
+      },
+    });
+  }
+
+  function closeForm() {
+    setFormMode(null);
+    setPendingCandidateKey(null);
+  }
+
+  function openAddForm() {
+    setPendingCandidateKey(null);
+    setFormMode({ mode: 'add' });
+  }
+
   async function handleSave(data: Omit<AddRecurringInput, 'userId'>) {
     if (!user) return;
     try {
       if (formMode?.mode === 'edit') {
-        const { nextDueDate } = await updateRecurring(user.id, formMode.item.id, data);
+        const { nextDueDate, isActive } = await updateRecurring(user.id, formMode.item.id, data);
         dispatch(updateRecurringItem({
           ...formMode.item, ...data,
           startDate: data.startDate.toISOString(),
+          endDate: data.endDate ? data.endDate.toISOString() : undefined,
           nextDueDate,
           currency: data.currency,
+          ...(isActive === false ? { isActive } : {}),
         }));
       } else {
         const added = await addRecurring({ ...data, userId: user.id });
+        // Saved from a detected-subscription card — stop suggesting this merchant
+        if (pendingCandidateKey) {
+          dismissCandidate(pendingCandidateKey);
+          setPendingCandidateKey(null);
+        }
         const shouldCreateInitialOccurrence = occursOnOrBeforeToday(data.startDate);
         if (shouldCreateInitialOccurrence) {
           try {
@@ -171,19 +250,21 @@ export default function RecurringPage() {
           dispatch(addRecurringItem(added));
         }
       }
-      setFormMode(null);
+      closeForm();
     } catch (e) {
       console.error('handleSave error:', e);
       throw e;
     }
   }
 
-  async function handleMarkPaid(item: SerializableRecurringPayment) {
+  async function handleMarkPaid(item: SerializableRecurringPayment, amountOverride?: number) {
     if (!user) return;
+    const amount = amountOverride ?? item.amount;
+    if (amount <= 0) return;
     try {
       if (item.categoryId) {
         const exp = await addExpense({
-          userId: user.id, amount: item.amount, currency: item.currency,
+          userId: user.id, amount, currency: item.currency,
           categoryId: item.categoryId, date: parseISO(item.nextDueDate),
           paymentMethod: 'card', splits: [], tags: ['recurring'],
           privacy: resolveExpensePrivacy({ categories, categoryId: item.categoryId }),
@@ -193,7 +274,10 @@ export default function RecurringPage() {
         });
         dispatch(prependExpense(exp));
       }
-      dispatch(updateRecurringItem(await markAsPaid(user.id, item)));
+      // «Сумма изменилась»: the new price sticks to the template from now on
+      if (amount !== item.amount) await updateRecurringAmount(user.id, item.id, amount);
+      dispatch(updateRecurringItem(await markAsPaid(user.id, { ...item, amount })));
+      setPayEdit(null);
     } catch (e) {
       console.error('handleMarkPaid error:', e);
     }
@@ -212,19 +296,110 @@ export default function RecurringPage() {
     dispatch(toggleRecurringItem({ id: item.id, isActive: next }));
   }
 
-  const monthlyTotal = list
-    .filter((r) => r.isActive)
-    .reduce((s, r) => {
-      const m = r.frequency === 'monthly' ? 1 : r.frequency === 'yearly' ? 1 / 12 : r.frequency === 'weekly' ? 4.33 : 30;
-      return s + r.amount * m;
-    }, 0);
+  // Skip a missed occurrence without creating an expense
+  async function handleSkip(item: SerializableRecurringPayment) {
+    if (!user) return;
+    try {
+      dispatch(updateRecurringItem(await advanceToNextFutureDue(user.id, item)));
+    } catch (e) {
+      console.error('handleSkip error:', e);
+    }
+  }
+
+  // «Я отменил подписку» — terminate: no more dues, stays listed as completed
+  async function handleFinish(item: SerializableRecurringPayment) {
+    if (!user || !confirm(t('recurring.confirmFinish'))) return;
+    try {
+      const { endDate } = await completeRecurring(user.id, item.id);
+      dispatch(updateRecurringItem({ ...item, endDate, isActive: false }));
+      closeForm();
+    } catch (e) {
+      console.error('handleFinish error:', e);
+    }
+  }
+
+  // Different currencies are never added into one number — totals are grouped
+  // per currency (same rule as family analytics №15/16)
+  const activeItems = list.filter((r) => r.isActive);
+  const asMonthly = (items: SerializableRecurringPayment[]) =>
+    items.map((r) => ({ amount: monthlyEquivalent(r.amount, r.frequency), currency: r.currency }));
+  const monthlyTotals = groupByCurrency(asMonthly(activeItems));
+  const primaryTotal = monthlyTotals[0];
+  const otherTotals = monthlyTotals.slice(1);
+
+  // Fixed commitments as a share of this month's income, in the primary
+  // commitments currency only (no FX conversion on the free plan)
+  const monthStr = toLocalMonthKey(new Date());
+  const incomeList = useAppSelector((s) => s.income.list);
+  const monthIncomeTotals = groupByCurrency(
+    incomeList
+      .filter((i) => toLocalMonthKey(i.date) === monthStr)
+      .map((i) => ({ amount: i.amount, currency: i.currency }))
+  );
+  const primaryIncome = primaryTotal
+    ? monthIncomeTotals.find((g) => g.currency === primaryTotal.currency)
+    : undefined;
+  const incomeShare = primaryTotal && primaryIncome && primaryIncome.total > 0
+    ? Math.round((primaryTotal.total / primaryIncome.total) * 100)
+    : 0;
+
+  // Monthly-equivalent commitments per kind — the "where does it all go" line
+  const typeTotals = TYPES
+    .map((tp) => {
+      const items = activeItems.filter((r) => r.type === tp.value);
+      return {
+        ...tp,
+        count: items.length,
+        text: formatCurrencyTotals(groupByCurrency(asMonthly(items)), { sign: '-', fallback: currency }),
+      };
+    })
+    .filter((tp) => tp.count > 0);
+
+  const headerTotals = (
+    <>
+      <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, color: 'hsl(var(--destructive))' }}>
+        {primaryTotal ? `-${formatAmount(primaryTotal.total, primaryTotal.currency)}` : formatAmount(0, currency)}
+      </div>
+      {(otherTotals.length > 0 || incomeShare > 0) && (
+        <p style={{ marginTop: 6, fontSize: 12, fontWeight: 700, color: 'hsl(var(--muted-foreground))' }}>
+          {otherTotals.length > 0 && formatCurrencyTotals(otherTotals, { sign: '-', fallback: currency })}
+          {otherTotals.length > 0 && incomeShare > 0 && ' · '}
+          {incomeShare > 0 && `${incomeShare}% ${t('recurring.ofIncome')}`}
+        </p>
+      )}
+    </>
+  );
+
+  const typeBreakdown = typeTotals.length > 1 ? (
+    <div className="flex flex-wrap gap-1.5" style={{ marginTop: 10 }}>
+      {typeTotals.map((tp) => (
+        <span
+          key={tp.value}
+          className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[11px] font-bold text-muted-foreground"
+        >
+          <span>{tp.icon}</span>
+          <span>{tp.label}</span>
+          <span className="tabular-nums text-foreground">{tp.text}</span>
+        </span>
+      ))}
+    </div>
+  ) : null;
 
   const listItems = list.map((item) => {
     const cat = categories.find((c) => c.id === item.categoryId);
     const days = daysUntil(item.nextDueDate);
     const typeObj = TYPES.find((tp) => tp.value === item.type);
+    const typeText = item.type === 'custom' && item.typeLabel ? item.typeLabel : typeObj?.label;
     const isSelected = formMode?.mode === 'edit' && formMode.item.id === item.id;
     const borderColor = cat?.color ?? 'hsl(var(--muted-foreground))';
+    // Fixed-term progress (credits/installments): which payment is pending of how many
+    const termTotal = item.endDate
+      ? countOccurrences(parseISO(item.startDate), parseISO(item.endDate), item.frequency)
+      : 0;
+    const termCompleted = item.endDate ? isScheduleCompleted(item.nextDueDate, item.endDate) : false;
+    const termPending = termTotal > 0 && !termCompleted
+      ? termTotal - paymentsLeft(item.nextDueDate, item.endDate!, item.frequency) + 1
+      : 0;
     return (
       <div
         key={item.id}
@@ -239,32 +414,89 @@ export default function RecurringPage() {
           {cat ? <CategoryIcon icon={cat.icon} color={cat.color} size="md" /> : <span className="text-2xl shrink-0">{typeObj?.icon ?? '🔄'}</span>}
           <div className="flex-1 min-w-0">
             <p className="text-[15px] font-semibold truncate leading-snug">{item.name}</p>
-            <p className="flex items-center gap-1.5 mt-0.5">
+            <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-0.5">
+              {typeText && (
+                <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground whitespace-nowrap">
+                  {typeObj?.icon} {typeText}
+                </span>
+              )}
               <span style={{ fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700, color: borderColor }}>
                 {FREQ.find((f) => f.value === item.frequency)?.label}
               </span>
               <span className="text-muted-foreground/40">·</span>
-              {days <= 0 ? (
+              {termCompleted ? (
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'hsl(152 60% 32%)' }}>{t('recurring.completed')}</span>
+              ) : days < 0 ? (
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'hsl(var(--destructive))' }}>{t('recurring.overdueDays', { n: -days })}</span>
+              ) : days === 0 ? (
                 <span style={{ fontSize: 12, fontWeight: 700, color: 'hsl(var(--destructive))' }}>{t('recurring.dueToday')}</span>
               ) : days <= 3 ? (
                 <span style={{ fontSize: 12, fontWeight: 700, color: 'hsl(38 80% 36%)' }}>{t('recurring.inDays').replace('{n}', String(days))}</span>
               ) : (
                 <span style={{ fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>{format(parseISO(item.nextDueDate), 'd MMM', { locale: dfLocale })}</span>
               )}
+              {termPending > 0 && (
+                <>
+                  <span className="text-muted-foreground/40">·</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'hsl(var(--muted-foreground))' }}>
+                    {t('recurring.paymentNofM', { n: termPending, m: termTotal })}
+                  </span>
+                </>
+              )}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span style={{ fontSize: 18, fontWeight: 900, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em' }}>
-            {item.amount > 0 ? '-' : ''}{formatAmount(item.amount, item.currency)}
-          </span>
+          {payEdit?.id !== item.id && (
+            <span style={{ fontSize: 18, fontWeight: 900, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em' }}>
+              {item.amount > 0 ? '-' : ''}{formatAmount(item.amount, item.currency)}
+            </span>
+          )}
           {item.isActive && days <= 0 && (
-            <button
-              onClick={() => handleMarkPaid(item)}
-              className="min-h-11 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 px-3 text-sm font-semibold hover:bg-emerald-500/20 transition-colors"
-            >
-              {t('recurring.markPaid')}
-            </button>
+            payEdit?.id === item.id ? (
+              <div className="flex items-center gap-1">
+                <input
+                  type="number" inputMode="decimal" min="0" step="0.01" autoFocus
+                  value={payEdit.value}
+                  onChange={(e) => setPayEdit({ id: item.id, value: e.target.value })}
+                  className="w-20 min-h-11 rounded-xl border border-border bg-background px-2 text-right text-sm font-extrabold tabular-nums outline-none focus:border-primary"
+                />
+                <button
+                  onClick={() => handleMarkPaid(item, parseFloat(payEdit.value) || 0)}
+                  disabled={!(parseFloat(payEdit.value) > 0)}
+                  aria-label={t('recurring.markPaid')}
+                  className="min-h-11 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 px-3 text-sm font-bold hover:bg-emerald-500/20 transition-colors disabled:opacity-50"
+                >✓</button>
+                <button
+                  onClick={() => setPayEdit(null)}
+                  aria-label={t('recurring.cancel')}
+                  className="min-h-11 w-9 rounded-xl bg-muted text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >✕</button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1">
+                <button
+                  onClick={() => handleMarkPaid(item)}
+                  className="min-h-11 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 px-3 text-sm font-semibold hover:bg-emerald-500/20 transition-colors"
+                >
+                  {t('recurring.markPaid')}
+                </button>
+                <button
+                  onClick={() => setPayEdit({ id: item.id, value: String(item.amount) })}
+                  className="min-h-11 rounded-xl bg-muted px-3 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {t('recurring.payDifferent')}
+                </button>
+                {days < 0 && (
+                  <button
+                    onClick={() => handleSkip(item)}
+                    className="min-h-11 rounded-xl bg-muted px-3 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {t('recurring.skip')}
+                  </button>
+                )}
+              </div>
+            )
           )}
           <button
             onClick={() => handleToggle(item)}
@@ -280,16 +512,52 @@ export default function RecurringPage() {
     );
   });
 
+  // Detected subscription-shaped merchants — suggestion only, adding opens
+  // the prefilled form for explicit confirmation
+  const candidatesBlock = candidates.length > 0 ? (
+    <div className="px-4 pt-3 lg:px-0">
+      <p className="text-[10px] font-extrabold uppercase tracking-[.15em] text-muted-foreground mb-1.5 px-0.5">
+        {t('recurring.detectedTitle')}
+      </p>
+      <div className="flex flex-col gap-1.5">
+        {candidates.map((c) => (
+          <div key={c.key} className="flex items-center gap-3 rounded-[14px] border border-dashed border-border bg-card/60 px-3 py-2.5">
+            <span className="text-xl shrink-0">📺</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold truncate">{c.displayName}</p>
+              <p className="text-xs text-muted-foreground tabular-nums">
+                ~{formatAmount(c.amount, c.currency)}{t('recurring.perMonthShort')} · ×{c.occurrences}
+              </p>
+            </div>
+            <button
+              onClick={() => openCandidateForm(c)}
+              className="min-h-11 shrink-0 rounded-xl bg-primary/10 px-3 text-xs font-bold text-primary hover:bg-primary/15 transition-colors"
+            >
+              {t('recurring.detectedAdd')}
+            </button>
+            <button
+              onClick={() => dismissCandidate(c.key)}
+              aria-label={t('common.close')}
+              className="fb-touch-target flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
+            >✕</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  ) : null;
+
   const formPanel = formMode ? (
     <div className="rounded-2xl border border-border bg-card overflow-hidden">
       <div className="border-b border-border px-4 py-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">{formMode.mode === 'edit' ? t('recurring.editTitle') : t('recurring.newTitle')}</h2>
-        <button onClick={() => setFormMode(null)} className="fb-touch-target flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={t('common.close')}>✕</button>
+        <button onClick={closeForm} className="fb-touch-target flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={t('common.close')}>✕</button>
       </div>
       <RecurringForm
         initial={formMode.mode === 'edit' ? formMode.item : undefined}
-        onSave={handleSave} onCancel={() => setFormMode(null)}
-        currency={currency} freq={FREQ}
+        prefill={formMode.mode === 'add' ? formMode.prefill : undefined}
+        onSave={handleSave} onCancel={closeForm}
+        onFinish={formMode.mode === 'edit' && formMode.item.isActive ? () => handleFinish(formMode.item) : undefined}
+        currency={currency} freq={FREQ} types={TYPES}
       />
     </div>
   ) : (
@@ -297,7 +565,7 @@ export default function RecurringPage() {
       <p className="text-3xl">🔄</p>
       <p className="text-sm text-muted-foreground">{t('recurring.selectToEdit')}</p>
       <button
-        onClick={() => setFormMode({ mode: 'add' })}
+        onClick={openAddForm}
         className="mt-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
       >
         + {t('recurring.add')}
@@ -313,12 +581,11 @@ export default function RecurringPage() {
           <p style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
             {t('recurring.title')}
           </p>
-          {list.length > 0 && (
-            <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, color: 'hsl(var(--destructive))' }}>
-              {monthlyTotal > 0 ? '-' : ''}{formatAmount(monthlyTotal, currency)}
-            </div>
-          )}
+          {list.length > 0 && headerTotals}
+          {typeBreakdown}
         </div>
+
+        {candidatesBlock}
 
         {loading && <div className="flex justify-center py-12"><div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-primary" /></div>}
         {!loading && list.length === 0 && (
@@ -334,7 +601,7 @@ export default function RecurringPage() {
 
         {/* FAB */}
         <button
-          onClick={() => setFormMode({ mode: 'add' })}
+          onClick={openAddForm}
           className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-transform active:scale-95"
           style={{ background: 'hsl(var(--primary))' }}
         >
@@ -345,8 +612,10 @@ export default function RecurringPage() {
         {formMode && (
           <RecurringForm
             initial={formMode.mode === 'edit' ? formMode.item : undefined}
-            onSave={handleSave} onCancel={() => setFormMode(null)}
-            currency={currency} freq={FREQ}
+            prefill={formMode.mode === 'add' ? formMode.prefill : undefined}
+            onSave={handleSave} onCancel={closeForm}
+            onFinish={formMode.mode === 'edit' && formMode.item.isActive ? () => handleFinish(formMode.item) : undefined}
+            currency={currency} freq={FREQ} types={TYPES}
           />
         )}
       </div>
@@ -360,17 +629,16 @@ export default function RecurringPage() {
                 <p style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
                   {t('recurring.title')}
                 </p>
-                {list.length > 0 && (
-                  <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, color: 'hsl(var(--destructive))' }}>
-                    {monthlyTotal > 0 ? '-' : ''}{formatAmount(monthlyTotal, currency)}
-                  </div>
-                )}
+                {list.length > 0 && headerTotals}
+                {typeBreakdown}
               </div>
-              <button onClick={() => setFormMode({ mode: 'add' })} className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-medium">
+              <button onClick={openAddForm} className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-medium">
                 {t('recurring.add')}
               </button>
             </div>
           </div>
+
+          {candidatesBlock && <div className="mb-4">{candidatesBlock}</div>}
 
           {loading && <div className="flex justify-center py-12"><div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-primary" /></div>}
           {!loading && list.length === 0 && (
@@ -393,12 +661,17 @@ export default function RecurringPage() {
 
 // ── RecurringForm ─────────────────────────────────────────────────────────────
 
-function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
+function RecurringForm({ initial, prefill, onSave, onCancel, onFinish, currency, freq, types }: {
   initial?: SerializableRecurringPayment;
+  /** Seed values for add mode (detected-subscription card) */
+  prefill?: RecurringPrefill;
   onSave: (d: Omit<AddRecurringInput, 'userId'>) => Promise<void>;
   onCancel: () => void;
+  /** Terminate the payment (edit mode, active items only) */
+  onFinish?: () => void;
   currency: string;
   freq: { value: RecurringFrequency; label: string }[];
+  types: { value: RecurringType; label: string; icon: string }[];
 }) {
   const t = useT();
   const language = useAppSelector((s) => s.ui.language);
@@ -408,23 +681,34 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
   const allExpCats = useAppSelector((s) => s.categories.expense);
   const expenseFolders = useAppSelector((s) => s.categories.folders.expense ?? []);
   const { groups: expenseCatGroups, getCatsInGroup, getGroupOf } = useCategoryGroups('expense');
-  const symbol = getCurrencySymbol(currency as Parameters<typeof getCurrencySymbol>[0]);
   const folderSuggestions = getFolderLibraryBlueprints('expense').map((b) => folderBlueprintToSuggestion(b, language));
   const categorySuggestions = getCategoryLibraryBlueprints('expense').map((b) => categoryBlueprintToSuggestion(b, language));
 
-  const [name, setName] = useState(initial?.name ?? '');
-  const [amount, setAmount] = useState(initial ? String(initial.amount) : '0');
-  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? '');
-  const [frequency, setFrequency] = useState<RecurringFrequency>(initial?.frequency ?? 'monthly');
-  const [type, setType] = useState<RecurringType>(initial?.type ?? 'subscription');
+  const [name, setName] = useState(initial?.name ?? prefill?.name ?? '');
+  const [amount, setAmount] = useState(
+    initial ? String(initial.amount) : prefill ? String(prefill.amount) : '0'
+  );
+  const [cur, setCur] = useState<Currency>((initial?.currency ?? prefill?.currency ?? currency) as Currency);
+  const symbol = getCurrencySymbol(cur);
+  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? prefill?.categoryId ?? '');
+  const [frequency, setFrequency] = useState<RecurringFrequency>(initial?.frequency ?? prefill?.frequency ?? 'monthly');
+  const [type, setType] = useState<RecurringType>(initial?.type ?? prefill?.type ?? 'subscription');
   const [typeLabel, setTypeLabel] = useState(initial?.typeLabel ?? '');
   const [selectedGroupId, setSelectedGroupId] = useState<string>(() => {
-    if (!initial?.categoryId) return '';
-    const cat = allExpCats.find((c) => c.id === initial.categoryId);
+    const seedCatId = initial?.categoryId ?? prefill?.categoryId;
+    if (!seedCatId) return '';
+    const cat = allExpCats.find((c) => c.id === seedCatId);
     return getGroupOf(cat) || (cat?.id ?? '');
   });
-  const [startDate, setStartDate] = useState(
-    initial ? format(parseISO(initial.startDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')
+  const [startDate, setStartDate] = useState(() => {
+    const seedStart = initial?.startDate ?? prefill?.startDate;
+    return seedStart ? format(parseISO(seedStart), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
+  });
+  // Fixed term as a payment count; '' = open-ended. endDate is derived on save.
+  const [payments, setPayments] = useState(() =>
+    initial?.endDate
+      ? String(countOccurrences(parseISO(initial.startDate), parseISO(initial.endDate), initial.frequency))
+      : ''
   );
   const [reminderDays, setReminderDays] = useState(initial?.reminderDays ?? 3);
   const [comment, setComment] = useState(initial?.comment ?? '');
@@ -437,6 +721,12 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
   const [showCatPicker, setShowCatPicker] = useState(false);
 
   const amountNum = parseFloat(amount) || 0;
+  // Term applies to debt-like kinds; subscriptions stay open-ended by design
+  const isTermType = type === 'credit' || type === 'installment' || type === 'mortgage';
+  const paymentsNum = Math.max(0, Math.floor(parseFloat(payments) || 0));
+  const lastPaymentDate = isTermType && paymentsNum >= 1
+    ? occurrenceDate(parseLocalDate(startDate), frequency, paymentsNum)
+    : null;
   const category = allExpCats.find((c) => c.id === categoryId);
   const selectedGroupCat = expenseCatGroups.find((g) => g.id === selectedGroupId);
   const catsInGroup = selectedGroupId ? getCatsInGroup(selectedGroupId) : [];
@@ -593,8 +883,9 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
     setError(''); setSaving(true);
     try {
       await onSave({
-        name: name.trim(), amount: amountNum, currency: currency as Currency,
+        name: name.trim(), amount: amountNum, currency: cur,
         categoryId, frequency, startDate: parseLocalDate(startDate),
+        endDate: lastPaymentDate ?? undefined,
         type, typeLabel: type === 'custom' ? typeLabel.trim() || undefined : undefined,
         reminderDays, comment: comment.trim() || undefined,
       });
@@ -646,6 +937,27 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
               {amount}
             </span>
           </div>
+        </div>
+
+        {/* Currency chips — per-template currency, no FX conversion */}
+        <div className="mx-4 mt-1 flex gap-1.5 flex-shrink-0">
+          {CURRENCIES.map((c) => {
+            const sel = cur === c;
+            return (
+              <button
+                key={c}
+                onClick={() => setCur(c)}
+                className="min-h-9 flex-1 rounded-xl text-xs font-bold transition-all border"
+                style={{
+                  background: sel ? 'hsl(var(--primary) / .12)' : 'hsl(var(--card))',
+                  borderColor: sel ? 'hsl(var(--primary))' : 'transparent',
+                  color: sel ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                }}
+              >
+                {getCurrencySymbol(c)} {c}
+              </button>
+            );
+          })}
         </div>
 
         {/* Scrollable middle */}
@@ -733,6 +1045,85 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
             </div>
           </div>
 
+          {/* Kind of payment: subscription / credit / installment / … */}
+          <div>
+            <p className="text-xs font-extrabold text-muted-foreground uppercase tracking-wider mb-1.5 px-0.5">
+              {t('recurring.type')}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {types.map((tp) => {
+                const sel = type === tp.value;
+                return (
+                  <button
+                    key={tp.value}
+                    onClick={() => setType(tp.value)}
+                    className="min-h-9 rounded-xl px-3 text-xs font-bold transition-all border inline-flex items-center gap-1"
+                    style={{
+                      background: sel ? catColor + '18' : 'hsl(var(--card))',
+                      borderColor: sel ? catColor : 'transparent',
+                      color: sel ? catColor : 'hsl(var(--muted-foreground))',
+                    }}
+                  >
+                    <span>{tp.icon}</span>
+                    <span>{tp.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {type === 'custom' && (
+              <input
+                type="text"
+                value={typeLabel}
+                onChange={(e) => setTypeLabel(e.target.value)}
+                placeholder={t('recurring.customTypePlaceholder')}
+                className="mt-1.5 block w-full px-3 py-2 rounded-xl text-sm bg-card border border-border outline-none focus:border-primary transition-colors"
+              />
+            )}
+          </div>
+
+          {/* Fixed term for debt-like kinds */}
+          {isTermType && (
+            <div
+              className="bg-card rounded-[14px] px-3.5 py-2.5 flex-shrink-0"
+              style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[12.5px] font-bold text-foreground">{t('recurring.termPayments')}</p>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  step="1"
+                  placeholder="∞"
+                  value={payments}
+                  onChange={(e) => setPayments(e.target.value)}
+                  className="w-20 rounded-xl border border-border bg-background px-3 py-1.5 text-right text-sm font-extrabold tabular-nums outline-none focus:border-primary transition-colors"
+                />
+              </div>
+              <div className="flex gap-1.5 mt-2">
+                {[3, 6, 12, 24].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setPayments(String(n))}
+                    className="min-h-9 flex-1 rounded-xl text-xs font-bold transition-all border"
+                    style={{
+                      background: paymentsNum === n ? catColor + '18' : 'hsl(var(--muted))',
+                      borderColor: paymentsNum === n ? catColor : 'transparent',
+                      color: paymentsNum === n ? catColor : 'hsl(var(--muted-foreground))',
+                    }}
+                  >
+                    ×{n}
+                  </button>
+                ))}
+              </div>
+              {lastPaymentDate && (
+                <p className="text-[11px] text-muted-foreground mt-1.5">
+                  {t('recurring.lastPaymentOn', { date: format(lastPaymentDate, 'd MMMM yyyy', { locale: dfLocale }) })}
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Category — canonical folder-first picker */}
           <div>
             <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider mb-1.5 px-0.5">
@@ -761,6 +1152,16 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
               >+</button>
             </div>
           </div>
+
+          {/* Terminate: «я отменил эту подписку» */}
+          {onFinish && (
+            <button
+              onClick={onFinish}
+              className="min-h-11 rounded-[14px] border border-border bg-card text-sm font-bold text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors flex-shrink-0"
+            >
+              🏁 {t('recurring.finish')}
+            </button>
+          )}
         </div>
 
         {/* Numpad */}
@@ -812,13 +1213,21 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
             className="w-full bg-transparent text-sm font-medium outline-none" />
         </div>
         <div className="rounded-2xl border border-border bg-card p-4">
-          <label className="text-xs text-muted-foreground mb-1 block">{t('recurring.amount')} ({currency})</label>
+          <label className="text-xs text-muted-foreground mb-1 block">{t('recurring.amount')} ({cur})</label>
           <input
             type="number" min="0" step="0.01" placeholder="0.00"
             value={amountNum === 0 ? '' : String(amountNum)}
             onChange={(e) => setAmount(e.target.value || '0')}
             className="w-full bg-transparent text-2xl font-bold outline-none tabular-nums text-destructive"
           />
+          <div className="flex gap-1.5 mt-2">
+            {CURRENCIES.map((c) => (
+              <button key={c} type="button" onClick={() => setCur(c)}
+                className={`flex-1 rounded-xl py-1.5 text-xs font-semibold border transition-colors ${cur === c ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'}`}>
+                {getCurrencySymbol(c)} {c}
+              </button>
+            ))}
+          </div>
         </div>
         <div className="rounded-2xl border border-border bg-card p-4">
           <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.frequency')}</label>
@@ -831,6 +1240,45 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
             ))}
           </div>
         </div>
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.type')}</label>
+          <div className="grid grid-cols-2 gap-2">
+            {types.map((tp) => (
+              <button key={tp.value} type="button" onClick={() => setType(tp.value)}
+                className={`rounded-xl py-2 px-2 text-sm font-medium border transition-colors inline-flex items-center justify-center gap-1.5 ${type === tp.value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'}`}>
+                <span>{tp.icon}</span>
+                <span className="truncate">{tp.label}</span>
+              </button>
+            ))}
+          </div>
+          {type === 'custom' && (
+            <input
+              type="text"
+              value={typeLabel}
+              onChange={(e) => setTypeLabel(e.target.value)}
+              placeholder={t('recurring.customTypePlaceholder')}
+              className="mt-2 block w-full px-3 py-2 rounded-xl text-sm bg-background border border-border outline-none focus:border-primary transition-colors"
+            />
+          )}
+        </div>
+        {isTermType && (
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between gap-3">
+              <label className="text-sm font-medium">{t('recurring.termPayments')}</label>
+              <input
+                type="number" inputMode="numeric" min="1" step="1" placeholder="∞"
+                value={payments}
+                onChange={(e) => setPayments(e.target.value)}
+                className="w-24 rounded-lg border border-border bg-background px-3 py-1.5 text-right text-sm font-semibold tabular-nums outline-none focus:border-primary"
+              />
+            </div>
+            {lastPaymentDate && (
+              <p className="text-xs text-muted-foreground mt-2">
+                {t('recurring.lastPaymentOn', { date: format(lastPaymentDate, 'd MMMM yyyy', { locale: dfLocale }) })}
+              </p>
+            )}
+          </div>
+        )}
         <div className="rounded-2xl border border-border bg-card p-4">
           <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.section')}</label>
           {categoryTriggerCard}
@@ -856,6 +1304,12 @@ function RecurringForm({ initial, onSave, onCancel, currency, freq }: {
             className="w-full bg-transparent text-sm outline-none" />
         </div>
         {visibleError && <p className="text-xs text-destructive px-1">{visibleError}</p>}
+        {onFinish && (
+          <button type="button" onClick={onFinish}
+            className="rounded-2xl border border-border py-3 text-sm font-medium text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors">
+            🏁 {t('recurring.finish')}
+          </button>
+        )}
         <div className="flex gap-3">
           <button type="button" onClick={onCancel} className="flex-1 rounded-2xl border border-border py-3 text-sm font-medium text-muted-foreground">
             {t('recurring.cancel')}

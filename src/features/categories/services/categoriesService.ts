@@ -17,7 +17,9 @@ import {
   DEFAULT_EXPENSE_CATEGORIES,
   DEFAULT_INCOME_CATEGORIES,
   DEFAULT_INCOME_FOLDER_SEEDS,
+  PRESET_EXPENSE_CATEGORY_IDS,
 } from './defaultCategories';
+import { removeBudgetLimit, remapBudgetLimits } from '@/features/budget/services/budgetService';
 import { bulkCreateFolders, fetchFolders } from './categoryFoldersService';
 import { legacyCategoryMap } from '../compat/legacyCategoryMap';
 import { CATEGORY_BLUEPRINTS } from '../preset/categoryPresets';
@@ -85,6 +87,8 @@ export async function updateCategoryMetadata(
 /** Hard-deletes a category. Only call when the category has never been used in any expense. */
 export async function deleteCategory(userId: string, categoryId: string, type: CategoryType): Promise<void> {
   await deleteDoc(doc(getDb(), 'categories', userId, type, categoryId));
+  // A limit for a deleted category would linger as an orphan in budgets/{uid}
+  if (type === 'expense') await removeBudgetLimit(userId, categoryId);
 }
 
 /** Soft-deletes: marks archived=true. Use when the category may have expenses. */
@@ -144,6 +148,11 @@ export async function resetCategoriesToDefaults(userId: string): Promise<Record<
   for (const [legacyId, newId] of Object.entries(legacyCategoryMap)) {
     if (!oldIdToNewId[legacyId]) oldIdToNewId[legacyId] = newId;
   }
+
+  // Budget limits follow the same remap as expenses; ids that cannot resolve
+  // anymore (deleted custom categories, folder-keyed legacy limits) are dropped
+  await remapBudgetLimits(userId, oldIdToNewId, PRESET_EXPENSE_CATEGORY_IDS);
+
   return oldIdToNewId;
 }
 

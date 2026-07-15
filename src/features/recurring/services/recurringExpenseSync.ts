@@ -49,17 +49,29 @@ export async function restoreRecurringDueFromDeletedExpense(
     if (!snap.exists()) return;
 
     const data = snap.data() as Record<string, unknown>;
-    if ((data.isActive as boolean) === false) return;
-
     const currentNextDue =
       data.nextDueDate instanceof Timestamp
         ? toLocalDateKey(data.nextDueDate.toDate())
         : (data.nextDueDate as string | undefined) ?? deletedDueDate;
 
+    // Distinguish a fixed-term template that auto-completed (endDate passed)
+    // from a manual pause: the former is reactivated when its generated
+    // expense is deleted, the latter stays untouched.
+    const endDue =
+      data.endDate instanceof Timestamp
+        ? toLocalDateKey(data.endDate.toDate())
+        : (data.endDate as string | undefined);
+    const isInactive = (data.isActive as boolean) === false;
+    const autoCompleted = isInactive && !!endDue && currentNextDue > endDue;
+    if (isInactive && !autoCompleted) return;
+
     if (deletedDueDate >= currentNextDue) return;
 
-    transaction.update(ref, { nextDueDate: deletedDueDate });
-    result = toSerializableRecurring(snap.id, data, deletedDueDate);
+    transaction.update(ref, {
+      nextDueDate: deletedDueDate,
+      ...(autoCompleted ? { isActive: true } : {}),
+    });
+    result = { ...toSerializableRecurring(snap.id, data, deletedDueDate), isActive: true };
   });
 
   return result;

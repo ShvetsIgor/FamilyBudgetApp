@@ -362,7 +362,21 @@
     "total": "Итого в месяц",
     "overdue": "Просрочено",
     "todayBang": "Сегодня!",
-    "daysShort": "{days} дн"
+    "daysShort": "{days} дн",
+    "termPayments": "Количество платежей",
+    "lastPaymentOn": "Последний платёж: {date}",
+    "paymentNofM": "платёж {n} из {m}",
+    "completed": "Завершено",
+    "customTypePlaceholder": "Свой тип…",
+    "overdueDays": "Просрочено {n} дн",
+    "skip": "Пропустить",
+    "finish": "Завершить",
+    "confirmFinish": "Больше не платить? Шаблон останется в списке со статусом «Завершено».",
+    "ofIncome": "от дохода за месяц",
+    "detectedTitle": "Похоже на подписки",
+    "detectedAdd": "Добавить",
+    "perMonthShort": "/мес",
+    "payDifferent": "Другая сумма"
   },
   "savings": {
     "title": "Цели накоплений",
@@ -659,7 +673,9 @@
     "familyDigest": "Новые траты семьи: {n} · {sum}",
     "budgetTitle": "Бюджет",
     "budget85": "Потрачено 85% бюджета месяца",
-    "budget100": "Бюджет месяца исчерпан"
+    "budget100": "Бюджет месяца исчерпан",
+    "subsReviewTitle": "Ревизия подписок",
+    "subsReviewText": "Подписок: {n}, {sum} в месяц — проверь, всё ли ещё нужно."
   },
   "export": {
     "title": "Экспорт данных",

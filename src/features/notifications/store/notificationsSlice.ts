@@ -2,7 +2,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 export interface AppNotification {
   id: string;
-  kind: 'morning' | 'weekly' | 'alert' | 'family_invite' | 'family';
+  kind: 'morning' | 'weekly' | 'alert' | 'family_invite' | 'family' | 'subscriptions';
   title: string;
   text: string;
   data?: unknown;

@@ -49,6 +49,8 @@ import type { EnvelopesCardData } from '@/features/chat/components/BotCard/Envel
 import type { Currency } from '@/shared/types';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { toLocalDateKey, toLocalMonthKey } from '@/shared/utils/dateKey';
+import { monthlyEquivalent } from '@/features/recurring/utils/schedule';
+import { groupByCurrency, formatCurrencyTotals } from '@/features/family/utils/familyCurrency';
 
 import type { SerializableChatMessage } from '@/shared/types/message';
 import type { ParseResult } from '@/shared/types/message';
@@ -171,6 +173,31 @@ export default function HomePage() {
     }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, monthSpent, monthIncome, budgetMode, budgetMonthlyLimit]);
+
+  // Monthly subscription review → bell, once per calendar month.
+  // Pull-based on launch (free plan, no server pushes), same as budget alerts.
+  const recurringList = useAppSelector((s) => s.recurring.list);
+  useEffect(() => {
+    if (!userId) return;
+    const subs = recurringList.filter((r) => r.isActive && r.type === 'subscription');
+    if (subs.length < 2) return;
+    const key = `subs_review_${userId}_${format(new Date(), 'yyyy-MM')}`;
+    try {
+      if (localStorage.getItem(key)) return;
+      localStorage.setItem(key, '1');
+    } catch { return; }
+    const sum = formatCurrencyTotals(
+      groupByCurrency(subs.map((r) => ({ amount: monthlyEquivalent(r.amount, r.frequency), currency: r.currency }))),
+      { fallback: currency },
+    );
+    dispatch(addNotification({
+      kind: 'subscriptions',
+      title: t('notifications.subsReviewTitle'),
+      text: t('notifications.subsReviewText', { n: subs.length, sum }),
+      createdAt: new Date().toISOString(),
+    }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, recurringList]);
 
   const allExpenses = useAppSelector((s) => s.expenses.list);
   const allExpenseCats = useAppSelector((s) => s.categories.expense.filter((category) => !category.archived));

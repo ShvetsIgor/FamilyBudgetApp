@@ -1,11 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { mergeExpenses } from '@/features/expenses/store/expensesSlice';
 import { fetchMonthExpenses } from '@/features/expenses/services/expensesService';
+import { setBudgets } from '@/features/budget/store/budgetSlice';
+import { remapBudgetLimits } from '@/features/budget/services/budgetService';
+import { buildEnvelopes } from '@/features/budget/utils/envelopes';
+import { PRESET_EXPENSE_CATEGORY_IDS } from '@/features/categories/services/defaultCategories';
 import { setBudgetMode, setBudgetDailyLimit, setBudgetMonthlyLimit, setBudgetSnapshot } from '@/features/ui/store/uiSlice';
 import type { BudgetMode } from '@/features/ui/store/uiSlice';
 import { formatAmount, blockInvalidAmountKeys } from '@/shared/utils/currency';
@@ -54,41 +58,32 @@ export default function BudgetPage() {
     : 0;
 
   const budgetLimits = useAppSelector((s) => s.budget.limits);
+  const budgetStatus = useAppSelector((s) => s.budget.status);
   const expCategories = useAppSelector((s) => s.categories.expense);
+  const categoriesStatus = useAppSelector((s) => s.categories.status);
   const allExpensesList = useAppSelector((s) => s.expenses.list);
 
-  // Per-category envelopes for the current month; split rows count toward
-  // their own categories, the remainder toward the main one
-  const envelopes = useMemo(() => {
-    const spent: Record<string, number> = {};
-    for (const e of allExpensesList) {
-      if (toLocalMonthKey(e.date) !== monthStr) continue;
-      if (e.splits?.length) {
-        let splitsSum = 0;
-        for (const sp of e.splits) {
-          spent[sp.categoryId] = (spent[sp.categoryId] ?? 0) + sp.amount;
-          splitsSum += sp.amount;
-        }
-        const rem = e.amount - splitsSum;
-        if (rem > 0.009) spent[e.categoryId] = (spent[e.categoryId] ?? 0) + rem;
-      } else {
-        spent[e.categoryId] = (spent[e.categoryId] ?? 0) + e.amount;
-      }
-    }
-    return Object.entries(budgetLimits)
-      .filter(([, limit]) => limit > 0)
-      .map(([catId, limit]) => {
-        const cat = expCategories.find((c) => c.id === catId);
-        return {
-          catId, limit,
-          spent: spent[catId] ?? 0,
-          name: cat?.name ?? '—',
-          icon: cat?.icon ?? 'box',
-          color: cat?.color ?? '#8AA9D6',
-        };
-      })
-      .sort((a, b) => b.spent / b.limit - a.spent / a.limit);
-  }, [allExpensesList, budgetLimits, expCategories, monthStr]);
+  const envelopes = useMemo(
+    () => buildEnvelopes(allExpensesList, budgetLimits, expCategories, monthStr),
+    [allExpensesList, budgetLimits, expCategories, monthStr]
+  );
+
+  // One-time prune of orphaned limits (deleted custom categories, folder-keyed
+  // legacy entries from the old constructor). Preset ids are kept: after a
+  // category reset their limits stay dormant until the category is re-activated
+  // from the Library. Gated on both slices being ready so a slow load can
+  // never wipe valid limits.
+  const prunedRef = useRef(false);
+  useEffect(() => {
+    if (prunedRef.current || !user?.id) return;
+    if (budgetStatus !== 'ready' || categoriesStatus !== 'ready') return;
+    prunedRef.current = true;
+    const keep = new Set<string>([...PRESET_EXPENSE_CATEGORY_IDS, ...expCategories.map((c) => c.id)]);
+    if (!Object.keys(budgetLimits).some((id) => !keep.has(id))) return;
+    remapBudgetLimits(user.id, {}, keep)
+      .then((next) => dispatch(setBudgets(next)))
+      .catch(() => {});
+  }, [user?.id, budgetStatus, categoriesStatus, expCategories, budgetLimits, dispatch]);
 
   const [localMode, setLocalMode] = useState<BudgetMode>(mode);
   const [localDaily, setLocalDaily] = useState(dailyLimit > 0 ? String(dailyLimit) : '');

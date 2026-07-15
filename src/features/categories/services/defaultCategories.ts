@@ -73,6 +73,17 @@ export const DEFAULT_EXPENSE_CATEGORIES: DefaultCategoryEntry[] = [
   },
 ];
 
+// ─── Stable expense category ids ─────────────────────────────────────────────
+// Every library blueprint plus the fixed app-managed 'savings'. A budget limit
+// keyed by one of these ids stays valid across a category reset (the category
+// can be re-activated from the Library under the same id); anything else can
+// never resolve again and is safe to prune.
+
+export const PRESET_EXPENSE_CATEGORY_IDS: ReadonlySet<string> = new Set([
+  ...CATEGORY_BLUEPRINTS.filter((c) => c.folderId !== 'income').map((c) => c.id),
+  'savings',
+]);
+
 export const DEFAULT_INCOME_CATEGORIES: DefaultCategoryEntry[] = CATEGORY_BLUEPRINTS
   .filter((c) => c.folderId === 'income')
   .map((c, order) => ({

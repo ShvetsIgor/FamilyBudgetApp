@@ -17,7 +17,7 @@ import type { SerializableRecurringPayment } from '@/shared/types';
 
 const TYPE_ICONS: Record<string, string> = {
   subscription: '📺', rent: '🏠', utility: '💡',
-  credit: '💳', mortgage: '🏦', custom: '🔄',
+  credit: '💳', mortgage: '🏦', installment: '📦', custom: '🔄',
 };
 
 function DayPill({ days }: { days: number }) {

@@ -10,7 +10,7 @@ interface MobileBottomNavProps {
   onMore: () => void;
 }
 
-const PLAN_ROUTES = ['/budget', '/savings', '/recurring'];
+import { PLAN_ROUTES } from './PlanTabs';
 
 export function MobileBottomNav({ onMore }: MobileBottomNavProps) {
   const pathname = usePathname();

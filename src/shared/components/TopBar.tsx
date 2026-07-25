@@ -12,6 +12,7 @@ const PAGE_TITLE_KEYS: Record<string, string> = {
   '/expenses': 'nav.transactions',
   '/budget': 'nav.budget',
   '/statistics': 'nav.statistics',
+  '/income': 'nav.income',
   '/analytics': 'nav.analytics',
   '/categories': 'nav.categories',
   '/savings': 'nav.savings',

@@ -173,7 +173,8 @@
     "notePlaceholder": "Income note…",
     "creditEvery": "Credited on the",
     "dayNum": "day {day}",
-    "familyEmpty": "No family income this month"
+    "familyEmpty": "No family income this month",
+    "add": "Add income"
   },
   "expenses": {
     "title": "Expenses",
@@ -926,7 +927,10 @@
       "categoriesLink": "Categories",
       "recentTitle": "RECENT",
       "noExpensesShort": "No expenses"
-    }
+    },
+    "emptyTitle": "Write your first expense",
+    "emptyHint": "For example: «coffee 30» or «Shufersal 250»",
+    "emptyExample": "coffee 30"
   },
   "onboarding": {
     "hi": "Hi{name}!",

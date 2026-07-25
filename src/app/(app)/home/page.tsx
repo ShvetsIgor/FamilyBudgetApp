@@ -506,6 +506,22 @@ export default function HomePage() {
         onSettings={() => router.push('/budget')}
       />
 
+      {/* Empty chat — a first-run user needs to know what to type here */}
+      {groups.length === 0 && !typing && (
+        <div className="flex flex-col items-center gap-3 px-8 py-14 text-center">
+          <p className="text-4xl">💬</p>
+          <p className="text-[15px] font-bold">{t('chat.emptyTitle')}</p>
+          <p className="text-sm text-muted-foreground">{t('chat.emptyHint')}</p>
+          <button
+            type="button"
+            onClick={() => handleSend(t('chat.emptyExample'))}
+            className="mt-1 min-h-11 rounded-xl bg-primary/10 px-4 text-sm font-bold text-primary hover:bg-primary/15 transition-colors"
+          >
+            {t('chat.emptyExample')}
+          </button>
+        </div>
+      )}
+
       {/* Message groups */}
       {groups.map(({ day, items }) => (
         <div key={day}>

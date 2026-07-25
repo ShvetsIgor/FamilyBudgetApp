@@ -15,6 +15,12 @@ export function inviteDocId(familyId: string, toEmail: string): string {
   return `${familyId}_${toEmail.toLowerCase().trim()}`;
 }
 
+// Family/invite objects land in Redux — Firestore Timestamps must become ISO
+// strings on read or the store holds non-serializable values
+function tsToISO(value: unknown): string {
+  return value instanceof Timestamp ? value.toDate().toISOString() : (value as string) ?? new Date().toISOString();
+}
+
 // ─── Family CRUD ──────────────────────────────────────────────────────────────
 
 export async function createFamily(userId: string, name: string): Promise<Family> {
@@ -39,14 +45,15 @@ export async function createFamily(userId: string, name: string): Promise<Family
     name,
     ownerId: userId,
     memberIds: [userId],
-    createdAt: Timestamp.fromDate(new Date()),
+    createdAt: new Date().toISOString(),
   };
 }
 
 export async function fetchFamily(familyId: string): Promise<Family | null> {
   const snap = await getDoc(doc(getDb(), 'families', familyId));
   if (!snap.exists()) return null;
-  return { id: snap.id, ...snap.data() } as Family;
+  const data = snap.data();
+  return { id: snap.id, ...data, createdAt: tsToISO(data.createdAt) } as Family;
 }
 
 export async function fetchFamilyMembers(memberIds: string[]): Promise<UserProfile[]> {
@@ -134,8 +141,8 @@ export async function sendInvite(
     fromUserId,
     toEmail: email,
     status: 'pending',
-    createdAt: Timestamp.fromDate(new Date()),
-    expiresAt: Timestamp.fromDate(expiresAt),
+    createdAt: new Date().toISOString(),
+    expiresAt: expiresAt.toISOString(),
   };
 }
 
@@ -155,7 +162,13 @@ export async function fetchPendingInvite(email: string): Promise<FamilyInvite | 
     return !exp || exp > now;
   });
   if (!valid) return null;
-  const invite = { id: valid.id, ...valid.data() } as FamilyInvite;
+  const raw = valid.data();
+  const invite = {
+    id: valid.id,
+    ...raw,
+    createdAt: tsToISO(raw.createdAt),
+    expiresAt: tsToISO(raw.expiresAt),
+  } as FamilyInvite;
   // Invites created before deterministic ids cannot pass the join rule.
   // Reject them so the sender can re-send; don't surface them in the UI.
   if (invite.id !== inviteDocId(invite.familyId, invite.toEmail)) {

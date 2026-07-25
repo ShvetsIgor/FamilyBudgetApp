@@ -45,12 +45,14 @@ export interface UserProfile {
 
 // ─── Family ──────────────────────────────────────────────────────────────────
 
+// Family/invite objects live in Redux, so their timestamps are ISO strings
+// (Firestore Timestamps are non-serializable; familyService converts on read)
 export interface Family {
   id: string;
   name: string;
   ownerId: string;
   memberIds: string[];
-  createdAt: Timestamp;
+  createdAt: string;
 }
 
 export interface FamilyInvite {
@@ -59,8 +61,8 @@ export interface FamilyInvite {
   fromUserId: string;
   toEmail: string;
   status: InviteStatus;
-  createdAt: Timestamp;
-  expiresAt: Timestamp;
+  createdAt: string;
+  expiresAt: string;
 }
 
 // ─── Category ────────────────────────────────────────────────────────────────

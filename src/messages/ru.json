@@ -175,7 +175,8 @@
     "notePlaceholder": "Заметка к доходу…",
     "creditEvery": "Зачислять каждое",
     "dayNum": "{day} число",
-    "familyEmpty": "У семьи нет доходов в этом месяце"
+    "familyEmpty": "У семьи нет доходов в этом месяце",
+    "add": "Добавить доход"
   },
   "expenses": {
     "title": "Расходы",
@@ -1057,7 +1058,10 @@
       "categoriesLink": "Категориях",
       "recentTitle": "ПОСЛЕДНИЕ",
       "noExpensesShort": "Нет трат"
-    }
+    },
+    "emptyTitle": "Запиши первую трату",
+    "emptyHint": "Например: «кофе 30» или «Шуферсаль 250»",
+    "emptyExample": "кофе 30"
   },
   "onboarding": {
     "hi": "Привет{name}!",

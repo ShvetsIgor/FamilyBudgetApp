@@ -27,27 +27,42 @@ export function IncomeCard({ income, onDelete, onEdit }: Props) {
   return (
     <div className="flex w-full items-center gap-3 pl-3 pr-4 py-3.5 group"
       style={{ borderLeft: `4px solid ${borderColor}` }}>
-      {category ? (
-        <CategoryIcon icon={category.icon} color={category.color} size="md" />
-      ) : (
-        <div className="h-10 w-10 rounded-xl bg-muted shrink-0" />
-      )}
+      {/* Tap anywhere on the row body to edit — on mobile this is the ONLY
+          path to edit/delete (the hover icons below are desktop-only) */}
+      <div
+        className="flex flex-1 items-center gap-3 min-w-0 cursor-pointer active:opacity-70 transition-opacity"
+        onClick={onEdit}
+        role={onEdit ? 'button' : undefined}
+        tabIndex={onEdit ? 0 : undefined}
+        onKeyDown={(e) => {
+          if (onEdit && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            onEdit();
+          }
+        }}
+      >
+        {category ? (
+          <CategoryIcon icon={category.icon} color={category.color} size="md" />
+        ) : (
+          <div className="h-10 w-10 rounded-xl bg-muted shrink-0" />
+        )}
 
-      <div className="flex-1 min-w-0">
-        <p className="text-[15px] font-semibold truncate leading-snug">
-          {income.comment || (category ? t.cat(category.name) : t('income.title'))}
-        </p>
-        <p className="flex items-center gap-1.5 mt-0.5">
-          <span style={{
-            fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase',
-            fontWeight: 700, color: borderColor,
-          }}>
-            {category ? t.cat(category.name) : ''}
-          </span>
-          <span className="text-muted-foreground/40">·</span>
-          <span className="opacity-50">{isRecurring ? '🔄' : (METHOD_ICONS[income.method] ?? '🔄')}</span>
-          {income.privacy === 'secret' && <span>🔒</span>}
-        </p>
+        <div className="flex-1 min-w-0">
+          <p className="text-[15px] font-semibold truncate leading-snug">
+            {income.comment || (category ? t.cat(category.name) : t('income.title'))}
+          </p>
+          <p className="flex items-center gap-1.5 mt-0.5">
+            <span style={{
+              fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase',
+              fontWeight: 700, color: borderColor,
+            }}>
+              {category ? t.cat(category.name) : ''}
+            </span>
+            <span className="text-muted-foreground/40">·</span>
+            <span className="opacity-50">{isRecurring ? '🔄' : (METHOD_ICONS[income.method] ?? '🔄')}</span>
+            {income.privacy === 'secret' && <span>🔒</span>}
+          </p>
+        </div>
       </div>
 
       <div className="flex items-center gap-1.5 shrink-0">

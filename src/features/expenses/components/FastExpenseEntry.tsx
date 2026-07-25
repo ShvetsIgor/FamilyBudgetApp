@@ -29,6 +29,7 @@ import { FolderEditorSheet } from '@/features/categories/components/FolderEditor
 import { CategoryEditorSheet } from '@/features/categories/components/CategoryEditorSheet';
 import type { CategoryFolder } from '@/shared/types';
 import { CategoryFolderPickerSheet, type CategoryPickerFolder } from '@/features/categories/components/CategoryFolderPickerSheet';
+import { EntryKindTabs } from '@/features/quickadd/components/EntryKindTabs';
 import {
   categoryBlueprintToSuggestion,
   folderBlueprintToSuggestion,
@@ -571,13 +572,19 @@ export function FastExpenseEntry({
         <button type="button" onClick={handleClose} className="fb-touch-target flex h-11 w-11 items-center justify-center rounded-xl hover:bg-muted transition-colors" aria-label={t('common.close')}>
           <X className="h-5 w-5" />
         </button>
-        <div className="flex-1 text-center text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">
-          {isEdit
-            ? t('expense.numpadEdit')
-            : fromChat && initialStore
-              ? t('expense.numpadReceipt', { store: initialStore })
-              : fmtCount(splits.length + 1)}
-        </div>
+        {/* Plain add mode gets the expense/income switch; edit and
+            chat-receipt modes keep their descriptive title */}
+        {!isEdit && !(fromChat && initialStore) && splits.length === 0 ? (
+          <EntryKindTabs active="expense" />
+        ) : (
+          <div className="flex-1 text-center text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">
+            {isEdit
+              ? t('expense.numpadEdit')
+              : fromChat && initialStore
+                ? t('expense.numpadReceipt', { store: initialStore })
+                : fmtCount(splits.length + 1)}
+          </div>
+        )}
         <div className="w-8" />
       </div>
 

@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
+    "dev:emulated": "NEXT_PUBLIC_USE_FIREBASE_EMULATOR=1 NEXT_PUBLIC_FIREBASE_API_KEY=demo-key NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=demo-family-budget.firebaseapp.com NEXT_PUBLIC_FIREBASE_PROJECT_ID=demo-family-budget NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=demo-family-budget.appspot.com NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=000000000000 NEXT_PUBLIC_FIREBASE_APP_ID=1:000000000000:web:demo next dev --turbo",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

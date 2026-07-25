@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { MobileBottomNav } from './MobileBottomNav';
+import { PlanTabs, isPlanRoute } from './PlanTabs';
 import { UpdateBanner } from './UpdateBanner';
 import { AddDrawer } from '@/features/quickadd/components/AddDrawer';
 import { ChatHeader } from '@/features/chat/components/ChatHeader';
@@ -44,6 +45,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           onBell={() => setBellOpen((v) => !v)}
           onClearChat={isChat ? handleClearChat : undefined}
         />
+        {isPlanRoute(pathname) && <PlanTabs />}
         <main className={isChat
           ? 'flex-1 flex flex-col overflow-hidden'
           : 'flex-1 overflow-y-auto md:px-6 md:[&>*]:mx-auto md:[&>*]:w-full md:[&>*]:max-w-[760px]'}>

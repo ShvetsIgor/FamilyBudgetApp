@@ -330,10 +330,12 @@ export default function IncomePage() {
         </div>
       </div>
 
-      {/* Mobile FAB */}
-      {!formOpen && isCurrentMonth && (
+      {/* Mobile FAB — available in past months too; the form's own date
+          picker decides which day the income lands on */}
+      {!formOpen && !isFamilyView && (
         <button
           onClick={() => router.push('/income/new')}
+          aria-label={t('income.add')}
           className="lg:hidden fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-transform active:scale-95"
           style={{ background: 'hsl(var(--primary))' }}
         >

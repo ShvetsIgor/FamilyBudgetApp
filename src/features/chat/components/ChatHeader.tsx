@@ -54,22 +54,19 @@ export function ChatHeader({ onBell, onClearChat }: ChatHeaderProps) {
       </div>}
 
       <div className="flex-1 min-w-0">
-        {isChat ? (
-          <>
-            <p className="m-0 text-base font-[800] leading-tight" style={{ letterSpacing: -0.3, color: C.fg }}>
+        {/* One line, no engineering status text — iOS nav bars carry a title,
+            not a running commentary on where the parser executes */}
+        <p className="m-0 text-[17px] font-[800] leading-tight" style={{ letterSpacing: -0.25, color: C.fg }}>
+          {isChat ? (
+            <>
               <span style={{ color: C.primary }}>family</span>
               <span style={{ color: C.sub, fontWeight: 700 }}>.</span>
               budget
-            </p>
-            <p className="m-0 mt-px text-[11px] font-[700]" style={{ color: C.sage }}>
-              {t('chat.header.online')}
-            </p>
-          </>
-        ) : (
-          <p className="m-0 text-[17px] font-[800] leading-tight" style={{ letterSpacing: -0.25, color: C.fg }}>
-            {t(pageTitleKey)}
-          </p>
-        )}
+            </>
+          ) : (
+            t(pageTitleKey)
+          )}
+        </p>
       </div>
 
       {onClearChat && (

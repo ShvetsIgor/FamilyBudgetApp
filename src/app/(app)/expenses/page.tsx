@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { format, parseISO, isToday, isYesterday } from 'date-fns';
 import type { Locale } from 'date-fns';
 import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
-import { Plus } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { mergeExpenses, removeExpense, prependExpense } from '@/features/expenses/store/expensesSlice';
 import { fetchMonthExpenses, deleteExpense, restoreExpense, backfillPrivateCategoryExpenses } from '@/features/expenses/services/expensesService';
@@ -551,14 +550,9 @@ export default function ExpensesPage() {
         {isCurrentMonth && <UpcomingBills withinDays={30} maxItems={5} />}
       </div>
 
-      {/* ── FAB — add expense ── */}
-      <button
-        onClick={() => router.push('/expenses/new')}
-        className="lg:hidden fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-transform active:scale-95"
-        style={{ background: 'hsl(var(--primary))' }}
-      >
-        <Plus size={24} color="white" />
-      </button>
+      {/* No mobile FAB here: the tab bar's «Add» is the same action, and two
+          add buttons on one screen is exactly the clutter we removed. Pages
+          whose FAB adds something else (income, goal, payment) keep theirs. */}
 
       {/* ── Undo delete toast ── */}
       {undoItem && (

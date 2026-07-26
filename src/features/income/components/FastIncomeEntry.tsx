@@ -366,7 +366,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
       </div>
 
       {/* ── Numpad ── */}
-      <div className="px-3 pt-0.5 grid grid-cols-3 flex-shrink-0" style={{ gridAutoRows: '40px', gap: '4px' }}>
+      <div className="px-3 pt-0.5 grid grid-cols-3 flex-shrink-0" style={{ gridAutoRows: '44px', gap: '4px' }}>
         {NUMPAD_KEYS.map((k) => (
           <button
             key={String(k)}

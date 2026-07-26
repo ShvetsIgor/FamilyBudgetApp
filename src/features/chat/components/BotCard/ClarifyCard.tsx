@@ -32,6 +32,26 @@ interface ClarifyCardProps {
   onCreateFolder?: (name: string) => void;
 }
 
+/** Quiet text-style action in the clarify card's secondary row (44pt target). */
+function SecondaryAction({ icon: Icon, label, onClick, color }: {
+  icon?: typeof Scissors;
+  label: string;
+  onClick: () => void;
+  color: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex min-h-11 items-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-[12.5px] font-[700] transition-opacity active:opacity-50"
+      style={{ color, background: 'transparent', border: 'none' }}
+    >
+      {Icon && <Icon size={13} strokeWidth={2.4} />}
+      {label}
+    </button>
+  );
+}
+
 export function ClarifyCard({
   amount, currency, chips, unknownNote, storeName, isRepeat, isTagLearning, categories,
   onSelectChip, onAllCategories, onOtherText, onSplit, onDefer, onCreateFolder,
@@ -206,6 +226,9 @@ export function ClarifyCard({
           </button>
         </div>
       ) : (
+        /* Only the categories are primary here — one obvious kind of answer.
+           Everything else moves to the quiet row below, so a first-time user
+           is not choosing between five equally loud options. */
         <div className="flex flex-wrap gap-1.5">
           {currentChips.map((chip) => (
             <button
@@ -226,106 +249,41 @@ export function ClarifyCard({
               {t.cat(chip.name)}
             </button>
           ))}
-
-          {!selectedParent && onOtherText && (
-            <button
-              type="button"
-              onClick={() => setOtherMode(true)}
-              className="inline-flex min-h-11 items-center gap-1.5 text-sm font-[800] transition-all active:scale-95"
-              style={{
-                padding: '7px 12px',
-                borderRadius: 999,
-                background: 'transparent',
-                border: `1.5px dashed ${C.sub}77`,
-                color: C.sub,
-                boxShadow: SHADOW.bubble,
-              }}
-            >
-              {t('chat.clarify.other')}
-            </button>
-          )}
-
-          {!selectedParent && onSplit && (
-            <button
-              type="button"
-              onClick={onSplit}
-              className="inline-flex min-h-11 items-center gap-1.5 text-sm font-[800] transition-all active:scale-95"
-              style={{
-                padding: '7px 12px 7px 10px',
-                borderRadius: 999,
-                background: 'transparent',
-                border: `1.5px dashed ${C.sub}77`,
-                color: C.sub,
-                boxShadow: SHADOW.bubble,
-              }}
-            >
-              <Scissors size={13} strokeWidth={2.5} />
-              {t('chat.clarify.split')}
-            </button>
-          )}
-
-          {!selectedParent && onDefer && (
-            <button
-              type="button"
-              onClick={onDefer}
-              className="inline-flex min-h-11 items-center gap-1.5 text-sm font-[800] transition-all active:scale-95"
-              style={{
-                padding: '7px 12px',
-                borderRadius: 999,
-                background: `${C.primary}10`,
-                border: `1.5px solid ${C.primary}33`,
-                color: C.primary,
-              }}
-            >
-              {t('chat.clarify.defer')}
-            </button>
-          )}
-
-          {isTagLearning && !selectedParent && !otherMode && onCreateFolder && (
-            <button
-              type="button"
-              onClick={() => setCreateFolderMode(true)}
-              className="inline-flex min-h-11 items-center gap-1.5 text-sm font-[800] transition-all active:scale-95"
-              style={{
-                padding: '7px 12px 7px 10px',
-                borderRadius: 999,
-                background: 'transparent',
-                border: `1.5px dashed ${C.sub}77`,
-                color: C.sub,
-                boxShadow: SHADOW.bubble,
-              }}
-            >
-              <FolderPlus size={13} strokeWidth={2.5} />
-              {t('chat.clarify.createFolder')}
-            </button>
-          )}
         </div>
       )}
 
       {!selectedParent && !otherMode && !createFolderMode && (
-        <>
-          <button
-            type="button"
-            onClick={onAllCategories}
-            className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-[800]"
-            style={{
-              padding: '8px 14px',
-              borderRadius: 999,
-              background: 'transparent',
-              border: `1.5px dashed ${C.sub}44`,
-              color: C.sub,
-            }}
-          >
-            <Search size={14} />
-            {t('chat.clarify.all')}
-          </button>
-
-          {!isRepeat && (
-            <p className="m-0 mt-2.5 text-xs font-[700]" style={{ color: C.sub }}>
-              {t('chat.clarify.promise')}
-            </p>
+        <div
+          className="mt-2 flex flex-wrap items-center gap-x-0.5 pt-1.5"
+          style={{ borderTop: `1px solid ${C.hairline}` }}
+        >
+          {onSplit && (
+            <SecondaryAction icon={Scissors} label={t('chat.clarify.split')} onClick={onSplit} color={C.sub} />
           )}
-        </>
+          {onOtherText && (
+            <SecondaryAction label={t('chat.clarify.other')} onClick={() => setOtherMode(true)} color={C.sub} />
+          )}
+          <SecondaryAction icon={Search} label={t('chat.clarify.all')} onClick={onAllCategories} color={C.sub} />
+          {onDefer && (
+            <SecondaryAction label={t('chat.clarify.defer')} onClick={onDefer} color={C.sub} />
+          )}
+          {isTagLearning && onCreateFolder && (
+            <SecondaryAction
+              icon={FolderPlus}
+              label={t('chat.clarify.createFolder')}
+              onClick={() => setCreateFolderMode(true)}
+              color={C.sub}
+            />
+          )}
+        </div>
+      )}
+
+      {/* The «I'll remember this word» promise only makes sense while actually
+          learning an unknown merchant — elsewhere it read as noise */}
+      {isTagLearning && !selectedParent && !otherMode && !createFolderMode && (
+        <p className="m-0 mt-2 text-xs font-[700]" style={{ color: C.sub }}>
+          {t('chat.clarify.promise')}
+        </p>
       )}
     </div>
   );

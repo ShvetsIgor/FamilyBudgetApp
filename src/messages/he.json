@@ -3,7 +3,8 @@
     "add": "הוסף",
     "expenses": "הוצאות",
     "statistics": "סטטיסטיקה",
-    "analytics": "אנליטיקה"
+    "analytics": "אנליטיקה",
+    "plan": "תכנון"
   },
   "home": {
     "addExpense": "הוסף הוצאה",
@@ -124,7 +125,17 @@
       "todaySpent": "הוצא היום",
       "online": "משפחה מחוברת · {n}",
       "onlyYou": "רק אתה"
-    }
+    },
+    "emptyTitle": "רשום את ההוצאה הראשונה שלך",
+    "emptyHint": "לדוגמה: „קפה 30” או „שופרסל 250”",
+    "emptyExample": "קפה 30"
+  },
+  "income": {
+    "add": "הוסף הכנסה"
+  },
+  "quickadd": {
+    "tabExpense": "הוצאה",
+    "tabIncome": "הכנסה"
   },
   "categories": {
     "title": "קטגוריות",

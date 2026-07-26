@@ -12,7 +12,8 @@ import { updateRecurringItem } from '@/features/recurring/store/recurringSlice';
 import { reverseContributionById, reverseContributionByAmount } from '@/features/savings/services/savingsService';
 import { updateGoalItem } from '@/features/savings/store/savingsSlice';
 import { localizeSavingsExpenseComment } from '@/features/savings/utils/savingsExpenseComment';
-import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
+import { CategoryIcon, StickerIcon } from '@/features/categories/components/CategoryIcon';
+import { paymentMethodIcon } from '@/shared/config/domainIcons';
 import { formatAmount } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
 
@@ -30,8 +31,8 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
 
   const PAYMENT_LABELS: Record<string, string> = {
     card: t('expense.card'),
-    cash: `💵 ${t('expense.cash')}`,
-    other: `🔄 ${t('expense.other')}`,
+    cash: t('expense.cash'),
+    other: t('expense.other'),
   };
 
   if (!expense) {
@@ -112,7 +113,19 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
       <div className="rounded-2xl border border-border bg-card divide-y divide-border">
         <Row label={t('expense.category')} value={category ? t.cat(category.name) : '—'} />
 {expense.store && <Row label={t('expense.store')} value={expense.store} />}
-        <Row label={t('expense.payment')} value={PAYMENT_LABELS[expense.paymentMethod] ?? expense.paymentMethod} />
+        <Row
+          label={t('expense.payment')}
+          value={(
+            <span className="inline-flex items-center gap-2">
+              <StickerIcon
+                icon={paymentMethodIcon(expense.paymentMethod)}
+                color="hsl(var(--muted-foreground))"
+                className="h-4 w-4"
+              />
+              {PAYMENT_LABELS[expense.paymentMethod] ?? expense.paymentMethod}
+            </span>
+          )}
+        />
         <Row label={t('expense.privacy2')} value={expense.privacy === 'secret' ? t('expense.secret') : t('expense.regular')} />
         {detailComment && <Row label={t('expense.comment')} value={detailComment} />}
         {expense.tags.length > 0 && <Row label={t('expense.tags')} value={expense.tags.map((tag) => tag === 'recurring' ? t('expense.tagRecurring') : tag).join(', ')} />}
@@ -150,7 +163,7 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between px-4 py-3">
       <span className="text-sm text-muted-foreground">{label}</span>

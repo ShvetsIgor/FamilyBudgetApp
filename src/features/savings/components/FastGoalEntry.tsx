@@ -2,10 +2,10 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, Calendar } from 'lucide-react';
+import { X, Calendar, Lock } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
-import { addGoalItem } from '@/features/savings/store/savingsSlice';
-import { addGoal } from '@/features/savings/services/savingsService';
+import { addGoalItem, updateGoalItem } from '@/features/savings/store/savingsSlice';
+import { addGoal, updateGoal } from '@/features/savings/services/savingsService';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import { useT } from '@/shared/hooks/useT';
@@ -14,33 +14,34 @@ import { format } from 'date-fns';
 import { applyKey } from '@/features/expenses/hooks/useSplitEditor';
 import { ColorPaletteRow } from '@/features/categories/components/ColorPaletteRow';
 import { normalizeName } from '@/shared/utils/normalizeName';
-import type { Currency } from '@/shared/types';
+import { GoalGlyph } from '@/features/savings/components/GoalIcon';
+import { GOAL_ICON_OPTIONS } from '@/features/savings/config/goalIcons';
+import type { Currency, SavingsGoal } from '@/shared/types';
 
 const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫'] as const;
 type NumKey = (typeof NUMPAD_KEYS)[number];
 
-const GOAL_ICONS = ['🎯','🏠','🚗','✈️','💻','📱','👶','💍','🎓','🏖️','💰','🛋️','🎮','🏋️','🐶','🎨','🏕️','💊'];
-
-export function FastGoalEntry() {
+export function FastGoalEntry({ initialGoal }: { initialGoal?: SavingsGoal }) {
   const router = useRouter();
   // Direct URL entry has no history to go back to — fall back to /savings
   const goBack = () => { if (window.history.length > 1) router.back(); else router.replace('/savings'); };
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
-  const currency = useAppSelector((s) => s.ui.currency);
+  const profileCurrency = useAppSelector((s) => s.ui.currency);
+  const currency = initialGoal?.currency ?? profileCurrency;
   const t = useT();
   const dfLocale = useDateFnsLocale();
   const symbol = getCurrencySymbol(currency);
   const nameRef = useRef<HTMLInputElement>(null);
 
-  const [name, setName] = useState('');
-  const [icon, setIcon] = useState(GOAL_ICONS[0]);
-  const [color, setColor] = useState('#5B6CFF');
-  const [target, setTarget] = useState('0');
+  const [name, setName] = useState(initialGoal?.name ?? '');
+  const [icon, setIcon] = useState(initialGoal?.icon ?? GOAL_ICON_OPTIONS[0]);
+  const [color, setColor] = useState(initialGoal?.color ?? '#5B6CFF');
+  const [target, setTarget] = useState(initialGoal ? String(initialGoal.targetAmount) : '0');
   const [showDate, setShowDate] = useState(false);
-  const [deadline, setDeadline] = useState('');
+  const [deadline, setDeadline] = useState(initialGoal?.deadline ? toDateInput(new Date(initialGoal.deadline)) : '');
   const [saving, setSaving] = useState(false);
-  const [isPrivate, setIsPrivate] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(initialGoal?.isPrivate ?? false);
 
   const targetNum = parseFloat(target) || 0;
   const canSave = name.trim().length > 0 && targetNum > 0;
@@ -53,7 +54,7 @@ export function FastGoalEntry() {
     if (!user || !canSave || saving) return;
     setSaving(true);
     try {
-      const goal = await addGoal({
+      const payload = {
         userId: user.id,
         name: normalizeName(name),
         icon,
@@ -62,8 +63,14 @@ export function FastGoalEntry() {
         currency: currency as Currency,
         deadline: deadline ? new Date(deadline) : undefined,
         isPrivate,
-      });
-      dispatch(addGoalItem(goal));
+      };
+      if (initialGoal) {
+        const goal = await updateGoal({ ...payload, id: initialGoal.id, previous: initialGoal });
+        dispatch(updateGoalItem(goal));
+      } else {
+        const goal = await addGoal(payload);
+        dispatch(addGoalItem(goal));
+      }
       goBack();
     } catch {
       setSaving(false);
@@ -81,15 +88,17 @@ export function FastGoalEntry() {
           <X className="h-4 w-4" />
         </button>
         <div className="flex-1 text-center text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">
-          {t('savings.goalNew')}
+          {initialGoal ? t('common.edit') : t('savings.goalNew')}
         </div>
         <button
           onClick={() => setIsPrivate((v) => !v)}
-          className="p-1.5 rounded-full transition-colors text-sm leading-none"
+          className="fb-touch-target flex h-11 w-11 items-center justify-center rounded-xl transition-colors"
+          aria-pressed={isPrivate}
+          aria-label={isPrivate ? t('savings.showToFamily') : t('savings.hideFromFamily')}
           title={isPrivate ? t('savings.showToFamily') : t('savings.hideFromFamily')}
           style={{ opacity: isPrivate ? 1 : 0.35 }}
         >
-          🔒
+          <Lock className="h-4 w-4" />
         </button>
         <button
           onClick={() => setShowDate(!showDate)}
@@ -134,20 +143,19 @@ export function FastGoalEntry() {
         {/* Icon grid */}
         <div className="overflow-x-auto [scrollbar-width:none]">
           <div className="grid grid-rows-2 grid-flow-col gap-1.5 pb-1" style={{ gridAutoColumns: '52px' }}>
-            {GOAL_ICONS.map((ic) => {
+            {GOAL_ICON_OPTIONS.map((ic) => {
               const sel = ic === icon;
               return (
                 <button
                   key={ic}
                   onClick={() => setIcon(ic)}
-                  className="w-[52px] h-[44px] rounded-[12px] flex items-center justify-center text-xl transition-all border-0"
+                  className="h-11 w-[52px] rounded-[12px] flex items-center justify-center transition-all border-0"
                   style={{
                     background: sel ? color : 'hsl(var(--card))',
                     boxShadow: sel ? `0 3px 8px ${color}55` : '0 1px 3px rgba(61,44,31,.06)',
-                    fontSize: sel ? 22 : 18,
                   }}
                 >
-                  {ic}
+                  <GoalGlyph icon={ic} color={sel ? '#fff' : color} className="h-5 w-5" />
                 </button>
               );
             })}
@@ -162,11 +170,8 @@ export function FastGoalEntry() {
           className="rounded-[14px] p-3 flex items-center gap-3 flex-shrink-0"
           style={{ background: color + '14', boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}
         >
-          <div
-            className="h-10 w-10 rounded-[12px] flex items-center justify-center text-xl flex-shrink-0"
-            style={{ background: color + '30' }}
-          >
-            {icon}
+          <div className="h-10 w-10 rounded-[12px] flex items-center justify-center flex-shrink-0" style={{ background: color + '30' }}>
+            <GoalGlyph icon={icon} color={color} className="h-5 w-5" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-sm font-extrabold text-foreground">{name || t('savings.goalName')}</div>
@@ -222,7 +227,7 @@ export function FastGoalEntry() {
           className="w-full py-[14px] rounded-[16px] flex items-center justify-center gap-2 text-[15px] font-black text-white transition-opacity disabled:opacity-40 border-0"
           style={{ background: saving ? '#18A957' : color }}
         >
-          <span className="text-lg leading-none">{icon}</span>
+          <GoalGlyph icon={icon} color="#fff" className="h-5 w-5" />
           <span>{saving ? t('savings.numpadSaving') : canSave ? t('savings.numpadCreate', { name, symbol, target }) : t('savings.numpadCreateHint')}</span>
         </button>
       </div>

@@ -21,6 +21,8 @@ import { buildMemberColorMap } from '@/features/family/utils/memberColors';
 import type { SavingsGoal } from '@/shared/types';
 import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { getReadableForeground } from '@/shared/utils/colors';
+import { GoalIcon } from '@/features/savings/components/GoalIcon';
+import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 
 type Mode = 'list' | { goal: SavingsGoal; action: 'contribute' | 'detail' };
 
@@ -142,7 +144,7 @@ export default function SavingsPage() {
           </div>
           <div className="flex flex-col gap-4 p-4">
             <div className="flex flex-col items-center gap-2 py-2">
-              <div className="text-5xl">{goal.icon}</div>
+              <GoalIcon icon={goal.icon} color={goal.color} size="lg" />
               <p className="text-2xl font-bold">{pct.toFixed(0)}%</p>
               <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
                 <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: goal.color }} />
@@ -215,7 +217,7 @@ export default function SavingsPage() {
 
     return (
       <div className="hidden lg:flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center gap-3">
-        <p className="text-3xl">🎯</p>
+        <StickerIcon icon="star" color="hsl(var(--muted-foreground))" className="h-8 w-8" />
         <p className="text-sm text-muted-foreground">{t('savings.selectGoal')}</p>
       </div>
     );
@@ -251,7 +253,7 @@ export default function SavingsPage() {
 
       {!isFamilyView && !loading && list.length === 0 && (
         <div className="flex flex-col items-center py-16 text-center">
-          <p className="text-5xl mb-3">🎯</p>
+          <StickerIcon icon="star" color="hsl(var(--muted-foreground))" className="mb-3 h-10 w-10" />
           <p className="font-medium">{t('savings.noGoals')}</p>
           <p className="text-sm text-muted-foreground mt-1">{t('savings.noGoalsHint')}</p>
         </div>
@@ -259,7 +261,7 @@ export default function SavingsPage() {
 
       {isFamilyView && !familyLoading && familyList.length === 0 && (
         <div className="flex flex-col items-center py-16 text-center">
-          <p className="text-5xl mb-3">👨‍👩‍👧</p>
+          <Users className="mb-3 h-10 w-10 text-muted-foreground" strokeWidth={1.6} />
           <p className="font-medium">{t('savings.familyEmpty')}</p>
         </div>
       )}
@@ -275,7 +277,7 @@ export default function SavingsPage() {
                   className="w-full flex items-center gap-3 pl-3 pr-4 py-3.5 text-left"
                   style={{ borderLeft: `4px solid ${done ? '#10b981' : goal.color}` }}
                 >
-                  <span className="text-2xl shrink-0">{goal.icon}</span>
+                  <GoalIcon icon={goal.icon} color={goal.color} size="md" />
                   <div className="flex-1 min-w-0">
                     <p className="flex items-center gap-1.5 text-[15px] font-semibold truncate leading-snug">
                       {goal.isPrivate && <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={2.2} />}
@@ -320,11 +322,14 @@ export default function SavingsPage() {
           return (
             <div key={goal.id} className="border-b border-border/30">
               <button
-                onClick={() => setMode({ goal, action: 'detail' })}
+                onClick={() => {
+                  if (window.innerWidth < 1024) router.push(`/savings/${goal.id}`);
+                  else setMode({ goal, action: 'detail' });
+                }}
                 className={cn('w-full flex items-center gap-3 pl-3 pr-4 py-3.5 text-left transition-colors', isSelected ? 'bg-muted/40' : 'hover:bg-muted/20')}
                 style={{ borderLeft: `4px solid ${done ? '#10b981' : goal.color}` }}
               >
-                <span className="text-2xl shrink-0">{goal.icon}</span>
+                <GoalIcon icon={goal.icon} color={goal.color} size="md" />
                 <div className="flex-1 min-w-0">
                   <p className="text-[15px] font-semibold truncate leading-snug">{goal.name}</p>
                   <p style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: done ? '#10b981' : goal.color }}>
@@ -352,7 +357,7 @@ export default function SavingsPage() {
       {/* ── MOBILE ── */}
       <div className="lg:hidden flex flex-col gap-0 pt-5 pb-8">
         {mode !== 'list' && (
-          <div className="px-4 pb-3 flex justify-end">
+          <div className="px-4 pb-3 flex justify-start">
             <button onClick={() => setMode('list')} className="fb-touch-target min-h-11 rounded-xl px-3 text-sm font-semibold text-muted-foreground hover:bg-muted">{t('savings.back')}</button>
           </div>
         )}
@@ -369,7 +374,7 @@ export default function SavingsPage() {
           return (
             <div className="flex flex-col gap-4 px-4">
               <div className="flex items-center gap-4 py-3" style={{ borderLeft: `4px solid ${done ? '#10b981' : goal.color}`, paddingLeft: 12 }}>
-                <div className="text-4xl">{goal.icon}</div>
+                <GoalIcon icon={goal.icon} color={goal.color} size="lg" />
                 <div className="flex-1 min-w-0">
                   <h2 className="text-[15px] font-semibold">{goal.name}</h2>
                   <p style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: done ? '#10b981' : goal.color }}>
@@ -485,7 +490,7 @@ function ContributeForm({ goal, currency, onSave, onCancel, t }: {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-4 pb-8 lg:px-4 lg:pt-2">
       <div className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3">
-        <span className="text-3xl">{goal.icon}</span>
+        <GoalIcon icon={goal.icon} color={goal.color} size="lg" />
         <div>
           <p className="font-semibold">{goal.name}</p>
           <p className="text-xs text-muted-foreground">
@@ -507,7 +512,10 @@ function ContributeForm({ goal, currency, onSave, onCancel, t }: {
       <div className="rounded-2xl border border-border bg-card px-4 py-3 flex items-center justify-between">
         <div>
           <p className="text-sm font-medium">{t('savings.recordAsExpense')}</p>
-          <p className="text-xs text-muted-foreground">🐷 {t('savings.savingsCategory')} · {t('savings.showsInStats')}</p>
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <StickerIcon icon="piggy" color="hsl(var(--muted-foreground))" className="h-3.5 w-3.5" />
+            {t('savings.savingsCategory')} · {t('savings.showsInStats')}
+          </p>
         </div>
         <button type="button" role="switch" aria-checked={recordAsExpense} onClick={() => setRecordAsExpense(!recordAsExpense)}
           className={`relative h-11 w-14 rounded-full transition-colors flex-shrink-0 ${recordAsExpense ? 'bg-primary' : 'bg-muted'}`}>

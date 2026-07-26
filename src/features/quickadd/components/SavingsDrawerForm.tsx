@@ -13,6 +13,8 @@ import { prependExpense } from '@/features/expenses/store/expensesSlice';
 import { addContributionWithExpense } from '@/features/savings/services/savingsExpenseService';
 import { recordSavedCard } from '@/features/chat/services/savedCardService';
 import { normalizeName } from '@/shared/utils/normalizeName';
+import { GoalGlyph } from '@/features/savings/components/GoalIcon';
+import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 
 const AMOUNT_PRESETS = [500, 1000, 5000, 10000];
 
@@ -91,7 +93,7 @@ export function SavingsDrawerForm({ accent }: { accent: string }) {
   if (goals.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
-        <span className="text-4xl">🎯</span>
+        <StickerIcon icon="star" color="hsl(var(--muted-foreground))" className="h-10 w-10" />
         <div className="text-sm font-bold text-foreground">{t('quickadd.noGoals')}</div>
         <div className="text-xs text-muted-foreground">{t('quickadd.createGoalHint')}</div>
       </div>
@@ -126,7 +128,7 @@ export function SavingsDrawerForm({ accent }: { accent: string }) {
                     boxShadow: sel ? `0 3px 10px ${g.color}55` : '0 1px 3px rgba(61,44,31,.06)',
                   }}
                 >
-                  <span className="text-lg leading-none">{g.icon}</span>
+                  <GoalGlyph icon={g.icon} color={sel ? '#fff' : g.color} className="h-5 w-5" />
                   <span className="text-[9px] font-extrabold leading-tight line-clamp-2"
                     style={{ color: sel ? '#fff' : 'hsl(var(--foreground))' }}>
                     {g.name}
@@ -246,7 +248,7 @@ export function SavingsDrawerForm({ accent }: { accent: string }) {
             boxShadow: `0 8px 20px ${(selected?.color ?? accent)}55`,
           }}
         >
-          <span>{selected?.icon ?? '🎯'}</span>
+          <GoalGlyph icon={selected?.icon} color="#fff" className="h-5 w-5" />
           <span>{saving ? t('savings.numpadSaving') : t('savings.numpadSave', { symbol, total: amount || '0' })}</span>
           <kbd className="ml-1 px-1.5 py-0.5 rounded bg-white/20 text-[9px] font-mono">⌘↵</kbd>
         </button>

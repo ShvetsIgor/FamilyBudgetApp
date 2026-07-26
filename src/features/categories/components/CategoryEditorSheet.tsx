@@ -11,6 +11,7 @@ import { IconPickerGrid } from './IconPickerGrid';
 import { CC } from '../styles/tokens';
 import type { LibrarySuggestion } from '../utils/libraryLookup';
 import { normalizeName } from '@/shared/utils/normalizeName';
+import { makeT } from '@/shared/utils/makeT';
 
 interface Props {
   open: boolean;
@@ -45,6 +46,7 @@ export function CategoryEditorSheet({
   const lang = useAppSelector((s) => s.ui.language) ?? 'ru';
 
   const [name, setName] = useState('');
+  const [nameEdited, setNameEdited] = useState(false);
   const [icon, setIcon] = useState('box');
   const [color, setColor] = useState<string>(CC.primary);
   const [isPrivate, setIsPrivate] = useState(false);
@@ -61,7 +63,8 @@ export function CategoryEditorSheet({
 
   useEffect(() => {
     if (!open) return;
-    setName(initial?.name ?? '');
+    setName(initial?.name ? makeT(lang).cat(initial.name) : '');
+    setNameEdited(false);
     setIcon(initial?.icon ?? 'box');
     setColor(initial?.color ?? CC.primary);
     setIsPrivate(initial?.isPrivate ?? false);
@@ -74,7 +77,7 @@ export function CategoryEditorSheet({
     setSelectedPresetId(undefined);
     setSuggestionsOpen(false);
     setSaving(false);
-  }, [open, initial, budget, folderIdProp]);
+  }, [open, initial, budget, folderIdProp, lang]);
 
   const matchedSuggestions = useMemo(() => {
     const query = name.trim().toLowerCase();
@@ -93,7 +96,9 @@ export function CategoryEditorSheet({
   if (!open) return null;
 
   const handleSave = async () => {
-    const cleanName = normalizeName(name);
+    // Keep the canonical system name when the user only edits another field.
+    // This lets built-in categories follow the selected interface language.
+    const cleanName = normalizeName(initial?.name && !nameEdited ? initial.name : name);
     if (!cleanName || saving) return;
     setSaving(true);
     try {
@@ -157,6 +162,7 @@ export function CategoryEditorSheet({
               }}
               onChange={(e) => {
                 setName(e.target.value);
+                setNameEdited(true);
                 setSelectedPresetId(undefined);
                 setSuggestionsOpen(true);
               }}
@@ -173,6 +179,7 @@ export function CategoryEditorSheet({
                     onPointerDown={(event) => {
                       event.preventDefault();
                       setName(suggestion.label);
+                      setNameEdited(true);
                       setIcon(suggestion.icon);
                       setColor(suggestion.color);
                       setSelectedPresetId(suggestion.id);

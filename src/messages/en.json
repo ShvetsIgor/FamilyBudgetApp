@@ -375,7 +375,9 @@
     "detectedTitle": "Looks like subscriptions",
     "detectedAdd": "Add",
     "perMonthShort": "/mo",
-    "payDifferent": "Different amount"
+    "payDifferent": "Different amount",
+    "pause": "Pause",
+    "resume": "Resume"
   },
   "savings": {
     "title": "Savings Goals",

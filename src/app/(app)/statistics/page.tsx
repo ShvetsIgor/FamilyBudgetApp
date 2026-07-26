@@ -135,7 +135,7 @@ export default function StatisticsPage() {
           <div key={d.catId}>
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <CategoryIcon icon={d.icon} color={d.color} size="sm" />
-              <span className="min-w-0 flex-1 basis-[48%] text-sm leading-tight line-clamp-2 [overflow-wrap:anywhere]">{d.name}</span>
+              <span className="min-w-0 flex-1 basis-[48%] text-sm leading-tight line-clamp-2 break-normal [overflow-wrap:normal] [word-break:normal] hyphens-none">{d.name}</span>
               <span className="text-sm font-semibold tabular-nums shrink-0">{formatAmount(d.amount, currency)}</span>
               {showBudget && isLive && (
                 <button

@@ -33,7 +33,9 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
   const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
-  const currency = useAppSelector((s) => s.ui.currency);
+  const profileCurrency = useAppSelector((s) => s.ui.currency);
+  // Editing has no currency control, so it must preserve the stored currency.
+  const currency = initialIncome?.currency ?? profileCurrency;
   const allCats = useAppSelector((s) => s.categories.income);
   const displayCats = useAppSelector((s) => selectAllActiveCategories(s, 'income'));
   const t = useT();
@@ -103,6 +105,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
           categoryId, date, method, privacy: initialIncome.privacy,
           comment: normalizeName(comment) || undefined,
           tags: initialIncome.tags,
+          previous: initialIncome,
         });
         dispatch(updateIncome(updated));
         goBack();

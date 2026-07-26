@@ -20,7 +20,10 @@ interface Props {
 }
 
 export function IncomeForm({ initialIncome, onSave, onCancel }: Props) {
-  const currency = useAppSelector((s) => s.ui.currency);
+  const profileCurrency = useAppSelector((s) => s.ui.currency);
+  // The edit form does not expose a currency selector; never rewrite an
+  // existing entry merely because the user's current preference changed.
+  const currency = initialIncome?.currency ?? profileCurrency;
   const t = useT();
   const isEdit = !!initialIncome;
 

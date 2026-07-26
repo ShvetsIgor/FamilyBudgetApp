@@ -377,7 +377,9 @@
     "detectedTitle": "Похоже на подписки",
     "detectedAdd": "Добавить",
     "perMonthShort": "/мес",
-    "payDifferent": "Другая сумма"
+    "payDifferent": "Другая сумма",
+    "pause": "Приостановить",
+    "resume": "Возобновить"
   },
   "savings": {
     "title": "Цели накоплений",

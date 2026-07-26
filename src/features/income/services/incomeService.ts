@@ -2,8 +2,8 @@ import {
   collection,
   doc,
   addDoc,
-  deleteDoc,
   getDocs,
+  getDoc,
   query,
   orderBy,
   where,
@@ -16,6 +16,7 @@ import {
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import { queueLinkedChatMessageDeletes } from '@/features/expenses/services/expensesService';
+import { toLocalMonthKey } from '@/shared/utils/dateKey';
 import type { SerializableIncome, Currency, Privacy } from '@/shared/types';
 import { format } from 'date-fns';
 
@@ -58,6 +59,11 @@ export async function fetchMonthIncome(userId: string, month: string): Promise<S
     query(incCol(userId), where('date', '>=', from), where('date', '<', to), orderBy('date', 'desc'))
   );
   return snap.docs.map((d) => toSerializable(d.id, d.data()));
+}
+
+export async function fetchIncomeById(userId: string, incomeId: string): Promise<SerializableIncome | null> {
+  const snap = await getDoc(doc(getDb(), 'incomes', userId, 'items', incomeId));
+  return snap.exists() ? toSerializable(snap.id, snap.data()) : null;
 }
 
 /**
@@ -106,6 +112,53 @@ export interface AddIncomeInput {
   privacy: Privacy;
 }
 
+export interface UpdateIncomeInput extends AddIncomeInput {
+  id: string;
+  previous: SerializableIncome;
+}
+
+export interface IncomeStatsDelta {
+  month: string;
+  amount: number;
+}
+
+/**
+ * Monthly income aggregates are delta-based. Moving an entry between months
+ * must subtract it from the old month and add it to the new one; an edit
+ * within one month only applies the amount difference.
+ */
+export function buildIncomeStatsDeltas(
+  previous: Pick<SerializableIncome, 'amount' | 'date'>,
+  next: Pick<AddIncomeInput, 'amount' | 'date'>,
+): IncomeStatsDelta[] {
+  const previousMonth = toLocalMonthKey(previous.date);
+  const nextMonth = toLocalMonthKey(next.date);
+
+  if (previousMonth === nextMonth) {
+    const amount = next.amount - previous.amount;
+    return amount === 0 ? [] : [{ month: nextMonth, amount }];
+  }
+
+  return [
+    { month: previousMonth, amount: -previous.amount },
+    { month: nextMonth, amount: next.amount },
+  ];
+}
+
+function queueMonthlyIncomeUpdate(
+  batch: ReturnType<typeof writeBatch>,
+  userId: string,
+  { month, amount }: IncomeStatsDelta,
+) {
+  if (amount === 0) return;
+  batch.set(statsDoc(userId, month), {
+    userId,
+    month,
+    totalIncome: increment(amount),
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+}
+
 export async function addIncome(input: AddIncomeInput): Promise<SerializableIncome> {
   const { userId, date, comment, ...rest } = input;
 
@@ -134,8 +187,8 @@ export async function addIncome(input: AddIncomeInput): Promise<SerializableInco
   });
 }
 
-export async function updateIncome(input: AddIncomeInput & { id: string }): Promise<SerializableIncome> {
-  const { userId, id, date, comment, ...rest } = input;
+export async function updateIncome(input: UpdateIncomeInput): Promise<SerializableIncome> {
+  const { userId, id, previous, date, comment, ...rest } = input;
   const data = Object.fromEntries(
     Object.entries({
       ...rest,
@@ -145,11 +198,19 @@ export async function updateIncome(input: AddIncomeInput & { id: string }): Prom
       updatedAt: serverTimestamp(),
     }).filter(([, v]) => v !== undefined)
   );
-  await updateDoc(doc(getDb(), 'incomes', userId, 'items', id), data);
+
+  const batch = writeBatch(getDb());
+  batch.update(doc(getDb(), 'incomes', userId, 'items', id), data);
+  for (const delta of buildIncomeStatsDeltas(previous, input)) {
+    queueMonthlyIncomeUpdate(batch, userId, delta);
+  }
+  await batch.commit();
+
   return toSerializable(id, {
+    ...previous,
     ...data,
     date: Timestamp.fromDate(date),
-    createdAt: Timestamp.fromDate(new Date()),
+    createdAt: previous.createdAt,
     updatedAt: Timestamp.fromDate(new Date()),
   });
 }

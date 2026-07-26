@@ -6,9 +6,9 @@ import type { PaymentMethod, RecurringType } from '@/shared/types';
  * emoji (💳 🏦 📺 …). Emoji render differently per platform and cannot be
  * themed, so structural icons come from the app's own outline registry.
  *
- * Deliberately still emoji elsewhere: savings-goal icons (user-picked, and
- * rendered as emoji across every surface), family reactions (content, not
- * chrome), the parser's emoji dictionary (input data) and bot copy.
+ * Deliberately still emoji elsewhere: family reactions (content, not chrome),
+ * the parser's emoji dictionary (input data) and bot copy. Savings goals use
+ * the same outline registry through the legacy-compatible GoalIcon adapter.
  */
 
 // Income rows carry an extra 'bank' method on top of the expense union

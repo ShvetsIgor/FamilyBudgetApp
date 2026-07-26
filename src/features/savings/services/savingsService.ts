@@ -1,6 +1,6 @@
 import {
   collection, doc, addDoc, updateDoc, deleteDoc, deleteField,
-  getDocs, query, where, orderBy, serverTimestamp, Timestamp,
+  getDocs, getDoc, query, where, orderBy, serverTimestamp, Timestamp,
   runTransaction,
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
@@ -81,7 +81,7 @@ function toGoal(id: string, data: Record<string, unknown>): SavingsGoal {
     id,
     userId: data.userId as string,
     name: data.name as string,
-    icon: (data.icon as string) ?? '🎯',
+    icon: (data.icon as string) ?? 'star',
     color: (data.color as string) ?? '#6366f1',
     targetAmount: data.targetAmount as number,
     currentAmount: data.currentAmount as number,
@@ -97,6 +97,11 @@ function toGoal(id: string, data: Record<string, unknown>): SavingsGoal {
 export async function fetchGoals(userId: string): Promise<SavingsGoal[]> {
   const snap = await getDocs(query(col(userId), orderBy('createdAt', 'desc')));
   return snap.docs.map((d) => toGoal(d.id, d.data()));
+}
+
+export async function fetchGoalById(userId: string, goalId: string): Promise<SavingsGoal | null> {
+  const snap = await getDoc(goalDoc(userId, goalId));
+  return snap.exists() ? toGoal(snap.id, snap.data()) : null;
 }
 
 /**
@@ -154,6 +159,29 @@ export async function addGoal(input: AddGoalInput): Promise<SavingsGoal> {
   );
   const ref = await addDoc(col(userId), data);
   return toGoal(ref.id, { ...data, createdAt: Timestamp.fromDate(new Date()) });
+}
+
+export async function updateGoal(
+  input: AddGoalInput & { id: string; previous: SavingsGoal },
+): Promise<SavingsGoal> {
+  const { userId, id, previous, deadline, monthlyContribution, initialAmount: _initialAmount, ...rest } = input;
+  const data = Object.fromEntries(
+    Object.entries({
+      ...rest,
+      userId,
+      monthlyContribution,
+      deadline: deadline ? Timestamp.fromDate(deadline) : deleteField(),
+    }).filter(([, value]) => value !== undefined),
+  );
+  await updateDoc(goalDoc(userId, id), data);
+  return toGoal(id, {
+    ...previous,
+    ...data,
+    currentAmount: previous.currentAmount,
+    contributions: previous.contributions,
+    deadline: deadline ? deadline.toISOString() : undefined,
+    createdAt: previous.createdAt,
+  });
 }
 
 export interface ContributionRequest {

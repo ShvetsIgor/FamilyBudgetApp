@@ -16,6 +16,8 @@ import { useT } from '@/shared/hooks/useT';
 import { applyKey } from '@/features/expenses/hooks/useSplitEditor';
 import { addContributionWithExpense } from '@/features/savings/services/savingsExpenseService';
 import { recordSavedCard, buildEntryDateHint } from '@/features/chat/services/savedCardService';
+import { GoalIcon } from '@/features/savings/components/GoalIcon';
+import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import type { SavingsGoal } from '@/shared/types';
 
 const NUMPAD_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫'] as const;
@@ -43,6 +45,7 @@ export function FastSavingsEntry() {
   const [showComment, setShowComment] = useState(false);
   const [dateStr, setDateStr] = useState(toDateInput(new Date()));
   const [showDate, setShowDate] = useState(false);
+  const [showGoalPicker, setShowGoalPicker] = useState(false);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -140,51 +143,38 @@ export function FastSavingsEntry() {
         </div>
       </div>
 
-      {/* ── Goals list ── */}
+      {/* ── Goal picker — same compact trigger → sheet pattern as categories ── */}
       <div className="flex-1 overflow-y-auto px-4 py-2 flex flex-col gap-1.5 min-h-0 [scrollbar-width:none]">
         {goals.length === 0 ? (
           <div className="flex flex-col items-center justify-center flex-1 gap-2 text-muted-foreground text-sm">
-            <span className="text-4xl">🐷</span>
+            <StickerIcon icon="piggy" color="hsl(var(--muted-foreground))" className="h-10 w-10" />
             <span>{t('savings.noGoals')}</span>
           </div>
-        ) : (
-          goals.map((goal) => {
-            const sel = goal.id === selectedGoalId;
-            const gPct = Math.min(100, (goal.currentAmount / goal.targetAmount) * 100);
-            return (
-              <button
-                key={goal.id}
-                onClick={() => setSelectedGoalId(goal.id)}
-                className="flex items-center gap-3 pl-3 pr-4 py-3 text-left transition-colors flex-shrink-0"
-                style={{
-                  borderLeft: `4px solid ${sel ? goal.color : 'transparent'}`,
-                  background: sel ? goal.color + '0e' : 'hsl(var(--card))',
-                  boxShadow: '0 1px 2px rgba(61,44,31,.05)',
-                }}
-              >
+        ) : selectedGoal && (
+          <button
+            type="button"
+            onClick={() => setShowGoalPicker(true)}
+            className="flex w-full flex-shrink-0 items-center gap-3 rounded-[16px] bg-card p-3 text-left"
+            style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}
+          >
+            <GoalIcon icon={selectedGoal.icon} color={selectedGoal.color} size="md" />
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-extrabold text-foreground">{selectedGoal.name}</div>
+              <div className="mt-1 h-1 overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-9 w-9 rounded-[12px] flex items-center justify-center text-xl flex-shrink-0"
-                  style={{ background: goal.color + '22' }}
-                >
-                  {goal.icon}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-extrabold text-foreground truncate">{goal.name}</div>
-                  <div className="mt-1 h-1 bg-muted overflow-hidden">
-                    <div className="h-full transition-all" style={{ width: `${gPct}%`, background: goal.color }} />
-                  </div>
-                  <div className="text-[10px] text-muted-foreground font-semibold mt-0.5">
-                    {formatAmount(goal.currentAmount, currency)} / {formatAmount(goal.targetAmount, currency)}
-                  </div>
-                </div>
-                {sel && (
-                  <div className="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: goal.color }}>
-                    <div className="h-2 w-2 rounded-full bg-white" />
-                  </div>
-                )}
-              </button>
-            );
-          })
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${Math.min(100, (selectedGoal.currentAmount / selectedGoal.targetAmount) * 100)}%`,
+                    background: selectedGoal.color,
+                  }}
+                />
+              </div>
+              <div className="mt-0.5 text-[10px] font-semibold text-muted-foreground">
+                {formatAmount(selectedGoal.currentAmount, selectedGoal.currency)} / {formatAmount(selectedGoal.targetAmount, selectedGoal.currency)}
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </button>
         )}
 
         {/* Date row */}
@@ -281,6 +271,58 @@ export function FastSavingsEntry() {
       </div>
 
     </div>
+
+    {showGoalPicker && (
+      <div className="fixed inset-0 z-[70] flex items-end bg-black/45" onClick={() => setShowGoalPicker(false)}>
+        <div
+          className="max-h-[72dvh] w-full overflow-hidden rounded-t-[24px] bg-background shadow-2xl"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="flex min-h-14 items-center justify-between border-b border-border px-4">
+            <h2 className="text-sm font-bold">{t('savings.selectGoal')}</h2>
+            <button
+              type="button"
+              onClick={() => setShowGoalPicker(false)}
+              className="fb-touch-target flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground"
+              aria-label={t('common.close')}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="max-h-[calc(72dvh-56px)] overflow-y-auto p-4">
+            <div className="flex flex-col gap-2">
+              {goals.map((goal) => {
+                const selected = goal.id === selectedGoalId;
+                return (
+                  <button
+                    key={goal.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedGoalId(goal.id);
+                      setShowGoalPicker(false);
+                    }}
+                    className="flex min-h-14 items-center gap-3 rounded-2xl border p-3 text-left"
+                    style={{
+                      borderColor: selected ? goal.color : 'hsl(var(--border))',
+                      background: selected ? `${goal.color}12` : 'hsl(var(--card))',
+                    }}
+                  >
+                    <GoalIcon icon={goal.icon} color={goal.color} size="md" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold">{goal.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatAmount(goal.currentAmount, goal.currency)} / {formatAmount(goal.targetAmount, goal.currency)}
+                      </p>
+                    </div>
+                    {selected && <span className="h-2.5 w-2.5 rounded-full" style={{ background: goal.color }} />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   );
 }

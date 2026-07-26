@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { format, parseISO, differenceInCalendarDays, isToday, isYesterday, subMonths } from 'date-fns';
 import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
-import { X, Calendar, MessageSquare, Plus, ChevronRight } from 'lucide-react';
+import { X, Calendar, MessageSquare, Plus, ChevronRight, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import {
   setRecurring, addRecurringItem, removeRecurringItem, updateRecurringItem, toggleRecurringItem,
@@ -119,6 +119,7 @@ export default function RecurringPage() {
   const [loading, setLoading] = useState(false);
   // «Оплачено, но сумма изменилась» — inline amount editor per row
   const [payEdit, setPayEdit] = useState<{ id: string; value: string } | null>(null);
+  const [actionsOpenId, setActionsOpenId] = useState<string | null>(null);
   const [dismissedKeys, setDismissedKeys] = useState<string[]>([]);
   const [pendingCandidateKey, setPendingCandidateKey] = useState<string | null>(null);
   const t = useT();
@@ -282,6 +283,7 @@ export default function RecurringPage() {
       dispatch(updateRecurringItem(await markAsPaid(user.id, { ...item, amount })));
       haptic('success');
       setPayEdit(null);
+      setActionsOpenId(null);
     } catch (e) {
       console.error('handleMarkPaid error:', e);
     }
@@ -291,6 +293,7 @@ export default function RecurringPage() {
     if (!user || !confirm(`${t('recurring.confirmDelete')} "${item.name}"?`)) return;
     await deleteRecurring(user.id, item.id);
     dispatch(removeRecurringItem(item.id));
+    setActionsOpenId(null);
   }
 
   async function handleToggle(item: SerializableRecurringPayment) {
@@ -298,6 +301,7 @@ export default function RecurringPage() {
     const next = !item.isActive;
     await toggleRecurring(user.id, item.id, next);
     dispatch(toggleRecurringItem({ id: item.id, isActive: next }));
+    setActionsOpenId(null);
   }
 
   // Skip a missed occurrence without creating an expense
@@ -305,6 +309,7 @@ export default function RecurringPage() {
     if (!user) return;
     try {
       dispatch(updateRecurringItem(await advanceToNextFutureDue(user.id, item)));
+      setActionsOpenId(null);
     } catch (e) {
       console.error('handleSkip error:', e);
     }
@@ -404,115 +409,130 @@ export default function RecurringPage() {
     const termPending = termTotal > 0 && !termCompleted
       ? termTotal - paymentsLeft(item.nextDueDate, item.endDate!, item.frequency) + 1
       : 0;
+    const actionsOpen = actionsOpenId === item.id;
     return (
       <div
         key={item.id}
         className={cn(
-          'flex w-full items-center gap-3 pl-3 pr-4 py-3.5 hover:bg-muted/30 transition-colors',
+          'transition-colors hover:bg-muted/20',
           !item.isActive && 'opacity-50',
-          isSelected && 'bg-primary/5'
+          isSelected && 'bg-primary/5',
         )}
         style={{ borderLeft: `4px solid ${borderColor}` }}
       >
-        <div className="flex flex-1 items-center gap-3 min-w-0 cursor-pointer" onClick={() => setFormMode({ mode: 'edit', item })}>
-          {cat ? <CategoryIcon icon={cat.icon} color={cat.color} size="md" /> : <CategoryIcon icon={typeObj?.icon ?? 'refund'} color={borderColor} size="md" />}
-          <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-semibold truncate leading-snug">{item.name}</p>
-            <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-0.5">
-              {typeText && (
-                <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground whitespace-nowrap">
-                  <StickerIcon icon={typeObj?.icon ?? 'refund'} color="hsl(var(--muted-foreground))" className="h-3 w-3" />
-                  {typeText}
-                </span>
-              )}
-              <span style={{ fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700, color: borderColor }}>
-                {FREQ.find((f) => f.value === item.frequency)?.label}
-              </span>
-              <span className="text-muted-foreground/40">·</span>
-              {termCompleted ? (
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'hsl(152 60% 32%)' }}>{t('recurring.completed')}</span>
-              ) : days < 0 ? (
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'hsl(var(--destructive))' }}>{t('recurring.overdueDays', { n: -days })}</span>
-              ) : days === 0 ? (
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'hsl(var(--destructive))' }}>{t('recurring.dueToday')}</span>
-              ) : days <= 3 ? (
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'hsl(38 80% 36%)' }}>{t('recurring.inDays').replace('{n}', String(days))}</span>
-              ) : (
-                <span style={{ fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>{format(parseISO(item.nextDueDate), 'd MMM', { locale: dfLocale })}</span>
-              )}
-              {termPending > 0 && (
-                <>
-                  <span className="text-muted-foreground/40">·</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: 'hsl(var(--muted-foreground))' }}>
-                    {t('recurring.paymentNofM', { n: termPending, m: termTotal })}
-                  </span>
-                </>
-              )}
+        <div className="flex min-h-16 items-center gap-3 py-2 pl-3 pr-2">
+          <button
+            type="button"
+            onClick={() => setFormMode({ mode: 'edit', item })}
+            className="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left"
+          >
+            {cat
+              ? <CategoryIcon icon={cat.icon} color={cat.color} size="sm" />
+              : <CategoryIcon icon={typeObj?.icon ?? 'refund'} color={borderColor} size="sm" />}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[14px] font-semibold leading-tight">{item.name}</p>
+              <p className="mt-1 flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap text-[11px] text-muted-foreground">
+                {typeText && <span className="truncate">{typeText}</span>}
+                {typeText && <span className="text-muted-foreground/35">·</span>}
+                <span className="shrink-0">{FREQ.find((f) => f.value === item.frequency)?.label}</span>
+                <span className="text-muted-foreground/35">·</span>
+                {termCompleted ? (
+                  <span className="shrink-0 font-semibold text-emerald-600">{t('recurring.completed')}</span>
+                ) : days < 0 ? (
+                  <span className="shrink-0 font-semibold text-destructive">{t('recurring.overdueDays', { n: -days })}</span>
+                ) : days === 0 ? (
+                  <span className="shrink-0 font-semibold text-destructive">{t('recurring.dueToday')}</span>
+                ) : days <= 3 ? (
+                  <span className="shrink-0 font-semibold text-amber-600">{t('recurring.inDays').replace('{n}', String(days))}</span>
+                ) : (
+                  <span className="shrink-0">{format(parseISO(item.nextDueDate), 'd MMM', { locale: dfLocale })}</span>
+                )}
+                {termPending > 0 && (
+                  <>
+                    <span className="text-muted-foreground/35">·</span>
+                    <span className="shrink-0">{t('recurring.paymentNofM', { n: termPending, m: termTotal })}</span>
+                  </>
+                )}
+              </p>
+            </div>
+          </button>
+
+          <div className="shrink-0 text-right">
+            <p className="text-[15px] font-black tabular-nums tracking-[-0.02em]">
+              {item.amount > 0 ? '-' : ''}{formatAmount(item.amount, item.currency)}
             </p>
           </div>
+          <button
+            type="button"
+            onClick={() => {
+              setActionsOpenId(actionsOpen ? null : item.id);
+              setPayEdit(null);
+            }}
+            className="fb-touch-target flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label={t('nav.more')}
+            aria-expanded={actionsOpen}
+          >
+            <MoreHorizontal className="h-5 w-5" />
+          </button>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {payEdit?.id !== item.id && (
-            <span style={{ fontSize: 18, fontWeight: 900, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em' }}>
-              {item.amount > 0 ? '-' : ''}{formatAmount(item.amount, item.currency)}
-            </span>
-          )}
-          {item.isActive && days <= 0 && (
-            payEdit?.id === item.id ? (
-              <div className="flex items-center gap-1">
+
+        {actionsOpen && (
+          <div className="border-t border-border/30 px-3 py-2">
+            {payEdit?.id === item.id ? (
+              <div className="flex items-center gap-2">
                 <input
-                  type="number" inputMode="decimal" min="0" step="0.01" autoFocus
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.01"
+                  autoFocus
                   value={payEdit.value}
                   onChange={(e) => setPayEdit({ id: item.id, value: e.target.value })}
-                  className="w-20 min-h-11 rounded-xl border border-border bg-background px-2 text-right text-sm font-extrabold tabular-nums outline-none focus:border-primary"
+                  className="min-h-11 min-w-0 flex-1 rounded-xl border border-border bg-background px-3 text-right text-sm font-extrabold tabular-nums outline-none focus:border-primary"
                 />
                 <button
                   onClick={() => handleMarkPaid(item, parseFloat(payEdit.value) || 0)}
                   disabled={!(parseFloat(payEdit.value) > 0)}
-                  aria-label={t('recurring.markPaid')}
-                  className="min-h-11 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 px-3 text-sm font-bold hover:bg-emerald-500/20 transition-colors disabled:opacity-50"
-                >✓</button>
-                <button
-                  onClick={() => setPayEdit(null)}
-                  aria-label={t('recurring.cancel')}
-                  className="min-h-11 w-9 rounded-xl bg-muted text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >✕</button>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-1">
-                <button
-                  onClick={() => handleMarkPaid(item)}
-                  className="min-h-11 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 px-3 text-sm font-semibold hover:bg-emerald-500/20 transition-colors"
+                  className="min-h-11 rounded-xl bg-emerald-500/10 px-4 text-sm font-bold text-emerald-700 disabled:opacity-50 dark:text-emerald-300"
                 >
                   {t('recurring.markPaid')}
                 </button>
-                <button
-                  onClick={() => setPayEdit({ id: item.id, value: String(item.amount) })}
-                  className="min-h-11 rounded-xl bg-muted px-3 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {t('recurring.payDifferent')}
-                </button>
-                {days < 0 && (
-                  <button
-                    onClick={() => handleSkip(item)}
-                    className="min-h-11 rounded-xl bg-muted px-3 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
-                  >
+                <button onClick={() => setPayEdit(null)} className="fb-touch-target h-11 w-11 rounded-xl bg-muted text-muted-foreground">✕</button>
+              </div>
+            ) : (
+              <div className="flex gap-2 overflow-x-auto [scrollbar-width:none]">
+                {item.isActive && days <= 0 && (
+                  <>
+                    <button onClick={() => handleMarkPaid(item)} className="min-h-11 shrink-0 rounded-xl bg-emerald-500/10 px-3 text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                      {t('recurring.markPaid')}
+                    </button>
+                    <button onClick={() => setPayEdit({ id: item.id, value: String(item.amount) })} className="min-h-11 shrink-0 rounded-xl bg-muted px-3 text-xs font-semibold text-muted-foreground">
+                      {t('recurring.payDifferent')}
+                    </button>
+                  </>
+                )}
+                {item.isActive && days < 0 && (
+                  <button onClick={() => handleSkip(item)} className="min-h-11 shrink-0 rounded-xl bg-muted px-3 text-xs font-semibold text-muted-foreground">
                     {t('recurring.skip')}
                   </button>
                 )}
+                <button
+                  onClick={() => handleToggle(item)}
+                  className="min-h-11 shrink-0 rounded-xl bg-muted px-3 text-xs font-semibold text-muted-foreground"
+                >
+                  {item.isActive ? t('recurring.pause') : t('recurring.resume')}
+                </button>
+                <button
+                  onClick={() => handleDelete(item)}
+                  className="fb-touch-target flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl bg-destructive/5 px-3 text-xs font-semibold text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {t('common.delete')}
+                </button>
               </div>
-            )
-          )}
-          <button
-            onClick={() => handleToggle(item)}
-            role="switch"
-            aria-checked={item.isActive}
-            className={`relative h-11 w-14 rounded-full transition-colors flex-shrink-0 ${item.isActive ? 'bg-primary' : 'bg-muted'}`}
-          >
-            <span className={`absolute top-2.5 h-6 w-6 rounded-full bg-white shadow transition-all ${item.isActive ? 'left-7' : 'left-1.5'}`} />
-          </button>
-          <button onClick={() => handleDelete(item)} className="fb-touch-target flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive" aria-label={t('common.delete')}>✕</button>
-        </div>
+            )}
+          </div>
+        )}
       </div>
     );
   });

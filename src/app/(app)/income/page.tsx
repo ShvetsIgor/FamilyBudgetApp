@@ -120,7 +120,13 @@ export default function IncomePage() {
 
   async function handleEdit(data: Omit<AddIncomeInput, 'userId'>) {
     if (!user || !editingIncome) return;
-    dispatch(updateIncomeAction(await updateIncome({ ...data, tags: editingIncome.tags, userId: user.id, id: editingIncome.id })));
+    dispatch(updateIncomeAction(await updateIncome({
+      ...data,
+      tags: editingIncome.tags,
+      userId: user.id,
+      id: editingIncome.id,
+      previous: editingIncome,
+    })));
     setEditingIncome(null);
   }
 
@@ -244,7 +250,7 @@ export default function IncomePage() {
                         key={i.id}
                         income={i}
                         onEdit={() => {
-                          if (window.innerWidth < 1024) router.push(`/income/${i.id}/edit`);
+                          if (window.innerWidth < 1024) router.push(`/income/${i.id}`);
                           else setEditingIncome(i);
                         }}
                         onDelete={() => handleDelete(i)}

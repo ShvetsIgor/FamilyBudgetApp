@@ -387,7 +387,7 @@ function FolderTile({
           </span>
         )}
       </span>
-      <span className="max-w-[96px] text-[11px] font-black leading-tight text-foreground line-clamp-2">
+      <span className="max-w-[96px] text-[11px] font-black leading-tight text-foreground line-clamp-2 break-normal [overflow-wrap:normal] [word-break:normal] hyphens-none">
         {t.cat(folder.name)}
       </span>
     </button>
@@ -436,7 +436,7 @@ function CategoryGrid({
             } as CSSProperties}
           >
             <StickerIcon icon={cat.icon ?? 'box'} color={color} className="h-6 w-6" />
-            <span className="max-w-full text-[10px] font-black leading-tight text-foreground line-clamp-2 [overflow-wrap:anywhere]">
+            <span className="max-w-full text-[10px] font-black leading-tight text-foreground line-clamp-2 break-normal [overflow-wrap:normal] [word-break:normal] hyphens-none">
               {t.cat(cat.name)}
             </span>
             {selected && (

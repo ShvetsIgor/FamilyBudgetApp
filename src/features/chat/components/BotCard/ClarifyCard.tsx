@@ -6,6 +6,7 @@ import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { SHADOW } from '@/features/chat/styles/tokens';
 import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { useT } from '@/shared/hooks/useT';
+import { haptic } from '@/shared/utils/haptics';
 import type { Category } from '@/shared/types';
 
 interface ClarifyChip {
@@ -103,6 +104,7 @@ export function ClarifyCard({
     : chips;
 
   const handleChipClick = (chip: ClarifyChip) => {
+    haptic('tap');
     // In tag-learning mode chips are folders — select directly, no drill-down
     if (!isTagLearning && !selectedParent && categories) {
       const subs = categories.filter((c) => c.folderId === chip.id);

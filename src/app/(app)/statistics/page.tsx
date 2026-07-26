@@ -12,6 +12,7 @@ import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
 import Link from 'next/link';
+import { BarChart2 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -272,7 +273,7 @@ export default function StatisticsPage() {
             {barChart}
             {pieData.length === 0 && (
               <div className="flex flex-col items-center py-12 text-center">
-                <p className="text-4xl mb-3">📊</p>
+                <BarChart2 className="mx-auto mb-3 h-9 w-9 text-muted-foreground" strokeWidth={1.6} />
                 <p className="font-medium">{t('stats.noData')}</p>
                 <Link href="/expenses/new" className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground">
                   {t('home.addExpense')}
@@ -286,7 +287,7 @@ export default function StatisticsPage() {
             {summaryCards}
             {pieData.length === 0 && (
               <div className="flex flex-col items-center py-16 text-center">
-                <p className="text-4xl mb-3">📊</p>
+                <BarChart2 className="mx-auto mb-3 h-9 w-9 text-muted-foreground" strokeWidth={1.6} />
                 <p className="font-medium">{t('stats.noData')}</p>
               </div>
             )}

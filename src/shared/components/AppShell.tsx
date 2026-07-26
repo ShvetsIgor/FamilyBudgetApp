@@ -49,6 +49,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main className={isChat
           ? 'flex-1 flex flex-col overflow-hidden'
           : 'flex-1 overflow-y-auto md:px-6 md:[&>*]:mx-auto md:[&>*]:w-full md:[&>*]:max-w-[760px]'}>
+          {/* No transition on tab switches — on iOS a tab bar swaps screens
+              instantly; motion belongs to modal presentation (see the
+              .fb-sheet-enter overlays), not to lateral navigation. An animated
+              wrapper here also became a stacking/containing block and pushed
+              the full-screen entry sheets under the header. */}
           {children}
         </main>
         <MobileBottomNav onMore={() => setMenuOpen(true)} />

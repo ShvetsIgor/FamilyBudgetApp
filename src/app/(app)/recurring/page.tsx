@@ -23,6 +23,9 @@ import { CategoryEditorSheet } from '@/features/categories/components/CategoryEd
 import { CategoryFolderPickerSheet } from '@/features/categories/components/CategoryFolderPickerSheet';
 import { FolderEditorSheet } from '@/features/categories/components/FolderEditorSheet';
 import { CategoryIcon, StickerIcon } from '@/features/categories/components/CategoryIcon';
+import { RECURRING_TYPE_ICONS } from '@/shared/config/domainIcons';
+import { haptic } from '@/shared/utils/haptics';
+import type { IconKey } from '@/features/categories/icons/icons';
 import {
   addCategory as addCategoryAction,
   addFolder as addFolderAction,
@@ -128,14 +131,14 @@ export default function RecurringPage() {
     { value: 'daily', label: t('recurring.daily') },
   ];
 
-  const TYPES: { value: RecurringType; label: string; icon: string }[] = [
-    { value: 'subscription', label: t('recurring.subscription'), icon: '📺' },
-    { value: 'rent', label: t('recurring.rent'), icon: '🏠' },
-    { value: 'utility', label: t('recurring.utility'), icon: '💡' },
-    { value: 'credit', label: t('recurring.credit'), icon: '💳' },
-    { value: 'mortgage', label: t('recurring.mortgage'), icon: '🏦' },
-    { value: 'installment', label: t('recurring.installment'), icon: '📦' },
-    { value: 'custom', label: t('recurring.custom'), icon: '🔄' },
+  const TYPES: { value: RecurringType; label: string; icon: IconKey }[] = [
+    { value: 'subscription', label: t('recurring.subscription'), icon: RECURRING_TYPE_ICONS.subscription },
+    { value: 'rent', label: t('recurring.rent'), icon: RECURRING_TYPE_ICONS.rent },
+    { value: 'utility', label: t('recurring.utility'), icon: RECURRING_TYPE_ICONS.utility },
+    { value: 'credit', label: t('recurring.credit'), icon: RECURRING_TYPE_ICONS.credit },
+    { value: 'mortgage', label: t('recurring.mortgage'), icon: RECURRING_TYPE_ICONS.mortgage },
+    { value: 'installment', label: t('recurring.installment'), icon: RECURRING_TYPE_ICONS.installment },
+    { value: 'custom', label: t('recurring.custom'), icon: RECURRING_TYPE_ICONS.custom },
   ];
 
   // Overdue items are NOT silently advanced anymore: a missed payment stays
@@ -277,6 +280,7 @@ export default function RecurringPage() {
       // «Сумма изменилась»: the new price sticks to the template from now on
       if (amount !== item.amount) await updateRecurringAmount(user.id, item.id, amount);
       dispatch(updateRecurringItem(await markAsPaid(user.id, { ...item, amount })));
+      haptic('success');
       setPayEdit(null);
     } catch (e) {
       console.error('handleMarkPaid error:', e);
@@ -377,7 +381,7 @@ export default function RecurringPage() {
           key={tp.value}
           className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[11px] font-bold text-muted-foreground"
         >
-          <span>{tp.icon}</span>
+          <StickerIcon icon={tp.icon} color="hsl(var(--muted-foreground))" className="h-3.5 w-3.5" />
           <span>{tp.label}</span>
           <span className="tabular-nums text-foreground">{tp.text}</span>
         </span>
@@ -411,13 +415,14 @@ export default function RecurringPage() {
         style={{ borderLeft: `4px solid ${borderColor}` }}
       >
         <div className="flex flex-1 items-center gap-3 min-w-0 cursor-pointer" onClick={() => setFormMode({ mode: 'edit', item })}>
-          {cat ? <CategoryIcon icon={cat.icon} color={cat.color} size="md" /> : <span className="text-2xl shrink-0">{typeObj?.icon ?? '🔄'}</span>}
+          {cat ? <CategoryIcon icon={cat.icon} color={cat.color} size="md" /> : <CategoryIcon icon={typeObj?.icon ?? 'refund'} color={borderColor} size="md" />}
           <div className="flex-1 min-w-0">
             <p className="text-[15px] font-semibold truncate leading-snug">{item.name}</p>
             <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-0.5">
               {typeText && (
-                <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground whitespace-nowrap">
-                  {typeObj?.icon} {typeText}
+                <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground whitespace-nowrap">
+                  <StickerIcon icon={typeObj?.icon ?? 'refund'} color="hsl(var(--muted-foreground))" className="h-3 w-3" />
+                  {typeText}
                 </span>
               )}
               <span style={{ fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700, color: borderColor }}>
@@ -522,7 +527,7 @@ export default function RecurringPage() {
       <div className="flex flex-col gap-1.5">
         {candidates.map((c) => (
           <div key={c.key} className="flex items-center gap-3 rounded-[14px] border border-dashed border-border bg-card/60 px-3 py-2.5">
-            <span className="text-xl shrink-0">📺</span>
+            <StickerIcon icon={RECURRING_TYPE_ICONS.subscription} color="hsl(var(--primary))" className="h-5 w-5 shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold truncate">{c.displayName}</p>
               <p className="text-xs text-muted-foreground tabular-nums">
@@ -562,7 +567,7 @@ export default function RecurringPage() {
     </div>
   ) : (
     <div className="hidden lg:flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center gap-3">
-      <p className="text-3xl">🔄</p>
+      <StickerIcon icon="refund" color="hsl(var(--muted-foreground))" className="h-8 w-8" />
       <p className="text-sm text-muted-foreground">{t('recurring.selectToEdit')}</p>
       <button
         onClick={openAddForm}
@@ -590,7 +595,7 @@ export default function RecurringPage() {
         {loading && <div className="flex justify-center py-12"><div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-primary" /></div>}
         {!loading && list.length === 0 && (
           <div className="flex flex-col items-center py-12 text-center">
-            <p className="text-4xl mb-3">🔄</p>
+            <StickerIcon icon="refund" color="hsl(var(--muted-foreground))" className="mb-3 h-10 w-10" />
             <p className="font-medium">{t('recurring.noItems')}</p>
             <p className="text-sm text-muted-foreground mt-1">{t('recurring.noItemsHint')}</p>
           </div>
@@ -643,7 +648,7 @@ export default function RecurringPage() {
           {loading && <div className="flex justify-center py-12"><div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-primary" /></div>}
           {!loading && list.length === 0 && (
             <div className="flex flex-col items-center py-12 text-center">
-              <p className="text-4xl mb-3">🔄</p>
+              <StickerIcon icon="refund" color="hsl(var(--muted-foreground))" className="mb-3 h-10 w-10" />
               <p className="font-medium">{t('recurring.noItems')}</p>
               <p className="text-sm text-muted-foreground mt-1">{t('recurring.noItemsHint')}</p>
             </div>
@@ -900,7 +905,7 @@ function RecurringForm({ initial, prefill, onSave, onCancel, onFinish, currency,
     <>
       {/* ── Mobile: full-screen overlay ── */}
       <div
-        className="lg:hidden fixed inset-0 z-50 flex flex-col bg-background"
+        className="fb-sheet-enter lg:hidden fixed inset-0 z-50 flex flex-col bg-background"
         style={{ height: '100dvh', maxHeight: '100dvh' }}
       >
         {/* Top bar */}
@@ -1064,7 +1069,7 @@ function RecurringForm({ initial, prefill, onSave, onCancel, onFinish, currency,
                       color: sel ? catColor : 'hsl(var(--muted-foreground))',
                     }}
                   >
-                    <span>{tp.icon}</span>
+                    <StickerIcon icon={tp.icon} color={sel ? catColor : 'hsl(var(--muted-foreground))'} className="h-4 w-4" />
                     <span>{tp.label}</span>
                   </button>
                 );
@@ -1190,7 +1195,7 @@ function RecurringForm({ initial, prefill, onSave, onCancel, onFinish, currency,
             className="w-full py-[12px] rounded-[16px] flex items-center justify-center gap-2 text-[14px] font-black text-white transition-opacity disabled:opacity-50 border-0"
             style={{ background: catColor, boxShadow: `0 12px 24px ${catColor}60` }}
           >
-            <span className="text-base leading-none">🔄</span>
+            <StickerIcon icon="refund" color="#fff" className="h-4 w-4" />
             <span>
               {saving
                 ? t('recurring.saving')
@@ -1246,7 +1251,7 @@ function RecurringForm({ initial, prefill, onSave, onCancel, onFinish, currency,
             {types.map((tp) => (
               <button key={tp.value} type="button" onClick={() => setType(tp.value)}
                 className={`rounded-xl py-2 px-2 text-sm font-medium border transition-colors inline-flex items-center justify-center gap-1.5 ${type === tp.value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'}`}>
-                <span>{tp.icon}</span>
+                <StickerIcon icon={tp.icon} color={type === tp.value ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'} className="h-4 w-4" />
                 <span className="truncate">{tp.label}</span>
               </button>
             ))}

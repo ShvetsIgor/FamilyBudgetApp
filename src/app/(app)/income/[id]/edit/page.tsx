@@ -1,4 +1,5 @@
 'use client';
+import { Search } from 'lucide-react';
 
 import { use } from 'react';
 import { useRouter } from 'next/navigation';
@@ -15,7 +16,7 @@ export default function EditIncomePage({ params }: { params: Promise<{ id: strin
   if (!income) {
     return (
       <div className="flex flex-col items-center py-20 px-4 text-center">
-        <p className="text-4xl mb-3">🔍</p>
+        <Search className="mx-auto mb-3 h-9 w-9 text-muted-foreground" strokeWidth={1.6} />
         <p className="font-medium">{t('common.entryNotFound')}</p>
         <button onClick={() => router.back()} className="mt-4 text-sm text-primary hover:underline">
           {t('common.back')}

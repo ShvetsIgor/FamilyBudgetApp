@@ -2,7 +2,7 @@
 
 import { format, parseISO } from 'date-fns';
 import { getDateFnsLocale } from '@/shared/utils/dateLocale';
-import { X } from 'lucide-react';
+import { X, Bell, Sunrise, BarChart2, Users, AlertTriangle, Tv } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { markRead, markAllRead, clearNotifications } from '../store/notificationsSlice';
@@ -12,6 +12,15 @@ import { useT } from '@/shared/hooks/useT';
 interface Props {
   onClose: () => void;
 }
+
+const KIND_ICONS: Record<string, typeof Bell> = {
+  morning: Sunrise,
+  weekly: BarChart2,
+  family: Users,
+  family_invite: Users,
+  alert: AlertTriangle,
+  subscriptions: Tv,
+};
 
 export function NotificationsPanel({ onClose }: Props) {
   const dispatch = useAppDispatch();
@@ -91,7 +100,7 @@ export function NotificationsPanel({ onClose }: Props) {
         <div className="overflow-y-auto flex-1">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 gap-2">
-              <span className="text-3xl">🔔</span>
+              <Bell className="h-7 w-7" strokeWidth={1.8} style={{ color: C.sub }} />
               <p className="text-[13px] font-[700]" style={{ color: C.sub }}>
                 {t('notifications.empty')}
               </p>
@@ -120,10 +129,13 @@ export function NotificationsPanel({ onClose }: Props) {
                   }}
                 >
                   <div
-                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[11px] text-lg"
-                    style={{ background: C.primaryTint + '44' }}
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[11px]"
+                    style={{ background: C.primaryTint + '44', color: C.primary }}
                   >
-                    {n.kind === 'morning' ? '🌅' : n.kind === 'weekly' ? '📊' : n.kind === 'family_invite' || n.kind === 'family' ? '👨‍👩‍👧' : n.kind === 'alert' ? '⚠️' : n.kind === 'subscriptions' ? '📺' : '🔔'}
+                    {(() => {
+                      const KindIcon = KIND_ICONS[n.kind] ?? Bell;
+                      return <KindIcon className="h-[18px] w-[18px]" strokeWidth={2} />;
+                    })()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="m-0 text-[13.5px] font-[800] leading-tight" style={{ color: C.fg }}>

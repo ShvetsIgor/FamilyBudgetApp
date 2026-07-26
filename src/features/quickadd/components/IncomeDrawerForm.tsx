@@ -11,16 +11,17 @@ import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import { useT } from '@/shared/hooks/useT';
+import { paymentMethodIcon } from '@/shared/config/domainIcons';
 import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { recordSavedCard, buildEntryDateHint } from '@/features/chat/services/savedCardService';
 import { normalizeName } from '@/shared/utils/normalizeName';
 import { selectAllActiveCategories } from '@/features/categories/store/selectors';
 
 const INCOME_METHODS = [
-  { value: 'bank'  as const, label: 'income.bank', icon: '🏦' },
-  { value: 'card'  as const, label: 'expense.card',   icon: '💳' },
-  { value: 'cash'  as const, label: 'expense.cash', icon: '💵' },
-  { value: 'other' as const, label: 'expense.other',  icon: '🔄' },
+  { value: 'bank'  as const, label: 'income.bank' },
+  { value: 'card'  as const, label: 'expense.card' },
+  { value: 'cash'  as const, label: 'expense.cash' },
+  { value: 'other' as const, label: 'expense.other' },
 ];
 
 const AMOUNT_PRESETS = [10000, 25000, 50000, 100000];
@@ -236,7 +237,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
                       color: sel ? catColor : 'hsl(var(--muted-foreground))',
                     }}
                   >
-                    <span>{m.icon}</span><span>{t(m.label)}</span>
+                    <StickerIcon icon={paymentMethodIcon(m.value)} color="currentColor" className="h-4 w-4" /><span>{t(m.label)}</span>
                   </button>
                 );
               })}

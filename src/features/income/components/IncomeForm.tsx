@@ -6,6 +6,8 @@ import { useAppSelector } from '@/store/store';
 import { CategoryPicker } from '@/features/categories/components/CategoryPicker';
 import { blockInvalidAmountKeys, parseLocalDate } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
+import { StickerIcon } from '@/features/categories/components/CategoryIcon';
+import { paymentMethodIcon } from '@/shared/config/domainIcons';
 import type { AddIncomeInput } from '../services/incomeService';
 import type { SerializableIncome } from '@/shared/types';
 
@@ -22,11 +24,11 @@ export function IncomeForm({ initialIncome, onSave, onCancel }: Props) {
   const t = useT();
   const isEdit = !!initialIncome;
 
-  const METHODS: { value: IncomeMethod; label: string; icon: string }[] = [
-    { value: 'card', label: t('income.card'), icon: '💳' },
-    { value: 'cash', label: t('income.cash'), icon: '💵' },
-    { value: 'bank', label: t('income.bank'), icon: '🏦' },
-    { value: 'other', label: t('income.other'), icon: '🔄' },
+  const METHODS: { value: IncomeMethod; label: string }[] = [
+    { value: 'card', label: t('income.card') },
+    { value: 'cash', label: t('income.cash') },
+    { value: 'bank', label: t('income.bank') },
+    { value: 'other', label: t('income.other') },
   ];
 
   const [amount, setAmount] = useState(initialIncome?.amount.toString() ?? '');
@@ -115,7 +117,7 @@ export function IncomeForm({ initialIncome, onSave, onCancel }: Props) {
                   : 'border-border text-muted-foreground'
               }`}
             >
-              <span>{m.icon}</span>
+              <StickerIcon icon={paymentMethodIcon(m.value)} color="currentColor" className="h-4 w-4" />
               <span>{m.label}</span>
             </button>
           ))}

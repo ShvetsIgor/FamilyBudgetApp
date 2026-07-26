@@ -8,17 +8,14 @@ import { useAppSelector, useAppDispatch } from '@/store/store';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { formatAmount } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
+import { StickerIcon } from '@/features/categories/components/CategoryIcon';
+import { recurringTypeIcon } from '@/shared/config/domainIcons';
 import { markAsPaid } from '@/features/recurring/services/recurringService';
 import { updateRecurringItem } from '@/features/recurring/store/recurringSlice';
 import { addExpense } from '@/features/expenses/services/expensesService';
 import { resolveExpensePrivacy } from '@/features/expenses/utils/expensePrivacy';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
 import type { SerializableRecurringPayment } from '@/shared/types';
-
-const TYPE_ICONS: Record<string, string> = {
-  subscription: '📺', rent: '🏠', utility: '💡',
-  credit: '💳', mortgage: '🏦', installment: '📦', custom: '🔄',
-};
 
 function DayPill({ days }: { days: number }) {
   const t = useT();
@@ -113,7 +110,7 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false, embe
         {cat ? (
           <CategoryIcon icon={cat.icon} color={cat.color} size="sm" />
         ) : (
-          <span className="text-xl shrink-0">{TYPE_ICONS[item.type] ?? '🔄'}</span>
+          <StickerIcon icon={recurringTypeIcon(item.type)} color="hsl(var(--muted-foreground))" className="h-5 w-5 shrink-0" />
         )}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold truncate">{item.name}</p>

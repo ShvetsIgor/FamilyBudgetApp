@@ -315,6 +315,28 @@ textarea { font-size: 16px; }
   min-height: 44px;
 }
 
+/* ── Motion ────────────────────────────────────────────────────────────────
+   Full-screen entry forms are modal presentations, so they slide up like an
+   iOS sheet on the platform's spring-out curve. Tab switches stay instant —
+   that is what a native tab bar does.
+
+   A CSS mount animation rather than the View Transition API: the React build
+   shipped with Next here exposes no <ViewTransition>, and a keyframe works in
+   every browser including older iOS Safari. Reduced motion disables it. */
+
+/* The sheet transforms itself, but must land on `none`: a lingering transform
+   would make it the containing block for the pickers it opens, pinning those
+   to the sheet instead of the viewport. */
+@keyframes fb-sheet-up {
+  from { transform: translateY(6%); opacity: 0.6 }
+  to   { transform: none;           opacity: 1 }
+}
+
+/* iOS sheet presentation for the full-screen entry overlays */
+.fb-sheet-enter {
+  animation: fb-sheet-up 300ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

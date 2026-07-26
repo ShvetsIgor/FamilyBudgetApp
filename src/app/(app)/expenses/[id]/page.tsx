@@ -1,4 +1,5 @@
 'use client';
+import { Search } from 'lucide-react';
 
 import { use } from 'react';
 import { useRouter } from 'next/navigation';
@@ -28,7 +29,7 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
   const dfLocale = useDateFnsLocale();
 
   const PAYMENT_LABELS: Record<string, string> = {
-    card: `💳 ${t('expense.card')}`,
+    card: t('expense.card'),
     cash: `💵 ${t('expense.cash')}`,
     other: `🔄 ${t('expense.other')}`,
   };
@@ -36,7 +37,7 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
   if (!expense) {
     return (
       <div className="flex flex-col items-center py-20 px-4 text-center">
-        <p className="text-4xl mb-3">🔍</p>
+        <Search className="mx-auto mb-3 h-9 w-9 text-muted-foreground" strokeWidth={1.6} />
         <p className="font-medium">{t('expense.notFound')}</p>
         <button onClick={() => router.back()} className="mt-4 text-sm text-primary hover:underline">
           {t('expense.goBack')}
@@ -112,7 +113,7 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
         <Row label={t('expense.category')} value={category ? t.cat(category.name) : '—'} />
 {expense.store && <Row label={t('expense.store')} value={expense.store} />}
         <Row label={t('expense.payment')} value={PAYMENT_LABELS[expense.paymentMethod] ?? expense.paymentMethod} />
-        <Row label={t('expense.privacy2')} value={expense.privacy === 'secret' ? `🔒 ${t('expense.secret')}` : t('expense.regular')} />
+        <Row label={t('expense.privacy2')} value={expense.privacy === 'secret' ? t('expense.secret') : t('expense.regular')} />
         {detailComment && <Row label={t('expense.comment')} value={detailComment} />}
         {expense.tags.length > 0 && <Row label={t('expense.tags')} value={expense.tags.map((tag) => tag === 'recurring' ? t('expense.tagRecurring') : tag).join(', ')} />}
       </div>

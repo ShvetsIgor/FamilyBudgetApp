@@ -14,6 +14,8 @@ import { selectAllActiveCategories } from '@/features/categories/store/selectors
 import { CategoryFolderPickerSheet } from '@/features/categories/components/CategoryFolderPickerSheet';
 import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
 import { EntryKindTabs } from '@/features/quickadd/components/EntryKindTabs';
+import { paymentMethodIcon } from '@/shared/config/domainIcons';
+import { haptic } from '@/shared/utils/haptics';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
 import { applyKey } from '@/features/expenses/hooks/useSplitEditor';
@@ -66,6 +68,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
     try {
       await deleteIncome(user.id, initialIncome);
       dispatch(removeIncome(initialIncome.id));
+      haptic('warning');
       goBack();
     } catch {
       setSaving(false);
@@ -137,6 +140,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
         tags: isRecurring ? ['recurring'] : [],
       });
       dispatch(prependIncome(income));
+      haptic('success');
 
       // Secondary chat-history write — must not undo the saved income or
       // block navigation (a retry would duplicate the income).
@@ -155,15 +159,15 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
 
   if (!user) return null;
 
-  const METHODS: { value: Method; icon: string; label: string }[] = [
-    { value: 'card', icon: '💳', label: t('expense.card') },
-    { value: 'cash', icon: '💵', label: t('expense.cash') },
-    { value: 'bank', icon: '🏦', label: t('income.bank') },
-    { value: 'other', icon: '🔄', label: t('expense.other') },
+  const METHODS: { value: Method; label: string }[] = [
+    { value: 'card', label: t('expense.card') },
+    { value: 'cash', label: t('expense.cash') },
+    { value: 'bank', label: t('income.bank') },
+    { value: 'other', label: t('expense.other') },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:bg-black/50 lg:backdrop-blur-sm">
+    <div className="fb-sheet-enter fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:bg-black/50 lg:backdrop-blur-sm">
     <div
       className="flex flex-col bg-background w-full lg:max-w-[440px] lg:rounded-2xl lg:shadow-2xl overflow-hidden"
       style={{ height: '100dvh', maxHeight: '100dvh' }}
@@ -306,7 +310,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
               style={{ background: isRecurring ? catColor + '14' : 'hsl(var(--card))' }}
             >
               <div className="flex items-center gap-2.5">
-                <span className="text-base leading-none">🔄</span>
+                <StickerIcon icon="refund" color={isRecurring ? catColor : 'hsl(var(--muted-foreground))'} className="h-4 w-4" />
                 <div className="text-left">
                   <p className="text-[12.5px] font-[800] leading-tight" style={{ color: isRecurring ? catColor : 'hsl(var(--foreground))' }}>
                     {t('income.recurring')}
@@ -358,7 +362,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
                 color: sel ? catColor : 'hsl(var(--muted-foreground))',
               }}
             >
-              <span>{m.icon}</span>
+              <StickerIcon icon={paymentMethodIcon(m.value)} color={sel ? catColor : 'hsl(var(--muted-foreground))'} className="h-4 w-4" />
               <span>{m.label}</span>
             </button>
           );

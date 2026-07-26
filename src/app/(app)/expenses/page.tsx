@@ -21,6 +21,7 @@ import {
 import { updateGoalItem } from '@/features/savings/store/savingsSlice';
 import { setExpensesSearch } from '@/features/ui/store/uiSlice';
 import { useT } from '@/shared/hooks/useT';
+import { Search } from 'lucide-react';
 import { getEffectiveBudget } from '@/features/budget/utils/effectiveBudget';
 import { buildMemberColorMap } from '@/features/family/utils/memberColors';
 import { fetchFamilyMonthExpenses, setExpenseReaction, type FamilyExpense, type FamilyMonthData } from '@/features/family/services/familyBudgetService';
@@ -387,7 +388,7 @@ export default function ExpensesPage() {
         )}
         {!isFamilyView && !loading && expenses.length > 0 && filteredExpenses.length === 0 && (
           <div className="flex flex-col items-center py-12 px-8 text-center">
-            <p className="text-4xl mb-3">🔍</p>
+            <Search className="mx-auto mb-3 h-9 w-9 text-muted-foreground" strokeWidth={1.6} />
             <p className="font-medium">{t('expenses.noResults')}</p>
             <p className="text-sm text-muted-foreground mt-1">{t('expenses.tryOther')}</p>
           </div>

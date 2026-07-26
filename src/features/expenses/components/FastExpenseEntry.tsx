@@ -30,6 +30,8 @@ import { CategoryEditorSheet } from '@/features/categories/components/CategoryEd
 import type { CategoryFolder } from '@/shared/types';
 import { CategoryFolderPickerSheet, type CategoryPickerFolder } from '@/features/categories/components/CategoryFolderPickerSheet';
 import { EntryKindTabs } from '@/features/quickadd/components/EntryKindTabs';
+import { paymentMethodIcon } from '@/shared/config/domainIcons';
+import { haptic } from '@/shared/utils/haptics';
 import {
   categoryBlueprintToSuggestion,
   folderBlueprintToSuggestion,
@@ -459,6 +461,7 @@ export function FastExpenseEntry({
       } else {
         const exp = await addExpense(base);
         dispatch(prependExpense(exp));
+        haptic('success');
         const effectiveCat = activeExpCats.find((c) => c.id === effectiveCatId);
         dispatch(recordExpense({
           merchant: initialStore,
@@ -564,7 +567,7 @@ export function FastExpenseEntry({
 
   return (
     <>
-    <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:bg-black/50 lg:backdrop-blur-sm">
+    <div className="fb-sheet-enter fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:bg-black/50 lg:backdrop-blur-sm">
     <div className="flex flex-col bg-background w-full lg:max-w-[440px] lg:rounded-2xl lg:shadow-2xl overflow-hidden" style={{ height: '100dvh', maxHeight: '100dvh' }} suppressHydrationWarning>
 
       {/* ── Top bar ── */}
@@ -796,7 +799,6 @@ export function FastExpenseEntry({
       {/* ── Payment method ── */}
       <div className="px-3 pb-1 flex gap-2 flex-shrink-0">
         {(['card', 'cash', 'other'] as const).map((m) => {
-          const icons = { card: '💳', cash: '💵', other: '🔄' };
           const labels = { card: t('expense.card'), cash: t('expense.cash'), other: t('expense.other') };
           const sel = paymentMethod === m;
           return (
@@ -811,7 +813,7 @@ export function FastExpenseEntry({
               }}
               aria-pressed={sel}
             >
-              <span>{icons[m]}</span>
+              <StickerIcon icon={paymentMethodIcon(m)} color={sel ? catColor : 'hsl(var(--muted-foreground))'} className="h-4 w-4" />
               <span>{labels[m]}</span>
             </button>
           );

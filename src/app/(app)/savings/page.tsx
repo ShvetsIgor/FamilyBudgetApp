@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { format, parseISO, differenceInDays, differenceInMonths } from 'date-fns';
-import { Plus } from 'lucide-react';
+import { Lock, Plus, Users } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setGoals, addGoalItem, updateGoalItem, removeGoalItem } from '@/features/savings/store/savingsSlice';
 import {
@@ -179,7 +179,9 @@ export default function SavingsPage() {
               }}
               className="w-full rounded-xl border border-border py-2.5 text-sm font-semibold text-muted-foreground flex items-center justify-center gap-2"
             >
-              <span>{goal.isPrivate ? '🔒' : '👨‍👩‍👧'}</span>
+              {goal.isPrivate
+                ? <Lock className="h-3.5 w-3.5" strokeWidth={2.2} />
+                : <Users className="h-3.5 w-3.5" strokeWidth={2.2} />}
               <span>{goal.isPrivate ? t('savings.showToFamily') : t('savings.hideFromFamily')}</span>
             </button>
 
@@ -275,7 +277,10 @@ export default function SavingsPage() {
                 >
                   <span className="text-2xl shrink-0">{goal.icon}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[15px] font-semibold truncate leading-snug">{goal.isPrivate ? '🔒 ' : ''}{goal.name}</p>
+                    <p className="flex items-center gap-1.5 text-[15px] font-semibold truncate leading-snug">
+                      {goal.isPrivate && <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={2.2} />}
+                      {goal.name}
+                    </p>
                     <p style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: done ? '#10b981' : goal.color }}>
                       {formatAmount(goal.currentAmount, goal.currency)} / {formatAmount(goal.targetAmount, goal.currency)}
                       {' · '}<span style={{ color: memberColorMap[goal.memberId] }}>{isMine ? t('expenses.you') : goal.memberName}</span>

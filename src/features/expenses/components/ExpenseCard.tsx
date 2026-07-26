@@ -1,12 +1,15 @@
 'use client';
 
+import { Lock } from 'lucide-react';
+
 import { useState } from 'react';
 import { useAppSelector } from '@/store/store';
-import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
+import { CategoryIcon, StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { getExpenseListMeta } from '@/features/expenses/utils/expensePresentation';
 import { localizeSavingsExpenseComment } from '@/features/savings/utils/savingsExpenseComment';
 import { formatAmount } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
+import { paymentMethodIcon } from '@/shared/config/domainIcons';
 import type { SerializableExpense } from '@/shared/types';
 
 interface Props {
@@ -15,12 +18,6 @@ interface Props {
   onEdit?: () => void;
   onDelete?: () => void;
 }
-
-const PAYMENT_ICONS: Record<string, string> = {
-  card: '💳',
-  cash: '💵',
-  other: '🔄',
-};
 
 export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
   const allCategories = useAppSelector((s) => s.categories.expense);
@@ -85,9 +82,15 @@ export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
               </button>
             )}
             <span className="text-muted-foreground/40">·</span>
-            {isRecurring && <span title={t('expenses.recurringBadge')}>🔄</span>}
-            {!isRecurring && !isSavings && <span className="opacity-50">{PAYMENT_ICONS[expense.paymentMethod]}</span>}
-            {expense.privacy === 'secret' && <span>🔒</span>}
+            {isRecurring && (
+              <StickerIcon icon="refund" color="hsl(var(--muted-foreground))" className="h-3.5 w-3.5 opacity-70" />
+            )}
+            {!isRecurring && !isSavings && (
+              <StickerIcon icon={paymentMethodIcon(expense.paymentMethod)} color="hsl(var(--muted-foreground))" className="h-3.5 w-3.5 opacity-70" />
+            )}
+            {expense.privacy === 'secret' && (
+              <Lock className="h-3 w-3 text-muted-foreground" strokeWidth={2.2} aria-label={t('expense.secret')} />
+            )}
             {expense.reactions && Object.keys(expense.reactions).length > 0 && (
               <span title={Object.values(expense.reactions).join(' ')}>{Object.values(expense.reactions).join(' ')}</span>
             )}

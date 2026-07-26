@@ -1,9 +1,13 @@
 'use client';
 
+import { Lock } from 'lucide-react';
+
 import { useAppSelector } from '@/store/store';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { formatAmount } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
+import { StickerIcon } from '@/features/categories/components/CategoryIcon';
+import { paymentMethodIcon } from '@/shared/config/domainIcons';
 import type { SerializableIncome } from '@/shared/types';
 
 interface Props {
@@ -11,10 +15,6 @@ interface Props {
   onDelete?: () => void;
   onEdit?: () => void;
 }
-
-const METHOD_ICONS: Record<string, string> = {
-  card: '💳', cash: '💵', bank: '🏦', other: '🔄',
-};
 
 export function IncomeCard({ income, onDelete, onEdit }: Props) {
   const categories = useAppSelector((s) => s.categories.income);
@@ -59,8 +59,14 @@ export function IncomeCard({ income, onDelete, onEdit }: Props) {
               {category ? t.cat(category.name) : ''}
             </span>
             <span className="text-muted-foreground/40">·</span>
-            <span className="opacity-50">{isRecurring ? '🔄' : (METHOD_ICONS[income.method] ?? '🔄')}</span>
-            {income.privacy === 'secret' && <span>🔒</span>}
+            <StickerIcon
+              icon={isRecurring ? 'refund' : paymentMethodIcon(income.method)}
+              color="hsl(var(--muted-foreground))"
+              className="h-3.5 w-3.5 opacity-70"
+            />
+            {income.privacy === 'secret' && (
+              <Lock className="h-3 w-3 text-muted-foreground" strokeWidth={2.2} aria-label={t('expense.secret')} />
+            )}
           </p>
         </div>
       </div>

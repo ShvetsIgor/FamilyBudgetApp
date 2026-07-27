@@ -13,7 +13,7 @@ import { toLocalDateKey, toLocalMonthKey } from '@/shared/utils/dateKey';
 import { monthStatsFromExpenses, isRecurringExpense } from '@/features/analytics/utils/monthStatsFromExpenses';
 import { toOwnCurrency, foreignTotals } from '@/features/stats/services/statsService';
 import { formatCurrencyTotals } from '@/shared/utils/currencyTotals';
-import type { Currency } from '@/shared/types';
+import type { Currency, SerializableExpense } from '@/shared/types';
 import { useRouter } from 'next/navigation';
 import { TrendingUp } from 'lucide-react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
@@ -60,11 +60,14 @@ export default function AnalyticsPage() {
       const monthKeys = Array.from({ length: period }, (_, i) =>
         toLocalMonthKey(subMonths(new Date(), period - 1 - i)));
 
-      let allExpenses;
+      let allExpenses: SerializableExpense[];
       if (recurringOnly) {
         const perMonth = await Promise.all(monthKeys.map((m) => fetchMonthExpenses(user.id, m)));
         allExpenses = perMonth.flat().filter(isRecurringExpense);
-        setMonths(monthStatsFromExpenses(allExpenses, monthKeys));
+        setMonths(monthStatsFromExpenses(
+          allExpenses.filter((expense) => expense.currency === currency),
+          monthKeys,
+        ));
       } else {
         const [stats, m0, m1] = await Promise.all([
           fetchLastNMonths(user.id, period),
@@ -76,6 +79,7 @@ export default function AnalyticsPage() {
         setForeign(foreignTotals(stats, currency));
         allExpenses = [...m0, ...m1];
       }
+      const chartExpenses = allExpenses.filter((expense) => expense.currency === currency);
 
       // Build current week: 7 days starting from weekStart
       const today = new Date();
@@ -85,7 +89,7 @@ export default function AnalyticsPage() {
       const points: DowPoint[] = Array.from({ length: 7 }, (_, i) => {
         const day = addDays(weekBegin, i);
         const isoDate = format(day, 'yyyy-MM-dd');
-        const dayTotal = allExpenses
+        const dayTotal = chartExpenses
           .filter((e) => toLocalDateKey(e.date) === isoDate)
           .reduce((s, e) => s + e.amount, 0);
         return {

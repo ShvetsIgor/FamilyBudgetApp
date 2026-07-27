@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useEffect, useState } from 'react';
+import { useCallback, useRef, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format, isToday, isYesterday, parseISO } from 'date-fns';
 import { getDateFnsLocale } from '@/shared/utils/dateLocale';
@@ -116,9 +116,10 @@ export default function HomePage() {
   const remainingDays = daysInMonth - now.getDate() + 1;
 
   const todaySpent = useAppSelector((s) =>
-    s.expenses.list
-      .filter((e) => toLocalDateKey(e.date) === todayStr)
-      .reduce((acc, e) => acc + e.amount, 0)
+    splitOwnCurrency(
+      s.expenses.list.filter((e) => toLocalDateKey(e.date) === todayStr),
+      currency,
+    ).ownTotal
   );
   // Budget arithmetic only works inside one currency: a $12 charge is not ₪12,
   // and there is no FX source. Foreign amounts are shown elsewhere, never folded
@@ -204,6 +205,10 @@ export default function HomePage() {
   }, [userId, recurringList]);
 
   const allExpenses = useAppSelector((s) => s.expenses.list);
+  const ownCurrencyExpenses = useMemo(
+    () => allExpenses.filter((expense) => expense.currency === currency),
+    [allExpenses, currency],
+  );
   const allExpenseCats = useAppSelector((s) => s.categories.expense.filter((category) => !category.archived));
   const allIncomeCats = useAppSelector((s) => s.categories.income);
   const savingsGoals = useAppSelector((s) => s.savings.list);
@@ -226,7 +231,7 @@ export default function HomePage() {
     if (!ctx) return;
 
     const yesterdayStr = toLocalDateKey(new Date(Date.now() - 86_400_000));
-    const yesterdayExpenses = allExpenses.filter((e) => toLocalDateKey(e.date) === yesterdayStr);
+    const yesterdayExpenses = ownCurrencyExpenses.filter((e) => toLocalDateKey(e.date) === yesterdayStr);
     const firstGoalName = savingsGoals.find((g) => !g.name?.toLowerCase().includes('savings'))?.name;
 
     const enrichedCtx = {
@@ -235,7 +240,7 @@ export default function HomePage() {
       dailyBudget,
       monthBudget,
       budgetLimits,
-      allExpenses,
+      allExpenses: ownCurrencyExpenses,
       firstGoalName,
     };
 
@@ -278,13 +283,13 @@ export default function HomePage() {
     if (!ctx) return null;
     return {
       ...ctx,
-      allExpenses,
+      allExpenses: ownCurrencyExpenses,
       monthBudget,
       budgetLimits,
       dailyBudget,
       firstGoalName: savingsGoals.find((g) => !g.name?.toLowerCase().includes('savings'))?.name,
     };
-  }, [appStore, allExpenses, monthBudget, budgetLimits, dailyBudget, savingsGoals]);
+  }, [appStore, ownCurrencyExpenses, monthBudget, budgetLimits, dailyBudget, savingsGoals]);
 
   const handleSend = useCallback(async (text: string) => {
     if (!userId || sendingRef.current) return;

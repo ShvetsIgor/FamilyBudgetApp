@@ -1,6 +1,7 @@
 import type { SuggestionMemoryState } from '@/features/expenses/store/suggestionMemorySlice';
 import type { Category, CategoryFolder, Currency, StoreProfile } from '@/shared/types';
 import { toLocalDateKey } from '@/shared/utils/dateKey';
+import { splitOwnCurrency } from '@/shared/utils/currencyTotals';
 import type { RootState } from '@/store/store';
 
 export interface BotContext {
@@ -59,9 +60,10 @@ export function collectBotContext(state: RootState): BotContext | null {
   const topIncomeCategoryIds = incomeRoots.slice(0, 6).map((category) => category.id);
 
   const todayStr = toLocalDateKey(new Date());
-  const todaySpent = state.expenses.list
-    .filter((expense) => toLocalDateKey(expense.date) === todayStr)
-    .reduce((sum, expense) => sum + expense.amount, 0);
+  const todaySpent = splitOwnCurrency(
+    state.expenses.list.filter((expense) => toLocalDateKey(expense.date) === todayStr),
+    currency,
+  ).ownTotal;
 
   return {
     userId,

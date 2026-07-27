@@ -137,12 +137,9 @@ export default function IncomePage() {
   }
 
   const familyIncomes = familyData?.incomes ?? [];
-  const monthTotal = isFamilyView
-    ? familyIncomes.reduce((s, i) => s + i.amount, 0)
-    : incomes.reduce((s, i) => s + i.amount, 0);
-  // Family members may earn in different currencies — never sum them into one
-  // number; show each currency's total separately.
   const familyTotals = groupByCurrency(familyIncomes);
+  const personalTotals = groupByCurrency(incomes);
+  const visibleTotals = isFamilyView ? familyTotals : personalTotals;
   const groups = groupByDate(incomes);
 
   const formPanel = (
@@ -164,10 +161,10 @@ export default function IncomePage() {
           <p style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
             {format(parseISO(selectedMonth + '-01'), 'LLLL yyyy', { locale: dfLocale })}
           </p>
-          <div style={{ fontSize: isFamilyView && familyTotals.length > 1 ? 26 : 44, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.05, color: '#18A957' }}>
-            {isFamilyView
-              ? (familyTotals.length > 0 ? formatCurrencyTotals(familyTotals, { sign: '+', fallback: currency }) : formatAmount(0, currency))
-              : `${monthTotal > 0 ? '+' : ''}${formatAmount(monthTotal, currency)}`}
+          <div style={{ fontSize: visibleTotals.length > 1 ? 26 : 44, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.05, color: '#18A957' }}>
+            {visibleTotals.length > 0
+              ? formatCurrencyTotals(visibleTotals, { sign: '+', fallback: currency })
+              : formatAmount(0, currency)}
           </div>
         </div>
 
@@ -233,7 +230,7 @@ export default function IncomePage() {
         {!isFamilyView && !loading && incomes.length > 0 && (
           <div className="flex flex-col pb-4">
             {groups.map(([day, items]) => {
-              const dayTotal = items.reduce((s, i) => s + i.amount, 0);
+              const dayTotals = groupByCurrency(items);
               return (
                 <div key={day} className="border-b border-border/30">
                   <div className="flex items-center justify-between px-4 py-2 lg:px-0" style={{ background: 'hsl(var(--muted)/0.4)' }}>
@@ -241,7 +238,7 @@ export default function IncomePage() {
                       {dayLabel(day, t, dfLocale)}
                     </span>
                     <span style={{ fontSize: 10, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: '#18A957' }}>
-                      +{formatAmount(dayTotal, currency)}
+                      {formatCurrencyTotals(dayTotals, { sign: '+', fallback: currency })}
                     </span>
                   </div>
                   <div className="divide-y divide-border/20">

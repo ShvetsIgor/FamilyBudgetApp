@@ -16,7 +16,9 @@ export function RPEnvelopes() {
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const monthExpenses = expenses.filter((e) => e.date >= monthStart);
+  const monthExpenses = expenses.filter(
+    (expense) => expense.currency === currency && expense.date >= monthStart,
+  );
 
   const envelopes = Object.entries(budgetLimits)
     .slice(0, 4)

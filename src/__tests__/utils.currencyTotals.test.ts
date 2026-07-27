@@ -59,6 +59,11 @@ const stats = (over: Partial<MonthStats> = {}): MonthStats => ({
   byCategory: {},
   totalsByCurrency: { ILS: 520, USD: 12 },
   incomeByCurrency: { ILS: 6500 },
+  byCategoryByCurrency: {
+    ILS: { groceries: 520 },
+    USD: { subscriptions: 12 },
+  },
+  currencyBreakdownComplete: true,
   ...over,
 });
 
@@ -67,15 +72,31 @@ describe('toOwnCurrency', () => {
     const out = toOwnCurrency(stats(), ILS);
     expect(out.totalExpenses).toBe(520);
     expect(out.totalIncome).toBe(6500);
+    expect(out.byCategory).toEqual({ groceries: 520 });
   });
 
   it('falls back to the legacy blind sum when no breakdown was stored', () => {
-    const legacy = stats({ totalsByCurrency: undefined, incomeByCurrency: undefined });
+    const legacy = stats({
+      totalsByCurrency: undefined,
+      incomeByCurrency: undefined,
+      byCategoryByCurrency: undefined,
+      currencyBreakdownComplete: undefined,
+    });
     expect(toOwnCurrency(legacy, ILS).totalExpenses).toBe(532);
   });
 
   it('yields zero for a currency the month has none of', () => {
     expect(toOwnCurrency(stats(), 'CAD').totalExpenses).toBe(0);
+  });
+
+  it('does not trust a partial map added to a legacy monthlyStats document', () => {
+    const partiallyUpgraded = stats({
+      totalExpenses: 1_012,
+      totalsByCurrency: { USD: 12 },
+      currencyBreakdownComplete: undefined,
+    });
+
+    expect(toOwnCurrency(partiallyUpgraded, ILS).totalExpenses).toBe(1_012);
   });
 });
 
@@ -88,5 +109,13 @@ describe('foreignTotals', () => {
   it('is empty when everything is in the account currency', () => {
     const single = stats({ totalsByCurrency: { ILS: 520 } });
     expect(foreignTotals([single], ILS)).toEqual([]);
+  });
+
+  it('ignores partial legacy maps whose historical currencies are unknown', () => {
+    const partial = stats({
+      totalsByCurrency: { USD: 12 },
+      currencyBreakdownComplete: undefined,
+    });
+    expect(foreignTotals([partial], ILS)).toEqual([]);
   });
 });

@@ -11,6 +11,7 @@ import { useAppSelector } from '@/store/store';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
 import { toLocalDateKey } from '@/shared/utils/dateKey';
+import { splitOwnCurrency } from '@/shared/utils/currencyTotals';
 import { signOut } from '@/features/auth/services/authService';
 
 interface NavItem {
@@ -57,9 +58,10 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
   // day key before comparing — `startsWith` filed a 02:00 expense under the
   // previous day for every timezone ahead of UTC.
   const todayStr = toLocalDateKey(new Date());
-  const todaySpent = expenses
-    .filter((e) => toLocalDateKey(e.date) === todayStr)
-    .reduce((s, e) => s + e.amount, 0);
+  const todaySpent = splitOwnCurrency(
+    expenses.filter((e) => toLocalDateKey(e.date) === todayStr),
+    currency,
+  ).ownTotal;
 
   const initial = memberInitial(user?.name, user?.email);
   const displayMembers = familyMembers.slice(0, 4);

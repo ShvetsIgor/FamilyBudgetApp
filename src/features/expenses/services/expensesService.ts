@@ -472,6 +472,7 @@ function queueMonthlyStatsUpdate(
         ? {
             totalExpenses: increment(delta.totalExpenses),
             totalsByCurrency: { [delta.currency]: increment(delta.totalExpenses) },
+            byCategoryByCurrency: { [delta.currency]: byCategory },
           }
         : {}),
       ...(Object.keys(byCategory).length > 0 ? { byCategory } : {}),

@@ -252,6 +252,10 @@ export interface MonthlyStats {
   totalExpenses: number;
   totalIncome: number;
   byCategory: Record<string, number>;
+  totalsByCurrency?: Partial<Record<Currency, number>>;
+  incomeByCurrency?: Partial<Record<Currency, number>>;
+  byCategoryByCurrency?: Partial<Record<Currency, Record<string, number>>>;
+  currencyBreakdownComplete?: boolean;
   updatedAt: Timestamp;
 }
 

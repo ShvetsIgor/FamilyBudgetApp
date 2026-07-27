@@ -17,28 +17,38 @@ export interface MonthStats {
   totalsByCurrency?: Partial<Record<Currency, number>>;
   /** Income per currency. Absent on old docs. */
   incomeByCurrency?: Partial<Record<Currency, number>>;
+  /** Category totals per currency. Absent or partial on old documents. */
+  byCategoryByCurrency?: Partial<Record<Currency, Record<string, number>>>;
+  /**
+   * True only when the currency maps cover the whole month. Incremental writes
+   * to a legacy document can create partial maps, which must not be trusted.
+   */
+  currencyBreakdownComplete?: boolean;
 }
 
 /**
  * Re-reads stored stats in ONE currency, so charts never plot ₪ and $ added
  * together. Documents written before per-currency totals existed have no
  * breakdown; their blind sum is used as-is (it was single-currency in practice).
- *
- * Known limit: `byCategory` is still a blind sum, so a category that holds
- * foreign spend is overstated in the category breakdown. Totals — the numbers
- * people actually read — are exact.
+ * Complete documents also carry per-currency category maps, keeping pie charts
+ * and totals on the same currency basis.
  */
 export function toOwnCurrency(stats: MonthStats, currency: Currency): MonthStats {
-  // A breakdown that simply lacks this currency means ZERO in it — falling back
-  // to the blind sum there would relabel someone else's money as yours.
+  // A complete breakdown that lacks this currency means ZERO. Partial maps can
+  // exist on legacy monthlyStats documents after their first post-upgrade
+  // write, so only explicitly complete maps are authoritative.
+  const hasCompleteBreakdown = stats.currencyBreakdownComplete === true;
   return {
     ...stats,
-    totalExpenses: stats.totalsByCurrency
+    totalExpenses: hasCompleteBreakdown && stats.totalsByCurrency
       ? (stats.totalsByCurrency[currency] ?? 0)
       : stats.totalExpenses,
-    totalIncome: stats.incomeByCurrency
+    totalIncome: hasCompleteBreakdown && stats.incomeByCurrency
       ? (stats.incomeByCurrency[currency] ?? 0)
       : stats.totalIncome,
+    byCategory: hasCompleteBreakdown && stats.byCategoryByCurrency
+      ? (stats.byCategoryByCurrency[currency] ?? {})
+      : stats.byCategory,
   };
 }
 
@@ -49,6 +59,7 @@ export function foreignTotals(
 ): { currency: Currency; total: number }[] {
   const acc = new Map<Currency, number>();
   for (const m of months) {
+    if (m.currencyBreakdownComplete !== true) continue;
     for (const [code, value] of Object.entries(m.totalsByCurrency ?? {})) {
       if (code === currency || !value) continue;
       acc.set(code as Currency, (acc.get(code as Currency) ?? 0) + value);
@@ -84,27 +95,52 @@ async function computeMonthStats(userId: string, month: string): Promise<MonthSt
   ]);
 
   let totalExpenses = 0;
+  const totalsByCurrency: Partial<Record<Currency, number>> = {};
   const byCategory: Record<string, number> = {};
+  const byCategoryByCurrency: Partial<Record<Currency, Record<string, number>>> = {};
 
   for (const d of expSnap.docs) {
     const data = d.data();
     const amount = data.amount as number;
+    const currency = data.currency as Currency;
     const categoryId = data.categoryId as string;
     const splits = (data.splits as SplitItem[]) ?? [];
     const splitTotal = splits.reduce((s, sp) => s + sp.amount, 0);
+    const currencyCategories = byCategoryByCurrency[currency] ?? {};
+    byCategoryByCurrency[currency] = currencyCategories;
 
     totalExpenses += amount;
+    totalsByCurrency[currency] = (totalsByCurrency[currency] ?? 0) + amount;
     byCategory[categoryId] = (byCategory[categoryId] ?? 0) + (amount - splitTotal);
+    currencyCategories[categoryId] = (currencyCategories[categoryId] ?? 0) + (amount - splitTotal);
     for (const sp of splits) {
       if (sp.categoryId && sp.amount > 0) {
         byCategory[sp.categoryId] = (byCategory[sp.categoryId] ?? 0) + sp.amount;
+        currencyCategories[sp.categoryId] = (currencyCategories[sp.categoryId] ?? 0) + sp.amount;
       }
     }
   }
 
-  const totalIncome = incSnap.docs.reduce((s, d) => s + (d.data().amount as number), 0);
+  let totalIncome = 0;
+  const incomeByCurrency: Partial<Record<Currency, number>> = {};
+  for (const d of incSnap.docs) {
+    const data = d.data();
+    const amount = data.amount as number;
+    const currency = data.currency as Currency;
+    totalIncome += amount;
+    incomeByCurrency[currency] = (incomeByCurrency[currency] ?? 0) + amount;
+  }
 
-  return { month, totalExpenses, totalIncome, byCategory };
+  return {
+    month,
+    totalExpenses,
+    totalIncome,
+    byCategory,
+    totalsByCurrency,
+    incomeByCurrency,
+    byCategoryByCurrency,
+    currencyBreakdownComplete: true,
+  };
 }
 
 export async function fetchLastNMonths(userId: string, n: number): Promise<MonthStats[]> {
@@ -132,21 +168,29 @@ export async function recalculateMonthStats(userId: string, month: string): Prom
   );
 
   let totalExpenses = 0;
+  const totalsByCurrency: Partial<Record<Currency, number>> = {};
   const byCategory: Record<string, number> = {};
+  const byCategoryByCurrency: Partial<Record<Currency, Record<string, number>>> = {};
 
   for (const d of expSnap.docs) {
     const data = d.data();
     const amount = data.amount as number;
+    const currency = data.currency as Currency;
     const categoryId = data.categoryId as string;
     const splits = (data.splits as SplitItem[]) ?? [];
     const splitTotal = splits.reduce((s, sp) => s + sp.amount, 0);
     const mainAmount = amount - splitTotal;
+    const currencyCategories = byCategoryByCurrency[currency] ?? {};
+    byCategoryByCurrency[currency] = currencyCategories;
 
     totalExpenses += amount;
+    totalsByCurrency[currency] = (totalsByCurrency[currency] ?? 0) + amount;
     byCategory[categoryId] = (byCategory[categoryId] ?? 0) + mainAmount;
+    currencyCategories[categoryId] = (currencyCategories[categoryId] ?? 0) + mainAmount;
     for (const sp of splits) {
       if (sp.categoryId && sp.amount > 0) {
         byCategory[sp.categoryId] = (byCategory[sp.categoryId] ?? 0) + sp.amount;
+        currencyCategories[sp.categoryId] = (currencyCategories[sp.categoryId] ?? 0) + sp.amount;
       }
     }
   }
@@ -162,8 +206,13 @@ export async function recalculateMonthStats(userId: string, month: string): Prom
   );
 
   let totalIncome = 0;
+  const incomeByCurrency: Partial<Record<Currency, number>> = {};
   for (const d of incSnap.docs) {
-    totalIncome += (d.data().amount as number);
+    const data = d.data();
+    const amount = data.amount as number;
+    const currency = data.currency as Currency;
+    totalIncome += amount;
+    incomeByCurrency[currency] = (incomeByCurrency[currency] ?? 0) + amount;
   }
 
   const ref = doc(getDb(), 'monthlyStats', userId, 'months', month);
@@ -172,9 +221,22 @@ export async function recalculateMonthStats(userId: string, month: string): Prom
     month,
     totalExpenses,
     totalIncome,
+    totalsByCurrency,
+    incomeByCurrency,
+    byCategoryByCurrency,
+    currencyBreakdownComplete: true,
     byCategory,
     updatedAt: serverTimestamp(),
   });
 
-  return { month, totalExpenses, totalIncome, byCategory };
+  return {
+    month,
+    totalExpenses,
+    totalIncome,
+    totalsByCurrency,
+    incomeByCurrency,
+    byCategoryByCurrency,
+    currencyBreakdownComplete: true,
+    byCategory,
+  };
 }

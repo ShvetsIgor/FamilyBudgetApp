@@ -767,7 +767,12 @@ function RecurringForm({ initial, prefill, onSave, onCancel, onFinish, currency,
   // Picking the kind implies the category, so the form does not ask twice.
   // Nothing is created on mere form open: the preset is materialized on save
   // (the explicit action), keeping the library-first contract intact.
-  const implied = categoryId ? null : impliedCategoryFor(type);
+  // A stored category that IS the kind's category is not an override — that is
+  // simply what picking the kind writes. Only a different one counts, and only
+  // then does the form show a category card instead of the quiet link.
+  const kindCategory = impliedCategoryFor(type);
+  const hasOverride = !!categoryId && categoryId !== kindCategory?.categoryId;
+  const implied = hasOverride ? null : kindCategory;
   const impliedBlueprint = implied
     ? findCategoryBlueprint('expense', { id: implied.categoryId })
     : undefined;
@@ -951,7 +956,7 @@ function RecurringForm({ initial, prefill, onSave, onCancel, onFinish, currency,
    * is the explicit action that justifies materializing library entities.
    */
   async function resolveCategoryId(): Promise<string | null> {
-    if (categoryId) return categoryId;
+    if (hasOverride) return categoryId;
     if (!implied || !user) return null;
 
     const active = allExpCats.find((c) => c.id === implied.categoryId && !c.archived);
@@ -1181,11 +1186,11 @@ function RecurringForm({ initial, prefill, onSave, onCancel, onFinish, currency,
             </p>
             <div className="flex flex-wrap gap-1.5">
               {types.map((tp) => {
-                const sel = type === tp.value;
+                const sel = type === tp.value && !hasOverride;
                 return (
                   <button
                     key={tp.value}
-                    onClick={() => setType(tp.value)}
+                    onClick={() => { setType(tp.value); setCategoryId(''); setSelectedGroupId(''); }}
                     className="min-h-9 rounded-xl px-3 text-xs font-bold transition-all border inline-flex items-center gap-1"
                     style={{
                       background: sel ? catColor + '18' : 'hsl(var(--card))',
@@ -1253,13 +1258,24 @@ function RecurringForm({ initial, prefill, onSave, onCancel, onFinish, currency,
             </div>
           )}
 
-          {/* Category — canonical folder-first picker */}
-          <div>
-            <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider mb-1.5 px-0.5">
-              {t('recurring.section')}
-            </p>
-            {categoryTriggerCard}
-          </div>
+          {/* The kind already chose a category. This is the escape hatch for
+              «this one goes somewhere else», not a second required question. */}
+          {hasOverride ? (
+            <div>
+              <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider mb-1.5 px-0.5">
+                {t('recurring.section')}
+              </p>
+              {categoryTriggerCard}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowCatPicker(true)}
+              className="min-h-11 self-start rounded-xl px-1 text-[13px] font-bold text-muted-foreground transition-opacity active:opacity-50"
+            >
+              {t('recurring.otherCategory')}
+            </button>
+          )}
 
           {/* Reminder */}
           <div
@@ -1375,8 +1391,8 @@ function RecurringForm({ initial, prefill, onSave, onCancel, onFinish, currency,
           <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.type')}</label>
           <div className="grid grid-cols-2 gap-2">
             {types.map((tp) => (
-              <button key={tp.value} type="button" onClick={() => setType(tp.value)}
-                className={`rounded-xl py-2 px-2 text-sm font-medium border transition-colors inline-flex items-center justify-center gap-1.5 ${type === tp.value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'}`}>
+              <button key={tp.value} type="button" onClick={() => { setType(tp.value); setCategoryId(''); setSelectedGroupId(''); }}
+                className={`rounded-xl py-2 px-2 text-sm font-medium border transition-colors inline-flex items-center justify-center gap-1.5 ${type === tp.value && !hasOverride ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'}`}>
                 <StickerIcon icon={tp.icon} color={type === tp.value ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'} className="h-4 w-4" />
                 <span className="truncate">{tp.label}</span>
               </button>
@@ -1410,10 +1426,20 @@ function RecurringForm({ initial, prefill, onSave, onCancel, onFinish, currency,
             )}
           </div>
         )}
-        <div className="rounded-2xl border border-border bg-card p-4">
-          <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.section')}</label>
-          {categoryTriggerCard}
-        </div>
+        {hasOverride ? (
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <label className="text-xs text-muted-foreground mb-2 block">{t('recurring.section')}</label>
+            {categoryTriggerCard}
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowCatPicker(true)}
+            className="self-start rounded-xl px-1 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            {t('recurring.otherCategory')}
+          </button>
+        )}
         <div className="rounded-2xl border border-border bg-card p-4">
           <label className="text-xs text-muted-foreground mb-1 block">{t('recurring.nextDue')}</label>
           <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}

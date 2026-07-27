@@ -397,7 +397,8 @@
     "payDifferent": "Different amount",
     "pause": "Pause",
     "resume": "Resume",
-    "fromType": "from the payment kind"
+    "fromType": "from the payment kind",
+    "otherCategory": "Another category"
   },
   "savings": {
     "title": "Savings Goals",

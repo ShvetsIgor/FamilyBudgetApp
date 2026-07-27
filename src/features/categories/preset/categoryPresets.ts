@@ -62,6 +62,7 @@ export const FOLDER_BLUEPRINTS: readonly FolderBlueprint[] = [
   { id: 'work',          name: 'Work',            ru: 'Работа',          color: '#8AA9D6', icon: 'briefcase' },
   { id: 'finance',       name: 'Finance',         ru: 'Финансы',         color: '#81B29A', icon: 'bank'      },
   { id: 'services',      name: 'Services',        ru: 'Услуги',          color: '#D4A574', icon: 'wrench'    },
+  { id: 'recurring',     name: 'Recurring',       ru: 'Регулярные',      color: '#8AA9D6', icon: 'refund'    },
   { id: 'income',        name: 'Income',          ru: 'Доход',           color: '#81B29A', icon: 'cash'      },
 ];
 
@@ -84,6 +85,16 @@ export const CATEGORY_BLUEPRINTS: readonly CategoryBlueprint[] = [
   { id: 'snacks',            folderId: 'dining',        name: 'Snacks',             ru: 'Снэки',              icon: 'icecream',    color: '#E07A5F' },
   { id: 'alcohol',           folderId: 'food',          name: 'Alcohol',            ru: 'Алкоголь',           icon: 'wine',        color: '#E07A5F' },
   { id: 'food_other',        folderId: 'food',          name: 'Other',              ru: 'Прочее',             icon: 'box',         color: '#E07A5F' },
+
+  // recurring — one category per payment kind, so picking the kind IS picking
+  // the category. Ordinary library entries: rename, delete or add your own.
+  { id: 'rec_subscription',  folderId: 'recurring',     name: 'Subscription',       ru: 'Подписка',           icon: 'tv',          color: '#8AA9D6' },
+  { id: 'rec_rent',          folderId: 'recurring',     name: 'Rent',               ru: 'Аренда',             icon: 'house',       color: '#8AA9D6' },
+  { id: 'rec_utility',       folderId: 'recurring',     name: 'Utilities',          ru: 'Коммунальные',       icon: 'lightning',   color: '#8AA9D6' },
+  { id: 'rec_credit',        folderId: 'recurring',     name: 'Credit',             ru: 'Кредит',             icon: 'card',        color: '#8AA9D6' },
+  { id: 'rec_mortgage',      folderId: 'recurring',     name: 'Mortgage',           ru: 'Ипотека',            icon: 'bank',        color: '#8AA9D6' },
+  { id: 'rec_installment',   folderId: 'recurring',     name: 'Installment',        ru: 'Рассрочка',          icon: 'box',         color: '#8AA9D6' },
+  { id: 'rec_other',         folderId: 'recurring',     name: 'Other',              ru: 'Другое',             icon: 'refund',      color: '#8AA9D6' },
 
   // home
   { id: 'rent',              folderId: 'home',          name: 'Rent',               ru: 'Аренда',             icon: 'key',         color: '#81B29A' },
@@ -166,7 +177,6 @@ export const CATEGORY_BLUEPRINTS: readonly CategoryBlueprint[] = [
   { id: 'music_sub',         folderId: 'subscriptions', name: 'Music',              ru: 'Музыка',             icon: 'music',       color: '#8AA9D6' },
   { id: 'cloud_storage',     folderId: 'subscriptions', name: 'Cloud Storage',      ru: 'Облако',             icon: 'cloud',       color: '#8AA9D6' },
   { id: 'software_sub',      folderId: 'subscriptions', name: 'Software',           ru: 'Программы',          icon: 'laptop',      color: '#8AA9D6' },
-  { id: 'sub_generic',       folderId: 'subscriptions', name: 'Subscription',       ru: 'Подписка',           icon: 'tv',          color: '#8AA9D6' },
   { id: 'sub_other',         folderId: 'subscriptions', name: 'Other',              ru: 'Прочее',             icon: 'box',         color: '#8AA9D6' },
 
   // travel
@@ -217,8 +227,6 @@ export const CATEGORY_BLUEPRINTS: readonly CategoryBlueprint[] = [
   { id: 'bank_fees',         folderId: 'finance',       name: 'Bank Fees',          ru: 'Комиссии банка',     icon: 'bank',        color: '#81B29A' },
   { id: 'taxes',             folderId: 'finance',       name: 'Taxes',              ru: 'Налоги',             icon: 'receipt',     color: '#81B29A' },
   { id: 'investments',       folderId: 'finance',       name: 'Investments',        ru: 'Инвестиции',         icon: 'chart_up',    color: '#81B29A' },
-  { id: 'credit_payment',    folderId: 'finance',       name: 'Credit',             ru: 'Кредит',             icon: 'card',        color: '#81B29A' },
-  { id: 'installment_pay',   folderId: 'finance',       name: 'Installment',        ru: 'Рассрочка',          icon: 'box',         color: '#81B29A' },
   { id: 'fin_other',         folderId: 'finance',       name: 'Other',              ru: 'Прочее',             icon: 'box',         color: '#81B29A' },
 
   // services

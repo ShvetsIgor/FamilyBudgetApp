@@ -25,7 +25,7 @@ import { Search } from 'lucide-react';
 import { getEffectiveBudget } from '@/features/budget/utils/effectiveBudget';
 import { buildMemberColorMap } from '@/features/family/utils/memberColors';
 import { fetchFamilyMonthExpenses, setExpenseReaction, type FamilyExpense, type FamilyMonthData } from '@/features/family/services/familyBudgetService';
-import { groupByCurrency, formatCurrencyTotals } from '@/features/family/utils/familyCurrency';
+import { groupByCurrency, formatCurrencyTotals, splitOwnCurrency } from '@/shared/utils/currencyTotals';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import {
   getExpenseListMeta,
@@ -225,12 +225,15 @@ export default function ExpensesPage() {
     const catName = familyData?.categoryMeta[e.categoryId]?.name;
     return [e.store, e.comment, catName, e.memberName].some((v) => v?.toLowerCase().includes(q));
   });
+  // Currencies are never summed together — not across family members, and not
+  // within one person either (a $12 subscription must not become ₪12). The own
+  // currency is the headline; anything else rides alongside it.
+  const familyTotals = groupByCurrency(familyExpenses);
+  const own = splitOwnCurrency(expenses, currency);
+  // Budget comparisons only make sense inside the budget's own currency
   const monthTotal = isFamilyView
     ? familyExpenses.reduce((s, e) => s + e.amount, 0)
-    : expenses.reduce((s, e) => s + e.amount, 0);
-  // Family members may use different currencies — never sum them into one
-  // number. The header shows each currency's total separately.
-  const familyTotals = groupByCurrency(familyExpenses);
+    : own.ownTotal;
   const expenseGroups = groupByDate(filteredExpenses).sort(([a], [b]) => b.localeCompare(a));
 
   const monthBar = (
@@ -286,10 +289,17 @@ export default function ExpensesPage() {
             {format(parseISO(selectedMonth + '-01'), 'LLLL yyyy', { locale: dfLocale })}
           </p>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-            <div style={{ fontSize: isFamilyView && familyTotals.length > 1 ? 26 : 44, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.05 }}>
-              {isFamilyView
-                ? (familyTotals.length > 0 ? formatCurrencyTotals(familyTotals, { sign: '-', fallback: currency }) : formatAmount(0, currency))
-                : `${monthTotal > 0 ? '-' : ''}${formatAmount(monthTotal, currency)}`}
+            <div>
+              <div style={{ fontSize: isFamilyView && familyTotals.length > 1 ? 26 : 44, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.05 }}>
+                {isFamilyView
+                  ? (familyTotals.length > 0 ? formatCurrencyTotals(familyTotals, { sign: '-', fallback: currency }) : formatAmount(0, currency))
+                  : `${monthTotal > 0 ? '-' : ''}${formatAmount(monthTotal, currency)}`}
+              </div>
+              {!isFamilyView && own.others.length > 0 && (
+                <p style={{ marginTop: 4, fontSize: 13, fontWeight: 700, color: 'hsl(var(--muted-foreground))' }}>
+                  {formatCurrencyTotals(own.others, { sign: '-', fallback: currency })}
+                </p>
+              )}
             </div>
             {monthBudget > 0 && (
               <button onClick={() => router.push('/budget')} style={{ textAlign: 'right' }}>
@@ -401,7 +411,7 @@ export default function ExpensesPage() {
         {!isFamilyView && !loading && (
           <div className="flex flex-col pb-4">
             {expenseGroups.map(([day, items]) => {
-              const dayTotal = (items as SerializableExpense[]).reduce((s, e) => s + e.amount, 0);
+              const dayTotals = groupByCurrency(items as SerializableExpense[]);
               return (
                 <div key={day} className="border-b border-border/30">
                   {/* Day header */}
@@ -410,7 +420,7 @@ export default function ExpensesPage() {
                       {dateLabel(day, t, dfLocale)}
                     </span>
                     <span style={{ fontSize: 10, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: 'hsl(var(--muted-foreground))' }}>
-                      {dayTotal > 0 ? '-' : ''}{formatAmount(dayTotal, currency)}
+                      {formatCurrencyTotals(dayTotals, { sign: '-', fallback: currency })}
                     </span>
                   </div>
                   {/* Rows */}

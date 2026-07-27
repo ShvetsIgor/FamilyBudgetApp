@@ -193,7 +193,7 @@ export function queueAddExpense(batch: WriteBatch | Transaction, input: AddExpen
     batch,
     userId,
     format(date, 'yyyy-MM'),
-    buildStatsDelta(input.categoryId, input.amount, input.splits, 1),
+    buildStatsDelta(input.categoryId, input.amount, input.splits, 1, input.currency),
   );
 
   return toSerializable(ref.id, {
@@ -249,19 +249,19 @@ export async function updateExpense(input: UpdateExpenseInput): Promise<Serializ
   const batch = writeBatch(getDb());
   batch.update(expenseDoc(userId, id), data);
 
-  const statsByMonth = new Map<string, StatsDelta>();
+  const statsByMonth = new Map<string, { month: string; delta: StatsDelta }>();
   mergeStatsDelta(
     statsByMonth,
     toLocalMonthKey(existing.date),
-    buildStatsDelta(existing.categoryId, existing.amount, existing.splits, -1),
+    buildStatsDelta(existing.categoryId, existing.amount, existing.splits, -1, existing.currency),
   );
   mergeStatsDelta(
     statsByMonth,
     format(date, 'yyyy-MM'),
-    buildStatsDelta(input.categoryId, input.amount, input.splits, 1),
+    buildStatsDelta(input.categoryId, input.amount, input.splits, 1, input.currency),
   );
 
-  for (const [month, delta] of statsByMonth) {
+  for (const { month, delta } of statsByMonth.values()) {
     queueMonthlyStatsUpdate(batch, userId, month, delta);
   }
 
@@ -311,7 +311,7 @@ export async function deleteExpense(userId: string, expense: SerializableExpense
     batch,
     userId,
     toLocalMonthKey(expense.date),
-    buildStatsDelta(expense.categoryId, expense.amount, expense.splits, -1),
+    buildStatsDelta(expense.categoryId, expense.amount, expense.splits, -1, expense.currency),
   );
   await batch.commit();
   return restoreRecurringDueFromDeletedExpense(userId, expense);
@@ -357,7 +357,7 @@ export async function restoreExpense(userId: string, expense: SerializableExpens
     batch,
     userId,
     toLocalMonthKey(expense.date),
-    buildStatsDelta(expense.categoryId, expense.amount, expense.splits ?? [], 1),
+    buildStatsDelta(expense.categoryId, expense.amount, expense.splits ?? [], 1, expense.currency),
   );
   await batch.commit();
 }
@@ -379,6 +379,8 @@ export async function queueLinkedChatMessageDeletes(
 }
 
 interface StatsDelta {
+  /** Currency of the expense this delta came from — totals are kept per currency. */
+  currency: Currency;
   totalExpenses: number;
   byCategory: Record<string, number>;
 }
@@ -388,6 +390,7 @@ function buildStatsDelta(
   amount: number,
   splits: SplitItem[],
   sign: 1 | -1,
+  currency: Currency,
 ): StatsDelta {
   const splitTotal = splits.reduce((sum, split) => sum + split.amount, 0);
   const mainAmount = amount - splitTotal;
@@ -402,24 +405,44 @@ function buildStatsDelta(
   }
 
   return {
+    currency,
     totalExpenses: sign * amount,
     byCategory,
   };
 }
 
+/**
+ * Deltas are merged per month AND per currency: an edit may move an expense
+ * between currencies, and folding those into one delta would corrupt the
+ * per-currency totals.
+ */
+function statsBucketKey(month: string, currency: Currency): string {
+  return `${month}|${currency}`;
+}
+
 function mergeStatsDelta(
-  target: Map<string, StatsDelta>,
+  target: Map<string, { month: string; delta: StatsDelta }>,
   month: string,
   incoming: StatsDelta,
 ) {
-  const current = target.get(month) ?? { totalExpenses: 0, byCategory: {} };
-  current.totalExpenses += incoming.totalExpenses;
-
-  for (const [categoryId, delta] of Object.entries(incoming.byCategory)) {
-    current.byCategory[categoryId] = (current.byCategory[categoryId] ?? 0) + delta;
+  const key = statsBucketKey(month, incoming.currency);
+  const bucket = target.get(key);
+  if (!bucket) {
+    target.set(key, {
+      month,
+      delta: {
+        currency: incoming.currency,
+        totalExpenses: incoming.totalExpenses,
+        byCategory: { ...incoming.byCategory },
+      },
+    });
+    return;
   }
 
-  target.set(month, current);
+  bucket.delta.totalExpenses += incoming.totalExpenses;
+  for (const [categoryId, delta] of Object.entries(incoming.byCategory)) {
+    bucket.delta.byCategory[categoryId] = (bucket.delta.byCategory[categoryId] ?? 0) + delta;
+  }
 }
 
 function queueMonthlyStatsUpdate(
@@ -443,7 +466,14 @@ function queueMonthlyStatsUpdate(
     {
       userId,
       month,
-      ...(delta.totalExpenses !== 0 ? { totalExpenses: increment(delta.totalExpenses) } : {}),
+      // `totalExpenses` stays as the legacy blind sum; `totalsByCurrency` is the
+      // honest one — a nested map so merge:true keeps the other currencies.
+      ...(delta.totalExpenses !== 0
+        ? {
+            totalExpenses: increment(delta.totalExpenses),
+            totalsByCurrency: { [delta.currency]: increment(delta.totalExpenses) },
+          }
+        : {}),
       ...(Object.keys(byCategory).length > 0 ? { byCategory } : {}),
       updatedAt: serverTimestamp(),
     },

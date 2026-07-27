@@ -49,6 +49,7 @@ import type { EnvelopesCardData } from '@/features/chat/components/BotCard/Envel
 import type { Currency } from '@/shared/types';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { toLocalDateKey, toLocalMonthKey } from '@/shared/utils/dateKey';
+import { splitOwnCurrency } from '@/shared/utils/currencyTotals';
 import { monthlyEquivalent } from '@/features/recurring/utils/schedule';
 import { groupByCurrency, formatCurrencyTotals } from '@/features/family/utils/familyCurrency';
 
@@ -119,11 +120,14 @@ export default function HomePage() {
       .filter((e) => toLocalDateKey(e.date) === todayStr)
       .reduce((acc, e) => acc + e.amount, 0)
   );
+  // Budget arithmetic only works inside one currency: a $12 charge is not ₪12,
+  // and there is no FX source. Foreign amounts are shown elsewhere, never folded
+  // into the allowance.
   const monthSpent = useAppSelector((s) =>
-    s.expenses.list.filter((e) => toLocalMonthKey(e.date) === monthStr).reduce((acc, e) => acc + e.amount, 0)
+    splitOwnCurrency(s.expenses.list.filter((e) => toLocalMonthKey(e.date) === monthStr), currency).ownTotal
   );
   const monthIncome = useAppSelector((s) =>
-    s.income.list.filter((i) => toLocalMonthKey(i.date) === monthStr).reduce((acc, i) => acc + i.amount, 0)
+    splitOwnCurrency(s.income.list.filter((i) => toLocalMonthKey(i.date) === monthStr), currency).ownTotal
   );
 
   // Compute daily budget based on selected mode

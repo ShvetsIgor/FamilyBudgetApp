@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { format, subMonths } from 'date-fns';
 import { useAppSelector, useAppDispatch } from '@/store/store';
-import { fetchMonthStats, fetchLastNMonths, type MonthStats } from '@/features/stats/services/statsService';
+import { fetchMonthStats, fetchLastNMonths, toOwnCurrency, type MonthStats } from '@/features/stats/services/statsService';
 import { saveBudget } from '@/features/budget/services/budgetService';
 import { setBudgetLimit } from '@/features/budget/store/budgetSlice';
 import { formatAmount, blockInvalidAmountKeys } from '@/shared/utils/currency';
@@ -47,15 +47,16 @@ export default function StatisticsPage() {
     if (!user) return;
     setLoading(true);
     try {
+      // One currency per chart: totals come from the per-currency breakdown
       if (range === 'month') {
-        setStats(await fetchMonthStats(user.id, format(new Date(), 'yyyy-MM')));
+        setStats(toOwnCurrency(await fetchMonthStats(user.id, format(new Date(), 'yyyy-MM')), currency));
         setHistory([]);
       } else if (range === 'last') {
-        setStats(await fetchMonthStats(user.id, format(subMonths(new Date(), 1), 'yyyy-MM')));
+        setStats(toOwnCurrency(await fetchMonthStats(user.id, format(subMonths(new Date(), 1), 'yyyy-MM')), currency));
         setHistory([]);
       } else {
         const n = range === '3m' ? 3 : 6;
-        const months = await fetchLastNMonths(user.id, n);
+        const months = (await fetchLastNMonths(user.id, n)).map((m) => toOwnCurrency(m, currency));
         setStats({
           month: `${months[0].month} – ${months[months.length - 1].month}`,
           totalExpenses: months.reduce((s, m) => s + m.totalExpenses, 0),
@@ -68,7 +69,7 @@ export default function StatisticsPage() {
         setHistory(months);
       }
     } finally { setLoading(false); }
-  }, [user, range]);
+  }, [user, range, currency]);
 
   useEffect(() => { load(); }, [load]);
 

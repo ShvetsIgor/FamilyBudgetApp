@@ -11,6 +11,9 @@ import { aggregateTopCategories } from '@/features/categories/utils/statsAggrega
 import { useT } from '@/shared/hooks/useT';
 import { toLocalDateKey, toLocalMonthKey } from '@/shared/utils/dateKey';
 import { monthStatsFromExpenses, isRecurringExpense } from '@/features/analytics/utils/monthStatsFromExpenses';
+import { toOwnCurrency, foreignTotals } from '@/features/stats/services/statsService';
+import { formatCurrencyTotals } from '@/shared/utils/currencyTotals';
+import type { Currency } from '@/shared/types';
 import { useRouter } from 'next/navigation';
 import { TrendingUp } from 'lucide-react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
@@ -48,6 +51,7 @@ export default function AnalyticsPage() {
   // Stored monthlyStats carry no recurring flag, so this view is rebuilt from
   // raw expenses — fetched only while the filter is actually on.
   const [recurringOnly, setRecurringOnly] = useState(false);
+  const [foreign, setForeign] = useState<{ currency: Currency; total: number }[]>([]);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -67,7 +71,9 @@ export default function AnalyticsPage() {
           fetchMonthExpenses(user.id, format(new Date(), 'yyyy-MM')),
           fetchMonthExpenses(user.id, format(subMonths(new Date(), 1), 'yyyy-MM')),
         ]);
-        setMonths(stats);
+        // Charts plot one currency; foreign spend is surfaced as a note
+        setMonths(stats.map((m) => toOwnCurrency(m, currency)));
+        setForeign(foreignTotals(stats, currency));
         allExpenses = [...m0, ...m1];
       }
 
@@ -91,7 +97,7 @@ export default function AnalyticsPage() {
       });
       setDowData(points);
     } finally { setLoading(false); }
-  }, [user, period, weekStart, dfLocale, recurringOnly]);
+  }, [user, period, weekStart, dfLocale, recurringOnly, currency]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -365,6 +371,12 @@ export default function AnalyticsPage() {
       {periodSelector}
 
       {recurringToggle}
+
+      {foreign.length > 0 && !recurringOnly && (
+        <p style={{ fontSize: 12, fontWeight: 700, color: 'hsl(var(--muted-foreground))' }}>
+          {t('analytics.otherCurrencies')} {formatCurrencyTotals(foreign, { sign: '-', fallback: currency })}
+        </p>
+      )}
 
       {statCards}
 

@@ -248,7 +248,8 @@
     "weekSummary": "Spending for each day of the current week",
     "averageSummary": "Average daily spending by month",
     "mixedCurrencyNote": "Breakdowns below are shown in {currency}; other currencies appear in the totals above.",
-    "recurringOnly": "Recurring only"
+    "recurringOnly": "Recurring only",
+    "otherCurrencies": "Not in these charts:"
   },
   "account": {
     "title": "Account",
@@ -988,7 +989,8 @@
     "envelopes": "Category envelopes",
     "envelopesHint": "Set a monthly limit in a category editor — it becomes an envelope here",
     "manageEnvelopes": "Set category limits",
-    "noLimit": "no limit"
+    "noLimit": "no limit",
+    "otherCurrencies": "Also spent:"
   },
   "quickadd": {
     "totalHint": "· total",

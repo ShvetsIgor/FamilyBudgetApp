@@ -15,6 +15,7 @@ import type { BudgetMode } from '@/features/ui/store/uiSlice';
 import { formatAmount, blockInvalidAmountKeys } from '@/shared/utils/currency';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { toLocalMonthKey } from '@/shared/utils/dateKey';
+import { splitOwnCurrency, formatCurrencyTotals } from '@/shared/utils/currencyTotals';
 import { useT } from '@/shared/hooks/useT';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -46,11 +47,16 @@ export default function BudgetPage() {
       .catch(() => {});
   }, [user?.id, dispatch]);
 
+  // Limits are set in the account currency, so only that currency is compared
+  // against them; foreign spend is listed separately below.
   const monthSpent = useAppSelector((s) =>
-    s.expenses.list.filter((e) => toLocalMonthKey(e.date) === monthStr).reduce((acc, e) => acc + e.amount, 0)
+    splitOwnCurrency(s.expenses.list.filter((e) => toLocalMonthKey(e.date) === monthStr), currency).ownTotal
   );
   const monthIncome = useAppSelector((s) =>
-    s.income.list.filter((i) => toLocalMonthKey(i.date) === monthStr).reduce((acc, i) => acc + i.amount, 0)
+    splitOwnCurrency(s.income.list.filter((i) => toLocalMonthKey(i.date) === monthStr), currency).ownTotal
+  );
+  const foreignSpend = useAppSelector((s) =>
+    splitOwnCurrency(s.expenses.list.filter((e) => toLocalMonthKey(e.date) === monthStr), currency).others
   );
 
   const autoDaily = monthIncome > 0
@@ -156,6 +162,13 @@ export default function BudgetPage() {
               </div>
             )}
           </div>
+          {foreignSpend.length > 0 && (
+            <p style={{ marginTop: 6, fontSize: 12, fontWeight: 700, color: 'hsl(var(--muted-foreground))' }}>
+              {/* Not part of the bar: the limit is set in one currency and
+                  there is no rate to convert these into it */}
+              {t('budget.otherCurrencies')} {formatCurrencyTotals(foreignSpend, { sign: '-', fallback: currency })}
+            </p>
+          )}
           {effectiveBudget > 0 && (
             <div style={{ marginTop: 12 }}>
               <div role="progressbar" aria-label={t('expenses.budget')} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} style={{ height: 4, background: 'hsl(var(--muted))' }}>

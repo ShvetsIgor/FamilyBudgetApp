@@ -120,6 +120,8 @@ export interface UpdateIncomeInput extends AddIncomeInput {
 export interface IncomeStatsDelta {
   month: string;
   amount: number;
+  /** Currency of the income — totals are kept per currency, never summed across. */
+  currency: Currency;
 }
 
 /**
@@ -128,33 +130,35 @@ export interface IncomeStatsDelta {
  * within one month only applies the amount difference.
  */
 export function buildIncomeStatsDeltas(
-  previous: Pick<SerializableIncome, 'amount' | 'date'>,
-  next: Pick<AddIncomeInput, 'amount' | 'date'>,
+  previous: Pick<SerializableIncome, 'amount' | 'date' | 'currency'>,
+  next: Pick<AddIncomeInput, 'amount' | 'date' | 'currency'>,
 ): IncomeStatsDelta[] {
   const previousMonth = toLocalMonthKey(previous.date);
   const nextMonth = toLocalMonthKey(next.date);
 
-  if (previousMonth === nextMonth) {
+  // A currency change is a move between buckets, exactly like a month change
+  if (previousMonth === nextMonth && previous.currency === next.currency) {
     const amount = next.amount - previous.amount;
-    return amount === 0 ? [] : [{ month: nextMonth, amount }];
+    return amount === 0 ? [] : [{ month: nextMonth, amount, currency: next.currency }];
   }
 
   return [
-    { month: previousMonth, amount: -previous.amount },
-    { month: nextMonth, amount: next.amount },
+    { month: previousMonth, amount: -previous.amount, currency: previous.currency },
+    { month: nextMonth, amount: next.amount, currency: next.currency },
   ];
 }
 
 function queueMonthlyIncomeUpdate(
   batch: ReturnType<typeof writeBatch>,
   userId: string,
-  { month, amount }: IncomeStatsDelta,
+  { month, amount, currency }: IncomeStatsDelta,
 ) {
   if (amount === 0) return;
   batch.set(statsDoc(userId, month), {
     userId,
     month,
     totalIncome: increment(amount),
+    incomeByCurrency: { [currency]: increment(amount) },
     updatedAt: serverTimestamp(),
   }, { merge: true });
 }
@@ -177,7 +181,7 @@ export async function addIncome(input: AddIncomeInput): Promise<SerializableInco
   const ref = await addDoc(incCol(userId), data);
 
   const month = format(date, 'yyyy-MM');
-  await updateMonthlyIncome(userId, month, input.amount, 1);
+  await updateMonthlyIncome(userId, month, input.amount, 1, input.currency);
 
   return toSerializable(ref.id, {
     ...data,
@@ -221,14 +225,17 @@ export async function deleteIncome(userId: string, income: SerializableIncome): 
   await queueLinkedChatMessageDeletes(batch, userId, 'incomeId', income.id);
   await batch.commit();
   const month = format(new Date(income.date), 'yyyy-MM');
-  await updateMonthlyIncome(userId, month, income.amount, -1);
+  await updateMonthlyIncome(userId, month, income.amount, -1, income.currency);
 }
 
-async function updateMonthlyIncome(userId: string, month: string, amount: number, sign: 1 | -1) {
+async function updateMonthlyIncome(
+  userId: string, month: string, amount: number, sign: 1 | -1, currency: Currency,
+) {
   const ref = statsDoc(userId, month);
   try {
     await updateDoc(ref, {
       totalIncome: increment(sign * amount),
+      [`incomeByCurrency.${currency}`]: increment(sign * amount),
       updatedAt: serverTimestamp(),
     });
   } catch (e: unknown) {
@@ -238,6 +245,7 @@ async function updateMonthlyIncome(userId: string, month: string, amount: number
         month,
         totalExpenses: 0,
         totalIncome: sign * amount,
+        incomeByCurrency: { [currency]: sign * amount },
         byCategory: {},
         updatedAt: serverTimestamp(),
       });

@@ -10,6 +10,7 @@ import type { BotContext } from './context';
 import { makeT } from '@/shared/utils/makeT';
 import { unknownPhrase } from './templates';
 import { buildExpenseDraft } from '@/features/expenses/engine/buildExpenseDraft';
+import { prefersSplit } from '@/features/expenses/engine/merchantMemory';
 
 function nowTimestamp(): string {
   return new Date().toISOString();
@@ -268,11 +269,18 @@ export async function respondToUserMessage(
   // nothing was known — a supermarket would offer «Квартира» and «Видео»,
   // which teaches people to ignore the chips altogether. No signal now means
   // no chips, and the card asks instead of guessing.
-  const candidateIds = [
+  // A merchant you always split (a supermarket receipt covers groceries,
+  // household and kids at once) must NOT be offered single-category chips:
+  // tapping one would file the whole amount under it. Lead with split instead.
+  const merchantKey = parsed.storeName ?? parsed.storeId ?? '';
+  const splitHabit = merchantKey ? prefersSplit(merchantKey, ctx.suggestionMemory) : false;
+
+  // Split-combo members are deliberately NOT candidates here — they are the
+  // parts of a divided receipt, not a category for the whole of it.
+  const candidateIds = splitHabit ? [] : [
     parsed.categoryId,
     parsed.learnedCategoryId,
     ...draft.suggestedCategories.map((suggestion) => suggestion.categoryId),
-    ...draft.splitPresets.flatMap((preset) => preset.categoryIds),
   ].filter((id): id is string => Boolean(id));
   const seen = new Set<string>();
   const chips = candidateIds
@@ -298,6 +306,7 @@ export async function respondToUserMessage(
         data: {
           amount: parsed.amount,
           chips,
+          suggestSplit: splitHabit,
           isIncome: false,
           userMsgId: userMsg.id,
           storeId: parsed.storeId,

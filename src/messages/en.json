@@ -807,7 +807,8 @@
       "undo": "Undo",
       "newFolder": "New folder",
       "folderName": "Folder name",
-      "createFolder": "Create folder"
+      "createFolder": "Create folder",
+      "usuallySplit": "You usually split {store}"
     },
     "future": {
       "question": "Is this a future expense?",

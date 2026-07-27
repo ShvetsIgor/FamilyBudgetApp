@@ -24,6 +24,8 @@ interface ClarifyCardProps {
   storeName?: string;
   isRepeat?: boolean;
   isTagLearning?: boolean;
+  /** Merchant is habitually split — lead with split, don't offer whole-amount chips. */
+  suggestSplit?: boolean;
   categories?: Category[];
   onSelectChip: (chip: ClarifyChip) => void;
   onAllCategories: () => void;
@@ -54,18 +56,23 @@ function SecondaryAction({ icon: Icon, label, onClick, color }: {
 }
 
 /** Full-width choice shown when the bot has no earned suggestion to offer. */
-function DoorAction({ icon: Icon, label, onClick, C }: {
+function DoorAction({ icon: Icon, label, onClick, C, primary }: {
   icon: typeof Scissors;
   label: string;
   onClick: () => void;
   C: ReturnType<typeof useChatTokens>;
+  primary?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-[54px] flex-col items-center justify-center gap-1 rounded-[14px] text-[13px] font-[800] transition-all active:scale-95"
-      style={{ background: C.card, border: `1.5px solid ${C.hairline}`, color: C.fg, boxShadow: SHADOW.bubble }}
+      className={primary
+        ? 'flex min-h-[52px] items-center justify-center gap-2 rounded-[14px] text-sm font-[800] transition-all active:scale-95'
+        : 'flex min-h-[54px] flex-col items-center justify-center gap-1 rounded-[14px] text-[13px] font-[800] transition-all active:scale-95'}
+      style={primary
+        ? { background: `${C.primary}14`, border: `1.5px solid ${C.primary}55`, color: C.primary }
+        : { background: C.card, border: `1.5px solid ${C.hairline}`, color: C.fg, boxShadow: SHADOW.bubble }}
     >
       <Icon size={19} strokeWidth={2} />
       {label}
@@ -74,7 +81,7 @@ function DoorAction({ icon: Icon, label, onClick, C }: {
 }
 
 export function ClarifyCard({
-  amount, currency, chips, unknownNote, storeName, isRepeat, isTagLearning, categories,
+  amount, currency, chips, unknownNote, storeName, isRepeat, isTagLearning, suggestSplit, categories,
   onSelectChip, onAllCategories, onOtherText, onSplit, onDefer, onCreateFolder,
 }: ClarifyCardProps) {
   const C = useChatTokens();
@@ -105,6 +112,8 @@ export function ClarifyCard({
 
   const headerText = selectedParent
     ? t.cat(selectedParent.name)
+    : suggestSplit && storeName
+      ? t('chat.clarify.usuallySplit').replace('{store}', storeName)
     : createFolderMode
       ? t('chat.clarify.newFolder')
       : storeName && isTagLearning
@@ -278,12 +287,20 @@ export function ClarifyCard({
         /* Nothing is known about this merchant yet, so the card offers the two
            real doors instead of inventing chips: pick a category, or split the
            receipt. Guessing here is what made the suggestions untrustworthy. */
-        <div className="grid grid-cols-2 gap-2">
-          <DoorAction icon={LayoutGrid} label={t('chat.clarify.all')} onClick={onAllCategories} C={C} />
-          {onSplit && (
-            <DoorAction icon={Scissors} label={t('chat.clarify.split')} onClick={onSplit} C={C} />
-          )}
-        </div>
+        suggestSplit && onSplit ? (
+          /* Habitually split here — one obvious action, category as the escape */
+          <div className="flex flex-col gap-2">
+            <DoorAction icon={Scissors} label={t('chat.clarify.split')} onClick={onSplit} C={C} primary />
+            <SecondaryAction icon={LayoutGrid} label={t('chat.clarify.all')} onClick={onAllCategories} color={C.sub} />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            <DoorAction icon={LayoutGrid} label={t('chat.clarify.all')} onClick={onAllCategories} C={C} />
+            {onSplit && (
+              <DoorAction icon={Scissors} label={t('chat.clarify.split')} onClick={onSplit} C={C} />
+            )}
+          </div>
+        )
       )}
 
       {!selectedParent && !otherMode && !createFolderMode && (

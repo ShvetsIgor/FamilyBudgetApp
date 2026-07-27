@@ -626,6 +626,7 @@ export default function HomePage() {
                       unknownNote={context.parsedNote}
                       storeName={context.storeName}
                       isRepeat={Boolean(d.isRepeat)}
+                      suggestSplit={Boolean(d.suggestSplit)}
                       categories={allExpenseCats}
                       onSelectChip={(chip) => handleExpenseClarifyChip(context, chip)}
                       onAllCategories={() => setExpenseCategorySheet(context)}

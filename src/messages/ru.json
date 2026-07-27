@@ -938,7 +938,8 @@
       "undo": "Отменить",
       "newFolder": "Новый раздел",
       "folderName": "Название раздела",
-      "createFolder": "Создать раздел"
+      "createFolder": "Создать раздел",
+      "usuallySplit": "{store} обычно делишь"
     },
     "future": {
       "question": "Это будущая трата?",

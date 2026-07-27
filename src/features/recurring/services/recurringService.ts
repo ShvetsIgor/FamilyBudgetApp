@@ -110,13 +110,25 @@ export async function addRecurringWithFirstOccurrence(
   buildExpense: (recurringId: string, dueDate: Date) => AddExpenseInput,
 ): Promise<{ recurring: SerializableRecurringPayment; expense: SerializableExpense | null }> {
   const { userId, startDate, endDate, comment, ...rest } = input;
-  const firstDue = firstFutureOrToday(startDate, input.frequency);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const backfillFirst = firstDue <= today;
 
-  // With the first occurrence booked now, the template already owes the NEXT one
-  const nextDueDate = backfillFirst ? nextOccurrence(firstDue, input.frequency) : firstDue;
+  // The occurrence to book is the START date itself when it is today or
+  // earlier — «first payment was last Sunday» means that payment happened.
+  // (Deciding this from the ADVANCED due date silently skipped it, because
+  // advancing a past start jumps straight into the future.)
+  const startDay = new Date(startDate);
+  startDay.setHours(0, 0, 0, 0);
+  const backfillFirst = startDay <= today;
+
+  // Next due is the first occurrence that is still ahead; when the booked one
+  // IS today, the template already owes the following one.
+  let nextDueDate = firstFutureOrToday(startDate, input.frequency);
+  const bookedDay = new Date(nextDueDate);
+  bookedDay.setHours(0, 0, 0, 0);
+  if (backfillFirst && bookedDay.getTime() === startDay.getTime()) {
+    nextDueDate = nextOccurrence(nextDueDate, input.frequency);
+  }
   const isActive = !isScheduleCompleted(nextDueDate.toISOString(), endDate?.toISOString());
 
   const ref = doc(col(userId));
@@ -135,7 +147,7 @@ export async function addRecurringWithFirstOccurrence(
 
   const batch = writeBatch(getDb());
   batch.set(ref, data);
-  const expense = backfillFirst ? queueAddExpense(batch, buildExpense(ref.id, firstDue)) : null;
+  const expense = backfillFirst ? queueAddExpense(batch, buildExpense(ref.id, startDate)) : null;
   await batch.commit();
 
   return {

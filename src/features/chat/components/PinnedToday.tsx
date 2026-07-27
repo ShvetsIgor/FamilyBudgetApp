@@ -54,6 +54,13 @@ export function PinnedToday({ spent, total, currency, dayLabel, budgetMode, dail
       ? `${t('chat.budget.over')} ${sym} ${over.toLocaleString()}`
       : `${sym} ${left.toLocaleString()}`
     : '—';
+  // The collapsed bar is one line on a 375px screen: the word «over» is
+  // redundant next to the red number and was pushing the row off-screen.
+  const compactAmount = total > 0
+    ? isOver
+      ? `−${sym} ${over.toLocaleString()}`
+      : `${sym} ${left.toLocaleString()}`
+    : '—';
 
   return (
     <>
@@ -67,8 +74,12 @@ export function PinnedToday({ spent, total, currency, dayLabel, budgetMode, dail
       }}>
         {/* top row: label + mode badge (+ inline amount when compact) + settings */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: compact ? 0 : 8, transition: 'margin-bottom 0.25s ease' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-            <span style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 800, color: 'hsl(var(--muted-foreground))', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, overflow: 'hidden' }}>
+            <span style={{
+              fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 800,
+              color: 'hsl(var(--muted-foreground))',
+              minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
               {dayLabel}
             </span>
             <span style={{
@@ -81,10 +92,10 @@ export function PinnedToday({ spent, total, currency, dayLabel, budgetMode, dail
             {compact && (
               <span style={{
                 fontSize: 15, fontWeight: 900, letterSpacing: '-0.02em', lineHeight: 1,
-                fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap',
+                fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', flexShrink: 0,
                 color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--foreground))',
               }}>
-                {inlineAmount}
+                {compactAmount}
               </span>
             )}
           </div>

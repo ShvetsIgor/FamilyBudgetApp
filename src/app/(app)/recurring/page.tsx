@@ -26,6 +26,7 @@ import { CategoryIcon, StickerIcon } from '@/features/categories/components/Cate
 import { RECURRING_TYPE_ICONS } from '@/shared/config/domainIcons';
 import { impliedCategoryFor } from '@/features/recurring/utils/typeCategory';
 import { haptic } from '@/shared/utils/haptics';
+import { recordSavedCard } from '@/features/chat/services/savedCardService';
 import type { IconKey } from '@/features/categories/icons/icons';
 import {
   addCategory as addCategoryAction,
@@ -234,7 +235,27 @@ export default function RecurringPage() {
             isRecurring: true,
           }),
         );
-        if (expense) dispatch(prependExpense(expense));
+        if (expense) {
+          dispatch(prependExpense(expense));
+          // A payment booked on save is a real expense — it belongs in the
+          // chat history like every other entry, not only in the list.
+          try {
+            const cat = categories.find((c) => c.id === data.categoryId);
+            await recordSavedCard({
+              userId: user.id,
+              text: `${data.name} · ${getCurrencySymbol(data.currency)} ${data.amount}`,
+              icon: cat?.icon ?? RECURRING_TYPE_ICONS[data.type],
+              color: cat?.color ?? 'hsl(var(--primary))',
+              title: data.name,
+              hint: t('recurring.title'),
+              amount: data.amount,
+              currencySymbol: getCurrencySymbol(data.currency),
+              expenseId: expense.id,
+            });
+          } catch (err) {
+            console.error('chat card write failed (payment already saved)', err);
+          }
+        }
         dispatch(addRecurringItem(recurring));
         // Saved from a detected-subscription card — stop suggesting this merchant
         if (pendingCandidateKey) {

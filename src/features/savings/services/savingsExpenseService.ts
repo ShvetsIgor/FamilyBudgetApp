@@ -80,7 +80,9 @@ export async function addContributionWithExpense(params: {
 
     const entry: Record<string, unknown> = {
       amount,
-      date: new Date().toISOString(),
+      // The contribution shares the expense's date — a payment entered for
+      // yesterday must read «yesterday» in the goal's history too, not «today»
+      date: date.toISOString(),
       ...(note ? { note } : {}),
       byId: userId,
       ...(isForeignGoal && contributorName ? { byName: contributorName } : {}),

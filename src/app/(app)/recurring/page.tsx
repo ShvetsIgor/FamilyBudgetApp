@@ -1026,6 +1026,7 @@ function RecurringForm({ initial, prefill, onSave, onCancel, onFinish, currency,
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
+            type="text"
             placeholder={t('recurring.namePlaceholder')}
             autoFocus
             className="block w-full px-4 py-2.5 rounded-[14px] text-sm font-bold bg-card border border-border outline-none focus:border-primary transition-colors"
@@ -1318,7 +1319,7 @@ function RecurringForm({ initial, prefill, onSave, onCancel, onFinish, currency,
       >
         <div className="rounded-2xl border border-border bg-card p-4">
           <label className="text-xs text-muted-foreground mb-1 block">{t('recurring.name')}</label>
-          <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={t('recurring.namePlaceholder')}
+          <input type="text" autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={t('recurring.namePlaceholder')}
             className="w-full bg-transparent text-sm font-medium outline-none" />
         </div>
         <div className="rounded-2xl border border-border bg-card p-4">

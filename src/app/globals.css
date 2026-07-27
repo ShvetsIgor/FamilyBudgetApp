@@ -295,11 +295,14 @@
 /* RTL support for Hebrew */
 [dir='rtl'] { direction: rtl; }
 
-/* Prevent iOS zoom on input focus */
-input[type='text'],
-input[type='number'],
-input[type='email'],
-input[type='password'],
+/* iOS zooms the whole page when a focused control's font-size is under 16px,
+   so every text-entry control must be at least 16px — that, not a locked
+   viewport scale, is what keeps forms from jumping.
+   Listing `input[type='text']` was not enough: an <input> with no type
+   attribute behaves as text but matches no [type] selector, so the recurring
+   form's autofocused name field stayed 14px and zoomed the screen on open.
+   Excluded types are the ones where font-size cannot trigger the zoom. */
+input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='submit']):not([type='button']),
 select,
 textarea { font-size: 16px; }
 

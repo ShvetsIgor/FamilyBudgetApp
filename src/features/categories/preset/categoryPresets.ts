@@ -166,6 +166,7 @@ export const CATEGORY_BLUEPRINTS: readonly CategoryBlueprint[] = [
   { id: 'music_sub',         folderId: 'subscriptions', name: 'Music',              ru: 'Музыка',             icon: 'music',       color: '#8AA9D6' },
   { id: 'cloud_storage',     folderId: 'subscriptions', name: 'Cloud Storage',      ru: 'Облако',             icon: 'cloud',       color: '#8AA9D6' },
   { id: 'software_sub',      folderId: 'subscriptions', name: 'Software',           ru: 'Программы',          icon: 'laptop',      color: '#8AA9D6' },
+  { id: 'sub_generic',       folderId: 'subscriptions', name: 'Subscription',       ru: 'Подписка',           icon: 'tv',          color: '#8AA9D6' },
   { id: 'sub_other',         folderId: 'subscriptions', name: 'Other',              ru: 'Прочее',             icon: 'box',         color: '#8AA9D6' },
 
   // travel
@@ -216,6 +217,8 @@ export const CATEGORY_BLUEPRINTS: readonly CategoryBlueprint[] = [
   { id: 'bank_fees',         folderId: 'finance',       name: 'Bank Fees',          ru: 'Комиссии банка',     icon: 'bank',        color: '#81B29A' },
   { id: 'taxes',             folderId: 'finance',       name: 'Taxes',              ru: 'Налоги',             icon: 'receipt',     color: '#81B29A' },
   { id: 'investments',       folderId: 'finance',       name: 'Investments',        ru: 'Инвестиции',         icon: 'chart_up',    color: '#81B29A' },
+  { id: 'credit_payment',    folderId: 'finance',       name: 'Credit',             ru: 'Кредит',             icon: 'card',        color: '#81B29A' },
+  { id: 'installment_pay',   folderId: 'finance',       name: 'Installment',        ru: 'Рассрочка',          icon: 'box',         color: '#81B29A' },
   { id: 'fin_other',         folderId: 'finance',       name: 'Other',              ru: 'Прочее',             icon: 'box',         color: '#81B29A' },
 
   // services

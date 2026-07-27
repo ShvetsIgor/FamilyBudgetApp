@@ -222,7 +222,7 @@ export default function HomePage() {
     if (!ctx) return;
 
     const yesterdayStr = toLocalDateKey(new Date(Date.now() - 86_400_000));
-    const yesterdayExpenses = allExpenses.filter((e) => e.date.startsWith(yesterdayStr));
+    const yesterdayExpenses = allExpenses.filter((e) => toLocalDateKey(e.date) === yesterdayStr);
     const firstGoalName = savingsGoals.find((g) => !g.name?.toLowerCase().includes('savings'))?.name;
 
     const enrichedCtx = {

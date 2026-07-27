@@ -6,6 +6,7 @@ import type {
   SerializableIncome,
   SerializableRecurringPayment,
 } from '@/shared/types';
+import { toLocalDateKey } from '@/shared/utils/dateKey';
 
 function escapeCsv(val: unknown): string {
   const s = val == null ? '' : String(val);
@@ -23,7 +24,7 @@ export function expensesToCsv(expenses: SerializableExpense[], categoryNames: Re
   const header = row(['Date', 'Category', 'Store', 'Amount', 'Currency', 'Payment', 'Comment', 'Tags', 'Privacy']);
   const rows = expenses.map((e) =>
     row([
-      e.date.slice(0, 10),
+      toLocalDateKey(e.date),
       categoryNames[e.categoryId] ?? e.categoryId,
       e.store ?? '',
       e.amount,
@@ -41,7 +42,7 @@ export function incomeTocsv(incomes: SerializableIncome[], categoryNames: Record
   const header = row(['Date', 'Category', 'Amount', 'Currency', 'Method', 'Comment', 'Privacy']);
   const rows = incomes.map((i) =>
     row([
-      i.date.slice(0, 10),
+      toLocalDateKey(i.date),
       categoryNames[i.categoryId] ?? i.categoryId,
       i.amount,
       i.currency,
@@ -205,7 +206,7 @@ export function budgetExportSheets(t: (key: string) => string, data: BudgetExpor
       rows: [
         [t('export.colDate'), t('export.colSection'), t('export.colCategory'), t('export.colAmount'), t('export.colStoreTag'), t('export.colComment')],
         ...data.expenses.map((e) => [
-          e.date.slice(0, 10),
+          toLocalDateKey(e.date),
           sectionName(e.categoryId),
           categoryName(e.categoryId, expenseCategoryById),
           e.amount,
@@ -219,7 +220,7 @@ export function budgetExportSheets(t: (key: string) => string, data: BudgetExpor
       rows: [
         [t('export.colDate'), t('export.colCategory'), t('export.colAmount'), t('export.colComment')],
         ...data.incomes.map((i) => [
-          i.date.slice(0, 10),
+          toLocalDateKey(i.date),
           categoryName(i.categoryId, incomeCategoryById),
           i.amount,
           i.comment ?? '',

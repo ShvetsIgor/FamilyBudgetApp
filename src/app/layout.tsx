@@ -29,7 +29,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
+  // No maximumScale: pinch-zoom must stay available (WCAG 1.4.4). Inputs are
+  // already 16px in globals.css, so iOS has no reason to auto-zoom on focus —
+  // which is the only thing locking the scale ever bought us.
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#5B6CFF' },
     { media: '(prefers-color-scheme: dark)', color: '#0E1422' },

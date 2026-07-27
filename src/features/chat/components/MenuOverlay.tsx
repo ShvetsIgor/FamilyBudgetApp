@@ -10,6 +10,7 @@ import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { useAppSelector } from '@/store/store';
 import { getCurrencySymbol } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
+import { toLocalDateKey } from '@/shared/utils/dateKey';
 import { signOut } from '@/features/auth/services/authService';
 
 interface NavItem {
@@ -52,10 +53,12 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
   const familyMembers = useAppSelector((s) => s.family.members);
   const sym = getCurrencySymbol(currency);
 
-  const _now = new Date();
-  const todayStr = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-${String(_now.getDate()).padStart(2, '0')}`;
+  // Stored dates are UTC ISO strings, so they must be converted to a LOCAL
+  // day key before comparing — `startsWith` filed a 02:00 expense under the
+  // previous day for every timezone ahead of UTC.
+  const todayStr = toLocalDateKey(new Date());
   const todaySpent = expenses
-    .filter((e) => e.date.startsWith(todayStr))
+    .filter((e) => toLocalDateKey(e.date) === todayStr)
     .reduce((s, e) => s + e.amount, 0);
 
   const initial = memberInitial(user?.name, user?.email);

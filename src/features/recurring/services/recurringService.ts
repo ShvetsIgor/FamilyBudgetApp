@@ -1,11 +1,15 @@
 import {
   collection, doc, addDoc, updateDoc, deleteDoc, deleteField,
-  getDocs, query, orderBy, serverTimestamp, Timestamp,
+  getDocs, query, orderBy, serverTimestamp, Timestamp, writeBatch,
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import { parseISO } from 'date-fns';
 import { nextOccurrence, isScheduleCompleted } from '../utils/schedule';
-import type { SerializableRecurringPayment, Currency, RecurringFrequency, RecurringType } from '@/shared/types';
+import { queueAddExpense, type AddExpenseInput } from '@/features/expenses/services/expensesService';
+import type {
+  SerializableRecurringPayment, SerializableExpense,
+  Currency, RecurringFrequency, RecurringType,
+} from '@/shared/types';
 
 function col(userId: string) {
   return collection(getDb(), 'recurringPayments', userId, 'items');
@@ -89,6 +93,59 @@ export async function addRecurring(input: AddRecurringInput): Promise<Serializab
     startDate: Timestamp.fromDate(startDate),
     nextDueDate: Timestamp.fromDate(nextDueDate),
   });
+}
+
+/**
+ * Creates a template and, when its start date is today or earlier, its first
+ * occurrence — in ONE batch, so saving costs a single round trip.
+ *
+ * The old flow was three sequential writes (create → expense+stats → advance
+ * the due date), which on a phone connection took seconds and looked hung;
+ * it also needed a compensating delete when the expense write failed. Here the
+ * template is written with the already-advanced due date, so either everything
+ * lands or nothing does.
+ */
+export async function addRecurringWithFirstOccurrence(
+  input: AddRecurringInput,
+  buildExpense: (recurringId: string, dueDate: Date) => AddExpenseInput,
+): Promise<{ recurring: SerializableRecurringPayment; expense: SerializableExpense | null }> {
+  const { userId, startDate, endDate, comment, ...rest } = input;
+  const firstDue = firstFutureOrToday(startDate, input.frequency);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const backfillFirst = firstDue <= today;
+
+  // With the first occurrence booked now, the template already owes the NEXT one
+  const nextDueDate = backfillFirst ? nextOccurrence(firstDue, input.frequency) : firstDue;
+  const isActive = !isScheduleCompleted(nextDueDate.toISOString(), endDate?.toISOString());
+
+  const ref = doc(col(userId));
+  const data = Object.fromEntries(
+    Object.entries({
+      ...rest,
+      userId,
+      comment,
+      startDate: Timestamp.fromDate(startDate),
+      endDate: endDate ? Timestamp.fromDate(endDate) : undefined,
+      nextDueDate: Timestamp.fromDate(nextDueDate),
+      isActive,
+      createdAt: serverTimestamp(),
+    }).filter(([, v]) => v !== undefined),
+  );
+
+  const batch = writeBatch(getDb());
+  batch.set(ref, data);
+  const expense = backfillFirst ? queueAddExpense(batch, buildExpense(ref.id, firstDue)) : null;
+  await batch.commit();
+
+  return {
+    recurring: toSerializable(ref.id, {
+      ...data,
+      startDate: Timestamp.fromDate(startDate),
+      nextDueDate: Timestamp.fromDate(nextDueDate),
+    }),
+    expense,
+  };
 }
 
 export async function updateRecurring(

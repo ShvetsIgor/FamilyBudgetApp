@@ -9,8 +9,8 @@ import {
   setRecurring, addRecurringItem, removeRecurringItem, updateRecurringItem, toggleRecurringItem,
 } from '@/features/recurring/store/recurringSlice';
 import {
-  fetchRecurring, addRecurring, updateRecurring, deleteRecurring, toggleRecurring,
-  markAsPaid, advanceToNextFutureDue, completeRecurring, updateRecurringAmount,
+  fetchRecurring, addRecurringWithFirstOccurrence, updateRecurring, deleteRecurring,
+  toggleRecurring, markAsPaid, advanceToNextFutureDue, completeRecurring, updateRecurringAmount,
   type AddRecurringInput,
 } from '@/features/recurring/services/recurringService';
 import { groupByCurrency, formatCurrencyTotals } from '@/features/family/utils/familyCurrency';
@@ -24,6 +24,7 @@ import { CategoryFolderPickerSheet } from '@/features/categories/components/Cate
 import { FolderEditorSheet } from '@/features/categories/components/FolderEditorSheet';
 import { CategoryIcon, StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { RECURRING_TYPE_ICONS } from '@/shared/config/domainIcons';
+import { impliedCategoryFor } from '@/features/recurring/utils/typeCategory';
 import { haptic } from '@/shared/utils/haptics';
 import type { IconKey } from '@/features/categories/icons/icons';
 import {
@@ -81,10 +82,6 @@ function startOfDay(date: Date): Date {
   const value = new Date(date);
   value.setHours(0, 0, 0, 0);
   return value;
-}
-
-function occursOnOrBeforeToday(date: Date): boolean {
-  return startOfDay(date) <= startOfDay(new Date());
 }
 
 function toLocalNoon(date: Date): Date {
@@ -222,36 +219,27 @@ export default function RecurringPage() {
           ...(isActive === false ? { isActive } : {}),
         }));
       } else {
-        const added = await addRecurring({ ...data, userId: user.id });
+        // One batch: template + (if it starts today or earlier) its first
+        // occurrence with monthly stats. Previously three sequential writes,
+        // which felt like a hang on a phone connection.
+        const { recurring, expense } = await addRecurringWithFirstOccurrence(
+          { ...data, userId: user.id },
+          (recurringId, dueDate) => ({
+            userId: user.id, amount: data.amount, currency: data.currency,
+            categoryId: data.categoryId, date: toLocalNoon(dueDate),
+            paymentMethod: 'card', splits: [], tags: ['recurring'],
+            privacy: resolveExpensePrivacy({ categories, categoryId: data.categoryId }),
+            store: data.name, comment: data.comment || undefined,
+            recurringId,
+            isRecurring: true,
+          }),
+        );
+        if (expense) dispatch(prependExpense(expense));
+        dispatch(addRecurringItem(recurring));
         // Saved from a detected-subscription card — stop suggesting this merchant
         if (pendingCandidateKey) {
           dismissCandidate(pendingCandidateKey);
           setPendingCandidateKey(null);
-        }
-        const shouldCreateInitialOccurrence = occursOnOrBeforeToday(data.startDate);
-        if (shouldCreateInitialOccurrence) {
-          try {
-            const exp = await addExpense({
-              userId: user.id, amount: data.amount, currency: data.currency,
-              categoryId: data.categoryId, date: toLocalNoon(data.startDate),
-              paymentMethod: 'card', splits: [], tags: ['recurring'],
-              privacy: resolveExpensePrivacy({ categories, categoryId: data.categoryId }),
-              store: data.name, comment: data.comment || undefined,
-              recurringId: added.id,
-              isRecurring: true,
-            });
-            dispatch(prependExpense(exp));
-          } catch (expenseError) {
-            await deleteRecurring(user.id, added.id).catch(() => {});
-            throw expenseError;
-          }
-          try {
-            dispatch(addRecurringItem(await advanceToNextFutureDue(user.id, added)));
-          } catch {
-            dispatch(addRecurringItem(added));
-          }
-        } else {
-          dispatch(addRecurringItem(added));
         }
       }
       closeForm();
@@ -755,9 +743,41 @@ function RecurringForm({ initial, prefill, onSave, onCancel, onFinish, currency,
   const category = allExpCats.find((c) => c.id === categoryId);
   const selectedGroupCat = expenseCatGroups.find((g) => g.id === selectedGroupId);
   const catsInGroup = selectedGroupId ? getCatsInGroup(selectedGroupId) : [];
-  const catColor = selectedGroupCat?.color ?? category?.color ?? '#E07A5F';
+  // Picking the kind implies the category, so the form does not ask twice.
+  // Nothing is created on mere form open: the preset is materialized on save
+  // (the explicit action), keeping the library-first contract intact.
+  const implied = categoryId ? null : impliedCategoryFor(type);
+  const impliedBlueprint = implied
+    ? findCategoryBlueprint('expense', { id: implied.categoryId })
+    : undefined;
+  const impliedFolderBlueprint = implied
+    ? findFolderBlueprint('expense', { id: implied.folderId })
+    : undefined;
+  const impliedActive = implied
+    ? allExpCats.find((c) => c.id === implied.categoryId && !c.archived)
+    : undefined;
+  const effectiveCategoryReady = !!categoryId || !!implied;
+
+  const catColor = selectedGroupCat?.color
+    ?? category?.color
+    ?? impliedActive?.color
+    ?? impliedBlueprint?.color
+    ?? '#E07A5F';
   const categoryValidationError = t('categories.selectCategory');
-  const visibleError = categoryId && error === categoryValidationError ? '' : error;
+  const visibleError = effectiveCategoryReady && error === categoryValidationError ? '' : error;
+
+  // Materialized presets must be named in the language the user is reading
+  const presetLabel = (preset: { name: string; ru?: string }) =>
+    language === 'ru' ? (preset.ru ?? preset.name) : preset.name;
+
+  const impliedName = impliedActive
+    ? t.cat(impliedActive.name)
+    : impliedBlueprint
+      ? t.cat(presetLabel(impliedBlueprint))
+      : '';
+  const impliedFolderName = impliedFolderBlueprint
+    ? t.cat(presetLabel(impliedFolderBlueprint))
+    : '';
 
   // Canonical category trigger — opens the folder-first picker sheet
   const categoryTriggerCard = (
@@ -767,16 +787,24 @@ function RecurringForm({ initial, prefill, onSave, onCancel, onFinish, currency,
       className="bg-card rounded-[16px] p-3 flex items-center gap-3 w-full text-left flex-shrink-0"
       style={{
         boxShadow: '0 1px 3px rgba(61,44,31,.06)',
-        border: category ? '1.5px solid transparent' : '1.5px solid hsl(var(--destructive))',
+        border: effectiveCategoryReady ? '1.5px solid transparent' : '1.5px solid hsl(var(--destructive))',
       }}
     >
-      <CategoryIcon icon={category?.icon ?? selectedGroupCat?.icon ?? 'box'} color={catColor} size="md" />
+      <CategoryIcon
+        icon={category?.icon ?? selectedGroupCat?.icon ?? impliedActive?.icon ?? impliedBlueprint?.icon ?? 'box'}
+        color={catColor}
+        size="md"
+      />
       <div className="flex-1 min-w-0">
         <div className="text-sm font-extrabold text-foreground truncate">
-          {category ? t.cat(category.name) : t('categories.selectCategory')}
+          {category ? t.cat(category.name) : implied ? impliedName : t('categories.selectCategory')}
         </div>
         <div className="text-[11px] text-muted-foreground font-semibold mt-0.5 truncate">
-          {selectedGroupCat ? t.cat(selectedGroupCat.name) : t('expense.tapToPick')}
+          {selectedGroupCat
+            ? t.cat(selectedGroupCat.name)
+            : implied
+              ? `${impliedFolderName} · ${t('recurring.fromType')}`
+              : t('expense.tapToPick')}
         </div>
       </div>
       <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -896,20 +924,69 @@ function RecurringForm({ initial, prefill, onSave, onCancel, onFinish, currency,
     setShowCategoryEditor(false);
   }
 
+  /**
+   * Turns the kind's implied preset into a real category, creating the preset
+   * folder/category under their stable ids if they are not active yet. Saving
+   * is the explicit action that justifies materializing library entities.
+   */
+  async function resolveCategoryId(): Promise<string | null> {
+    if (categoryId) return categoryId;
+    if (!implied || !user) return null;
+
+    const active = allExpCats.find((c) => c.id === implied.categoryId && !c.archived);
+    if (active) return active.id;
+
+    const catPreset = findCategoryBlueprint('expense', { id: implied.categoryId });
+    const folderPreset = findFolderBlueprint('expense', { id: implied.folderId });
+    if (!catPreset) return null;
+
+    if (folderPreset && !expenseFolders.some((f) => f.id === folderPreset.id)) {
+      const createdFolder = await addFolderWithId(user.id, folderPreset.id, {
+        name: presetLabel(folderPreset),
+        icon: folderPreset.icon,
+        color: folderPreset.color,
+        type: 'expense',
+        order: expenseFolders.length,
+      });
+      dispatch(addFolderAction(createdFolder));
+    }
+
+    const created = await addCategoryWithId(user.id, catPreset.id, {
+      name: presetLabel(catPreset),
+      icon: catPreset.icon,
+      color: catPreset.color,
+      type: 'expense',
+      folderId: catPreset.folderId,
+      order: allExpCats.filter((c) => c.folderId === catPreset.folderId).length,
+      isPrivate: false,
+    });
+    dispatch(addCategoryAction(created));
+    return created.id;
+  }
+
   async function handleSubmit() {
     if (!name.trim()) { setError(t('recurring.nameRequired')); return; }
     if (amountNum <= 0 || saving) return;
 
-    if (!categoryId) {
+    setError(''); setSaving(true);
+    let resolvedCategoryId: string | null;
+    try {
+      resolvedCategoryId = await resolveCategoryId();
+    } catch {
+      setError(t('recurring.saveError'));
+      setSaving(false);
+      return;
+    }
+    if (!resolvedCategoryId) {
       setError(categoryValidationError);
+      setSaving(false);
       return;
     }
 
-    setError(''); setSaving(true);
     try {
       await onSave({
         name: name.trim(), amount: amountNum, currency: cur,
-        categoryId, frequency, startDate: parseLocalDate(startDate),
+        categoryId: resolvedCategoryId, frequency, startDate: parseLocalDate(startDate),
         endDate: lastPaymentDate ?? undefined,
         type, typeLabel: type === 'custom' ? typeLabel.trim() || undefined : undefined,
         reminderDays, comment: comment.trim() || undefined,
@@ -930,7 +1007,12 @@ function RecurringForm({ initial, prefill, onSave, onCancel, onFinish, currency,
       >
         {/* Top bar */}
         <div className="flex items-center gap-2 px-4 pt-1 pb-0.5 flex-shrink-0">
-          <button onClick={onCancel} className="fb-touch-target flex h-11 w-11 items-center justify-center rounded-xl hover:bg-muted transition-colors" aria-label={t('common.close')}>
+          <button
+            onClick={onCancel}
+            disabled={saving}
+            aria-label={t('common.close')}
+            className="fb-touch-target flex h-11 w-11 items-center justify-center rounded-xl transition-colors hover:bg-muted disabled:opacity-30"
+          >
             <X className="h-5 w-5" />
           </button>
           <div className="flex-1 text-center text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em]">
@@ -1211,11 +1293,13 @@ function RecurringForm({ initial, prefill, onSave, onCancel, onFinish, currency,
         <div className="px-4 pt-1.5 flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
           <button
             onClick={handleSubmit}
-            disabled={saving || amountNum <= 0 || !categoryId}
+            disabled={saving || amountNum <= 0 || !effectiveCategoryReady}
             className="w-full py-[12px] rounded-[16px] flex items-center justify-center gap-2 text-[14px] font-black text-white transition-opacity disabled:opacity-50 border-0"
             style={{ background: catColor, boxShadow: `0 12px 24px ${catColor}60` }}
           >
-            <StickerIcon icon="refund" color="#fff" className="h-4 w-4" />
+            {saving
+              ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+              : <StickerIcon icon="refund" color="#fff" className="h-4 w-4" />}
             <span>
               {saving
                 ? t('recurring.saving')
@@ -1336,10 +1420,10 @@ function RecurringForm({ initial, prefill, onSave, onCancel, onFinish, currency,
           </button>
         )}
         <div className="flex gap-3">
-          <button type="button" onClick={onCancel} className="flex-1 rounded-2xl border border-border py-3 text-sm font-medium text-muted-foreground">
+          <button type="button" onClick={onCancel} disabled={saving} className="flex-1 rounded-2xl border border-border py-3 text-sm font-medium text-muted-foreground disabled:opacity-40">
             {t('recurring.cancel')}
           </button>
-          <button type="submit" disabled={saving || amountNum <= 0 || !categoryId} className="flex-1 rounded-2xl bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+          <button type="submit" disabled={saving || amountNum <= 0 || !effectiveCategoryReady} className="flex-1 rounded-2xl bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
             {saving ? t('recurring.saving') : initial ? t('recurring.saveChanges') : t('recurring.save')}
           </button>
         </div>

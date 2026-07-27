@@ -247,7 +247,8 @@
     "trendSummary": "Spending trend across {n} months",
     "weekSummary": "Spending for each day of the current week",
     "averageSummary": "Average daily spending by month",
-    "mixedCurrencyNote": "Breakdowns below are shown in {currency}; other currencies appear in the totals above."
+    "mixedCurrencyNote": "Breakdowns below are shown in {currency}; other currencies appear in the totals above.",
+    "recurringOnly": "Recurring only"
   },
   "account": {
     "title": "Account",
@@ -306,7 +307,24 @@
     "resetButton": "Reset everything else",
     "appSection": "App",
     "familyAlreadyInvited": "This email already has a pending invitation.",
-    "memberColor": "Your color in the family"
+    "memberColor": "Your color in the family",
+    "password": {
+      "title": "Change password",
+      "current": "Current password",
+      "new": "New password",
+      "repeat": "Repeat new password",
+      "submit": "Change password",
+      "changed": "Password changed.",
+      "wrongCurrent": "Current password is incorrect.",
+      "tooShort": "At least {n} characters.",
+      "mismatch": "Passwords do not match.",
+      "tooManyAttempts": "Too many attempts. Try again later.",
+      "googleOnly": "This account signs in with Google, so it has no password.",
+      "failed": "Could not change the password. Try again.",
+      "forgot": "Forgot the current password? Send a reset link",
+      "resetSent": "Reset link sent to your email",
+      "row": "Password"
+    }
   },
   "recurring": {
     "title": "Recurring Payments",
@@ -377,7 +395,8 @@
     "perMonthShort": "/mo",
     "payDifferent": "Different amount",
     "pause": "Pause",
-    "resume": "Resume"
+    "resume": "Resume",
+    "fromType": "from the payment kind"
   },
   "savings": {
     "title": "Savings Goals",

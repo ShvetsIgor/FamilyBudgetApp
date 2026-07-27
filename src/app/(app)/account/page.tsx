@@ -4,7 +4,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setDarkMode, setTheme, setCurrency, setLanguage, setWeekStart, type WeekStart } from '@/features/ui/store/uiSlice';
-import { signOut } from '@/features/auth/services/authService';
+import { signOut, hasPasswordProvider } from '@/features/auth/services/authService';
+import { ChangePasswordSheet } from '@/features/auth/components/ChangePasswordSheet';
+import { KeyRound } from 'lucide-react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import { setFamily, setMembers, setPendingInvite, clearFamily } from '@/features/family/store/familySlice';
@@ -66,6 +68,9 @@ export default function AccountPage() {
   const [saving, setSaving] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [editingName, setEditingName] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
+  // Google-only accounts have no password credential to change
+  const canChangePassword = hasPasswordProvider();
   const [nameInput, setNameInput] = useState(user?.name ?? '');
   const [nameSaving, setNameSaving] = useState(false);
   const t = useT();
@@ -614,6 +619,25 @@ export default function AccountPage() {
     </div>
   );
 
+  const passwordRow = (
+    <button
+      onClick={() => setPasswordOpen(true)}
+      disabled={!canChangePassword}
+      className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted/30 disabled:cursor-default disabled:hover:bg-transparent"
+    >
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px]" style={{ background: '#8AA9D622' }}>
+        <KeyRound className="h-[18px] w-[18px]" style={{ color: '#8AA9D6' }} strokeWidth={2} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-bold text-foreground">{t('account.password.row')}</p>
+        {!canChangePassword && (
+          <p className="mt-0.5 text-[11px] font-semibold text-muted-foreground">{t('account.password.googleOnly')}</p>
+        )}
+      </div>
+      {canChangePassword && <span className="shrink-0 text-muted-foreground">›</span>}
+    </button>
+  );
+
   const mobileLabel = (label: string) => (
     <p className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-[.08em] px-1">{label}</p>
   );
@@ -739,6 +763,10 @@ export default function AccountPage() {
         {mobileLabel(t('account.debug'))}
         {debugBlock}
 
+        {/* Account security */}
+        {mobileLabel(t('account.password.row'))}
+        {mobileCard(passwordRow)}
+
         {/* Sign out */}
         {signOutBtn}
       </div>
@@ -765,10 +793,15 @@ export default function AccountPage() {
           {preferencesBlock}
           {notificationsBlock}
           {quickLinks}
+          <div className="fb-card overflow-hidden">{passwordRow}</div>
           {debugBlock}
           {signOutBtn}
         </div>
       </div>
+
+      {passwordOpen && canChangePassword && (
+        <ChangePasswordSheet onClose={() => setPasswordOpen(false)} />
+      )}
     </>
   );
 }

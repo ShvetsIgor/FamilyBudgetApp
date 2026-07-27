@@ -21,7 +21,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="relative min-h-screen bg-background flex">
       <div className="absolute right-4 top-4 z-10 flex rounded-xl border border-border bg-card p-1 shadow-sm" aria-label={t('auth.language')}>
-        {(['en', 'ru', 'he'] as Language[]).map((value) => (
+        {/* Hebrew stays out of the picker until RTL is actually supported —
+            the runtime contract lists `en`/`ru` only, so offering `he` here
+            handed users a half-translated, LTR-forced app. Translations and
+            the `he` Language type are kept for when RTL is picked back up. */}
+        {(['en', 'ru'] as Language[]).map((value) => (
           <button
             key={value}
             type="button"

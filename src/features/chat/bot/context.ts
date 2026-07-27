@@ -60,7 +60,7 @@ export function collectBotContext(state: RootState): BotContext | null {
 
   const todayStr = toLocalDateKey(new Date());
   const todaySpent = state.expenses.list
-    .filter((expense) => expense.date.startsWith(todayStr))
+    .filter((expense) => toLocalDateKey(expense.date) === todayStr)
     .reduce((sum, expense) => sum + expense.amount, 0);
 
   return {

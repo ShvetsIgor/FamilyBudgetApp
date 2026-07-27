@@ -9,7 +9,10 @@ import { fetchMonthExpenses } from '@/features/expenses/services/expensesService
 import { formatAmount } from '@/shared/utils/currency';
 import { aggregateTopCategories } from '@/features/categories/utils/statsAggregation';
 import { useT } from '@/shared/hooks/useT';
+import { toLocalDateKey, toLocalMonthKey } from '@/shared/utils/dateKey';
+import { monthStatsFromExpenses, isRecurringExpense } from '@/features/analytics/utils/monthStatsFromExpenses';
 import { useRouter } from 'next/navigation';
+import { TrendingUp } from 'lucide-react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { FamilyAnalyticsView } from '@/features/family/components/FamilyAnalyticsView';
 import {
@@ -42,20 +45,31 @@ export default function AnalyticsPage() {
   const familyAvailable = !!family && members.length > 1;
   const isFamilyView = viewMode === 'family' && familyAvailable;
   const [loading, setLoading] = useState(false);
+  // Stored monthlyStats carry no recurring flag, so this view is rebuilt from
+  // raw expenses — fetched only while the filter is actually on.
+  const [recurringOnly, setRecurringOnly] = useState(false);
 
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const stats = await fetchLastNMonths(user.id, period);
-      setMonths(stats);
+      const monthKeys = Array.from({ length: period }, (_, i) =>
+        toLocalMonthKey(subMonths(new Date(), period - 1 - i)));
 
-      // Fetch expenses for current + last month (for DOW current-week data)
-      const [m0, m1] = await Promise.all([
-        fetchMonthExpenses(user.id, format(new Date(), 'yyyy-MM')),
-        fetchMonthExpenses(user.id, format(subMonths(new Date(), 1), 'yyyy-MM')),
-      ]);
-      const allExpenses = [...m0, ...m1];
+      let allExpenses;
+      if (recurringOnly) {
+        const perMonth = await Promise.all(monthKeys.map((m) => fetchMonthExpenses(user.id, m)));
+        allExpenses = perMonth.flat().filter(isRecurringExpense);
+        setMonths(monthStatsFromExpenses(allExpenses, monthKeys));
+      } else {
+        const [stats, m0, m1] = await Promise.all([
+          fetchLastNMonths(user.id, period),
+          fetchMonthExpenses(user.id, format(new Date(), 'yyyy-MM')),
+          fetchMonthExpenses(user.id, format(subMonths(new Date(), 1), 'yyyy-MM')),
+        ]);
+        setMonths(stats);
+        allExpenses = [...m0, ...m1];
+      }
 
       // Build current week: 7 days starting from weekStart
       const today = new Date();
@@ -66,7 +80,7 @@ export default function AnalyticsPage() {
         const day = addDays(weekBegin, i);
         const isoDate = format(day, 'yyyy-MM-dd');
         const dayTotal = allExpenses
-          .filter((e) => e.date.startsWith(isoDate))
+          .filter((e) => toLocalDateKey(e.date) === isoDate)
           .reduce((s, e) => s + e.amount, 0);
         return {
           name: format(day, 'EEE', { locale: dfLocale }),
@@ -77,7 +91,7 @@ export default function AnalyticsPage() {
       });
       setDowData(points);
     } finally { setLoading(false); }
-  }, [user, period, weekStart, dfLocale]);
+  }, [user, period, weekStart, dfLocale, recurringOnly]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -127,6 +141,28 @@ export default function AnalyticsPage() {
       ))}
     </div>
   ) : null;
+
+  // Expense-side filter: «only what a template generates». Off by default —
+  // it changes what every chart below is counting.
+  const recurringToggle = (
+    <button
+      onClick={() => setRecurringOnly((v) => !v)}
+      aria-pressed={recurringOnly}
+      className="inline-flex min-h-11 items-center gap-1.5 self-start rounded-full px-3.5 text-[13px] font-bold transition-colors"
+      style={{
+        background: recurringOnly ? 'hsl(var(--primary) / .12)' : 'hsl(var(--card))',
+        color: recurringOnly ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+        boxShadow: recurringOnly ? 'none' : '0 1px 3px rgba(61,44,31,.06)',
+      }}
+    >
+      <StickerIcon
+        icon="refund"
+        color={recurringOnly ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'}
+        className="h-3.5 w-3.5"
+      />
+      {t('analytics.recurringOnly')}
+    </button>
+  );
 
   // Period selector (shared)
   const periodSelector = (
@@ -306,9 +342,10 @@ export default function AnalyticsPage() {
         <h1 className="text-xl font-bold lg:hidden">{t('analytics.title')}</h1>
         {viewToggle}
         {periodSelector}
+        {recurringToggle}
         {statCards}
         <div className="flex flex-col items-center py-12 text-center">
-          <p className="text-4xl mb-3">📈</p>
+          <TrendingUp className="mx-auto mb-3 h-9 w-9 text-muted-foreground" strokeWidth={1.6} />
           <p className="font-medium">{t('analytics.noData')}</p>
           <p className="text-sm text-muted-foreground mt-1">{t('analytics.addMore')}</p>
           <button type="button" onClick={() => router.push('/expenses/new')} className="mt-5 min-h-11 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground">
@@ -326,6 +363,8 @@ export default function AnalyticsPage() {
       {viewToggle}
 
       {periodSelector}
+
+      {recurringToggle}
 
       {statCards}
 

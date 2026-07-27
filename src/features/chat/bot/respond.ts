@@ -70,7 +70,7 @@ export async function respondToUserMessage(
   parsed: ParseResult,
   ctx: BotContext
 ): Promise<BotReply> {
-  const { userId, currency, categoriesById, foldersById, topCategoryIds, incomeCategoriesById, topIncomeCategoryIds } = ctx;
+  const { userId, currency, categoriesById, foldersById, incomeCategoriesById, topIncomeCategoryIds } = ctx;
   const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
   const sym = symMap[currency] ?? currency;
 
@@ -261,12 +261,18 @@ export async function respondToUserMessage(
     categories,
     ctx.suggestionMemory,
   );
+  // Only EARNED suggestions: a dictionary hit, a learned word, or something
+  // the engine backed with merchant history (it already refuses to surface
+  // recency-only guesses). Padding this list with the user's overall top
+  // categories filled the card up to five confident-looking chips even when
+  // nothing was known — a supermarket would offer «Квартира» and «Видео»,
+  // which teaches people to ignore the chips altogether. No signal now means
+  // no chips, and the card asks instead of guessing.
   const candidateIds = [
     parsed.categoryId,
     parsed.learnedCategoryId,
     ...draft.suggestedCategories.map((suggestion) => suggestion.categoryId),
     ...draft.splitPresets.flatMap((preset) => preset.categoryIds),
-    ...topCategoryIds,
   ].filter((id): id is string => Boolean(id));
   const seen = new Set<string>();
   const chips = candidateIds
@@ -275,7 +281,7 @@ export async function respondToUserMessage(
       seen.add(id);
       return true;
     })
-    .slice(0, 5)
+    .slice(0, 3)
     .map((id) => categoriesById.get(id)!)
     .map((category) => ({
       id: category.id,

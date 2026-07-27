@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Search, ChevronLeft, ArrowRight, Scissors, FolderPlus } from 'lucide-react';
+import { LayoutGrid, ChevronLeft, ArrowRight, Scissors, FolderPlus } from 'lucide-react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { SHADOW } from '@/features/chat/styles/tokens';
 import { useChatTokens } from '@/features/chat/styles/useChatTokens';
@@ -48,6 +48,26 @@ function SecondaryAction({ icon: Icon, label, onClick, color }: {
       style={{ color, background: 'transparent', border: 'none' }}
     >
       {Icon && <Icon size={13} strokeWidth={2.4} />}
+      {label}
+    </button>
+  );
+}
+
+/** Full-width choice shown when the bot has no earned suggestion to offer. */
+function DoorAction({ icon: Icon, label, onClick, C }: {
+  icon: typeof Scissors;
+  label: string;
+  onClick: () => void;
+  C: ReturnType<typeof useChatTokens>;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex min-h-[54px] flex-col items-center justify-center gap-1 rounded-[14px] text-[13px] font-[800] transition-all active:scale-95"
+      style={{ background: C.card, border: `1.5px solid ${C.hairline}`, color: C.fg, boxShadow: SHADOW.bubble }}
+    >
+      <Icon size={19} strokeWidth={2} />
       {label}
     </button>
   );
@@ -102,6 +122,8 @@ export function ClarifyCard({
         .filter((c) => c.folderId === selectedParent.id)
         .map((c) => ({ id: c.id, name: c.name, icon: c.icon, color: c.color }))
     : chips;
+
+  const hasChips = currentChips.length > 0;
 
   const handleChipClick = (chip: ClarifyChip) => {
     haptic('tap');
@@ -227,10 +249,10 @@ export function ClarifyCard({
             <ArrowRight size={14} strokeWidth={2.5} />
           </button>
         </div>
-      ) : (
-        /* Only the categories are primary here — one obvious kind of answer.
-           Everything else moves to the quiet row below, so a first-time user
-           is not choosing between five equally loud options. */
+      ) : hasChips ? (
+        /* Earned suggestions only — the bot proposes a category solely when
+           merchant history or a known word backs it. Everything else lives in
+           the quiet row below. */
         <div className="flex flex-wrap gap-1.5">
           {currentChips.map((chip) => (
             <button
@@ -252,20 +274,34 @@ export function ClarifyCard({
             </button>
           ))}
         </div>
+      ) : (
+        /* Nothing is known about this merchant yet, so the card offers the two
+           real doors instead of inventing chips: pick a category, or split the
+           receipt. Guessing here is what made the suggestions untrustworthy. */
+        <div className="grid grid-cols-2 gap-2">
+          <DoorAction icon={LayoutGrid} label={t('chat.clarify.all')} onClick={onAllCategories} C={C} />
+          {onSplit && (
+            <DoorAction icon={Scissors} label={t('chat.clarify.split')} onClick={onSplit} C={C} />
+          )}
+        </div>
       )}
 
       {!selectedParent && !otherMode && !createFolderMode && (
         <div
-          className="mt-2 flex flex-wrap items-center gap-x-0.5 pt-1.5"
-          style={{ borderTop: `1px solid ${C.hairline}` }}
+          className={hasChips ? 'mt-2 flex flex-wrap items-center gap-x-0.5 pt-1.5' : 'mt-2 flex flex-wrap items-center justify-center gap-x-0.5'}
+          style={hasChips ? { borderTop: `1px solid ${C.hairline}` } : undefined}
         >
-          {onSplit && (
+          {hasChips && onSplit && (
             <SecondaryAction icon={Scissors} label={t('chat.clarify.split')} onClick={onSplit} color={C.sub} />
+          )}
+          {hasChips && (
+            <SecondaryAction icon={LayoutGrid} label={t('chat.clarify.all')} onClick={onAllCategories} color={C.sub} />
           )}
           {onOtherText && (
             <SecondaryAction label={t('chat.clarify.other')} onClick={() => setOtherMode(true)} color={C.sub} />
           )}
-          <SecondaryAction icon={Search} label={t('chat.clarify.all')} onClick={onAllCategories} color={C.sub} />
+          {/* Kept on purpose: some people log the total now and sort receipts
+              once a week. It files the expense under «Неразобранное». */}
           {onDefer && (
             <SecondaryAction label={t('chat.clarify.defer')} onClick={onDefer} color={C.sub} />
           )}

@@ -28,3 +28,21 @@ const serwist = new Serwist({
 });
 
 serwist.addEventListeners();
+
+/**
+ * One-time migration off next-pwa.
+ *
+ * Anyone who already had the app installed still carries workbox's precache —
+ * a full copy of a build that no longer exists on the server, several MB of it,
+ * which nothing will ever read again. Serwist names its own caches under the
+ * `serwist` prefix, so anything under `workbox-` is by construction dead and
+ * safe to drop. The runtime caches (`others`, `static-js-assets`, …) keep their
+ * names across both worlds and are simply reused.
+ */
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((names) => Promise.all(
+      names.filter((name) => name.startsWith('workbox-')).map((name) => caches.delete(name)),
+    )),
+  );
+});

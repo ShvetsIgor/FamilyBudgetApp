@@ -47,7 +47,7 @@ export function AddDrawer() {
           aria-describedby={undefined}
         >
           {/* ── Tab bar ── */}
-          <div className="flex items-center gap-0 border-b border-border flex-shrink-0 px-2 pt-2">
+          <div className="flex items-center gap-0 border-b border-border shrink-0 px-2 pt-2">
             {TABS.map((tabItem) => {
               const active = tab === tabItem.key;
               return (

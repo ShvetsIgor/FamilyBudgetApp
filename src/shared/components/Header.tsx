@@ -12,7 +12,7 @@ export function Header() {
   const t = useT();
 
   return (
-    <header className="lg:hidden sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="lg:hidden sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur-sm supports-backdrop-filter:bg-background/60">
       <div className="flex h-14 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/home" className="flex items-center">

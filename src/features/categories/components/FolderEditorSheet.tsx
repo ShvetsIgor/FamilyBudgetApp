@@ -44,6 +44,7 @@ export function FolderEditorSheet({
 
   useEffect(() => {
     if (!open) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- form state is reset when the sheet (re)opens for a different entity
     setName(initial?.name ?? '');
     setIcon(initial?.icon ?? 'box');
     setColor(initial?.color ?? CC.primary);
@@ -132,7 +133,7 @@ export function FolderEditorSheet({
                 setSuggestionsOpen(true);
               }}
               placeholder={t('categories.folderEditor.namePlaceholder')}
-              className="w-full rounded-xl border border-[#EDE0CC] bg-white px-3 py-2.5 text-sm text-[#3D2C1F] outline-none placeholder:text-[#B6A48E] focus:border-[#E07A5F]"
+              className="w-full rounded-xl border border-[#EDE0CC] bg-white px-3 py-2.5 text-sm text-[#3D2C1F] outline-hidden placeholder:text-[#B6A48E] focus:border-[#E07A5F]"
             />
             {suggestionsOpen && matchedSuggestions.length > 0 && (
               <div className="mt-1 overflow-hidden rounded-xl border border-[#EDE0CC] bg-white shadow-sm">

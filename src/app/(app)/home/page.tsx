@@ -593,7 +593,7 @@ export default function HomePage() {
                     <div className="flex" style={{ paddingLeft: 42, marginTop: 4, marginBottom: 2 }}>
                       <button
                         onClick={undoHandler}
-                        className="text-[11.5px] font-[700] active:opacity-50 transition-opacity"
+                        className="text-[11.5px] font-bold active:opacity-50 transition-opacity"
                         style={{
                           color: '#9CA3AF',
                           background: 'none',

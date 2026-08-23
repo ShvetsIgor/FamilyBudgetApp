@@ -155,7 +155,7 @@ export function ExpenseForm({ initialExpense }: Props) {
             onChange={(e) => setAmount(e.target.value)}
             onKeyDown={blockInvalidAmountKeys}
             placeholder="0.00"
-            className="flex-1 bg-transparent text-4xl font-bold outline-none placeholder:text-muted-foreground/30"
+            className="flex-1 bg-transparent text-4xl font-bold outline-hidden placeholder:text-muted-foreground/30"
           />
         </div>
       </div>
@@ -248,7 +248,7 @@ export function ExpenseForm({ initialExpense }: Props) {
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className="rounded-xl border border-border bg-card px-4 py-3 text-sm outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
       </div>
 
@@ -284,7 +284,7 @@ export function ExpenseForm({ initialExpense }: Props) {
           value={store}
           onChange={(e) => setStore(e.target.value)}
           placeholder={t('expense.storePlaceholder')}
-          className="rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
+          className="rounded-xl border border-border bg-card px-4 py-3 text-sm outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
         />
       </div>
 
@@ -298,7 +298,7 @@ export function ExpenseForm({ initialExpense }: Props) {
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           placeholder={t('expense.commentPlaceholder')}
-          className="rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
+          className="rounded-xl border border-border bg-card px-4 py-3 text-sm outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
         />
       </div>
 

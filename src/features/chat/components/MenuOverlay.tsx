@@ -144,23 +144,23 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
             </svg>
             <div className="relative flex items-center gap-3">
               <div
-                className="flex h-11 w-11 items-center justify-center rounded-2xl text-[18px] font-[900]"
+                className="flex h-11 w-11 items-center justify-center rounded-2xl text-[18px] font-black"
                 style={{ background: 'rgba(255,255,255,.22)', backdropFilter: 'blur(8px)', color: 'white' }}
               >
                 {initial}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="m-0 truncate text-[16px] font-[800]" style={{ letterSpacing: -0.2 }}>
+                <p className="m-0 truncate text-[16px] font-extrabold" style={{ letterSpacing: -0.2 }}>
                   {user?.name || user?.email}
                 </p>
-                <p className="m-0 mt-0.5 text-[11.5px] font-[700] opacity-85">family.budget</p>
+                <p className="m-0 mt-0.5 text-[11.5px] font-bold opacity-85">family.budget</p>
               </div>
             </div>
             <div className="relative mt-3 flex items-baseline gap-2">
-              <span className="text-[26px] font-[900] tabular-nums" style={{ letterSpacing: -0.8 }}>
+              <span className="text-[26px] font-black tabular-nums" style={{ letterSpacing: -0.8 }}>
                 {sym}{'\u202F'}{todaySpent.toLocaleString()}
               </span>
-              <span className="text-[12px] font-[800] opacity-80">{t('chat.menu.todaySpent')}</span>
+              <span className="text-[12px] font-extrabold opacity-80">{t('chat.menu.todaySpent')}</span>
             </div>
           </div>
         </div>
@@ -186,7 +186,7 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
               >
                 <StickerIcon icon={item.icon} color={item.color} className="h-5 w-5" />
               </div>
-              <span className="flex-1 text-[14.5px] font-[800]">{t(item.labelKey)}</span>
+              <span className="flex-1 text-[14.5px] font-extrabold">{t(item.labelKey)}</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2.4" strokeLinecap="round">
                 <path d="M9 6l6 6-6 6" />
               </svg>
@@ -196,7 +196,7 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
 
         {/* Footer */}
         <div
-          className="flex-shrink-0 flex items-center gap-3 px-4 pt-3.5"
+          className="shrink-0 flex items-center gap-3 px-4 pt-3.5"
           style={{ borderTop: `1px solid ${C.hairline}`, paddingBottom: 'max(32px, env(safe-area-inset-bottom))' }}
         >
           <div className="flex">
@@ -204,7 +204,7 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
               displayMembers.map((m, i) => (
                 <div
                   key={m.id}
-                  className="flex h-7 w-7 items-center justify-center rounded-full border-[2.5px] text-[11px] font-[900] text-white"
+                  className="flex h-7 w-7 items-center justify-center rounded-full border-[2.5px] text-[11px] font-black text-white"
                   style={{
                     background: MEMBER_COLORS[i % MEMBER_COLORS.length],
                     borderColor: C.bg,
@@ -217,14 +217,14 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
               ))
             ) : (
               <div
-                className="flex h-7 w-7 items-center justify-center rounded-full border-[2.5px] text-[11px] font-[900] text-white"
+                className="flex h-7 w-7 items-center justify-center rounded-full border-[2.5px] text-[11px] font-black text-white"
                 style={{ background: C.primary, borderColor: C.bg }}
               >
                 {initial}
               </div>
             )}
           </div>
-          <p className="m-0 flex-1 text-[12px] font-[700]" style={{ color: C.sub }}>
+          <p className="m-0 flex-1 text-[12px] font-bold" style={{ color: C.sub }}>
             {familyMembers.length > 0
               ? t('chat.menu.online').replace('{n}', String(onlineCount))
               : t('chat.menu.onlyYou')}

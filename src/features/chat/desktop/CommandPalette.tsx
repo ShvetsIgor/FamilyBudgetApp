@@ -52,23 +52,23 @@ export function CommandPalette({ onClose }: Props) {
 
   return (
     <>
-      <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs" onClick={onClose} />
       <div
         className="fixed top-1/4 left-1/2 -translate-x-1/2 z-50 w-full max-w-[560px] rounded-2xl overflow-hidden"
         style={{ background: C.card, boxShadow: '0 20px 60px rgba(61,44,31,.2)', border: `1px solid ${C.hairline}` }}
       >
         {/* Input */}
         <div className="flex items-center gap-3 px-4 py-4" style={{ borderBottom: `1px solid ${C.hairline}` }}>
-          <Search className="h-5 w-5 flex-shrink-0" style={{ color: C.sub }} />
+          <Search className="h-5 w-5 shrink-0" style={{ color: C.sub }} />
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('chat.desktop.searchPlaceholder')}
-            className="flex-1 text-[15px] font-[700] bg-transparent outline-none"
+            className="flex-1 text-[15px] font-bold bg-transparent outline-hidden"
             style={{ color: C.fg }}
           />
-          <button onClick={onClose} className="flex-shrink-0" style={{ color: C.sub }}>
+          <button onClick={onClose} className="shrink-0" style={{ color: C.sub }}>
             <X size={16} />
           </button>
         </div>
@@ -83,7 +83,7 @@ export function CommandPalette({ onClose }: Props) {
             return (
               <div
                 key={e.id}
-                className="flex items-center justify-between px-5 py-3 cursor-pointer hover:bg-black/[0.03]"
+                className="flex items-center justify-between px-5 py-3 cursor-pointer hover:bg-black/3"
                 style={{ borderBottom: `1px solid ${C.hairline}80` }}
               >
                 <div>

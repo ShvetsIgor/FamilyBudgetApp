@@ -38,7 +38,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         ))}
       </div>
       {/* ── Left brand panel — desktop only ── */}
-      <div className="hidden lg:flex w-[480px] flex-shrink-0 flex-col items-center justify-center bg-primary px-12 gap-8">
+      <div className="hidden lg:flex w-[480px] shrink-0 flex-col items-center justify-center bg-primary px-12 gap-8">
         <div className="flex flex-col items-center gap-4">
           <Image src="/logo-mark.svg" alt="Family Budget" width={100} height={100} priority className="h-24 w-24" />
           <Image src="/logo-wordmark.svg" alt="Family Budget" width={220} height={60} priority className="h-14 w-auto brightness-0 invert" style={{ width: 'auto' }} />

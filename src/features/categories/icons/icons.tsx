@@ -34,7 +34,6 @@ const out = (c: string) => ({
   strokeLinejoin: 'round' as const,
 });
 
-/* eslint-disable react/display-name */
 export const I: Record<string, (props: IconProps) => React.ReactElement> = {};
 
 /* ───── MONEY / INCOME ───── */

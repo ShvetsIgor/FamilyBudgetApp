@@ -18,7 +18,7 @@ export function UserBubble({ text, time, status = 'sent', tail = true }: UserBub
       style={{ margin: tail ? '6px 14px 2px' : '2px 14px' }}
     >
       <div
-        className="inline-flex max-w-[78%] items-baseline gap-2 text-[14.5px] font-[700] leading-[1.4]"
+        className="inline-flex max-w-[78%] items-baseline gap-2 text-[14.5px] font-bold leading-[1.4]"
         style={{
           background: `linear-gradient(160deg, ${C.primary} 0%, ${C.primaryDeep} 100%)`,
           color: 'white',
@@ -31,7 +31,7 @@ export function UserBubble({ text, time, status = 'sent', tail = true }: UserBub
         <span>{text}</span>
         <span className="inline-flex items-baseline gap-0.5 opacity-80">
           {time && (
-            <span className="text-[10px] font-[700] tabular-nums">{time}</span>
+            <span className="text-[10px] font-bold tabular-nums">{time}</span>
           )}
           {status === 'saved' && (
             <svg width="13" height="9" viewBox="0 0 13 9" fill="none" className="ml-0.5">

@@ -56,7 +56,6 @@ interface UIState {
 
 const storedTheme = ls('ui.theme');
 const storedDarkMode = ls('ui.darkMode');
-const storedLanguage = ls('ui.language');
 // Migrate legacy 'paper' → 'press' so previously saved preferences map to the
 // new warm-paper editorial theme rather than silently falling back to mist.
 const normalizedTheme: 'mist' | 'press' =
@@ -65,7 +64,11 @@ const normalizedTheme: 'mist' | 'press' =
 const initialState: UIState = {
   theme: normalizedTheme,
   isDarkMode: storedDarkMode === 'true' || storedTheme === 'dark',
-  language: storedLanguage === 'ru' ? 'ru' : 'en',
+  // Deliberately NOT read from localStorage here: this module also runs during
+  // prerendering, where there is none, so a stored 'ru' would make the client's
+  // first render disagree with the server's HTML and break hydration. The
+  // stored value is applied by hydrateDisplayPreferences on mount instead.
+  language: 'en',
   currency: 'ILS',
   weekStart: 'monday',
   isOffline: false,
@@ -93,7 +96,9 @@ const uiSlice = createSlice({
       state.isDarkMode = action.payload;
       if (typeof window !== 'undefined') localStorage.setItem('ui.darkMode', String(action.payload));
     },
-    hydrateThemePreferences(state) {
+    hydrateDisplayPreferences(state) {
+      const storedLanguage = ls('ui.language');
+      if (storedLanguage === 'ru' || storedLanguage === 'en') state.language = storedLanguage;
       const storedTheme = ls('ui.theme');
       const storedDarkMode = ls('ui.darkMode');
       if (storedTheme === 'mist' || storedTheme === 'press') state.theme = storedTheme;
@@ -200,6 +205,6 @@ const uiSlice = createSlice({
   },
 });
 
-export const { setTheme, setDarkMode, hydrateThemePreferences, setLanguage, setCurrency, setWeekStart, setOffline, setSyncing, setExpensesSearch, setBudgetMode, setBudgetDailyLimit, setBudgetMonthlyLimit, setBudgetSnapshot, hydrateBudgetPreferences, setDesktopRightPanelOpen } =
+export const { setTheme, setDarkMode, hydrateDisplayPreferences, setLanguage, setCurrency, setWeekStart, setOffline, setSyncing, setExpensesSearch, setBudgetMode, setBudgetDailyLimit, setBudgetMonthlyLimit, setBudgetSnapshot, hydrateBudgetPreferences, setDesktopRightPanelOpen } =
   uiSlice.actions;
 export default uiSlice.reducer;

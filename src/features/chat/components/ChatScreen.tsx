@@ -28,7 +28,7 @@ export function ChatScreen({ children, onSend, onPlus, disabled }: ChatScreenPro
     >
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex-1 overflow-y-auto pb-2 scrollbar-none [&::-webkit-scrollbar]:hidden"
       >
         {children}
         <div className="h-3" />

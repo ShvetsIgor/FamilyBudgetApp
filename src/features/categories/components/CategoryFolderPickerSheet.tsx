@@ -59,7 +59,7 @@ export function CategoryFolderPickerSheet({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/45 lg:items-center lg:p-6" onClick={onClose}>
+    <div className="fixed inset-0 z-70 flex items-end justify-center bg-black/45 lg:items-center lg:p-6" onClick={onClose}>
       <div
         className="flex max-h-[88dvh] min-h-[68dvh] w-full flex-col overflow-hidden rounded-t-[24px] bg-background shadow-2xl lg:max-h-[760px] lg:max-w-[560px] lg:rounded-[24px]"
         onClick={(e) => e.stopPropagation()}
@@ -97,19 +97,22 @@ export function CategoryFolderPickerView({
 }: CategoryFolderPickerViewProps) {
   const t = useT();
   const [query, setQuery] = useState('');
-  const [folderId, setFolderId] = useState<string | null>(initialFolderId);
+  const [openedFolderId, setOpenedFolderId] = useState<string | null>(initialFolderId);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- form state is reset when the sheet (re)opens for a different entity
     setQuery('');
-    setFolderId(initialFolderId);
+    setOpenedFolderId(initialFolderId);
   }, [initialFolderId]);
 
-  // If the open folder is deleted (e.g. via the folder editor), fall back to the root grid.
-  useEffect(() => {
-    if (folderId && folderId !== UNGROUPED_FOLDER_ID && !folders.some((folder) => folder.id === folderId)) {
-      setFolderId(null);
-    }
-  }, [folderId, folders]);
+  // If the open folder is deleted (e.g. via the folder editor), the root grid is
+  // what remains — derived during render rather than corrected by an effect,
+  // which would render the missing folder once before fixing itself.
+  const folderId =
+    openedFolderId && openedFolderId !== UNGROUPED_FOLDER_ID
+      && !folders.some((folder) => folder.id === openedFolderId)
+      ? null
+      : openedFolderId;
 
   const selectedIds = useMemo(() => new Set(selectedCategoryIds), [selectedCategoryIds]);
   const suggestedIds = useMemo(() => new Set(suggestedCategoryIds), [suggestedCategoryIds]);
@@ -182,7 +185,7 @@ export function CategoryFolderPickerView({
           {folderId ? (
             <button
               type="button"
-              onClick={() => setFolderId(null)}
+              onClick={() => setOpenedFolderId(null)}
               aria-label={t('categories.pickerAria.back')}
               className="flex h-10 w-10 items-center justify-center rounded-xl hover:bg-muted active:bg-muted"
             >
@@ -240,7 +243,7 @@ export function CategoryFolderPickerView({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('categories.search')}
-              className="min-w-0 flex-1 bg-transparent text-sm font-bold outline-none placeholder:text-muted-foreground"
+              className="min-w-0 flex-1 bg-transparent text-sm font-bold outline-hidden placeholder:text-muted-foreground"
             />
             {query && (
               <button type="button" onClick={() => setQuery('')} className="rounded-lg p-1 text-muted-foreground hover:text-foreground">
@@ -252,7 +255,7 @@ export function CategoryFolderPickerView({
       )}
 
       <div className={cn(
-        'flex-1 overflow-y-auto overscroll-contain px-4 pb-6 pt-4 [scrollbar-width:none]',
+        'flex-1 overflow-y-auto overscroll-contain px-4 pb-6 pt-4 scrollbar-none',
         variant === 'inline' && 'overflow-visible',
       )}>
           {query ? (
@@ -303,7 +306,7 @@ export function CategoryFolderPickerView({
                       cats={sortedCats(catsByFolder.get(folder.id) ?? [])}
                       selectedIds={selectedIds}
                       suggestedIds={suggestedIds}
-                      onClick={() => setFolderId(folder.id)}
+                      onClick={() => setOpenedFolderId(folder.id)}
                     />
                   ))}
                   {showUngroupedTile && (
@@ -312,7 +315,7 @@ export function CategoryFolderPickerView({
                       cats={ungroupedCats}
                       selectedIds={selectedIds}
                       suggestedIds={suggestedIds}
-                      onClick={() => setFolderId(UNGROUPED_FOLDER_ID)}
+                      onClick={() => setOpenedFolderId(UNGROUPED_FOLDER_ID)}
                     />
                   )}
                   {onCreateFolder && (
@@ -387,7 +390,7 @@ function FolderTile({
           </span>
         )}
       </span>
-      <span className="max-w-[96px] text-[11px] font-black leading-tight text-foreground line-clamp-2 break-normal [overflow-wrap:normal] [word-break:normal] hyphens-none">
+      <span className="max-w-[96px] text-[11px] font-black leading-tight text-foreground line-clamp-2 break-normal wrap-normal [word-break:normal] hyphens-none">
         {t.cat(folder.name)}
       </span>
     </button>
@@ -436,7 +439,7 @@ function CategoryGrid({
             } as CSSProperties}
           >
             <StickerIcon icon={cat.icon ?? 'box'} color={color} className="h-6 w-6" />
-            <span className="max-w-full text-[10px] font-black leading-tight text-foreground line-clamp-2 break-normal [overflow-wrap:normal] [word-break:normal] hyphens-none">
+            <span className="max-w-full text-[10px] font-black leading-tight text-foreground line-clamp-2 break-normal wrap-normal [word-break:normal] hyphens-none">
               {t.cat(cat.name)}
             </span>
             {selected && (

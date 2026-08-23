@@ -80,10 +80,10 @@ export function FastGoalEntry({ initialGoal }: { initialGoal?: SavingsGoal }) {
   if (!user) return null;
 
   return (
-    <div className="fb-sheet-enter fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:bg-black/50 lg:backdrop-blur-sm">
+    <div className="fb-sheet-enter fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:bg-black/50 lg:backdrop-blur-xs">
     <div className="flex flex-col bg-background w-full lg:max-w-[440px] lg:rounded-2xl lg:shadow-2xl overflow-hidden" style={{ height: '100dvh', maxHeight: '100dvh' }}>
       {/* ── Top bar ── */}
-      <div className="flex items-center gap-2 px-4 pt-1 pb-0.5 flex-shrink-0">
+      <div className="flex items-center gap-2 px-4 pt-1 pb-0.5 shrink-0">
         <button onClick={goBack} className="p-1.5 rounded-full hover:bg-muted transition-colors">
           <X className="h-4 w-4" />
         </button>
@@ -111,7 +111,7 @@ export function FastGoalEntry({ initialGoal }: { initialGoal?: SavingsGoal }) {
 
       {/* ── Name input ── */}
       <div
-        className="mx-4 px-4 py-2.5 rounded-[18px] flex-shrink-0 border-[1.5px] transition-all"
+        className="mx-4 px-4 py-2.5 rounded-[18px] shrink-0 border-[1.5px] transition-all"
         style={{ background: color + '14', borderColor: color + '55' }}
         onClick={() => nameRef.current?.focus()}
       >
@@ -123,13 +123,13 @@ export function FastGoalEntry({ initialGoal }: { initialGoal?: SavingsGoal }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder={t('savings.goalNamePlaceholder')}
-          className="w-full bg-transparent text-[18px] font-black text-foreground outline-none placeholder:text-muted-foreground/40"
+          className="w-full bg-transparent text-[18px] font-black text-foreground outline-hidden placeholder:text-muted-foreground/40"
         />
       </div>
 
       {/* ── Deadline calendar ── */}
       {showDate && (
-        <div className="mx-4 mt-2 flex-shrink-0">
+        <div className="mx-4 mt-2 shrink-0">
           <MiniCalendar
             value={deadline || toDateInput(new Date())}
             onChange={(d) => { setDeadline(d); setShowDate(false); }}
@@ -139,9 +139,9 @@ export function FastGoalEntry({ initialGoal }: { initialGoal?: SavingsGoal }) {
       )}
 
       {/* ── Icon + color pickers ── */}
-      <div className="flex-1 overflow-y-auto px-4 py-2 flex flex-col gap-2 min-h-0 [scrollbar-width:none]">
+      <div className="flex-1 overflow-y-auto px-4 py-2 flex flex-col gap-2 min-h-0 scrollbar-none">
         {/* Icon grid */}
-        <div className="overflow-x-auto [scrollbar-width:none]">
+        <div className="overflow-x-auto scrollbar-none">
           <div className="grid grid-rows-2 grid-flow-col gap-1.5 pb-1" style={{ gridAutoColumns: '52px' }}>
             {GOAL_ICON_OPTIONS.map((ic) => {
               const sel = ic === icon;
@@ -167,10 +167,10 @@ export function FastGoalEntry({ initialGoal }: { initialGoal?: SavingsGoal }) {
 
         {/* Selected preview */}
         <div
-          className="rounded-[14px] p-3 flex items-center gap-3 flex-shrink-0"
+          className="rounded-[14px] p-3 flex items-center gap-3 shrink-0"
           style={{ background: color + '14', boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}
         >
-          <div className="h-10 w-10 rounded-[12px] flex items-center justify-center flex-shrink-0" style={{ background: color + '30' }}>
+          <div className="h-10 w-10 rounded-[12px] flex items-center justify-center shrink-0" style={{ background: color + '30' }}>
             <GoalGlyph icon={icon} color={color} className="h-5 w-5" />
           </div>
           <div className="flex-1 min-w-0">
@@ -189,7 +189,7 @@ export function FastGoalEntry({ initialGoal }: { initialGoal?: SavingsGoal }) {
 
       {/* ── Target amount display ── */}
       <div
-        className="mx-4 mb-1 px-4 py-1.5 rounded-[18px] flex items-baseline justify-between flex-shrink-0 border-[1.5px] transition-all"
+        className="mx-4 mb-1 px-4 py-1.5 rounded-[18px] flex items-baseline justify-between shrink-0 border-[1.5px] transition-all"
         style={{ background: color + '10', borderColor: color + '44' }}
       >
         <span className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">{t('savings.goalLabel')}</span>
@@ -202,7 +202,7 @@ export function FastGoalEntry({ initialGoal }: { initialGoal?: SavingsGoal }) {
       </div>
 
       {/* ── Numpad ── */}
-      <div className="px-3 pt-0.5 grid grid-cols-3 flex-shrink-0" style={{ gridAutoRows: '44px', gap: '4px' }}>
+      <div className="px-3 pt-0.5 grid grid-cols-3 shrink-0" style={{ gridAutoRows: '44px', gap: '4px' }}>
         {NUMPAD_KEYS.map((k) => (
           <button
             key={String(k)}
@@ -220,7 +220,7 @@ export function FastGoalEntry({ initialGoal }: { initialGoal?: SavingsGoal }) {
       </div>
 
       {/* ── Save bar ── */}
-      <div className="px-4 pt-1.5 flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
+      <div className="px-4 pt-1.5 shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
         <button
           onClick={handleSave}
           disabled={saving || !canSave}

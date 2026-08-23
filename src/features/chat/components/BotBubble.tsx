@@ -14,7 +14,7 @@ function BotAvatar({ visible = true }: { visible?: boolean }) {
   const C = useChatTokens();
   return (
     <div
-      className="flex h-[26px] w-[26px] flex-shrink-0 items-center justify-center self-end rounded-full"
+      className="flex h-[26px] w-[26px] shrink-0 items-center justify-center self-end rounded-full"
       style={{
         background: `linear-gradient(135deg, ${C.primaryTint}, ${C.primary}22)`,
         boxShadow: 'inset 0 0 0 1px rgba(255,255,255,.6)',
@@ -37,7 +37,7 @@ export function BotBubble({ text, time, tail = true }: BotBubbleProps) {
     >
       <BotAvatar visible={tail} />
       <div
-        className="text-[14.5px] font-[700] leading-[1.4]"
+        className="text-[14.5px] font-bold leading-[1.4]"
         style={{
           background: C.cardTint,
           padding: '9px 13px',
@@ -49,7 +49,7 @@ export function BotBubble({ text, time, tail = true }: BotBubbleProps) {
         dangerouslySetInnerHTML={{ __html: text }}
       />
       {time && (
-        <span className="self-end pb-1 text-[10px] font-[700] tabular-nums" style={{ color: C.sub }}>
+        <span className="self-end pb-1 text-[10px] font-bold tabular-nums" style={{ color: C.sub }}>
           {time}
         </span>
       )}

@@ -31,7 +31,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const budgetStatus = useAppSelector((s) => s.budget.status);
   const incomeStatus = useAppSelector((s) => s.income.status);
   const router = useRouter();
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  // Onboarding is a fact about the profile, not state to be synced into: only
+  // finishing it is remembered locally, until the profile write comes back.
+  const [onboardingDone, setOnboardingDone] = useState(false);
 
   useEffect(() => {
     if (initialized && !user) {
@@ -132,11 +134,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [user, incomeStatus, dispatch]);
 
-  // Show onboarding for new users (only when explicitly onboarded === false)
-  useEffect(() => {
-    if (user && user.onboarded === false) setShowOnboarding(true);
-  }, [user]);
-
   // Request notification permission once after login
   useEffect(() => {
     if (user) requestNotificationPermission();
@@ -148,10 +145,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (!initialized) return <LoadingScreen />;
   if (!user) return null;
 
+  const showOnboarding = user?.onboarded === false && !onboardingDone;
+
   return (
     <>
       <AppShell>{children}</AppShell>
-      {showOnboarding && <OnboardingFlow onComplete={() => setShowOnboarding(false)} />}
+      {showOnboarding && <OnboardingFlow onComplete={() => setOnboardingDone(true)} />}
     </>
   );
 }

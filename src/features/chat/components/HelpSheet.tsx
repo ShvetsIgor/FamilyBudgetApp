@@ -119,7 +119,7 @@ export function HelpSheet({ onClose }: HelpSheetProps) {
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-5 pb-4 flex-shrink-0">
+        <div className="flex items-center justify-between px-5 pt-5 pb-4 shrink-0">
           <div className="flex items-center gap-2.5">
             <div
               className="flex h-9 w-9 items-center justify-center rounded-[12px]"
@@ -128,8 +128,8 @@ export function HelpSheet({ onClose }: HelpSheetProps) {
               <StickerIcon icon="piggy" color={C.primary} className="h-6 w-6" />
             </div>
             <div>
-              <p className="m-0 text-[16px] font-[900]" style={{ color: C.fg }}>{t('chat.help.title')}</p>
-              <p className="m-0 text-[11.5px] font-[700]" style={{ color: C.sub }}>{t('chat.help.subtitle')}</p>
+              <p className="m-0 text-[16px] font-black" style={{ color: C.fg }}>{t('chat.help.title')}</p>
+              <p className="m-0 text-[11.5px] font-bold" style={{ color: C.sub }}>{t('chat.help.subtitle')}</p>
             </div>
           </div>
           <button
@@ -142,7 +142,7 @@ export function HelpSheet({ onClose }: HelpSheetProps) {
         </div>
 
         {/* Divider */}
-        <div className="mx-5 h-px flex-shrink-0" style={{ background: C.hairline }} />
+        <div className="mx-5 h-px shrink-0" style={{ background: C.hairline }} />
 
         {/* Tips list */}
         <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-2">
@@ -153,20 +153,20 @@ export function HelpSheet({ onClose }: HelpSheetProps) {
               style={{ background: C.card, border: `1px solid ${C.hairline}` }}
             >
               <div
-                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[13px]"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[13px]"
                 style={{ background: tip.color + '18' }}
               >
                 <StickerIcon icon={tip.icon} color={tip.color} className="h-7 w-7" />
               </div>
               <div className="flex-1">
-                <p className="m-0 text-[13.5px] font-[900]" style={{ color: C.fg }}>{tip.title}</p>
-                <p className="m-0 mt-0.5 text-[12.5px] font-[600] leading-[1.45]" style={{ color: C.sub }}>{tip.desc}</p>
+                <p className="m-0 text-[13.5px] font-black" style={{ color: C.fg }}>{tip.title}</p>
+                <p className="m-0 mt-0.5 text-[12.5px] font-semibold leading-[1.45]" style={{ color: C.sub }}>{tip.desc}</p>
                 {tip.example && (
                   <div
                     className="mt-2 inline-block rounded-[10px] px-3 py-1.5"
                     style={{ background: tip.color + '14', border: `1px solid ${tip.color}33` }}
                   >
-                    <span className="text-[12px] font-[800]" style={{ color: tip.color }}>{tip.example}</span>
+                    <span className="text-[12px] font-extrabold" style={{ color: tip.color }}>{tip.example}</span>
                   </div>
                 )}
               </div>

@@ -22,7 +22,7 @@ export function BudgetField({ value, onChange, currency = '₪' }: Props) {
             const v = parseFloat(e.target.value);
             onChange(isNaN(v) ? null : v);
           }}
-          className="flex-1 bg-transparent text-sm text-[#3D2C1F] outline-none placeholder:text-[#B6A48E]"
+          className="flex-1 bg-transparent text-sm text-[#3D2C1F] outline-hidden placeholder:text-[#B6A48E]"
         />
         {value != null && (
           <button

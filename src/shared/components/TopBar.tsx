@@ -48,7 +48,7 @@ export function TopBar({ onBell }: TopBarProps) {
     : t(getPageTitleKey(pathname));
 
   return (
-    <header className="hidden lg:flex h-16 flex-shrink-0 items-center gap-4 border-b border-border bg-background/95 backdrop-blur px-6">
+    <header className="hidden lg:flex h-16 shrink-0 items-center gap-4 border-b border-border bg-background/95 backdrop-blur-sm px-6">
       {/* Title */}
       <h1 className="text-lg font-bold text-foreground shrink-0 min-w-[160px]">{title}</h1>
 
@@ -62,7 +62,7 @@ export function TopBar({ onBell }: TopBarProps) {
               value={expensesSearch}
               onChange={(e) => dispatch(setExpensesSearch(e.target.value))}
               placeholder={t('expenses.search')}
-              className="w-full rounded-xl border border-border bg-muted/50 py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+              className="w-full rounded-xl border border-border bg-muted/50 py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
             />
           </div>
         </div>

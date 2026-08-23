@@ -160,23 +160,23 @@ export function ExpenseCard({ expense, onClick, onEdit, onDelete }: Props) {
             style={{ padding: '24px 20px 32px' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-center text-[15px] font-[700] mb-1" style={{ color: 'var(--foreground)' }}>
+            <p className="text-center text-[15px] font-bold mb-1" style={{ color: 'var(--foreground)' }}>
               {t('expense.confirmDelete')}
             </p>
-            <p className="text-center text-[13px] font-[500] mb-6" style={{ color: 'var(--muted-foreground)' }}>
+            <p className="text-center text-[13px] font-medium mb-6" style={{ color: 'var(--muted-foreground)' }}>
               {topLine} · {formatAmount(expense.amount, expense.currency || currency)}
             </p>
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => { onDelete?.(); setShowDeleteModal(false); }}
-                className="w-full rounded-xl py-3.5 text-[15px] font-[700] transition-opacity active:opacity-70"
+                className="w-full rounded-xl py-3.5 text-[15px] font-bold transition-opacity active:opacity-70"
                 style={{ background: '#EF4444', color: '#fff' }}
               >
                 {t('common.delete')}
               </button>
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="w-full rounded-xl py-3.5 text-[15px] font-[700] transition-opacity active:opacity-70"
+                className="w-full rounded-xl py-3.5 text-[15px] font-bold transition-opacity active:opacity-70"
                 style={{ background: 'var(--muted)', color: 'var(--muted-foreground)' }}
               >
                 {t('common.cancel')}

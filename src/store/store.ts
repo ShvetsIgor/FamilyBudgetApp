@@ -38,7 +38,24 @@ const rootReducer: typeof appReducer = (state, action) => {
     action.type === clearAuth.type ||
     (action.type === setUser.type && payload === null);
 
-  return appReducer(shouldResetAppState ? undefined : state, action);
+  if (!shouldResetAppState) return appReducer(state, action);
+
+  // Everything account-scoped is dropped, so user A's data can never surface
+  // for user B. Theme, dark mode and language are device preferences, not
+  // account data: they are chosen on the sign-in screen itself and must
+  // survive the reset that fires when auth resolves to «nobody».
+  const fresh = appReducer(undefined, action);
+  const previousUi = state?.ui;
+  if (!previousUi) return fresh;
+  return {
+    ...fresh,
+    ui: {
+      ...fresh.ui,
+      theme: previousUi.theme,
+      isDarkMode: previousUi.isDarkMode,
+      language: previousUi.language,
+    },
+  };
 };
 
 export const store = configureStore({

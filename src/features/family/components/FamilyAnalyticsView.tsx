@@ -32,6 +32,7 @@ export function FamilyAnalyticsView({ period }: { period: number }) {
     if (!user || members.length === 0) return;
     const monthKeys = Array.from({ length: period }, (_, i) =>
       format(subMonths(new Date(), period - 1 - i), 'yyyy-MM'));
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the fetch starts here; this app has no server loader, everything comes from Firestore on the client
     setLoading(true);
     fetchFamilyAnalytics(members, monthKeys, user.id, categories, currency)
       .then(setData)

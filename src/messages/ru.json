@@ -400,7 +400,21 @@
     "pause": "Приостановить",
     "resume": "Возобновить",
     "fromType": "по виду платежа",
-    "otherCategory": "Другая категория"
+    "otherCategory": "Другая категория",
+    "paused": "Приостановлено",
+    "nextPayment": "Следующий платёж",
+    "termTitle": "Срок платежей",
+    "schedulePaid": "Оплачено {n} из {m}",
+    "paymentsLeftLabel": "Осталось платежей",
+    "leftToPay": "Осталось выплатить",
+    "paidSoFar": "Уже выплачено",
+    "lastPaymentLabel": "Последний платёж",
+    "detailsTitle": "Детали",
+    "startedOn": "Начало",
+    "perMonthEquivalent": "В месяц",
+    "historyTitle": "История платежей",
+    "historyEmpty": "Пока нет проведённых платежей",
+    "historyTotal": "Всего выплачено"
   },
   "savings": {
     "title": "Цели накоплений",

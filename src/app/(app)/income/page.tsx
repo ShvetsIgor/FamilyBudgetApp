@@ -79,6 +79,7 @@ export default function IncomePage() {
   const isFamilyView = viewMode === 'family' && familyAvailable;
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the fetch starts here; this app has no server loader, everything comes from Firestore on the client
     if (!isFamilyView || !user) { setFamilyData(null); return; }
     setFamilyLoading(true);
     fetchFamilyMonthIncomes(members, selectedMonth, user.id, incomeCategories)
@@ -97,6 +98,7 @@ export default function IncomePage() {
   // here, a second concurrent run would duplicate recurring occurrences.
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the fetch starts here; this app has no server loader, everything comes from Firestore on the client
     if (isCurrentMonth) { setLocalIncomes(null); return; }
     if (!user) return;
     setLoading(true);
@@ -189,7 +191,7 @@ export default function IncomePage() {
         {/* Month bar */}
         <div
           ref={monthBarRef}
-          className="flex gap-1.5 overflow-x-auto px-4 pt-3 pb-2 [scrollbar-width:none] [-webkit-overflow-scrolling:touch] lg:px-0"
+          className="flex gap-1.5 overflow-x-auto px-4 pt-3 pb-2 scrollbar-none [-webkit-overflow-scrolling:touch] lg:px-0"
           style={{ background: 'hsl(var(--card))' }}
         >
           {yearMonths.map((m) => {

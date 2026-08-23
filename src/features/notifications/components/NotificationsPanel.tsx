@@ -72,14 +72,14 @@ export function NotificationsPanel({ onClose }: Props) {
           className="flex items-center justify-between px-4 py-3.5"
           style={{ borderBottom: `1px solid ${C.hairline}` }}
         >
-          <span className="text-[15px] font-[800]" style={{ color: C.fg }}>
+          <span className="text-[15px] font-extrabold" style={{ color: C.fg }}>
             {t('notifications.title')}
           </span>
           <div className="flex items-center gap-2">
             {items.length > 0 && (
               <button
                 onClick={() => dispatch(clearNotifications())}
-                className="min-h-11 text-xs font-[700] px-3 py-1 rounded-lg"
+                className="min-h-11 text-xs font-bold px-3 py-1 rounded-lg"
                 style={{ color: C.sub, background: C.card }}
               >
                 {t('notifications.clear')}
@@ -101,7 +101,7 @@ export function NotificationsPanel({ onClose }: Props) {
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 gap-2">
               <Bell className="h-7 w-7" strokeWidth={1.8} style={{ color: C.sub }} />
-              <p className="text-[13px] font-[700]" style={{ color: C.sub }}>
+              <p className="text-[13px] font-bold" style={{ color: C.sub }}>
                 {t('notifications.empty')}
               </p>
             </div>
@@ -129,7 +129,7 @@ export function NotificationsPanel({ onClose }: Props) {
                   }}
                 >
                   <div
-                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[11px]"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px]"
                     style={{ background: C.primaryTint + '44', color: C.primary }}
                   >
                     {(() => {
@@ -138,20 +138,20 @@ export function NotificationsPanel({ onClose }: Props) {
                     })()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="m-0 text-[13.5px] font-[800] leading-tight" style={{ color: C.fg }}>
+                    <p className="m-0 text-[13.5px] font-extrabold leading-tight" style={{ color: C.fg }}>
                       {n.title}
                     </p>
-                    <p className="m-0 mt-0.5 text-[12px] font-[600] leading-snug" style={{ color: C.sub }}>
+                    <p className="m-0 mt-0.5 text-[12px] font-semibold leading-snug" style={{ color: C.sub }}>
                       {n.text}
                     </p>
                     {dateLabel && (
-                      <p className="m-0 mt-1 text-[11px] font-[700]" style={{ color: C.sub + '99' }}>
+                      <p className="m-0 mt-1 text-[11px] font-bold" style={{ color: C.sub + '99' }}>
                         {dateLabel}
                       </p>
                     )}
                   </div>
                   {!n.read && (
-                    <div className="flex-shrink-0 mt-1.5 h-2 w-2 rounded-full" style={{ background: C.primary }} />
+                    <div className="shrink-0 mt-1.5 h-2 w-2 rounded-full" style={{ background: C.primary }} />
                   )}
                 </button>
               );

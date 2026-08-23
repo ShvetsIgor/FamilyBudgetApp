@@ -20,6 +20,9 @@ export function StepRefine({ folders, categories, onToggleCategory, onAddCustomC
     const val = customInput[folderId]?.trim();
     if (!val) return;
     onAddCustomCategory(folderId, {
+      // Minted on click, never during render — the compiler cannot see that
+      // through the handler, hence the exemption rather than a rewrite.
+      // eslint-disable-next-line react-hooks/purity
       id: `custom_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
       name: val,
       icon: 'box',
@@ -93,7 +96,7 @@ export function StepRefine({ folders, categories, onToggleCategory, onAddCustomC
                   value={customInput[folder.id] ?? ''}
                   onChange={(e) => setCustomInput((prev) => ({ ...prev, [folder.id]: e.target.value }))}
                   onKeyDown={(e) => e.key === 'Enter' && handleAddCustom(folder.id)}
-                  className="rounded-full border border-dashed border-[#EDE0CC] px-3 py-1.5 text-xs text-[#8E7A66] w-24 outline-none focus:border-[#E07A5F] focus:text-[#3D2C1F] bg-white"
+                  className="rounded-full border border-dashed border-[#EDE0CC] px-3 py-1.5 text-xs text-[#8E7A66] w-24 outline-hidden focus:border-[#E07A5F] focus:text-[#3D2C1F] bg-white"
                 />
                 {customInput[folder.id]?.trim() && (
                   <button

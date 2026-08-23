@@ -46,7 +46,7 @@ function SecondaryAction({ icon: Icon, label, onClick, color }: {
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex min-h-11 items-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-[12.5px] font-[700] transition-opacity active:opacity-50"
+      className="inline-flex min-h-11 items-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-[12.5px] font-bold transition-opacity active:opacity-50"
       style={{ color, background: 'transparent', border: 'none' }}
     >
       {Icon && <Icon size={13} strokeWidth={2.4} />}
@@ -68,8 +68,8 @@ function DoorAction({ icon: Icon, label, onClick, C, primary }: {
       type="button"
       onClick={onClick}
       className={primary
-        ? 'flex min-h-[52px] items-center justify-center gap-2 rounded-[14px] text-sm font-[800] transition-all active:scale-95'
-        : 'flex min-h-[54px] flex-col items-center justify-center gap-1 rounded-[14px] text-[13px] font-[800] transition-all active:scale-95'}
+        ? 'flex min-h-[52px] items-center justify-center gap-2 rounded-[14px] text-sm font-extrabold transition-all active:scale-95'
+        : 'flex min-h-[54px] flex-col items-center justify-center gap-1 rounded-[14px] text-[13px] font-extrabold transition-all active:scale-95'}
       style={primary
         ? { background: `${C.primary}14`, border: `1.5px solid ${C.primary}55`, color: C.primary }
         : { background: C.card, border: `1.5px solid ${C.hairline}`, color: C.fg, boxShadow: SHADOW.bubble }}
@@ -185,7 +185,7 @@ export function ClarifyCard({
             <ChevronLeft size={14} strokeWidth={2.5} />
           </button>
         )}
-        <p className="m-0 text-xs font-[800] uppercase tracking-[.08em]" style={{ color: C.sub }}>
+        <p className="m-0 text-xs font-extrabold uppercase tracking-[.08em]" style={{ color: C.sub }}>
           {otherMode ? t('chat.clarify.whatBought') : headerText}
         </p>
       </div>
@@ -198,7 +198,7 @@ export function ClarifyCard({
             onChange={(e) => setOtherText(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleOtherSubmit(); }}
             placeholder={t('chat.clarify.whatBought')}
-            className="flex-1 text-[13px] font-[700] outline-none bg-transparent"
+            className="flex-1 text-[13px] font-bold outline-hidden bg-transparent"
             style={{
               color: C.fg,
               borderBottom: `1.5px solid ${C.hairline}`,
@@ -232,7 +232,7 @@ export function ClarifyCard({
             onChange={(e) => setFolderName(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleFolderSubmit(); }}
             placeholder={t('chat.clarify.folderName')}
-            className="flex-1 text-[13px] font-[700] outline-none bg-transparent"
+            className="flex-1 text-[13px] font-bold outline-hidden bg-transparent"
             style={{
               color: C.fg,
               borderBottom: `1.5px solid ${C.hairline}`,
@@ -268,7 +268,7 @@ export function ClarifyCard({
               type="button"
               key={chip.id}
               onClick={() => handleChipClick(chip)}
-              className="inline-flex min-h-11 items-center gap-1.5 text-sm font-[800] transition-all active:scale-95"
+              className="inline-flex min-h-11 items-center gap-1.5 text-sm font-extrabold transition-all active:scale-95"
               style={{
                 padding: '7px 12px 7px 7px',
                 borderRadius: 999,
@@ -336,7 +336,7 @@ export function ClarifyCard({
       {/* The «I'll remember this word» promise only makes sense while actually
           learning an unknown merchant — elsewhere it read as noise */}
       {isTagLearning && !selectedParent && !otherMode && !createFolderMode && (
-        <p className="m-0 mt-2 text-xs font-[700]" style={{ color: C.sub }}>
+        <p className="m-0 mt-2 text-xs font-bold" style={{ color: C.sub }}>
           {t('chat.clarify.promise')}
         </p>
       )}

@@ -4,17 +4,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { format, parseISO, differenceInDays, endOfMonth } from 'date-fns';
 import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
-import { useAppSelector, useAppDispatch } from '@/store/store';
+import { useAppSelector } from '@/store/store';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { formatAmount } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { recurringTypeIcon } from '@/shared/config/domainIcons';
-import { markAsPaid } from '@/features/recurring/services/recurringService';
-import { updateRecurringItem } from '@/features/recurring/store/recurringSlice';
-import { addExpense } from '@/features/expenses/services/expensesService';
-import { resolveExpensePrivacy } from '@/features/expenses/utils/expensePrivacy';
-import { prependExpense } from '@/features/expenses/store/expensesSlice';
+import { useRecurringActions } from '@/features/recurring/hooks/useRecurringActions';
 import type { SerializableRecurringPayment } from '@/shared/types';
 
 function DayPill({ days }: { days: number }) {
@@ -55,14 +51,13 @@ interface Props {
 }
 
 export function UpcomingBills({ withinDays = 30, maxItems, compact = false, embedded = false }: Props) {
-  const dispatch = useAppDispatch();
-  const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
   const categories = useAppSelector((s) => s.categories.expense);
   const { list } = useAppSelector((s) => s.recurring);
   const t = useT();
   const dfLocale = useDateFnsLocale();
   const [payingId, setPayingId] = useState<string | null>(null);
+  const { markPaid } = useRecurringActions();
 
   const monthEnd = endOfMonth(new Date());
   const upcoming = list
@@ -77,25 +72,15 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false, embe
 
   if (upcoming.length === 0) return null;
 
+  // Booking a payment goes through the shared write path, the same one the
+  // list and the detail screen use — a third copy is a third thing to forget.
   async function handlePay(item: SerializableRecurringPayment, e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    if (!user || payingId) return;
+    if (payingId) return;
     setPayingId(item.id);
     try {
-      if (item.categoryId) {
-        const exp = await addExpense({
-          userId: user.id, amount: item.amount, currency: item.currency,
-          categoryId: item.categoryId, date: parseISO(item.nextDueDate),
-          paymentMethod: 'card', splits: [], tags: ['recurring'],
-          privacy: resolveExpensePrivacy({ categories, categoryId: item.categoryId }),
-          store: item.name,
-          comment: item.comment || undefined,
-          recurringId: item.id,
-        });
-        dispatch(prependExpense(exp));
-      }
-      dispatch(updateRecurringItem(await markAsPaid(user.id, item)));
+      await markPaid(item);
     } finally {
       setPayingId(null);
     }
@@ -107,17 +92,22 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false, embe
     const isDue = days <= 0;
     return (
       <div key={item.id} className="flex items-center gap-3 px-4 py-3">
-        {cat ? (
-          <CategoryIcon icon={cat.icon} color={cat.color} size="sm" />
-        ) : (
-          <StickerIcon icon={recurringTypeIcon(item.type)} color="hsl(var(--muted-foreground))" className="h-5 w-5 shrink-0" />
-        )}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold truncate">{item.name}</p>
-          <p className="text-xs text-muted-foreground">
-            {format(parseISO(item.nextDueDate), 'd MMMM', { locale: dfLocale })}
-          </p>
-        </div>
+        <Link
+          href={`/recurring/${item.id}`}
+          className="flex min-w-0 flex-1 items-center gap-3 transition-opacity active:opacity-60"
+        >
+          {cat ? (
+            <CategoryIcon icon={cat.icon} color={cat.color} size="sm" />
+          ) : (
+            <StickerIcon icon={recurringTypeIcon(item.type)} color="hsl(var(--muted-foreground))" className="h-5 w-5 shrink-0" />
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold truncate">{item.name}</p>
+            <p className="text-xs text-muted-foreground">
+              {format(parseISO(item.nextDueDate), 'd MMMM', { locale: dfLocale })}
+            </p>
+          </div>
+        </Link>
         <div className="flex flex-col items-end gap-1 shrink-0">
           <span className="text-sm font-bold tabular-nums">
             {item.amount > 0 ? '-' : ''}{formatAmount(item.amount, item.currency)}

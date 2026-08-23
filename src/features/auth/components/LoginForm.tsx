@@ -86,7 +86,7 @@ export function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder={t('auth.emailPlaceholder')}
           className={cn(
-            'w-full rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none',
+            'w-full rounded-xl border border-border bg-card px-4 py-3 text-sm outline-hidden',
             'placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20'
           )}
           required
@@ -109,7 +109,7 @@ export function LoginForm() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
             className={cn(
-              'w-full rounded-xl border border-border bg-card py-3 pl-4 pr-14 text-sm outline-none',
+              'w-full rounded-xl border border-border bg-card py-3 pl-4 pr-14 text-sm outline-hidden',
               'placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20'
             )}
             required

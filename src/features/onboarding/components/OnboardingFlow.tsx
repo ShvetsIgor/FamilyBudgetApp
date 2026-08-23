@@ -73,7 +73,7 @@ export function OnboardingFlow({ onComplete }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-xs">
       <div className="w-full max-w-md rounded-t-3xl bg-background px-6 pt-6 pb-10 flex flex-col gap-6 animate-in slide-in-from-bottom duration-300">
 
         {/* Step indicator */}

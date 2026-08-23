@@ -18,7 +18,7 @@ import { toLocalMonthKey } from '@/shared/utils/dateKey';
 import { splitOwnCurrency, formatCurrencyTotals } from '@/shared/utils/currencyTotals';
 import { useT } from '@/shared/hooks/useT';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, type UpdateData } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import Link from 'next/link';
 
@@ -111,7 +111,9 @@ export default function BudgetPage() {
     // snapshot that was active then, future months inherit this one
     dispatch(setBudgetSnapshot({ month: monthStr, snapshot }));
     if (user) {
-      const patch: Record<string, unknown> = { budgetMode: localMode };
+      // Dot-path keys make this a partial update, so it is typed as UpdateData
+      // rather than a plain record (TypeScript 7 rejects the loose form)
+      const patch: UpdateData<Record<string, unknown>> = { budgetMode: localMode };
       if (localMode === 'daily') patch.budgetDailyLimit = snapshot.dailyLimit;
       if (localMode === 'monthly') patch.budgetMonthlyLimit = snapshot.monthlyLimit;
       patch[`budgetByMonth.${monthStr}`] = snapshot;
@@ -241,7 +243,7 @@ export default function BudgetPage() {
                 value={localDaily}
                 onChange={(e) => setLocalDaily(e.target.value)}
                 onKeyDown={blockInvalidAmountKeys}
-                className="w-full bg-transparent outline-none"
+                className="w-full bg-transparent outline-hidden"
                 style={{ fontSize: 36, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1 }}
                 autoFocus
               />
@@ -264,7 +266,7 @@ export default function BudgetPage() {
                 value={localMonthly}
                 onChange={(e) => setLocalMonthly(e.target.value)}
                 onKeyDown={blockInvalidAmountKeys}
-                className="w-full bg-transparent outline-none"
+                className="w-full bg-transparent outline-hidden"
                 style={{ fontSize: 36, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1 }}
                 autoFocus
               />
@@ -337,7 +339,7 @@ export default function BudgetPage() {
           {/* Save button */}
           <button
             onClick={handleSave}
-            className="w-full rounded-2xl py-3.5 text-[15px] font-[700] transition-opacity active:opacity-70"
+            className="w-full rounded-2xl py-3.5 text-[15px] font-bold transition-opacity active:opacity-70"
             style={{ background: saved ? '#18A957' : 'hsl(var(--primary))', color: '#fff' }}
           >
             {saved ? `✓ ${t('home.saved')}` : t('chat.budget.settings.save')}

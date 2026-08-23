@@ -56,9 +56,9 @@ export function Sidebar() {
   const activatedHrefs = new Set<string>();
 
   return (
-    <aside className="hidden lg:flex w-[260px] flex-shrink-0 flex-col h-screen border-r border-border bg-background overflow-y-auto">
+    <aside className="hidden lg:flex w-[260px] shrink-0 flex-col h-screen border-r border-border bg-background overflow-y-auto">
       {/* Logo */}
-      <div className="flex items-center h-16 px-5 border-b border-border flex-shrink-0">
+      <div className="flex items-center h-16 px-5 border-b border-border shrink-0">
         <Link href="/home" className="flex items-center gap-2.5">
           <Image src="/logo-mark.svg" alt="" width={32} height={32} priority className="h-8 w-8" />
           <span className="text-[15px] font-bold tracking-tight leading-none">
@@ -91,7 +91,7 @@ export function Sidebar() {
                         : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                     )}
                   >
-                    {Icon ? <Icon className="h-4 w-4 flex-shrink-0" /> : <span className="h-4 w-4 flex-shrink-0" />}
+                    {Icon ? <Icon className="h-4 w-4 shrink-0" /> : <span className="h-4 w-4 shrink-0" />}
                     {t(labelKey)}
                   </Link>
                 );
@@ -102,12 +102,12 @@ export function Sidebar() {
       </nav>
 
 {/* Profile card */}
-      <div className="flex-shrink-0 border-t border-border p-3">
+      <div className="shrink-0 border-t border-border p-3">
         <Link
           href="/account"
           className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-muted transition-colors"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary flex-shrink-0">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0">
             {user?.name ? (
               <span className="text-sm font-bold">{user.name[0].toUpperCase()}</span>
             ) : (
@@ -125,7 +125,7 @@ export function Sidebar() {
           onClick={handleLogout}
           className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
         >
-          <LogOut className="h-4 w-4 flex-shrink-0" />
+          <LogOut className="h-4 w-4 shrink-0" />
           {t('account.signOut')}
         </button>
       </div>

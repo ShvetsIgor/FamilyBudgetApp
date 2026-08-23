@@ -29,7 +29,7 @@ export function PlanTabs() {
   return (
     <nav
       aria-label={t('nav.plan')}
-      className="flex gap-1.5 overflow-x-auto px-4 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="flex gap-1.5 overflow-x-auto px-4 py-2 scrollbar-none [&::-webkit-scrollbar]:hidden"
     >
       {tabs.map((tab) => {
         const active = pathname.startsWith(tab.href);

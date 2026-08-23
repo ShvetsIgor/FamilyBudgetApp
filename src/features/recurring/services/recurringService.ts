@@ -1,6 +1,6 @@
 import {
   collection, doc, addDoc, updateDoc, deleteDoc, deleteField,
-  getDocs, query, orderBy, serverTimestamp, Timestamp, writeBatch,
+  getDoc, getDocs, query, orderBy, serverTimestamp, Timestamp, writeBatch,
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import { parseISO } from 'date-fns';
@@ -52,6 +52,15 @@ function firstFutureOrToday(start: Date, frequency: RecurringFrequency): Date {
 export async function fetchRecurring(userId: string): Promise<SerializableRecurringPayment[]> {
   const snap = await getDocs(query(col(userId), orderBy('nextDueDate')));
   return snap.docs.map((d) => toSerializable(d.id, d.data()));
+}
+
+/** One template by id — the detail screen opened directly by URL has no list in Redux yet. */
+export async function fetchRecurringById(
+  userId: string,
+  id: string,
+): Promise<SerializableRecurringPayment | null> {
+  const snap = await getDoc(doc(getDb(), 'recurringPayments', userId, 'items', id));
+  return snap.exists() ? toSerializable(snap.id, snap.data()) : null;
 }
 
 export interface AddRecurringInput {

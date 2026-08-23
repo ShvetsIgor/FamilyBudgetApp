@@ -4,7 +4,28 @@
     {
       "name": "dev-emulated",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev:emulated"],
+      "runtimeArgs": [
+        "run",
+        "dev:emulated"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "prod",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "start"
+      ],
       "port": 3000
     }
   ]

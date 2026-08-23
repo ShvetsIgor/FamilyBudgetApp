@@ -37,7 +37,7 @@ export function ChatHeader({ onBell, onClearChat }: ChatHeaderProps) {
       className="sticky top-0 z-10 flex items-center gap-2.5 border-b px-3 pb-2.5 pt-2.5"
       style={{ background: C.bg, borderColor: C.hairline }}
     >
-      {isChat && <div className="relative flex-shrink-0">
+      {isChat && <div className="relative shrink-0">
         <div
           className="flex h-9 w-9 items-center justify-center rounded-full"
           style={{
@@ -56,7 +56,7 @@ export function ChatHeader({ onBell, onClearChat }: ChatHeaderProps) {
       <div className="flex-1 min-w-0">
         {/* One line, no engineering status text — iOS nav bars carry a title,
             not a running commentary on where the parser executes */}
-        <p className="m-0 text-[17px] font-[800] leading-tight" style={{ letterSpacing: -0.25, color: C.fg }}>
+        <p className="m-0 text-[17px] font-extrabold leading-tight" style={{ letterSpacing: -0.25, color: C.fg }}>
           {isChat ? (
             <>
               <span style={{ color: C.primary }}>family</span>
@@ -90,7 +90,7 @@ export function ChatHeader({ onBell, onClearChat }: ChatHeaderProps) {
         <Bell size={18} strokeWidth={2} />
         {unread > 0 && (
           <span
-            className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-[900] text-white"
+            className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-black text-white"
             style={{ background: C.rose, lineHeight: 1 }}
           >
             {unread > 9 ? '9+' : unread}

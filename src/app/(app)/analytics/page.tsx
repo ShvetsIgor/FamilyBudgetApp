@@ -103,6 +103,7 @@ export default function AnalyticsPage() {
     } finally { setLoading(false); }
   }, [user, period, weekStart, dfLocale, recurringOnly, currency]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- the fetch starts here; this app has no server loader, everything comes from Firestore on the client
   useEffect(() => { load(); }, [load]);
 
   const trendData = months.map((m) => ({ name: m.month.slice(5), expenses: m.totalExpenses, income: m.totalIncome }));
@@ -198,7 +199,7 @@ export default function AnalyticsPage() {
   const mobileHeroCard = (
     <div className="rounded-[22px] bg-card p-5" style={{ boxShadow: '0 2px 6px rgba(61,44,31,.04)' }}>
       <p className="text-xs font-extrabold text-muted-foreground uppercase tracking-[.08em]">{t('analytics.avgDay')}</p>
-      <p className="text-[36px] font-black tabular-nums text-foreground mt-1 leading-none tracking-[-0.025em]">
+      <p className="text-[36px] font-black tabular-nums text-foreground mt-1 leading-none tracking-tight">
         {formatAmount(avgDaily, currency)}
       </p>
       {momChange !== null && (
@@ -301,17 +302,6 @@ export default function AnalyticsPage() {
   );
 
   // Custom DOW tooltip for recharts
-  const DowTooltip = ({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) => {
-    if (!active || !payload?.length) return null;
-    const point = dowData.find((d) => d.name === label);
-    return (
-      <div style={{ ...tooltipStyle, background: 'hsl(var(--card))', padding: '8px 12px', fontSize: 12 }}>
-        <p style={{ fontWeight: 700 }}>{label}{point ? ` · ${point.shortDate}` : ''}</p>
-        <p style={{ color: 'hsl(var(--primary))' }}>{formatAmount(payload[0].value, currency)}</p>
-      </div>
-    );
-  };
-
   const dowChart = (
     <div className="rounded-[22px] border border-border bg-card p-4 hover:scale-[1.005] transition-transform" style={{ boxShadow: '0 2px 8px rgba(61,44,31,.04)' }}>
       <h2 className="text-sm font-bold mb-3">{t('analytics.byDow')}</h2>
@@ -320,7 +310,7 @@ export default function AnalyticsPage() {
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis dataKey="name" tick={{ fontSize: 11 }} />
           <YAxis tick={{ fontSize: 11 }} width={45} />
-          <Tooltip content={<DowTooltip />} />
+          <Tooltip content={<DowTooltip points={dowData} currency={currency} />} />
           <Bar dataKey="amount" name="Spent" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
@@ -501,6 +491,33 @@ export default function AnalyticsPage() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Recharts clones this element and injects `active`/`payload`/`label`, so it
+ * lives at module scope: a component defined inside the page would be a new
+ * type on every render and remount the tooltip each time.
+ */
+function DowTooltip({
+  active, payload, label, points, currency,
+}: {
+  active?: boolean;
+  payload?: { value: number }[];
+  label?: string;
+  points: { name: string; shortDate: string }[];
+  currency: Currency;
+}) {
+  if (!active || !payload?.length) return null;
+  const point = points.find((d) => d.name === label);
+  return (
+    <div style={{
+      borderRadius: 12, border: '1px solid hsl(var(--border))',
+      background: 'hsl(var(--card))', padding: '8px 12px', fontSize: 12,
+    }}>
+      <p style={{ fontWeight: 700 }}>{label}{point ? ` · ${point.shortDate}` : ''}</p>
+      <p style={{ color: 'hsl(var(--primary))' }}>{formatAmount(payload[0].value, currency)}</p>
     </div>
   );
 }

@@ -110,7 +110,7 @@ export function CategoryPicker({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t('categories.search')}
-              className="w-full rounded-lg bg-muted px-3 py-2 text-sm outline-none placeholder:text-muted-foreground"
+              className="w-full rounded-lg bg-muted px-3 py-2 text-sm outline-hidden placeholder:text-muted-foreground"
             />
           </div>
           <div className="max-h-64 overflow-y-auto p-2 flex flex-col gap-0.5">
@@ -150,7 +150,7 @@ function CategoryRowItem({
       )}
     >
       <CategoryIcon icon={cat.icon} color={cat.color} size="sm" />
-      <span className="min-w-0 flex-1 text-left text-[13px] leading-tight line-clamp-2 break-normal [overflow-wrap:normal] [word-break:normal] hyphens-none">{displayName}</span>
+      <span className="min-w-0 flex-1 text-left text-[13px] leading-tight line-clamp-2 break-normal wrap-normal [word-break:normal] hyphens-none">{displayName}</span>
       {selected === cat.id && <Check className="h-4 w-4 text-primary" />}
     </button>
   );

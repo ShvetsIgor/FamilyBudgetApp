@@ -86,7 +86,7 @@ export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: Compo
       disabled={!speechSupported || disabled}
       aria-label={speechSupported ? t('chat.composer.voice') : t('chat.composer.voiceUnsupported')}
       title={speechSupported ? t('chat.composer.voice') : t('chat.composer.voiceUnsupported')}
-      className="fb-touch-target flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl transition-all active:scale-95 disabled:opacity-35"
+      className="fb-touch-target flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-all active:scale-95 disabled:opacity-35"
       style={{
         color: listening ? '#fff' : C.sub,
         background: listening ? 'hsl(var(--destructive))' : 'transparent',
@@ -97,7 +97,7 @@ export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: Compo
   );
 
   return (
-    <div className="flex-shrink-0" style={{ background: C.bg }}>
+    <div className="shrink-0" style={{ background: C.bg }}>
       <div
         className="flex items-center gap-2 px-3 pt-2.5"
         style={{
@@ -134,13 +134,13 @@ export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: Compo
             onKeyDown={handleKey}
             placeholder={listening ? t('chat.composer.listening') : t('chat.composer.placeholder')}
             disabled={disabled}
-            className="flex-1 bg-transparent text-[14.5px] font-[700] outline-none"
+            className="flex-1 bg-transparent text-[14.5px] font-bold outline-hidden"
             style={{ color: C.fg }}
           />
           <button
             type="button"
             onClick={() => setHelpOpen(true)}
-            className="fb-touch-target -mr-2 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-xs font-[900] transition-all active:scale-90"
+            className="fb-touch-target -mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xs font-black transition-all active:scale-90"
             style={{ background: C.hairline, color: C.sub }}
             aria-label={t('chat.composer.help')}
           >
@@ -153,7 +153,7 @@ export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: Compo
             type="button"
             onClick={handleSend}
             disabled={disabled}
-            className="fb-touch-target flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border-0 transition-all active:scale-95 disabled:opacity-50"
+            className="fb-touch-target flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-0 transition-all active:scale-95 disabled:opacity-50"
             style={{
               background: `linear-gradient(135deg, ${C.primary}, ${C.primaryDeep})`,
               boxShadow: `0 6px 14px ${C.primaryDeep}55`,

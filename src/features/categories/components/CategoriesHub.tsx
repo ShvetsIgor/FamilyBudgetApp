@@ -680,7 +680,7 @@ export function CategoriesHub() {
             borderRadius: 14,
             backgroundColor: isHighlighted ? T.primary + '18' : isMenuOpen ? T.bgSoft : 'transparent',
             outline: isHighlighted ? `2px solid ${T.primary}55` : undefined,
-            transition: 'background-color 0.3s ease, outline 0.3s ease',
+            transition: 'background-color 0.3s ease, outline-solid 0.3s ease',
             position: 'relative',
           }}
         >

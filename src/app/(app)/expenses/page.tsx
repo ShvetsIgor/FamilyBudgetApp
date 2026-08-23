@@ -104,8 +104,11 @@ export default function ExpensesPage() {
     timerId: ReturnType<typeof setTimeout>;
     reversed?: { goalOwnerId: string; contribution: SavingsContribution };
   } | null>(null);
+  // The unmount cleanup needs the LATEST pending undo, so it reads a ref
+  // rather than a captured value. The ref is written in an effect: assigning
+  // during render breaks concurrent rendering.
   const undoRef = useRef<typeof undoItem>(null);
-  undoRef.current = undoItem;
+  useEffect(() => { undoRef.current = undoItem; }, [undoItem]);
 
   useEffect(() => {
     return () => {
@@ -145,6 +148,7 @@ export default function ExpensesPage() {
   }, [user, categories, reduxExpenses, localExpenses, isCurrentMonth, dispatch]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the fetch starts here; this app has no server loader, everything comes from Firestore on the client
     if (isCurrentMonth) { setLocalExpenses(null); return; }
     setLocalExpenses(null);
     if (!user) return;
@@ -156,6 +160,7 @@ export default function ExpensesPage() {
 
   // Family view: aggregate every member's shared expenses for the month
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the fetch starts here; this app has no server loader, everything comes from Firestore on the client
     if (!isFamilyView || !user) { setFamilyData(null); return; }
     setFamilyLoading(true);
     fetchFamilyMonthExpenses(members, selectedMonth, user.id, categories)
@@ -239,7 +244,7 @@ export default function ExpensesPage() {
   const monthBar = (
     <div
       ref={monthBarRef}
-      className="flex gap-1.5 overflow-x-auto px-4 pt-3 pb-2 [scrollbar-width:none] [-webkit-overflow-scrolling:touch] lg:px-0"
+      className="flex gap-1.5 overflow-x-auto px-4 pt-3 pb-2 scrollbar-none [-webkit-overflow-scrolling:touch] lg:px-0"
       style={{ background: 'hsl(var(--card))' }}
     >
       {yearMonths.map((m) => {
@@ -357,7 +362,7 @@ export default function ExpensesPage() {
             value={search}
             onChange={(e) => dispatch(setExpensesSearch(e.target.value))}
             placeholder={t('expenses.search')}
-            className="lg:hidden w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
+            className="lg:hidden w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
           />
           {!isFamilyView && expenses.length > 0 && (
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">

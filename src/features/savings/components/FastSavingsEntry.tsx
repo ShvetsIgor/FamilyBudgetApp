@@ -39,7 +39,9 @@ export function FastSavingsEntry() {
   const symbol = getCurrencySymbol(currency);
 
   const [amount, setAmount] = useState('0');
-  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(preselectedGoalId);
+  // Only an explicit pick is stored; the default falls out of the loaded list
+  // during render, so goals arriving later need no effect to catch up.
+  const [pickedGoalId, setPickedGoalId] = useState<string | null>(preselectedGoalId);
   const [saving, setSaving] = useState(false);
   const [comment, setComment] = useState('');
   const [showComment, setShowComment] = useState(false);
@@ -56,12 +58,7 @@ export function FastSavingsEntry() {
     if (status === 'idle') load();
   }, [status, load]);
 
-  useEffect(() => {
-    if (goals.length > 0 && !selectedGoalId) {
-      setSelectedGoalId(goals[0].id);
-    }
-  }, [goals, selectedGoalId]);
-
+  const selectedGoalId = pickedGoalId ?? goals[0]?.id ?? null;
   const selectedGoal = goals.find((g) => g.id === selectedGoalId);
   const amountNum = parseFloat(amount) || 0;
   const goalColor = selectedGoal?.color ?? '#E8442A';
@@ -113,11 +110,11 @@ export function FastSavingsEntry() {
   if (!user) return null;
 
   return (
-    <div className="fb-sheet-enter fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:bg-black/50 lg:backdrop-blur-sm">
+    <div className="fb-sheet-enter fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:bg-black/50 lg:backdrop-blur-xs">
     <div className="flex flex-col bg-background w-full lg:max-w-[440px] lg:rounded-2xl lg:shadow-2xl overflow-hidden" style={{ height: '100dvh', maxHeight: '100dvh' }}>
 
       {/* ── Top bar ── */}
-      <div className="flex items-center gap-2 px-4 pt-1 pb-0.5 flex-shrink-0">
+      <div className="flex items-center gap-2 px-4 pt-1 pb-0.5 shrink-0">
         <button onClick={goBack} className="p-1.5 rounded-full hover:bg-muted transition-colors">
           <X className="h-4 w-4" />
         </button>
@@ -129,7 +126,7 @@ export function FastSavingsEntry() {
 
       {/* ── Amount display ── */}
       <div
-        className="mx-4 px-4 py-1.5 rounded-[18px] flex items-baseline justify-between flex-shrink-0 border-[1.5px]"
+        className="mx-4 px-4 py-1.5 rounded-[18px] flex items-baseline justify-between shrink-0 border-[1.5px]"
         style={{ background: goalColor + '14', borderColor: goalColor + '55' }}
       >
         <span className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">
@@ -144,7 +141,7 @@ export function FastSavingsEntry() {
       </div>
 
       {/* ── Goal picker — same compact trigger → sheet pattern as categories ── */}
-      <div className="flex-1 overflow-y-auto px-4 py-2 flex flex-col gap-1.5 min-h-0 [scrollbar-width:none]">
+      <div className="flex-1 overflow-y-auto px-4 py-2 flex flex-col gap-1.5 min-h-0 scrollbar-none">
         {goals.length === 0 ? (
           <div className="flex flex-col items-center justify-center flex-1 gap-2 text-muted-foreground text-sm">
             <StickerIcon icon="piggy" color="hsl(var(--muted-foreground))" className="h-10 w-10" />
@@ -154,7 +151,7 @@ export function FastSavingsEntry() {
           <button
             type="button"
             onClick={() => setShowGoalPicker(true)}
-            className="flex w-full flex-shrink-0 items-center gap-3 rounded-[16px] bg-card p-3 text-left"
+            className="flex w-full shrink-0 items-center gap-3 rounded-[16px] bg-card p-3 text-left"
             style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}
           >
             <GoalIcon icon={selectedGoal.icon} color={selectedGoal.color} size="md" />
@@ -178,13 +175,13 @@ export function FastSavingsEntry() {
         )}
 
         {/* Date row */}
-        <div className="rounded-[14px] overflow-hidden flex-shrink-0" style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}>
+        <div className="rounded-[14px] overflow-hidden shrink-0" style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}>
           <button
             onClick={() => { setShowDate((v) => !v); setShowComment(false); }}
             className="w-full flex items-center gap-3 px-3.5 py-2.5 transition-all"
             style={{ background: showDate ? goalColor + '14' : 'hsl(var(--card))' }}
           >
-            <div className="h-8 w-8 rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: goalColor + '20' }}>
+            <div className="h-8 w-8 rounded-[10px] flex items-center justify-center shrink-0" style={{ background: goalColor + '20' }}>
               <Calendar className="h-4 w-4" style={{ color: goalColor }} />
             </div>
             <span className="flex-1 text-left text-[13px] font-bold text-foreground">
@@ -205,13 +202,13 @@ export function FastSavingsEntry() {
         </div>
 
         {/* Comment row */}
-        <div className="rounded-[14px] overflow-hidden flex-shrink-0" style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}>
+        <div className="rounded-[14px] overflow-hidden shrink-0" style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}>
           <button
             onClick={() => { setShowComment((v) => !v); setShowDate(false); }}
             className="w-full flex items-center gap-3 px-3.5 py-2.5 transition-all"
             style={{ background: (showComment || comment) ? goalColor + '14' : 'hsl(var(--card))' }}
           >
-            <div className="h-8 w-8 rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: goalColor + '20' }}>
+            <div className="h-8 w-8 rounded-[10px] flex items-center justify-center shrink-0" style={{ background: goalColor + '20' }}>
               <MessageSquare className="h-4 w-4" style={{ color: goalColor }} />
             </div>
             <span className="flex-1 text-left text-[13px] font-bold" style={{ color: comment ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
@@ -227,7 +224,7 @@ export function FastSavingsEntry() {
                 onChange={(e) => setComment(e.target.value)}
                 placeholder={t('expense.notePlaceholder')}
                 autoFocus
-                className="mt-2 block w-full px-3 py-2 rounded-xl text-sm bg-background border border-border outline-none focus:border-primary transition-colors"
+                className="mt-2 block w-full px-3 py-2 rounded-xl text-sm bg-background border border-border outline-hidden focus:border-primary transition-colors"
               />
             </div>
           )}
@@ -235,7 +232,7 @@ export function FastSavingsEntry() {
       </div>
 
       {/* ── Numpad ── */}
-      <div className="px-3 pt-0.5 grid grid-cols-3 flex-shrink-0" style={{ gridAutoRows: '44px', gap: '4px' }}>
+      <div className="px-3 pt-0.5 grid grid-cols-3 shrink-0" style={{ gridAutoRows: '44px', gap: '4px' }}>
         {NUMPAD_KEYS.map((k) => (
           <button
             key={String(k)}
@@ -253,7 +250,7 @@ export function FastSavingsEntry() {
       </div>
 
       {/* ── Save button ── */}
-      <div className="px-4 pt-1.5 flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
+      <div className="px-4 pt-1.5 shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
         <button
           onClick={handleSave}
           disabled={saving || amountNum <= 0 || !selectedGoal}
@@ -273,7 +270,7 @@ export function FastSavingsEntry() {
     </div>
 
     {showGoalPicker && (
-      <div className="fixed inset-0 z-[70] flex items-end bg-black/45" onClick={() => setShowGoalPicker(false)}>
+      <div className="fixed inset-0 z-70 flex items-end bg-black/45" onClick={() => setShowGoalPicker(false)}>
         <div
           className="max-h-[72dvh] w-full overflow-hidden rounded-t-[24px] bg-background shadow-2xl"
           onClick={(event) => event.stopPropagation()}
@@ -298,7 +295,7 @@ export function FastSavingsEntry() {
                     key={goal.id}
                     type="button"
                     onClick={() => {
-                      setSelectedGoalId(goal.id);
+                      setPickedGoalId(goal.id);
                       setShowGoalPicker(false);
                     }}
                     className="flex min-h-14 items-center gap-3 rounded-2xl border p-3 text-left"

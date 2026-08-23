@@ -102,7 +102,7 @@ export function SavingsDrawerForm({ accent }: { accent: string }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-3 [scrollbar-width:none]">
+      <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-3 scrollbar-none">
 
         {/* ── Goal picker ── */}
         <div>
@@ -160,7 +160,7 @@ export function SavingsDrawerForm({ accent }: { accent: string }) {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0"
-            className="flex-1 bg-transparent text-[32px] font-black text-foreground outline-none tabular-nums placeholder:text-muted-foreground/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+            className="flex-1 bg-transparent text-[32px] font-black text-foreground outline-hidden tabular-nums placeholder:text-muted-foreground/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
           />
           <span className="text-xs font-bold text-muted-foreground/50 uppercase">{currency}</span>
         </div>
@@ -225,14 +225,14 @@ export function SavingsDrawerForm({ accent }: { accent: string }) {
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder={t('quickadd.optionalPlaceholder')}
-              className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/40"
+              className="flex-1 bg-transparent text-sm text-foreground outline-hidden placeholder:text-muted-foreground/40"
             />
           </div>
         </div>
       </div>
 
       {/* ── Save bar ── */}
-      <div className="flex-shrink-0 border-t border-border px-5 py-4 flex items-center gap-3 bg-background">
+      <div className="shrink-0 border-t border-border px-5 py-4 flex items-center gap-3 bg-background">
         <button
           onClick={() => dispatch(closeQuickAdd())}
           className="px-4 py-2.5 rounded-xl text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors border border-border"

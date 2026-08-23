@@ -26,8 +26,8 @@ export function StepBudget({ folders, onSetBudget, currency, locale = 'ru' }: Pr
       {/* Hero total card */}
       <div className={`rounded-2xl p-5 text-white transition-all ${
         isOverBudget
-          ? 'bg-gradient-to-br from-[#C9684E] to-[#A0522D]'
-          : 'bg-gradient-to-br from-[#E07A5F] to-[#C9684E]'
+          ? 'bg-linear-to-br from-[#C9684E] to-[#A0522D]'
+          : 'bg-linear-to-br from-[#E07A5F] to-[#C9684E]'
       }`}>
         <p className="text-sm font-medium opacity-80">{t('categories.constructor.totalBudget')}</p>
         <p className="text-3xl font-bold mt-1">

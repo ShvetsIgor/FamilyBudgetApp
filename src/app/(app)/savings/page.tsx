@@ -59,6 +59,7 @@ export default function SavingsPage() {
     } finally { setLoading(false); }
   }, [user, dispatch]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- the fetch starts here; this app has no server loader, everything comes from Firestore on the client
   useEffect(() => { if (status === 'idle') load(); }, [status, load]);
 
   async function handleContribute(goal: SavingsGoal, amount: number, note: string, recordAsExpense: boolean, expenseCategoryId: string) {
@@ -104,6 +105,7 @@ export default function SavingsPage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the fetch starts here; this app has no server loader, everything comes from Firestore on the client
     if (!isFamilyView) { setFamilyGoals(null); return; }
     setFamilyLoading(true);
     fetchFamilyGoals(members)
@@ -113,7 +115,9 @@ export default function SavingsPage() {
   }, [isFamilyView, members]);
 
   // ── Right panel content ──────────────────────────────────────────────────────
-  function RightPanel() {
+  // A render helper, not a component: declaring a component inside the page
+  // makes it a fresh type on every render, remounting the whole panel.
+  function renderRightPanel() {
     if (typeof mode === 'object' && mode.action === 'contribute') return (
       <div className="rounded-2xl border border-border bg-card overflow-hidden">
         <div className="border-b border-border px-4 py-3 flex items-center justify-between">
@@ -442,7 +446,7 @@ export default function SavingsPage() {
           {listContent}
         </div>
         <div className="sticky top-6">
-          <RightPanel />
+          {renderRightPanel()}
         </div>
       </div>
 
@@ -502,12 +506,12 @@ function ContributeForm({ goal, currency, onSave, onCancel, t }: {
         <label className="text-xs text-muted-foreground mb-1 block">{t('savings.contribute')} ({currency})</label>
         <input autoFocus type="number" min="0" step="0.01" placeholder="0.00" value={amount}
           onChange={(e) => setAmount(e.target.value)} onKeyDown={blockInvalidAmountKeys}
-          className="w-full bg-transparent text-2xl font-bold outline-none tabular-nums text-emerald-500" />
+          className="w-full bg-transparent text-2xl font-bold outline-hidden tabular-nums text-emerald-500" />
       </div>
       <div className="rounded-2xl border border-border bg-card p-4">
         <label className="text-xs text-muted-foreground mb-1 block">{t('savings.note')}</label>
         <input value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('savings.contributePlaceholder')}
-          className="w-full bg-transparent text-sm outline-none" />
+          className="w-full bg-transparent text-sm outline-hidden" />
       </div>
       <div className="rounded-2xl border border-border bg-card px-4 py-3 flex items-center justify-between">
         <div>
@@ -518,7 +522,7 @@ function ContributeForm({ goal, currency, onSave, onCancel, t }: {
           </p>
         </div>
         <button type="button" role="switch" aria-checked={recordAsExpense} onClick={() => setRecordAsExpense(!recordAsExpense)}
-          className={`relative h-11 w-14 rounded-full transition-colors flex-shrink-0 ${recordAsExpense ? 'bg-primary' : 'bg-muted'}`}>
+          className={`relative h-11 w-14 rounded-full transition-colors shrink-0 ${recordAsExpense ? 'bg-primary' : 'bg-muted'}`}>
           <span className={`absolute top-2.5 h-6 w-6 rounded-full bg-white shadow transition-all ${recordAsExpense ? 'left-7' : 'left-1.5'}`} />
         </button>
       </div>

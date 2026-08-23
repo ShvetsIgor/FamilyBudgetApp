@@ -63,6 +63,7 @@ export function CategoryEditorSheet({
 
   useEffect(() => {
     if (!open) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- form state is reset when the sheet (re)opens for a different entity
     setName(initial?.name ? makeT(lang).cat(initial.name) : '');
     setNameEdited(false);
     setIcon(initial?.icon ?? 'box');
@@ -167,7 +168,7 @@ export function CategoryEditorSheet({
                 setSuggestionsOpen(true);
               }}
               placeholder={t('categories.namePlaceholder')}
-              className="w-full rounded-xl border border-[#EDE0CC] bg-white px-3 py-2.5 text-sm text-[#3D2C1F] outline-none placeholder:text-[#B6A48E] focus:border-[#E07A5F]"
+              className="w-full rounded-xl border border-[#EDE0CC] bg-white px-3 py-2.5 text-sm text-[#3D2C1F] outline-hidden placeholder:text-[#B6A48E] focus:border-[#E07A5F]"
             />
             {suggestionsOpen && matchedSuggestions.length > 0 && (
               <div className="mt-1 overflow-hidden rounded-xl border border-[#EDE0CC] bg-white shadow-sm">
@@ -316,7 +317,7 @@ export function CategoryEditorSheet({
                   }
                 }}
                 placeholder={t('categories.editor.addTagPlaceholder')}
-                className="flex-1 rounded-xl border border-[#EDE0CC] bg-white px-3 py-2 text-sm text-[#3D2C1F] outline-none placeholder:text-[#B6A48E] focus:border-[#E07A5F]"
+                className="flex-1 rounded-xl border border-[#EDE0CC] bg-white px-3 py-2 text-sm text-[#3D2C1F] outline-hidden placeholder:text-[#B6A48E] focus:border-[#E07A5F]"
               />
               <button
                 type="button"

@@ -30,7 +30,7 @@ export function SavedCard({ icon, color, title, hint, amount, currency, isIncome
         style={{ padding: '12px 14px 12px 12px', borderLeft: `4px solid ${color}` }}
       >
         <div
-          className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[12px]"
+          className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px]"
           style={{ background: color + '20' }}
         >
           <StickerIcon icon={icon} color={color} className="h-7 w-7" />
@@ -47,16 +47,16 @@ export function SavedCard({ icon, color, title, hint, amount, currency, isIncome
           </span>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="m-0 text-[14.5px] font-[800] leading-tight" style={{ color: C.fg, letterSpacing: -0.2 }}>
+          <p className="m-0 text-[14.5px] font-extrabold leading-tight" style={{ color: C.fg, letterSpacing: -0.2 }}>
             {title}
           </p>
           {hint && (
-            <p className="m-0 mt-0.5 text-[11.5px] font-[700]" style={{ color: C.sub }}>
+            <p className="m-0 mt-0.5 text-[11.5px] font-bold" style={{ color: C.sub }}>
               {hint}
             </p>
           )}
         </div>
-        <span className="text-[17px] font-[900] tabular-nums" style={{ color: amountColor, letterSpacing: -0.3 }}>
+        <span className="text-[17px] font-black tabular-nums" style={{ color: amountColor, letterSpacing: -0.3 }}>
           {isIncome ? '+' : ''}{currency}{'\u202F'}{amount.toLocaleString()}
         </span>
       </div>
@@ -64,7 +64,7 @@ export function SavedCard({ icon, color, title, hint, amount, currency, isIncome
       {/* Alert row */}
       {alert && (
         <div
-          className="flex items-center gap-1.5 px-3.5 py-2 text-[12px] font-[700]"
+          className="flex items-center gap-1.5 px-3.5 py-2 text-[12px] font-bold"
           style={{ color: C.rose, borderTop: `1px solid ${C.hairline}` }}
         >
           ⚠️ {alert}
@@ -76,7 +76,7 @@ export function SavedCard({ icon, color, title, hint, amount, currency, isIncome
         <div style={{ borderTop: `1px solid ${C.hairline}` }}>
           <button
             onClick={onUndo}
-            className="w-full px-3.5 py-2 text-left text-[12px] font-[700] transition-colors hover:bg-black/5"
+            className="w-full px-3.5 py-2 text-left text-[12px] font-bold transition-colors hover:bg-black/5"
             style={{ color: C.sub }}
           >
             {t('common.undo')}

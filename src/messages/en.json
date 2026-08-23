@@ -398,7 +398,21 @@
     "pause": "Pause",
     "resume": "Resume",
     "fromType": "from the payment kind",
-    "otherCategory": "Another category"
+    "otherCategory": "Another category",
+    "paused": "Paused",
+    "nextPayment": "Next payment",
+    "termTitle": "Payment term",
+    "schedulePaid": "Paid {n} of {m}",
+    "paymentsLeftLabel": "Payments left",
+    "leftToPay": "Left to pay",
+    "paidSoFar": "Paid so far",
+    "lastPaymentLabel": "Last payment",
+    "detailsTitle": "Details",
+    "startedOn": "Started",
+    "perMonthEquivalent": "Per month",
+    "historyTitle": "Payment history",
+    "historyEmpty": "No payments booked yet",
+    "historyTotal": "Total paid"
   },
   "savings": {
     "title": "Savings Goals",

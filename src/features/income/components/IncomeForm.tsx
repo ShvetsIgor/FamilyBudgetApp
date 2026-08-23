@@ -82,7 +82,7 @@ export function IncomeForm({ initialIncome, onSave, onCancel }: Props) {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             onKeyDown={blockInvalidAmountKeys}
-            className="flex-1 bg-transparent text-2xl font-bold outline-none tabular-nums text-emerald-500"
+            className="flex-1 bg-transparent text-2xl font-bold outline-hidden tabular-nums text-emerald-500"
             autoFocus
           />
         </div>
@@ -101,7 +101,7 @@ export function IncomeForm({ initialIncome, onSave, onCancel }: Props) {
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="w-full bg-transparent text-sm font-medium outline-none"
+          className="w-full bg-transparent text-sm font-medium outline-hidden"
         />
       </div>
 
@@ -135,7 +135,7 @@ export function IncomeForm({ initialIncome, onSave, onCancel }: Props) {
           placeholder={t('income.commentPlaceholder')}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          className="w-full bg-transparent text-sm outline-none"
+          className="w-full bg-transparent text-sm outline-hidden"
         />
       </div>
 
@@ -145,7 +145,7 @@ export function IncomeForm({ initialIncome, onSave, onCancel }: Props) {
         <button
           type="button"
           onClick={() => setPrivacy(privacy === 'secret' ? 'regular' : 'secret')}
-          className={`relative h-6 w-11 rounded-full transition-colors flex-shrink-0 ${
+          className={`relative h-6 w-11 rounded-full transition-colors shrink-0 ${
             privacy === 'secret' ? 'bg-primary' : 'bg-muted'
           }`}
         >

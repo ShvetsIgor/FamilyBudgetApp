@@ -170,14 +170,14 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
   ];
 
   return (
-    <div className="fb-sheet-enter fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:bg-black/50 lg:backdrop-blur-sm">
+    <div className="fb-sheet-enter fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:bg-black/50 lg:backdrop-blur-xs">
     <div
       className="flex flex-col bg-background w-full lg:max-w-[440px] lg:rounded-2xl lg:shadow-2xl overflow-hidden"
       style={{ height: '100dvh', maxHeight: '100dvh' }}
     >
 
       {/* ── Top bar ── */}
-      <div className="flex items-center gap-2 px-4 pt-1 pb-0.5 flex-shrink-0">
+      <div className="flex items-center gap-2 px-4 pt-1 pb-0.5 shrink-0">
         <button onClick={goBack} className="p-1.5 rounded-full hover:bg-muted transition-colors" aria-label={t('common.close')}>
           <X className="h-4 w-4" />
         </button>
@@ -203,7 +203,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
 
       {/* ── Amount row ── */}
       <div
-        className="mx-4 px-4 py-1.5 rounded-[18px] flex items-baseline justify-between flex-shrink-0 border-[1.5px]"
+        className="mx-4 px-4 py-1.5 rounded-[18px] flex items-baseline justify-between shrink-0 border-[1.5px]"
         style={{ background: catColor + '14', borderColor: catColor + '55' }}
       >
         <span className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">
@@ -218,21 +218,21 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
       </div>
 
       {/* ── Scrollable section ── */}
-      <div className="flex-1 overflow-y-auto px-4 py-2 flex flex-col gap-1.5 min-h-0 [scrollbar-width:none]">
+      <div className="flex-1 overflow-y-auto px-4 py-2 flex flex-col gap-1.5 min-h-0 scrollbar-none">
 
         {/* Category — compact trigger + canonical folder-first picker, so
             date/comment/monthly stay visible without scrolling */}
         <button
           type="button"
           onClick={() => setShowCatPicker(true)}
-          className="bg-card rounded-[16px] p-3 flex items-center gap-3 w-full text-left flex-shrink-0"
+          className="bg-card rounded-[16px] p-3 flex items-center gap-3 w-full text-left shrink-0"
           style={{
             boxShadow: '0 1px 3px rgba(61,44,31,.06)',
             border: category ? '1.5px solid transparent' : '1.5px solid hsl(var(--destructive))',
           }}
         >
           <div
-            className="h-9 w-9 rounded-[12px] flex items-center justify-center flex-shrink-0"
+            className="h-9 w-9 rounded-[12px] flex items-center justify-center shrink-0"
             style={{ background: catColor + '22' }}
           >
             <StickerIcon icon={category?.icon ?? 'cash'} color={catColor} className="h-5 w-5" />
@@ -245,17 +245,17 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
               {t('expense.tapToPick')}
             </div>
           </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
         </button>
 
         {/* Date row */}
-        <div className="rounded-[14px] overflow-hidden flex-shrink-0" style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}>
+        <div className="rounded-[14px] overflow-hidden shrink-0" style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}>
           <button
             onClick={() => { setShowDate((v) => !v); setShowComment(false); }}
             className="w-full flex items-center gap-3 px-3.5 py-2.5 transition-all"
             style={{ background: showDate ? catColor + '14' : 'hsl(var(--card))' }}
           >
-            <div className="h-8 w-8 rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: catColor + '20' }}>
+            <div className="h-8 w-8 rounded-[10px] flex items-center justify-center shrink-0" style={{ background: catColor + '20' }}>
               <Calendar className="h-4 w-4" style={{ color: catColor }} />
             </div>
             <span className="flex-1 text-left text-[13px] font-bold text-foreground">
@@ -276,13 +276,13 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
         </div>
 
         {/* Comment row */}
-        <div className="rounded-[14px] overflow-hidden flex-shrink-0" style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}>
+        <div className="rounded-[14px] overflow-hidden shrink-0" style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}>
           <button
             onClick={() => { setShowComment((v) => !v); setShowDate(false); }}
             className="w-full flex items-center gap-3 px-3.5 py-2.5 transition-all"
             style={{ background: (showComment || comment) ? catColor + '14' : 'hsl(var(--card))' }}
           >
-            <div className="h-8 w-8 rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: catColor + '20' }}>
+            <div className="h-8 w-8 rounded-[10px] flex items-center justify-center shrink-0" style={{ background: catColor + '20' }}>
               <MessageSquare className="h-4 w-4" style={{ color: catColor }} />
             </div>
             <span className="flex-1 text-left text-[13px] font-bold" style={{ color: comment ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
@@ -298,7 +298,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
                 onChange={(e) => setComment(e.target.value)}
                 placeholder={t('income.notePlaceholder')}
                 autoFocus
-                className="mt-2 block w-full px-3 py-2 rounded-xl text-sm bg-background border border-border outline-none focus:border-primary transition-colors"
+                className="mt-2 block w-full px-3 py-2 rounded-xl text-sm bg-background border border-border outline-hidden focus:border-primary transition-colors"
               />
             </div>
           )}
@@ -306,7 +306,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
 
         {/* Recurring toggle */}
         {!initialIncome && (
-          <div className="rounded-[14px] overflow-hidden flex-shrink-0" style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}>
+          <div className="rounded-[14px] overflow-hidden shrink-0" style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}>
             <button
               onClick={() => setIsRecurring((v) => !v)}
               className="w-full flex items-center justify-between px-3.5 py-3 transition-all"
@@ -315,18 +315,18 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
               <div className="flex items-center gap-2.5">
                 <StickerIcon icon="refund" color={isRecurring ? catColor : 'hsl(var(--muted-foreground))'} className="h-4 w-4" />
                 <div className="text-left">
-                  <p className="text-[12.5px] font-[800] leading-tight" style={{ color: isRecurring ? catColor : 'hsl(var(--foreground))' }}>
+                  <p className="text-[12.5px] font-extrabold leading-tight" style={{ color: isRecurring ? catColor : 'hsl(var(--foreground))' }}>
                     {t('income.recurring')}
                   </p>
                   {!isRecurring && (
-                    <p className="text-[10px] font-[600] mt-0.5 text-muted-foreground">
+                    <p className="text-[10px] font-semibold mt-0.5 text-muted-foreground">
                       {t('income.recurringHint')}
                     </p>
                   )}
                 </div>
               </div>
               <div
-                className="relative h-5 w-9 rounded-full transition-colors flex-shrink-0"
+                className="relative h-5 w-9 rounded-full transition-colors shrink-0"
                 style={{ background: isRecurring ? catColor : 'hsl(var(--muted))' }}
               >
                 <span
@@ -340,7 +340,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
                 className="px-3.5 py-3 flex items-center justify-between"
                 style={{ background: catColor + '0a', borderTop: `1px solid ${catColor}22` }}
               >
-                <p className="text-[12px] font-[700] text-muted-foreground">{t('income.creditEvery')}</p>
+                <p className="text-[12px] font-bold text-muted-foreground">{t('income.creditEvery')}</p>
                 <span className="text-[14px] font-extrabold tabular-nums" style={{ color: catColor }}>
                   {t('income.dayNum', { day: new Date(dateStr).getDate() })}
                 </span>
@@ -351,7 +351,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
       </div>
 
       {/* ── Payment method chips ── */}
-      <div className="px-3 pb-1 flex gap-2 flex-shrink-0">
+      <div className="px-3 pb-1 flex gap-2 shrink-0">
         {METHODS.map((m) => {
           const sel = method === m.value;
           return (
@@ -373,7 +373,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
       </div>
 
       {/* ── Numpad ── */}
-      <div className="px-3 pt-0.5 grid grid-cols-3 flex-shrink-0" style={{ gridAutoRows: '44px', gap: '4px' }}>
+      <div className="px-3 pt-0.5 grid grid-cols-3 shrink-0" style={{ gridAutoRows: '44px', gap: '4px' }}>
         {NUMPAD_KEYS.map((k) => (
           <button
             key={String(k)}
@@ -391,7 +391,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
       </div>
 
       {/* ── Save button ── */}
-      <div className="px-4 pt-1.5 flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
+      <div className="px-4 pt-1.5 shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
         <button
           onClick={handleSave}
           disabled={saving || amountNum <= 0 || !category}

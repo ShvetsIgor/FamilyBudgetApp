@@ -29,12 +29,12 @@ export function DesktopChatHeader() {
   return (
     <>
       <div
-        className="h-16 flex-shrink-0 flex items-center gap-3.5 px-6 border-b border-border"
+        className="h-16 shrink-0 flex items-center gap-3.5 px-6 border-b border-border"
         style={{ background: C.bg }}
       >
         {/* Avatar */}
         <div
-          className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0"
+          className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
           style={{ background: `radial-gradient(circle at 30% 30%, ${C.primaryTint}, ${C.primary}33)` }}
         >
           <StickerIcon icon="piggy" color={C.primary} className="h-7 w-7" />
@@ -42,10 +42,10 @@ export function DesktopChatHeader() {
 
         {/* Title */}
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-[900] leading-tight" style={{ color: C.fg }}>
+          <p className="text-[15px] font-black leading-tight" style={{ color: C.fg }}>
             {t('chat.desktop.personalBudget')}
           </p>
-          <p className="text-[11px] font-[700]" style={{ color: C.sage }}>
+          <p className="text-[11px] font-bold" style={{ color: C.sage }}>
             {t('chat.desktop.botLocal')}
           </p>
         </div>

@@ -73,7 +73,7 @@ export function CategorySheet({ onSelect, onClose, categories: categoriesOverrid
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('categories.search')}
-              className="flex-1 bg-transparent text-[14px] font-[600] outline-none"
+              className="flex-1 bg-transparent text-[14px] font-semibold outline-hidden"
               style={{ color: C.fg }}
             />
             {query && (
@@ -84,7 +84,7 @@ export function CategorySheet({ onSelect, onClose, categories: categoriesOverrid
           </div>
           <button
             onClick={onClose}
-            className="min-h-11 px-2 text-[13px] font-[700]"
+            className="min-h-11 px-2 text-[13px] font-bold"
             style={{ color: C.sub }}
           >
             {t('common.cancel')}
@@ -103,13 +103,13 @@ export function CategorySheet({ onSelect, onClose, categories: categoriesOverrid
                   style={{ background: C.card }}
                 >
                   <StickerIcon icon={cat.icon} color={cat.color} className="h-8 w-8 shrink-0" />
-                  <p className="text-[13.5px] font-[700] truncate flex-1" style={{ color: C.fg }}>
+                  <p className="text-[13.5px] font-bold truncate flex-1" style={{ color: C.fg }}>
                     {t.cat(cat.name)}
                   </p>
                 </button>
               ))}
               {filtered.length === 0 && (
-                <p className="py-8 text-center text-[13px] font-[600]" style={{ color: C.sub }}>
+                <p className="py-8 text-center text-[13px] font-semibold" style={{ color: C.sub }}>
                   {t('expenses.noResults')}
                 </p>
               )}
@@ -119,12 +119,12 @@ export function CategorySheet({ onSelect, onClose, categories: categoriesOverrid
               {sections.map(({ folderId, folderName, folderColor, cats }, idx) => (
                 <div key={folderId ?? `ungrouped-${idx}`}>
                   {folderId && (
-                    <p className="mb-1.5 text-[10px] font-[800] uppercase tracking-[.08em]" style={{ color: folderColor ?? C.sub }}>
+                    <p className="mb-1.5 text-[10px] font-extrabold uppercase tracking-[.08em]" style={{ color: folderColor ?? C.sub }}>
                       {folderName}
                     </p>
                   )}
                   {!folderId && sections.length > 1 && (
-                    <p className="mb-1.5 text-[10px] font-[800] uppercase tracking-[.08em]" style={{ color: C.sub }}>
+                    <p className="mb-1.5 text-[10px] font-extrabold uppercase tracking-[.08em]" style={{ color: C.sub }}>
                       {t('chat.otherCategories')}
                     </p>
                   )}
@@ -133,7 +133,7 @@ export function CategorySheet({ onSelect, onClose, categories: categoriesOverrid
                       <button
                         key={cat.id}
                         onClick={() => onSelect({ id: cat.id, name: cat.name, icon: cat.icon, color: cat.color })}
-                        className="inline-flex min-h-11 items-center gap-1.5 text-[12.5px] font-[700] active:scale-95 transition-transform"
+                        className="inline-flex min-h-11 items-center gap-1.5 text-[12.5px] font-bold active:scale-95 transition-transform"
                         style={{
                           padding: '7px 12px 7px 7px',
                           borderRadius: 999,

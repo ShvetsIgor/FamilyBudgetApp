@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {isPlanRoute(pathname) && <PlanTabs />}
         <main className={isChat
           ? 'flex-1 flex flex-col overflow-hidden'
-          : 'flex-1 overflow-y-auto md:px-6 md:[&>*]:mx-auto md:[&>*]:w-full md:[&>*]:max-w-[760px]'}>
+          : 'flex-1 overflow-y-auto md:px-6 md:*:mx-auto md:*:w-full md:*:max-w-[760px]'}>
           {/* No transition on tab switches — on iOS a tab bar swaps screens
               instantly; motion belongs to modal presentation (see the
               .fb-sheet-enter overlays), not to lateral navigation. An animated

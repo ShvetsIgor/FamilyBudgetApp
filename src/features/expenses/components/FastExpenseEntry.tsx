@@ -303,6 +303,7 @@ export function FastExpenseEntry({
     setActiveFolderId(initialFolderId ?? null);
 
     if (initialFolderId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- form state is reset when the sheet (re)opens for a different entity
       setSelectedCatId('');
       if (getCatsInGroup(initialFolderId).length === 0) {
         setCategorySheetMode('single');
@@ -567,11 +568,11 @@ export function FastExpenseEntry({
 
   return (
     <>
-    <div className="fb-sheet-enter fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:bg-black/50 lg:backdrop-blur-sm">
+    <div className="fb-sheet-enter fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:bg-black/50 lg:backdrop-blur-xs">
     <div className="flex flex-col bg-background w-full lg:max-w-[440px] lg:rounded-2xl lg:shadow-2xl overflow-hidden" style={{ height: '100dvh', maxHeight: '100dvh' }} suppressHydrationWarning>
 
       {/* ── Top bar ── */}
-      <div className="flex items-center gap-2 px-4 pt-1 pb-0.5 flex-shrink-0">
+      <div className="flex items-center gap-2 px-4 pt-1 pb-0.5 shrink-0">
         <button type="button" onClick={handleClose} className="fb-touch-target flex h-11 w-11 items-center justify-center rounded-xl hover:bg-muted transition-colors" aria-label={t('common.close')}>
           <X className="h-5 w-5" />
         </button>
@@ -596,7 +597,7 @@ export function FastExpenseEntry({
         type="button"
         onClick={() => openAmountEditor('total')}
         className={cn(
-          'mx-4 min-h-11 px-4 py-1.5 rounded-[18px] cursor-pointer flex items-baseline justify-between flex-shrink-0 transition-all border-[1.5px] text-left',
+          'mx-4 min-h-11 px-4 py-1.5 rounded-[18px] cursor-pointer flex items-baseline justify-between shrink-0 transition-all border-[1.5px] text-left',
           amountEditorTarget === 'total' ? 'bg-primary/10 border-primary' : 'bg-transparent border-transparent'
         )}
       >
@@ -610,7 +611,7 @@ export function FastExpenseEntry({
       </button>
 
       {/* ── Mode ── */}
-      <div className="mx-4 mb-2 grid grid-cols-2 rounded-[16px] bg-muted p-1 flex-shrink-0">
+      <div className="mx-4 mb-2 grid grid-cols-2 rounded-[16px] bg-muted p-1 shrink-0">
         {(['single', 'split'] as EntryMode[]).map((mode) => {
           const selected = entryMode === mode;
           return (
@@ -636,13 +637,13 @@ export function FastExpenseEntry({
       {/* ── Entry rows ── */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto overscroll-contain px-4 pb-2 flex flex-col gap-1.5 min-h-0 [scrollbar-width:none]"
+        className="flex-1 overflow-y-auto overscroll-contain px-4 pb-2 flex flex-col gap-1.5 min-h-0 scrollbar-none"
       >
         {entryMode === 'single' ? (
           <button
             type="button"
             onClick={() => setCategorySheetMode('single')}
-            className="bg-card rounded-[16px] p-3 flex items-center gap-3 flex-shrink-0 text-left"
+            className="bg-card rounded-[16px] p-3 flex items-center gap-3 shrink-0 text-left"
             style={{
               boxShadow: '0 1px 3px rgba(61,44,31,.06)',
               border: selectedCat ? '1.5px solid transparent' : '1.5px solid hsl(var(--destructive))',
@@ -662,13 +663,13 @@ export function FastExpenseEntry({
         ) : (
           <>
             <div
-              className="rounded-[16px] px-3 py-2.5 flex items-center gap-3 flex-shrink-0"
+              className="rounded-[16px] px-3 py-2.5 flex items-center gap-3 shrink-0"
               style={{
                 background: remainder > 0.01 || splitsOverflow ? catColor + '12' : 'hsl(var(--card))',
                 border: splitsOverflow ? '1.5px solid hsl(var(--destructive))' : `1.5px solid ${remainder > 0.01 ? catColor + '55' : 'transparent'}`,
               }}
             >
-              <div className="h-9 w-9 rounded-[12px] flex items-center justify-center flex-shrink-0" style={{ background: catColor + '20' }}>
+              <div className="h-9 w-9 rounded-[12px] flex items-center justify-center shrink-0" style={{ background: catColor + '20' }}>
                 <StickerIcon icon={displayIcon} color={catColor} className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
@@ -691,7 +692,7 @@ export function FastExpenseEntry({
             <div
               key={i}
               onClick={() => openAmountEditor(i)}
-              className="rounded-xl px-3 py-2 flex items-center gap-2.5 cursor-pointer transition-all border-[1.5px] flex-shrink-0"
+              className="rounded-xl px-3 py-2 flex items-center gap-2.5 cursor-pointer transition-all border-[1.5px] shrink-0"
               style={{
                 marginLeft: 18,
                 background: isEditing ? sp.color + '18' : 'hsl(var(--card))',
@@ -700,7 +701,7 @@ export function FastExpenseEntry({
               }}
             >
               <div
-                className="h-[26px] w-[26px] rounded-lg flex items-center justify-center flex-shrink-0"
+                className="h-[26px] w-[26px] rounded-lg flex items-center justify-center shrink-0"
                 style={{ background: sp.color + '22' }}
               >
                 <StickerIcon icon={sp.icon} color={sp.color} className="h-3.5 w-3.5" />
@@ -739,13 +740,13 @@ export function FastExpenseEntry({
         )}
 
         {/* Date row */}
-        <div className="rounded-[14px] overflow-hidden flex-shrink-0" style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}>
+        <div className="rounded-[14px] overflow-hidden shrink-0" style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}>
           <button
             onClick={() => { setShowDate((v) => !v); setShowComment(false); }}
             className="w-full flex items-center gap-3 px-3.5 py-2.5 transition-all"
             style={{ background: showDate ? catColor + '14' : 'hsl(var(--card))' }}
           >
-            <div className="h-8 w-8 rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: catColor + '20' }}>
+            <div className="h-8 w-8 rounded-[10px] flex items-center justify-center shrink-0" style={{ background: catColor + '20' }}>
               <Calendar className="h-4 w-4" style={{ color: catColor }} />
             </div>
             <span className="flex-1 text-left text-[13px] font-bold text-foreground">
@@ -766,13 +767,13 @@ export function FastExpenseEntry({
         </div>
 
         {/* Comment row */}
-        <div className="rounded-[14px] overflow-hidden flex-shrink-0" style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}>
+        <div className="rounded-[14px] overflow-hidden shrink-0" style={{ boxShadow: '0 1px 3px rgba(61,44,31,.06)' }}>
           <button
             onClick={() => { setShowComment((v) => !v); setShowDate(false); }}
             className="w-full flex items-center gap-3 px-3.5 py-2.5 transition-all"
             style={{ background: (showComment || comment) ? catColor + '14' : 'hsl(var(--card))' }}
           >
-            <div className="h-8 w-8 rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: catColor + '20' }}>
+            <div className="h-8 w-8 rounded-[10px] flex items-center justify-center shrink-0" style={{ background: catColor + '20' }}>
               <MessageSquare className="h-4 w-4" style={{ color: catColor }} />
             </div>
             <span className="flex-1 text-left text-[13px] font-bold" style={{ color: comment ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
@@ -788,7 +789,7 @@ export function FastExpenseEntry({
                 onChange={(e) => setComment(e.target.value)}
                 placeholder={t('expense.notePlaceholder')}
                 autoFocus
-                className="mt-2 block w-full px-3 py-2 rounded-xl text-sm bg-background border border-border outline-none focus:border-primary transition-colors"
+                className="mt-2 block w-full px-3 py-2 rounded-xl text-sm bg-background border border-border outline-hidden focus:border-primary transition-colors"
               />
             </div>
           )}
@@ -797,7 +798,7 @@ export function FastExpenseEntry({
       </div>
 
       {/* ── Payment method ── */}
-      <div className="px-3 pb-1 flex gap-2 flex-shrink-0">
+      <div className="px-3 pb-1 flex gap-2 shrink-0">
         {(['card', 'cash', 'other'] as const).map((m) => {
           const labels = { card: t('expense.card'), cash: t('expense.cash'), other: t('expense.other') };
           const sel = paymentMethod === m;
@@ -821,7 +822,7 @@ export function FastExpenseEntry({
       </div>
 
       {/* ── Save bar ── */}
-      <div className="px-4 pt-1.5 pb-safe flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
+      <div className="px-4 pt-1.5 pb-safe shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
         <button
           onClick={handleSave}
           disabled={saveDisabled}
@@ -841,7 +842,7 @@ export function FastExpenseEntry({
 
     {amountEditorOpen && (
       <div
-        className="fixed inset-0 z-[65] flex items-end justify-center bg-black/35 lg:items-center lg:p-6"
+        className="fixed inset-0 z-65 flex items-end justify-center bg-black/35 lg:items-center lg:p-6"
         onClick={() => setAmountEditorTarget(null)}
       >
         <div

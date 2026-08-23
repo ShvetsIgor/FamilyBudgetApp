@@ -7,7 +7,7 @@ export function DateChip({ label }: { label: string }) {
   return (
     <div className="flex justify-center" style={{ margin: '16px 0 6px' }}>
       <span
-        className="text-[10.5px] font-[800] uppercase tracking-[.08em]"
+        className="text-[10.5px] font-extrabold uppercase tracking-[.08em]"
         style={{
           padding: '5px 14px',
           borderRadius: 999,

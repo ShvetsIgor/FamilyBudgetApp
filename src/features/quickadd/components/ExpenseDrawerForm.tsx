@@ -76,17 +76,6 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
     amountRef.current?.focus();
   }, []);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleSave(); }
-      if (e.key === 's' || e.key === 'S') { if (!(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) { e.preventDefault(); setPickerOpen((v) => !v); } }
-      if (e.key === 'd' || e.key === 'D') { if (!(e.target instanceof HTMLInputElement)) { e.preventDefault(); setShowDatePicker((v) => !v); } }
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  });
-
   const selectedGroup = groups.find((g) => g.id === selectedGroupId);
   const catsInGroup = getCatsInGroup(selectedGroupId);
   const totalNum = parseFloat(amount) || 0;
@@ -192,12 +181,24 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
     }
   }
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleSave(); }
+      if (e.key === 's' || e.key === 'S') { if (!(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) { e.preventDefault(); setPickerOpen((v) => !v); } }
+      if (e.key === 'd' || e.key === 'D') { if (!(e.target instanceof HTMLInputElement)) { e.preventDefault(); setShowDatePicker((v) => !v); } }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+
+
   const today = toDateInput(new Date());
   const dateLabel = dateStr === today ? t('common.today') : format(new Date(dateStr + 'T12:00:00'), 'd MMM yyyy');
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-3 [scrollbar-width:none]">
+      <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-3 scrollbar-none">
 
         {/* ── Category grid ── */}
         <div>
@@ -299,7 +300,7 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
             onChange={(e) => setAmount(e.target.value)}
             onFocus={() => setActiveField('total')}
             placeholder="0"
-            className="flex-1 bg-transparent text-[32px] font-black text-foreground outline-none tabular-nums placeholder:text-muted-foreground/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+            className="flex-1 bg-transparent text-[32px] font-black text-foreground outline-hidden tabular-nums placeholder:text-muted-foreground/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
           />
           <span className="text-xs font-bold text-muted-foreground/50 uppercase">{currency}</span>
         </div>
@@ -308,7 +309,7 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
         <div className="bg-card rounded-[14px] overflow-hidden" style={{ boxShadow: '0 1px 4px rgba(61,44,31,.06)' }}>
           {/* Selected group row */}
           <div className="flex items-center gap-3 px-4 py-3">
-            <div className="h-8 w-8 rounded-[9px] flex items-center justify-center flex-shrink-0" style={{ background: catColor + '22' }}>
+            <div className="h-8 w-8 rounded-[9px] flex items-center justify-center shrink-0" style={{ background: catColor + '22' }}>
               <StickerIcon icon={selectedGroup?.icon ?? 'box'} color={catColor} className="h-4 w-4" />
             </div>
             <div className="flex-1 min-w-0">
@@ -341,7 +342,7 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
                   style={{ background: isActive ? catColor + '0e' : 'transparent', paddingLeft: 28 }}
                   onClick={() => { setActiveField(i); }}
                 >
-                  <div className="h-[22px] w-[22px] rounded-[6px] flex items-center justify-center flex-shrink-0" style={{ background: catColor + '28' }}>
+                  <div className="h-[22px] w-[22px] rounded-[6px] flex items-center justify-center shrink-0" style={{ background: catColor + '28' }}>
                     <StickerIcon icon={sp.icon} color={catColor} className="h-3 w-3" />
                   </div>
                   <div className="flex-1 min-w-0 text-xs font-bold text-foreground">{t.cat(sp.name)}</div>
@@ -354,7 +355,7 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
                       step="0.01"
                       value={sp.amount}
                       onChange={(e) => setSplits((prev) => prev.map((s, j) => j === i ? { ...s, amount: e.target.value } : s))}
-                      className="w-24 text-right bg-transparent text-sm font-black text-foreground outline-none tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                      className="w-24 text-right bg-transparent text-sm font-black text-foreground outline-hidden tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
                       placeholder="0"
                     />
                   ) : (
@@ -453,14 +454,14 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder={t('quickadd.optionalPlaceholder')}
-              className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/40"
+              className="flex-1 bg-transparent text-sm text-foreground outline-hidden placeholder:text-muted-foreground/40"
             />
           </div>
         </div>
       </div>
 
       {/* ── Save bar ── */}
-      <div className="flex-shrink-0 border-t border-border px-5 py-4 flex items-center gap-3 bg-background">
+      <div className="shrink-0 border-t border-border px-5 py-4 flex items-center gap-3 bg-background">
         <button
           onClick={() => dispatch(closeQuickAdd())}
           className="px-4 py-2.5 rounded-xl text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors border border-border"

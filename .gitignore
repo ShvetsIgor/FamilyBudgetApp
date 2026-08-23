@@ -17,10 +17,9 @@ dist/
 .env.test.local
 .env.production.local
 
-# PWA generated files
-public/workbox-*.js
+# PWA generated files (Serwist compiles src/app/sw.ts into public/sw.js)
 public/sw.js
-public/swe-worker-*.js
+public/sw.js.map
 
 # Misc
 .DS_Store

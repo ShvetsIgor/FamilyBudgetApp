@@ -47,7 +47,7 @@ export function StepPick({ folders, onToggle, onToggleExpanded, onAddCustom, loc
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('categories.constructor.searchGroups')}
-            className="w-full rounded-xl border border-[#EDE0CC] bg-white pl-9 pr-4 py-2 text-sm text-[#3D2C1F] placeholder:text-[#C4AA8E] outline-none focus:border-[#E07A5F] transition-colors"
+            className="w-full rounded-xl border border-[#EDE0CC] bg-white pl-9 pr-4 py-2 text-sm text-[#3D2C1F] placeholder:text-[#C4AA8E] outline-hidden focus:border-[#E07A5F] transition-colors"
           />
           {query && (
             <button

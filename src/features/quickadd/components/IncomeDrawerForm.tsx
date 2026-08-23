@@ -38,12 +38,10 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
   const dfLocale = useDateFnsLocale();
 
   const [amount, setAmount] = useState('');
-  const [categoryId, setCategoryId] = useState(activeCats[0]?.id ?? '');
-
-  // Categories may load after mount — pick the default once they arrive
-  useEffect(() => {
-    if (!categoryId && activeCats.length > 0) setCategoryId(activeCats[0].id);
-  }, [categoryId, activeCats]);
+  // Categories may load after mount: store only an explicit pick and derive the
+  // default during render, so the first category needs no catch-up effect.
+  const [pickedCategoryId, setPickedCategoryId] = useState('');
+  const categoryId = pickedCategoryId || (activeCats[0]?.id ?? '');
   const [method, setMethod] = useState<'cash' | 'card' | 'bank' | 'other'>('bank');
   const [comment, setComment] = useState('');
   const [dateStr, setDateStr] = useState(toDateInput(new Date()));
@@ -53,19 +51,6 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
   const amountRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { amountRef.current?.focus(); }, []);
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleSave(); }
-      if (e.key === 'd' || e.key === 'D') {
-        if (!(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
-          e.preventDefault(); setShowDatePicker((v) => !v);
-        }
-      }
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  });
 
   const selectedCat = activeCats.find((c) => c.id === categoryId);
   const catColor = selectedCat?.color ?? accent;
@@ -108,12 +93,26 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
     }
   }
 
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleSave(); }
+      if (e.key === 'd' || e.key === 'D') {
+        if (!(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
+          e.preventDefault(); setShowDatePicker((v) => !v);
+        }
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+
+
   const today = toDateInput(new Date());
   const dateLabel = dateStr === today ? t('common.today') : format(new Date(dateStr + 'T12:00:00'), 'd MMM yyyy');
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-3 [scrollbar-width:none]">
+      <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-3 scrollbar-none">
 
         {/* ── Category grid ── */}
         <div>
@@ -128,7 +127,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
               return (
                 <button
                   key={cat.id}
-                  onClick={() => setCategoryId(cat.id)}
+                  onClick={() => setPickedCategoryId(cat.id)}
                   className="h-[68px] rounded-[12px] flex flex-col items-center justify-center gap-1 transition-all border-0 relative"
                   style={{
                     background: sel ? c : 'hsl(var(--card))',
@@ -161,7 +160,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0"
-            className="flex-1 bg-transparent text-[32px] font-black text-foreground outline-none tabular-nums placeholder:text-muted-foreground/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+            className="flex-1 bg-transparent text-[32px] font-black text-foreground outline-hidden tabular-nums placeholder:text-muted-foreground/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
           />
           <span className="text-xs font-bold text-muted-foreground/50 uppercase">{currency}</span>
         </div>
@@ -252,14 +251,14 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder={t('quickadd.optionalPlaceholder')}
-              className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/40"
+              className="flex-1 bg-transparent text-sm text-foreground outline-hidden placeholder:text-muted-foreground/40"
             />
           </div>
         </div>
       </div>
 
       {/* ── Save bar ── */}
-      <div className="flex-shrink-0 border-t border-border px-5 py-4 flex items-center gap-3 bg-background">
+      <div className="shrink-0 border-t border-border px-5 py-4 flex items-center gap-3 bg-background">
         <button
           onClick={() => dispatch(closeQuickAdd())}
           className="px-4 py-2.5 rounded-xl text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors border border-border"

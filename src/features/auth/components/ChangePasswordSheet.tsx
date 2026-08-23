@@ -74,14 +74,14 @@ export function ChangePasswordSheet({ onClose }: { onClose: () => void }) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         autoComplete={autoComplete}
-        className="min-h-11 rounded-xl border border-border bg-background px-3 text-sm font-semibold outline-none focus:border-primary"
+        className="min-h-11 rounded-xl border border-border bg-background px-3 text-sm font-semibold outline-hidden focus:border-primary"
       />
       {hint && <span className="text-[11px] font-semibold text-destructive">{hint}</span>}
     </label>
   );
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 lg:items-center">
+    <div className="fixed inset-0 z-60 flex items-end justify-center bg-black/40 lg:items-center">
       <div
         role="dialog"
         aria-modal="true"

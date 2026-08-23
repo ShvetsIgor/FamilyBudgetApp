@@ -51,7 +51,7 @@ export function DesktopChatLayout({ children }: Props) {
 
       {/* Right panel */}
       <aside
-        className="flex-shrink-0 border-l border-border flex flex-col gap-3 transition-all duration-200"
+        className="shrink-0 border-l border-border flex flex-col gap-3 transition-all duration-200"
         style={{
           width: rightOpen ? 320 : 0,
           overflow: rightOpen ? 'auto' : 'hidden',

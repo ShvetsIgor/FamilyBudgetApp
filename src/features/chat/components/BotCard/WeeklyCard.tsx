@@ -34,16 +34,16 @@ function EnvelopeRow({ env }: { env: WeeklyEnvelope }) {
   return (
     <div className="flex items-center gap-2.5" style={{ padding: '7px 14px' }}>
       <div
-        className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[10px]"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px]"
         style={{ background: env.color + '20' }}
       >
         <StickerIcon icon={env.icon} color={env.color} className="h-5 w-5" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex justify-between mb-1">
-          <span className="text-[12px] font-[800]" style={{ color: C.fg }}>{env.name}</span>
+          <span className="text-[12px] font-extrabold" style={{ color: C.fg }}>{env.name}</span>
           <span
-            className="text-[11.5px] font-[800] tabular-nums"
+            className="text-[11.5px] font-extrabold tabular-nums"
             style={{ color: over ? C.rose : C.sub }}
           >
             {env.spent}/{env.limit}
@@ -83,23 +83,23 @@ export function WeeklyCard({ data }: { data: WeeklyCardData }) {
           <circle cx="60" cy="60" r="42" stroke="white" strokeWidth="1" fill="none" opacity=".7" />
         </svg>
 
-        <p className="m-0 text-[10px] font-[800] uppercase tracking-[.09em] opacity-85">
+        <p className="m-0 text-[10px] font-extrabold uppercase tracking-[.09em] opacity-85">
           {/* weekNum/weekRange come from stored data — keep as-is */}
           {weekNum ? `${t('chat.weeklyWeekN', { n: weekNum })} · ${weekRange}` : weekRange}
         </p>
 
         <div className="mt-1 flex items-baseline justify-between">
-          <span className="text-[26px] font-[900] tabular-nums" style={{ letterSpacing: -0.8 }}>
+          <span className="text-[26px] font-black tabular-nums" style={{ letterSpacing: -0.8 }}>
             {currency}{totalSpent.toLocaleString()}
           </span>
-          <span className="text-[12px] font-[800] opacity-85">
+          <span className="text-[12px] font-extrabold opacity-85">
             {t('chat.today.of')} {currency}{totalBudget.toLocaleString()}
           </span>
         </div>
 
         {saved > 0 && (
           <div
-            className="mt-2 inline-flex items-center gap-1.5 text-[11.5px] font-[800]"
+            className="mt-2 inline-flex items-center gap-1.5 text-[11.5px] font-extrabold"
             style={{ padding: '4px 10px', borderRadius: 999, background: 'rgba(255,255,255,.18)' }}
           >
             <StickerIcon icon="piggy" color={C.yellow} className="h-4 w-4" />
@@ -112,7 +112,7 @@ export function WeeklyCard({ data }: { data: WeeklyCardData }) {
       {envelopes.length > 0 && (
         <div style={{ paddingTop: 10, paddingBottom: 6 }}>
           <p
-            className="m-0 text-[10px] font-[800] uppercase tracking-[.08em]"
+            className="m-0 text-[10px] font-extrabold uppercase tracking-[.08em]"
             style={{ color: C.sub, margin: '4px 14px 4px' }}
           >
             {t('chat.weekly.envelopes')}
@@ -134,10 +134,10 @@ export function WeeklyCard({ data }: { data: WeeklyCardData }) {
         ].map((s, i, arr) => (
           <div key={s.lab} className="flex" style={{ flex: 1 }}>
             <div className="flex-1 px-2">
-              <p className="m-0 text-[9.5px] font-[800] uppercase tracking-[.08em]" style={{ color: C.sub }}>
+              <p className="m-0 text-[9.5px] font-extrabold uppercase tracking-[.08em]" style={{ color: C.sub }}>
                 {s.lab}
               </p>
-              <p className="m-0 mt-0.5 text-[12.5px] font-[800]" style={{ color: s.color }}>
+              <p className="m-0 mt-0.5 text-[12.5px] font-extrabold" style={{ color: s.color }}>
                 {s.val}
               </p>
             </div>

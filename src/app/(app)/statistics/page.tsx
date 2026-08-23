@@ -71,6 +71,7 @@ export default function StatisticsPage() {
     } finally { setLoading(false); }
   }, [user, range, currency]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- the fetch starts here; this app has no server loader, everything comes from Firestore on the client
   useEffect(() => { load(); }, [load]);
 
   // Stats aggregate by categoryId only — folders are UI-only and must not affect domain/analytics layer
@@ -136,7 +137,7 @@ export default function StatisticsPage() {
           <div key={d.catId}>
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <CategoryIcon icon={d.icon} color={d.color} size="sm" />
-              <span className="min-w-0 flex-1 basis-[48%] text-sm leading-tight line-clamp-2 break-normal [overflow-wrap:normal] [word-break:normal] hyphens-none">{d.name}</span>
+              <span className="min-w-0 flex-1 basis-[48%] text-sm leading-tight line-clamp-2 break-normal wrap-normal [word-break:normal] hyphens-none">{d.name}</span>
               <span className="text-sm font-semibold tabular-nums shrink-0">{formatAmount(d.amount, currency)}</span>
               {showBudget && isLive && (
                 <button
@@ -175,7 +176,7 @@ export default function StatisticsPage() {
                   value={limitInput}
                   onChange={(e) => setLimitInput(e.target.value)}
                   onKeyDown={blockInvalidAmountKeys}
-                  className="col-span-2 min-w-0 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:flex-1 sm:py-1.5"
+                  className="col-span-2 min-w-0 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 sm:flex-1 sm:py-1.5"
                 />
                 <button
                   onClick={() => handleSaveBudget(d.catId)}
@@ -219,7 +220,7 @@ export default function StatisticsPage() {
       <h1 className="text-xl font-bold lg:hidden">{t('stats.title')}</h1>
 
       {/* Range selector — pills (mobile) / tabs (desktop) */}
-      <div className="lg:hidden flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none]">
+      <div className="lg:hidden flex gap-2 overflow-x-auto pb-0.5 scrollbar-none">
         {RANGES.map((r) => (
           <button
             key={r.value}

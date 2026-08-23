@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/store';
-import { hydrateThemePreferences } from '@/features/ui/store/uiSlice';
+import { hydrateDisplayPreferences } from '@/features/ui/store/uiSlice';
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
@@ -11,7 +11,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const language = useAppSelector((s) => s.ui.language);
 
   useEffect(() => {
-    dispatch(hydrateThemePreferences());
+    dispatch(hydrateDisplayPreferences());
   }, [dispatch]);
 
   useEffect(() => {

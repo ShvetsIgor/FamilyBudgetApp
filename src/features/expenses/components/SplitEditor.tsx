@@ -105,7 +105,7 @@ export function SplitEditor({ total, currency, groupCategoryId, splits, onChange
                       value={split.amount || ''}
                       onChange={(e) => updateAmount(sub.id, parseFloat(e.target.value) || 0)}
                       placeholder="0"
-                      className="w-20 rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-right outline-none focus:border-primary"
+                      className="w-20 rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-right outline-hidden focus:border-primary"
                       autoFocus
                     />
                   </div>

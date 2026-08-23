@@ -278,7 +278,7 @@ export default function AccountPage() {
             <input
               autoFocus value={nameInput} onChange={(e) => setNameInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') setEditingName(false); }}
-              className="flex-1 rounded-lg border border-border bg-background px-2 py-1 text-sm font-semibold outline-none focus:border-primary"
+              className="flex-1 rounded-lg border border-border bg-background px-2 py-1 text-sm font-semibold outline-hidden focus:border-primary"
             />
             <button onClick={handleSaveName} disabled={nameSaving} className="text-xs font-medium text-primary disabled:opacity-50">
               {nameSaving ? '…' : t('account.save')}
@@ -342,7 +342,7 @@ export default function AccountPage() {
           {showInvite ? (
             <div className="flex flex-col gap-2">
               <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="member@email.com"
-                className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20" />
               <div className="flex gap-2">
                 <button onClick={handleSendInvite} disabled={!inviteEmail.trim() || familyLoading}
                   className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
@@ -390,7 +390,7 @@ export default function AccountPage() {
       {showCreateFamily ? (
         <div className="flex flex-col gap-2">
           <input type="text" value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder={t('account.familyNamePlaceholder')}
-            className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+            className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20" />
           {familyError && <p className="text-xs text-destructive">{familyError}</p>}
           <div className="flex gap-2">
             <button onClick={handleCreateFamily} disabled={!familyName.trim() || familyLoading}
@@ -535,7 +535,7 @@ export default function AccountPage() {
         <select
           value={exportMonth}
           onChange={(e) => setExportMonth(e.target.value)}
-          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary appearance-none cursor-pointer"
+          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-hidden focus:border-primary appearance-none cursor-pointer"
         >
           {Array.from({ length: 24 }, (_, i) => {
             const d = subMonths(new Date(), i);
@@ -653,7 +653,7 @@ export default function AccountPage() {
       {/* ── MOBILE layout ── */}
       <div className="lg:hidden flex flex-col gap-4 px-[22px] pt-4 pb-28">
         {/* Architectural header */}
-        <div className="pb-4 pt-4 -mt-4 -mx-[22px] px-[22px]" style={{ borderBottom: '2px solid hsl(var(--foreground))', background: 'hsl(var(--card))' }}>
+        <div className="pb-4 pt-4 -mt-4 mx-[-22px] px-[22px]" style={{ borderBottom: '2px solid hsl(var(--foreground))', background: 'hsl(var(--card))' }}>
           <p style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
             {t('account.title')}
           </p>
@@ -692,7 +692,7 @@ export default function AccountPage() {
             <select
               value={language}
               onChange={(e) => handleLanguage(e.target.value as Language)}
-              className="text-sm font-bold text-primary bg-transparent border-0 outline-none cursor-pointer pr-1"
+              className="text-sm font-bold text-primary bg-transparent border-0 outline-hidden cursor-pointer pr-1"
             >
               {LANGUAGES.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
             </select>
@@ -708,7 +708,7 @@ export default function AccountPage() {
             <select
               value={currency}
               onChange={(e) => handleCurrency(e.target.value as Currency)}
-              className="text-sm font-bold text-primary bg-transparent border-0 outline-none cursor-pointer pr-1"
+              className="text-sm font-bold text-primary bg-transparent border-0 outline-hidden cursor-pointer pr-1"
             >
               {CURRENCIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
@@ -722,7 +722,7 @@ export default function AccountPage() {
             <select
               value={weekStart}
               onChange={(e) => handleWeekStart(e.target.value as WeekStart)}
-              className="text-sm font-bold text-primary bg-transparent border-0 outline-none cursor-pointer pr-1"
+              className="text-sm font-bold text-primary bg-transparent border-0 outline-hidden cursor-pointer pr-1"
             >
               <option value="monday">{t('account.weekMonday')}</option>
               <option value="sunday">{t('account.weekSunday')}</option>

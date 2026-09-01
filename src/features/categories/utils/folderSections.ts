@@ -5,15 +5,15 @@
  * selectFolderSections (store/selectors.ts) is the CANONICAL path for
  * components that read full Redux active-category state.
  *
- * Direct usage of buildFolderSections() is valid in exactly two cases:
+ * Direct usage of buildFolderSections() is valid in exactly one case:
  *
  *   1. CategoryPicker — applies a search filter before grouping, so it
  *      passes a filtered subset rather than all active categories.
  *      selectFolderSections cannot accommodate a dynamic search list.
  *
- *   2. CategorySheet (chat feature) — supports a categoriesOverride prop
- *      that substitutes non-Redux data. When overriding, selector paths
- *      do not apply.
+ * (The chat had a second picker of its own with a categories override; it was
+ * the reason categories inside folders went missing there, and it is gone —
+ * the chat now uses the canonical CategoryFolderPickerSheet.)
  *
  * No other component should call buildFolderSections() directly.
  * ──────────────────────────────────────────────────────────────────────────

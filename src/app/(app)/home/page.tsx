@@ -35,7 +35,13 @@ import {
 import { isSlashCommand, handleSlashCommand } from '@/features/chat/bot/slash';
 
 import { ChatScreen } from '@/features/chat/components/ChatScreen';
-import { CategorySheet } from '@/features/chat/components/CategorySheet';
+import { CategoryFolderPickerSheet } from '@/features/categories/components/CategoryFolderPickerSheet';
+import { CategoryEditorSheet } from '@/features/categories/components/CategoryEditorSheet';
+import { FolderEditorSheet } from '@/features/categories/components/FolderEditorSheet';
+import { addCategory as addCategoryToDb } from '@/features/categories/services/categoriesService';
+import { addFolder as addFolderToDb } from '@/features/categories/services/categoryFoldersService';
+import { addFolder as addFolderAction } from '@/features/categories/store/categoriesSlice';
+import { normalizeNameKey } from '@/shared/utils/normalizeName';
 import { PinnedToday } from '@/features/chat/components/PinnedToday';
 import { DateChip } from '@/features/chat/components/DateChip';
 import { BotBubble, BotCardBubble } from '@/features/chat/components/BotBubble';
@@ -211,6 +217,8 @@ export default function HomePage() {
   );
   const allExpenseCats = useAppSelector((s) => s.categories.expense.filter((category) => !category.archived));
   const allIncomeCats = useAppSelector((s) => s.categories.income);
+  const expenseFolders = useAppSelector((s) => s.categories.folders.expense);
+  const incomeFolders = useAppSelector((s) => s.categories.folders.income);
   const savingsGoals = useAppSelector((s) => s.savings.list);
 
   // Load current month expenses on home mount so todaySpent is accurate
@@ -277,6 +285,12 @@ export default function HomePage() {
   };
   const [incomeCategorySheet, setIncomeCategorySheet] = useState<IncomeClarifyContext | null>(null);
   const [expenseCategorySheet, setExpenseCategorySheet] = useState<ExpenseClarifyContext | null>(null);
+  // Inline creation from the clarify picker: without it a merchant whose
+  // category does not exist yet is a dead end — the sheet used to offer
+  // search over what already existed and nothing else.
+  const [clarifyCatEditor, setClarifyCatEditor] = useState<{ type: 'expense' | 'income'; folderId: string | null } | null>(null);
+  const [clarifyFolderEditor, setClarifyFolderEditor] = useState<'expense' | 'income' | null>(null);
+  const [clarifyCreating, setClarifyCreating] = useState(false);
 
   const buildEnrichedCtx = useCallback(() => {
     const ctx = collectBotContext(appStore.getState());
@@ -684,31 +698,123 @@ export default function HomePage() {
       {typing && <Typing />}
     </ChatScreen>
 
-    {/* Income categories sheet */}
-    {incomeCategorySheet && (
-      <CategorySheet
-        categories={allIncomeCats}
-        onSelect={(chip) => {
-          handleIncomeClarifyChip(
-            incomeCategorySheet.amount,
-            chip,
-            incomeCategorySheet.parsedDate,
-            incomeCategorySheet.parsedDateLabel,
-            incomeCategorySheet.parsedNote,
-          );
-          setIncomeCategorySheet(null);
-        }}
-        onClose={() => setIncomeCategorySheet(null)}
-      />
-    )}
+    {/* Income categories — the canonical folder-first picker, same as entry forms */}
+    <CategoryFolderPickerSheet
+      open={!!incomeCategorySheet && !clarifyCatEditor && !clarifyFolderEditor}
+      onClose={() => setIncomeCategorySheet(null)}
+      title={t('categories.selectCategory')}
+      mode="single"
+      folders={incomeFolders}
+      categories={allIncomeCats.filter((category) => !category.archived)}
+      onSelectCategory={(category) => {
+        if (!incomeCategorySheet) return;
+        handleIncomeClarifyChip(
+          incomeCategorySheet.amount,
+          { id: category.id, name: category.name, icon: category.icon, color: category.color },
+          incomeCategorySheet.parsedDate,
+          incomeCategorySheet.parsedDateLabel,
+          incomeCategorySheet.parsedNote,
+        );
+        setIncomeCategorySheet(null);
+      }}
+      onCreateCategory={(folderId) => setClarifyCatEditor({ type: 'income', folderId })}
+      onCreateFolder={() => setClarifyFolderEditor('income')}
+    />
 
-    {expenseCategorySheet && (
-      <CategorySheet
-        categories={allExpenseCats}
-        onSelect={(chip) => handleExpenseClarifyChip(expenseCategorySheet, chip)}
-        onClose={() => setExpenseCategorySheet(null)}
-      />
-    )}
+    <CategoryFolderPickerSheet
+      open={!!expenseCategorySheet && !clarifyCatEditor && !clarifyFolderEditor}
+      onClose={() => setExpenseCategorySheet(null)}
+      title={t('categories.selectCategory')}
+      mode="single"
+      merchantLabel={expenseCategorySheet?.storeName}
+      folders={expenseFolders}
+      categories={allExpenseCats}
+      onSelectCategory={(category) => {
+        if (!expenseCategorySheet) return;
+        handleExpenseClarifyChip(expenseCategorySheet, {
+          id: category.id, name: category.name, icon: category.icon, color: category.color,
+        });
+      }}
+      onCreateCategory={(folderId) => setClarifyCatEditor({ type: 'expense', folderId })}
+      onCreateFolder={() => setClarifyFolderEditor('expense')}
+    />
+
+    {/* Create a category without leaving the clarify flow, then use it right away */}
+    <CategoryEditorSheet
+      open={!!clarifyCatEditor}
+      onClose={() => setClarifyCatEditor(null)}
+      type={clarifyCatEditor?.type ?? 'expense'}
+      folderId={clarifyCatEditor?.folderId ?? undefined}
+      initial={{ folderId: clarifyCatEditor?.folderId ?? undefined }}
+      availableFolders={clarifyCatEditor?.type === 'income' ? incomeFolders : expenseFolders}
+      onSave={async (catData) => {
+        const name = catData.name?.trim();
+        if (!name || !userId || !clarifyCatEditor || clarifyCreating) return;
+        setClarifyCreating(true);
+        try {
+          const type = clarifyCatEditor.type;
+          const folderId = catData.folderId ?? clarifyCatEditor.folderId ?? undefined;
+          const folder = (type === 'income' ? incomeFolders : expenseFolders).find((f) => f.id === folderId);
+          const created = await addCategoryToDb(userId, {
+            name,
+            icon: catData.icon ?? 'box',
+            color: catData.color ?? folder?.color ?? '#94A3B8',
+            folderId,
+            extraFolderIds: catData.extraFolderIds?.filter((id) => id !== folderId) ?? [],
+            isPrivate: catData.isPrivate ?? false,
+            order: 99,
+            type,
+            ...(catData.tags ? { tags: catData.tags } : {}),
+          });
+          dispatch(addCategoryAction(created));
+          setClarifyCatEditor(null);
+          const chip = { id: created.id, name: created.name, icon: created.icon, color: created.color };
+          if (type === 'income') {
+            if (!incomeCategorySheet) return;
+            handleIncomeClarifyChip(
+              incomeCategorySheet.amount, chip,
+              incomeCategorySheet.parsedDate, incomeCategorySheet.parsedDateLabel, incomeCategorySheet.parsedNote,
+            );
+            setIncomeCategorySheet(null);
+          } else {
+            if (!expenseCategorySheet) return;
+            await handleExpenseClarifyChip(expenseCategorySheet, chip);
+          }
+        } finally {
+          setClarifyCreating(false);
+        }
+      }}
+    />
+
+    {/* A brand-new folder opens category creation inside it, so the flow never
+        dead-ends on an empty folder */}
+    <FolderEditorSheet
+      open={!!clarifyFolderEditor}
+      onClose={() => setClarifyFolderEditor(null)}
+      type={clarifyFolderEditor ?? 'expense'}
+      onSave={async (data) => {
+        if (!userId || !clarifyFolderEditor) return;
+        const { id: _id, ...rest } = data;
+        const type = clarifyFolderEditor;
+        const existing = type === 'income' ? incomeFolders : expenseFolders;
+        // Reuse a folder of the same name instead of creating a duplicate
+        const duplicate = existing.find((f) => normalizeNameKey(f.name) === normalizeNameKey(rest.name));
+        let folderId: string;
+        if (duplicate) {
+          folderId = duplicate.id;
+        } else {
+          const created = await addFolderToDb(userId, rest);
+          dispatch(addFolderAction(created));
+          folderId = created.id;
+        }
+        setClarifyFolderEditor(null);
+        const pool = type === 'income' ? allIncomeCats : allExpenseCats;
+        const hasCategories = pool.some(
+          (c) => !c.archived && (c.folderId === folderId || c.extraFolderIds?.includes(folderId)),
+        );
+        if (!hasCategories) setClarifyCatEditor({ type, folderId });
+      }}
+    />
 
 </>
   );

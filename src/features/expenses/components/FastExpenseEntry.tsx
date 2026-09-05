@@ -12,7 +12,7 @@ import { prependExpense, updateExpense as updateExpenseAction } from '@/features
 import { addExpense, updateExpense } from '@/features/expenses/services/expensesService';
 import { resolveExpensePrivacy } from '@/features/expenses/utils/expensePrivacy';
 import { CategoryIcon, StickerIcon } from '@/features/categories/components/CategoryIcon';
-import { getCurrencySymbol } from '@/shared/utils/currency';
+import { getCurrencySymbol, parseLocalDate } from '@/shared/utils/currency';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
 import { recordSavedCard, buildEntryDateHint } from '@/features/chat/services/savedCardService';
@@ -298,11 +298,11 @@ export function FastExpenseEntry({
 
     const entryContextKey = `${initialStore ?? ''}|${initialFolderId ?? ''}`;
     if (entryContextRef.current === entryContextKey) return;
-    entryContextRef.current = entryContextKey;
 
     setActiveFolderId(initialFolderId ?? null);
 
     if (initialFolderId) {
+      entryContextRef.current = entryContextKey;
       // eslint-disable-next-line react-hooks/set-state-in-effect -- form state is reset when the sheet (re)opens for a different entity
       setSelectedCatId('');
       if (getCatsInGroup(initialFolderId).length === 0) {
@@ -312,9 +312,19 @@ export function FastExpenseEntry({
     }
 
     if (fromChat && initialStore) {
+      entryContextRef.current = entryContextKey;
       setSelectedCatId('');
       return;
     }
+
+    // Only the default preselect needs the category list, and the list arrives
+    // a round trip after auth: the layout drops its loading screen as soon as
+    // auth is `initialized`, so a cold start through the PWA «Новая трата»
+    // shortcut mounts this form against an empty list. Pinning the context
+    // here would fix an empty preselect in place, and the save would then
+    // demand a category the form was supposed to have chosen. Wait instead.
+    if (activeExpCats.length === 0) return;
+    entryContextRef.current = entryContextKey;
 
     const mainId = mainCatSuggestion && activeExpCats.some((c) => c.id === mainCatSuggestion.categoryId)
       ? mainCatSuggestion.categoryId
@@ -433,7 +443,7 @@ export function FastExpenseEntry({
     const base = {
       userId: user.id,
       currency,
-      date: new Date(dateStr),
+      date: parseLocalDate(dateStr),
       paymentMethod,
       // Editing must not wipe tags like 'savings'/'recurring'.
       tags: (isEdit && initialExpense?.tags ? initialExpense.tags : []) as string[],

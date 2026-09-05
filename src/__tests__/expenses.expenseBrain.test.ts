@@ -7,21 +7,8 @@ import {
   hasSplitPresets,
   topSplitPreset,
 } from '../features/expenses/engine/splitMemoryEngine';
-import {
-  initialQuickAddState,
-  applyContextToQuickAdd,
-  confirmSuggestion,
-  confirmSplitPreset,
-  resetQuickAdd,
-  markParsing,
-  isReadyToSave,
-  hasSuggestions,
-  isSplitPending,
-} from '../features/expenses/types/quickAddState';
-import { parseInput } from '../features/expenses/engine/inputPipeline';
 import type { SuggestionMemoryState, SplitComboEntry } from '../features/expenses/store/suggestionMemorySlice';
 import type { Category } from '../shared/types';
-import type { ExpenseContext } from '../features/expenses/types/expenseContext';
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -60,26 +47,6 @@ function makeCombo(merchantKey: string, categoryIds: string[], count: number, da
     categoryIds,
     count,
     lastUsed: new Date(NOW - daysAgo * 86_400_000).toISOString(),
-  };
-}
-
-/** Build a minimal ExpenseContext for testing quickAddState transitions. */
-function makeTestContext(amount: number | null, categoryIds: string[] = ['groceries', 'home']): ExpenseContext {
-  const input = amount !== null ? `coffee ${amount}` : 'coffee';
-  const parserContext = parseInput(input);
-  return {
-    rawInput: input,
-    amount,
-    merchant: 'coffee',
-    merchantKey: 'coffee',
-    tokens: [],
-    merchantTokens: [],
-    itemTokens: [],
-    normalizedTokens: [],
-    candidateCategories: categoryIds.map((id, i) => ({ categoryId: id, score: 0.8 - i * 0.1, reason: 'merchant_history', signals: [] })),
-    confidence: { amount: amount !== null ? 0.95 : 0, merchant: 0.3, category: 0.5, overall: 0.5 },
-    signals: [],
-    parserContext,
   };
 }
 
@@ -215,159 +182,6 @@ describe('splitMemoryEngine', () => {
 
     it('returns undefined when no combos', () => {
       expect(topSplitPreset('unknown', EMPTY_MEMORY, CATS, NOW)).toBeUndefined();
-    });
-  });
-});
-
-// ── quickAddState ─────────────────────────────────────────────────────────────
-
-describe('quickAddState', () => {
-  const ctx = makeTestContext(45);
-
-  describe('initialQuickAddState', () => {
-    it('returns idle state with empty fields', () => {
-      const state = initialQuickAddState();
-      expect(state.status).toBe('idle');
-      expect(state.rawInput).toBe('');
-      expect(state.context).toBeNull();
-      expect(state.liveSuggestions).toEqual([]);
-      expect(state.splitPresets).toEqual([]);
-      expect(state.pendingConfirmation).toBeNull();
-    });
-  });
-
-  describe('markParsing', () => {
-    it('sets status to parsing', () => {
-      const state = markParsing(initialQuickAddState(), 'coffee');
-      expect(state.status).toBe('parsing');
-      expect(state.rawInput).toBe('coffee');
-    });
-  });
-
-  describe('applyContextToQuickAdd', () => {
-    it('sets status to suggesting when context has suggestions', () => {
-      const state = applyContextToQuickAdd(initialQuickAddState(), ctx, [], NOW);
-      expect(['suggesting', 'split_pending']).toContain(state.status);
-    });
-
-    it('attaches context to state', () => {
-      const state = applyContextToQuickAdd(initialQuickAddState(), ctx, [], NOW);
-      expect(state.context).toBe(ctx);
-    });
-
-    it('sets liveSuggestions from context candidates', () => {
-      const state = applyContextToQuickAdd(initialQuickAddState(), ctx, [], NOW);
-      expect(state.liveSuggestions.length).toBe(ctx.candidateCategories.length);
-    });
-
-    it('sets split_pending when presets provided and split hint active', () => {
-      const largeCtx = makeTestContext(1500);
-      const presets = [{ id: 'p1', categoryIds: ['groceries', 'home'], categoryNames: ['Groceries', 'Home'], count: 3, lastUsed: '', confidence: 0.6 }];
-      const state = applyContextToQuickAdd(initialQuickAddState(), largeCtx, presets, NOW);
-      expect(['suggesting', 'split_pending']).toContain(state.status);
-    });
-  });
-
-  describe('confirmSuggestion', () => {
-    it('sets status to confirmed', () => {
-      const s0 = applyContextToQuickAdd(initialQuickAddState(), ctx, [], NOW);
-      const s1 = confirmSuggestion(s0, 'health');
-      expect(s1.status).toBe('confirmed');
-    });
-
-    it('sets pendingConfirmation with correct fields', () => {
-      const s0 = applyContextToQuickAdd(initialQuickAddState(), ctx, [], NOW);
-      const s1 = confirmSuggestion(s0, 'health');
-      expect(s1.pendingConfirmation?.categoryId).toBe('health');
-      expect(s1.pendingConfirmation?.amount).toBe(45);
-    });
-
-    it('no-ops when no context', () => {
-      const s0 = initialQuickAddState();
-      const s1 = confirmSuggestion(s0, 'health');
-      expect(s1.status).toBe('idle');
-    });
-
-    it('no-ops when no amount in context', () => {
-      const noAmountCtx = makeTestContext(null);
-      const s0 = applyContextToQuickAdd(initialQuickAddState(), noAmountCtx, [], NOW);
-      const s1 = confirmSuggestion(s0, 'health');
-      expect(s1.pendingConfirmation).toBeNull();
-    });
-  });
-
-  describe('confirmSplitPreset', () => {
-    const preset = {
-      id: 'p1', categoryIds: ['groceries', 'home'],
-      categoryNames: ['Groceries', 'Home'],
-      count: 3, lastUsed: '', confidence: 0.6,
-    };
-
-    it('sets confirmed status', () => {
-      const s0 = applyContextToQuickAdd(initialQuickAddState(), ctx, [preset], NOW);
-      const s1 = confirmSplitPreset(s0, preset);
-      expect(s1.status).toBe('confirmed');
-    });
-
-    it('sets splitCategoryIds on pending confirmation', () => {
-      const s0 = applyContextToQuickAdd(initialQuickAddState(), ctx, [preset], NOW);
-      const s1 = confirmSplitPreset(s0, preset);
-      expect(s1.pendingConfirmation?.splitCategoryIds).toEqual(['groceries', 'home']);
-    });
-
-    it('sets splitPresetId', () => {
-      const s0 = applyContextToQuickAdd(initialQuickAddState(), ctx, [preset], NOW);
-      const s1 = confirmSplitPreset(s0, preset);
-      expect(s1.pendingConfirmation?.splitPresetId).toBe('p1');
-    });
-  });
-
-  describe('resetQuickAdd', () => {
-    it('returns idle initial state', () => {
-      resetQuickAdd();
-      const s1 = resetQuickAdd();
-      expect(s1).toEqual(initialQuickAddState());
-    });
-  });
-
-  describe('query helpers', () => {
-    it('isReadyToSave: true when confirmed + pendingConfirmation set', () => {
-      const s0 = applyContextToQuickAdd(initialQuickAddState(), ctx, [], NOW);
-      const s1 = confirmSuggestion(s0, 'health');
-      expect(isReadyToSave(s1)).toBe(true);
-    });
-
-    it('isReadyToSave: false when idle', () => {
-      expect(isReadyToSave(initialQuickAddState())).toBe(false);
-    });
-
-    it('hasSuggestions: returns boolean', () => {
-      const state = applyContextToQuickAdd(initialQuickAddState(), ctx, [], NOW);
-      expect(typeof hasSuggestions(state)).toBe('boolean');
-    });
-
-    it('isSplitPending: false when suggesting', () => {
-      const state = applyContextToQuickAdd(initialQuickAddState(), ctx, [], NOW);
-      if (state.status === 'suggesting') {
-        expect(isSplitPending(state)).toBe(false);
-      }
-    });
-  });
-
-  describe('immutability', () => {
-    it('applyContextToQuickAdd does not mutate input state', () => {
-      const s0 = initialQuickAddState();
-      const frozen = { ...s0 };
-      applyContextToQuickAdd(s0, ctx, [], NOW);
-      expect(s0.status).toBe(frozen.status);
-      expect(s0.context).toBe(frozen.context);
-    });
-
-    it('confirmSuggestion does not mutate input state', () => {
-      const s0 = applyContextToQuickAdd(initialQuickAddState(), ctx, [], NOW);
-      const status = s0.status;
-      confirmSuggestion(s0, 'health');
-      expect(s0.status).toBe(status);
     });
   });
 });

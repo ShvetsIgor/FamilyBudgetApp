@@ -7,16 +7,11 @@
     "plan": "תכנון"
   },
   "home": {
-    "addExpense": "הוסף הוצאה",
-    "recentExpenses": "הוצאות אחרונות",
-    "thisMonth": "החודש"
+    "addExpense": "הוסף הוצאה"
   },
   "expense": {
-    "title": "הוצאה חדשה",
-    "editTitle": "ערוך הוצאה",
     "amount": "סכום",
     "category": "קטגוריה",
-    "subcategory": "תת-קטגוריה",
     "date": "תאריך",
     "paymentMethod": "אמצעי תשלום",
     "store": "חנות / מקום",
@@ -24,20 +19,12 @@
     "comment": "הערה",
     "privacy": "פרטיות",
     "split": "פיצול הוצאה",
-    "addSplit": "הוסף שורה",
-    "remaining": "יתרה",
-    "save": "שמור",
-    "cancel": "ביטול",
     "cash": "מזומן",
     "card": "כרטיס",
     "other": "אחר",
-    "personal": "אישי",
-    "family": "משפחתי",
     "secret": "סודי",
     "numpadEdit": "עריכה",
     "numpadReceipt": "קבלה · {store}",
-    "numpadReceiptCount_one": "פריט {count}",
-    "numpadReceiptCount_other": "{count} פריטים",
     "numpadTotal": "סה״כ",
     "numpadSave": "שמור קבלה {symbol}{total}",
     "numpadSaveEdit": "שמור {symbol}{total}",
@@ -50,17 +37,14 @@
     "income": "הכנסות",
     "expenses": "הוצאות",
     "balance": "יתרה",
-    "saved": "חסכון",
     "currentMonth": "החודש",
     "lastMonth": "חודש שעבר",
     "threeMonths": "3 חודשים",
-    "year": "שנה",
-    "custom": "בחר"
+    "year": "שנה"
   },
   "auth": {
     "signIn": "כניסה",
     "signUp": "הרשמה",
-    "signOut": "יציאה",
     "withGoogle": "המשך עם Google",
     "email": "אימייל",
     "password": "סיסמה",
@@ -68,26 +52,19 @@
     "forgotPassword": "שכחת סיסמה?"
   },
   "common": {
-    "loading": "טוען...",
     "error": "משהו השתבש",
-    "save": "שמור",
     "cancel": "ביטול",
     "delete": "מחק",
     "edit": "ערוך",
     "back": "חזור",
-    "offline": "לא מחובר",
-    "syncing": "מסנכרן..."
+    "offline": "לא מחובר"
   },
   "chat": {
-    "header": {
-      "online": "מחובר · מחשב מקומית"
-    },
     "today": {
       "budgetLabel": "תקציב להיום",
       "monthLabel": "תקציב חודשי",
       "of": "מתוך",
-      "spent": "הוצא",
-      "spentPct": "כבר {pct}%"
+      "spent": "הוצא"
     },
     "morning": {
       "greeting": "בוקר טוב ✨",
@@ -102,11 +79,6 @@
       "whatBought": "מה קניתם?",
       "split": "פיצול",
       "promise": "תגיד לי — אזכור את המילה הזו לנצח"
-    },
-    "future": {
-      "question": "האם זהו הוצאה עתידית?",
-      "yes": "כן, תתזמן",
-      "no": "לא, בטל"
     },
     "weekly": {
       "envelopes": "מעטפות",
@@ -138,82 +110,23 @@
     "tabIncome": "הכנסה"
   },
   "categories": {
-    "title": "קטגוריות",
     "expense": "הוצאות",
     "income": "הכנסות",
     "add": "+ הוסף קטגוריה",
-    "addSub": "+ תת-קטגוריה",
     "reset": "↺ איפוס",
-    "resetting": "מאפס…",
     "newCategory": "קטגוריה חדשה",
     "edit": "ערוך",
     "name": "שם",
     "namePlaceholder": "שם הקטגוריה",
     "icon": "אייקון",
-    "color": "צבע",
-    "private": "פרטי (מוסתר מהמשפחה)",
     "search": "חיפוש…",
     "selectCategory": "בחר קטגוריה",
     "save": "שמור",
     "saving": "שומר…",
     "cancel": "ביטול",
     "delete": "מחק",
-    "confirmDelete": "למחוק קטגוריה זו?",
-    "selectToEdit": "בחר קטגוריה לעריכה או הוסף חדשה",
     "hub": {
-      "summary": "{n} פעילות · {currency}{total}/חודש",
-      "active": "פעילות",
-      "library": "בספרייה",
-      "show": "הצג",
-      "hide": "הסתר",
-      "sort": "מיון",
-      "createManual": "צור קטגוריה ידנית",
-      "tabExpense": "הוצאות",
-      "tabIncome": "הכנסות"
-    },
-    "row": {
-      "subs": "{n} תתי-קטגוריות",
-      "more": "+{n}",
-      "inLibrary": "בספרייה"
-    },
-    "constructor": {
-      "cardTitle": "בונה קטגוריות",
-      "cardSubtitle": "הגדר את כל הקטגוריות שלך שלב אחר שלב",
-      "step": "שלב {current} מתוך {total}",
-      "next": "הבא",
-      "back": "חזור",
-      "skip": "דלג",
-      "pick": {
-        "title": "קטגוריות",
-        "h": "אילו הוצאות אתה עוקב?",
-        "sub": "בחר הכל שמתאים לך. ניתן לשנות בהמשך.",
-        "ownTile": "מותאם",
-        "nextWithCount": "הבא · {n}",
-        "nextEmpty": "בחר לפחות אחת"
-      },
-      "refine": {
-        "title": "עדכון",
-        "h": "עדכן כל קטגוריה",
-        "sub": "יותר תתי-קטגוריות = סטטיסטיקה טובה יותר.",
-        "ownChip": "מותאם",
-        "nextLabel": "תקציבים"
-      },
-      "budget": {
-        "title": "תקציב",
-        "h": "כמה בחודש?",
-        "sub": "ניתן להשאיר ריק ולהגדיר מאוחר יותר.",
-        "totalLabel": "תקציב כולל",
-        "nextLabel": "סיום"
-      },
-      "done": {
-        "title": "סיום",
-        "headline": "הכל מוכן!",
-        "sub": "ניתן להתחיל לעקוב אחר התקציב. שנה קטגוריות בכל עת בהגדרות.",
-        "statCats": "קטגוריות",
-        "statSubs": "תתי-קטגוריות",
-        "statBudget": "בחודש",
-        "cta": "התחל לנהל תקציב"
-      }
+      "createManual": "צור קטגוריה ידנית"
     },
     "editor": {
       "title": "ערוך",
@@ -225,9 +138,7 @@
       "budgetOptional": "אופציונלי",
       "private": "פרטי",
       "privateHint": "הסתר מהמשפחה",
-      "save": "שמור קטגוריה",
-      "delete": "מחק",
-      "confirmDelete": "למחוק קטגוריה זו?"
+      "delete": "מחק"
     }
   }
 }

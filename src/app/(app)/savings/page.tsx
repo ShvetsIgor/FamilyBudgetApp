@@ -486,7 +486,18 @@ function ContributeForm({ goal, currency, onSave, onCancel, t }: {
     const num = parseFloat(amount);
     if (!num || num <= 0) { setError(t('common.error')); return; }
     setError(''); setSaving(true);
-    try { await onSave(num, note, recordAsExpense, savingsCat?.id ?? ''); } finally { setSaving(false); }
+    try {
+      await onSave(num, note, recordAsExpense, savingsCat?.id ?? '');
+    } catch (err) {
+      // `addContributionWithExpense` throws 'goal-not-migrated' by design for a
+      // family member's goal whose owner has not opened /savings since the
+      // contributions map migration. Without this the form simply never closed
+      // and the user was told nothing at all.
+      const code = err instanceof Error ? err.message : '';
+      setError(code === 'goal-not-migrated' ? t('savings.contributeNotMigrated') : t('savings.contributeError'));
+    } finally {
+      setSaving(false);
+    }
   }
 
   const remaining = goal.targetAmount - goal.currentAmount;

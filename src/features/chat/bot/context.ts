@@ -1,5 +1,5 @@
 import type { SuggestionMemoryState } from '@/features/expenses/store/suggestionMemorySlice';
-import type { Category, CategoryFolder, Currency, StoreProfile } from '@/shared/types';
+import type { Category, CategoryFolder, Currency } from '@/shared/types';
 import { toLocalDateKey } from '@/shared/utils/dateKey';
 import { splitOwnCurrency } from '@/shared/utils/currencyTotals';
 import type { RootState } from '@/store/store';
@@ -14,7 +14,6 @@ export interface BotContext {
   incomeCategoriesById: Map<string, Category>;
   topIncomeCategoryIds: string[];
   todaySpent: number;
-  storeProfiles: Record<string, StoreProfile>;
   suggestionMemory: SuggestionMemoryState;
 }
 
@@ -75,7 +74,6 @@ export function collectBotContext(state: RootState): BotContext | null {
     incomeCategoriesById,
     topIncomeCategoryIds,
     todaySpent,
-    storeProfiles: state.storeProfiles?.profiles ?? {},
     suggestionMemory: state.suggestionMemory,
   };
 }

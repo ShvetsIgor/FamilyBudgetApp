@@ -1,7 +1,11 @@
 import type { Currency } from '@/shared/types';
-import { doc, setDoc, serverTimestamp, Timestamp, collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+import {
+  Timestamp, collection, doc, getDoc, getDocs, query, where, orderBy, setDoc,
+  serverTimestamp, type DocumentData,
+} from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import { format, subMonths } from 'date-fns';
+import { toLocalMonthKey } from '@/shared/utils/dateKey';
 import type { SplitItem } from '@/shared/types';
 
 export interface MonthStats {
@@ -70,8 +74,79 @@ export function foreignTotals(
     .sort((a, b) => b.total - a.total);
 }
 
+/**
+ * A month's stats, from the stored aggregate when it can be trusted.
+ *
+ * The `monthlyStats` collection has been written by every expense and income
+ * path for a long time — batched, per currency — while this reader ignored it
+ * and re-queried the raw collections instead. For `/analytics` over six months
+ * that is twelve range queries reading every expense and income document the
+ * user owns, on every visit; the stored aggregate is six document reads.
+ *
+ * Trust rule: only a document explicitly marked `currencyBreakdownComplete` is
+ * used. Incremental deltas alone never set that flag, so a document built
+ * purely from `increment()` calls on top of nothing is treated as absent —
+ * exactly right, because it has no baseline to be complete against.
+ *
+ * Caching rule: only CLOSED months are written back. The current month is
+ * still moving, and a snapshot taken from a query is stale the instant an
+ * expense lands; past months only change through the delta writers, which
+ * `increment()` the cached document and keep it correct. Even for a closed
+ * month the write is skipped if the document changed while we were computing.
+ */
 export async function fetchMonthStats(userId: string, month: string): Promise<MonthStats> {
-  return computeMonthStats(userId, month);
+  const ref = statsDoc(userId, month);
+
+  let before: DocumentData | undefined;
+  try {
+    const snap = await getDoc(ref);
+    before = snap.data();
+    if (before?.currencyBreakdownComplete === true) return fromStoredStats(month, before);
+  } catch { /* offline or denied: fall through to computing it */ }
+
+  const computed = await computeMonthStats(userId, month);
+
+  if (isClosedMonth(month)) {
+    try {
+      const now = await getDoc(ref);
+      const unchanged =
+        (now.data()?.updatedAt?.toMillis?.() ?? null) === (before?.updatedAt?.toMillis?.() ?? null);
+      // A delta that landed mid-computation would be overwritten by our
+      // pre-edit snapshot; leave the document alone and cache on a later visit.
+      if (unchanged) {
+        await setDoc(ref, {
+          ...computed,
+          userId,
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+      }
+    } catch { /* caching is an optimisation, never a failure */ }
+  }
+
+  return computed;
+}
+
+function statsDoc(userId: string, month: string) {
+  return doc(getDb(), 'monthlyStats', userId, 'months', month);
+}
+
+/** True once the month is over, so nothing new can be dated into it. */
+function isClosedMonth(month: string): boolean {
+  return month < toLocalMonthKey(new Date());
+}
+
+function fromStoredStats(month: string, data: DocumentData): MonthStats {
+  return {
+    month,
+    totalExpenses: (data.totalExpenses as number) ?? 0,
+    totalIncome: (data.totalIncome as number) ?? 0,
+    byCategory: (data.byCategory as Record<string, number>) ?? {},
+    totalsByCurrency: (data.totalsByCurrency as Partial<Record<Currency, number>>) ?? {},
+    incomeByCurrency: (data.incomeByCurrency as Partial<Record<Currency, number>>) ?? {},
+    byCategoryByCurrency:
+      (data.byCategoryByCurrency as Partial<Record<Currency, Record<string, number>>>) ?? {},
+    currencyBreakdownComplete: true,
+  };
 }
 
 async function computeMonthStats(userId: string, month: string): Promise<MonthStats> {
@@ -150,93 +225,4 @@ export async function fetchLastNMonths(userId: string, n: number): Promise<Month
 
   const results = await Promise.all(months.map((m) => fetchMonthStats(userId, m)));
   return results;
-}
-
-export async function recalculateMonthStats(userId: string, month: string): Promise<MonthStats> {
-  const [year, m] = month.split('-').map(Number);
-  const from = Timestamp.fromDate(new Date(year, m - 1, 1));
-  const to = Timestamp.fromDate(new Date(year, m, 1));
-
-  // Read all expenses for the month
-  const expSnap = await getDocs(
-    query(
-      collection(getDb(), 'expenses', userId, 'items'),
-      where('date', '>=', from),
-      where('date', '<', to),
-      orderBy('date', 'desc')
-    )
-  );
-
-  let totalExpenses = 0;
-  const totalsByCurrency: Partial<Record<Currency, number>> = {};
-  const byCategory: Record<string, number> = {};
-  const byCategoryByCurrency: Partial<Record<Currency, Record<string, number>>> = {};
-
-  for (const d of expSnap.docs) {
-    const data = d.data();
-    const amount = data.amount as number;
-    const currency = data.currency as Currency;
-    const categoryId = data.categoryId as string;
-    const splits = (data.splits as SplitItem[]) ?? [];
-    const splitTotal = splits.reduce((s, sp) => s + sp.amount, 0);
-    const mainAmount = amount - splitTotal;
-    const currencyCategories = byCategoryByCurrency[currency] ?? {};
-    byCategoryByCurrency[currency] = currencyCategories;
-
-    totalExpenses += amount;
-    totalsByCurrency[currency] = (totalsByCurrency[currency] ?? 0) + amount;
-    byCategory[categoryId] = (byCategory[categoryId] ?? 0) + mainAmount;
-    currencyCategories[categoryId] = (currencyCategories[categoryId] ?? 0) + mainAmount;
-    for (const sp of splits) {
-      if (sp.categoryId && sp.amount > 0) {
-        byCategory[sp.categoryId] = (byCategory[sp.categoryId] ?? 0) + sp.amount;
-        currencyCategories[sp.categoryId] = (currencyCategories[sp.categoryId] ?? 0) + sp.amount;
-      }
-    }
-  }
-
-  // Read all income for the month
-  const incSnap = await getDocs(
-    query(
-      collection(getDb(), 'incomes', userId, 'items'),
-      where('date', '>=', from),
-      where('date', '<', to),
-      orderBy('date', 'desc')
-    )
-  );
-
-  let totalIncome = 0;
-  const incomeByCurrency: Partial<Record<Currency, number>> = {};
-  for (const d of incSnap.docs) {
-    const data = d.data();
-    const amount = data.amount as number;
-    const currency = data.currency as Currency;
-    totalIncome += amount;
-    incomeByCurrency[currency] = (incomeByCurrency[currency] ?? 0) + amount;
-  }
-
-  const ref = doc(getDb(), 'monthlyStats', userId, 'months', month);
-  await setDoc(ref, {
-    userId,
-    month,
-    totalExpenses,
-    totalIncome,
-    totalsByCurrency,
-    incomeByCurrency,
-    byCategoryByCurrency,
-    currencyBreakdownComplete: true,
-    byCategory,
-    updatedAt: serverTimestamp(),
-  });
-
-  return {
-    month,
-    totalExpenses,
-    totalIncome,
-    totalsByCurrency,
-    incomeByCurrency,
-    byCategoryByCurrency,
-    currencyBreakdownComplete: true,
-    byCategory,
-  };
 }

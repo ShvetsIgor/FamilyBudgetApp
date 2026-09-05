@@ -1,7 +1,6 @@
 import {
   collection,
   doc,
-  addDoc,
   getDocs,
   getDoc,
   query,
@@ -18,7 +17,6 @@ import { getDb } from '@/shared/lib/firebase';
 import { queueLinkedChatMessageDeletes } from '@/features/expenses/services/expensesService';
 import { toLocalMonthKey } from '@/shared/utils/dateKey';
 import type { SerializableIncome, Currency, Privacy } from '@/shared/types';
-import { format } from 'date-fns';
 
 type IncomeMethod = 'cash' | 'card' | 'bank' | 'other';
 
@@ -178,10 +176,18 @@ export async function addIncome(input: AddIncomeInput): Promise<SerializableInco
     }).filter(([, v]) => v !== undefined)
   );
 
-  const ref = await addDoc(incCol(userId), data);
-
-  const month = format(date, 'yyyy-MM');
-  await updateMonthlyIncome(userId, month, input.amount, 1, input.currency);
+  // One batch, like the expense path: the income and its month aggregate are
+  // now READ back by /statistics and /analytics, so a write that lands without
+  // its stats update is a number the user sees and cannot explain.
+  const ref = doc(incCol(userId));
+  const batch = writeBatch(getDb());
+  batch.set(ref, data);
+  queueMonthlyIncomeUpdate(batch, userId, {
+    month: toLocalMonthKey(date),
+    amount: input.amount,
+    currency: input.currency,
+  });
+  await batch.commit();
 
   return toSerializable(ref.id, {
     ...data,
@@ -223,34 +229,10 @@ export async function deleteIncome(userId: string, income: SerializableIncome): 
   const batch = writeBatch(getDb());
   batch.delete(doc(getDb(), 'incomes', userId, 'items', income.id));
   await queueLinkedChatMessageDeletes(batch, userId, 'incomeId', income.id);
+  queueMonthlyIncomeUpdate(batch, userId, {
+    month: toLocalMonthKey(income.date),
+    amount: -income.amount,
+    currency: income.currency,
+  });
   await batch.commit();
-  const month = format(new Date(income.date), 'yyyy-MM');
-  await updateMonthlyIncome(userId, month, income.amount, -1, income.currency);
-}
-
-async function updateMonthlyIncome(
-  userId: string, month: string, amount: number, sign: 1 | -1, currency: Currency,
-) {
-  const ref = statsDoc(userId, month);
-  try {
-    await updateDoc(ref, {
-      totalIncome: increment(sign * amount),
-      [`incomeByCurrency.${currency}`]: increment(sign * amount),
-      updatedAt: serverTimestamp(),
-    });
-  } catch (e: unknown) {
-    if ((e as { code?: string }).code === 'not-found') {
-      await setDoc(ref, {
-        userId,
-        month,
-        totalExpenses: 0,
-        totalIncome: sign * amount,
-        incomeByCurrency: { [currency]: sign * amount },
-        byCategory: {},
-        updatedAt: serverTimestamp(),
-      });
-    } else {
-      throw e;
-    }
-  }
 }

@@ -38,7 +38,10 @@ export function RegisterForm() {
       dispatch(setUser(profile));
       dispatch(setCurrency(profile.currency));
       dispatch(setLanguage(profile.language));
-      dispatch(setTheme(profile.theme === 'press' ? 'press' : 'mist'));
+      // Same widening as AuthProvider: 'paper' predates the Press migration and
+      // can still sit in an existing profile document, outside the Theme union.
+      const profileTheme = profile.theme as typeof profile.theme | 'paper';
+      dispatch(setTheme(profileTheme === 'press' || profileTheme === 'paper' ? 'press' : 'mist'));
       router.replace('/home');
     } catch (e: unknown) {
       const code = (e as { code?: string }).code;

@@ -8,7 +8,7 @@ import { closeQuickAdd } from '@/features/quickadd/store/quickAddSlice';
 import { prependIncome } from '@/features/income/store/incomeSlice';
 import { addIncome } from '@/features/income/services/incomeService';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
-import { getCurrencySymbol } from '@/shared/utils/currency';
+import { getCurrencySymbol, parseLocalDate } from '@/shared/utils/currency';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import { useT } from '@/shared/hooks/useT';
 import { paymentMethodIcon } from '@/shared/config/domainIcons';
@@ -62,7 +62,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
     setSaving(true);
     try {
       const inc = await addIncome({
-        userId: user.id, currency, date: new Date(dateStr),
+        userId: user.id, currency, date: parseLocalDate(dateStr),
         method, privacy: 'regular',
         comment: normalizeName(comment) || undefined,
         amount: amountNum, categoryId,
@@ -108,7 +108,7 @@ export function IncomeDrawerForm({ accent }: { accent: string }) {
 
 
   const today = toDateInput(new Date());
-  const dateLabel = dateStr === today ? t('common.today') : format(new Date(dateStr + 'T12:00:00'), 'd MMM yyyy');
+  const dateLabel = dateStr === today ? t('common.today') : format(parseLocalDate(dateStr), 'd MMM yyyy');
 
   return (
     <div className="flex flex-col h-full">

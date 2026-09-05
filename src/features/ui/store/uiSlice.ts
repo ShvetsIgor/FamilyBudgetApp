@@ -54,20 +54,14 @@ interface UIState {
   desktopRightPanelOpen: boolean;
 }
 
-const storedTheme = ls('ui.theme');
-const storedDarkMode = ls('ui.darkMode');
-// Migrate legacy 'paper' → 'press' so previously saved preferences map to the
-// new warm-paper editorial theme rather than silently falling back to mist.
-const normalizedTheme: 'mist' | 'press' =
-  storedTheme === 'press' || storedTheme === 'paper' ? 'press' : 'mist';
-
 const initialState: UIState = {
-  theme: normalizedTheme,
-  isDarkMode: storedDarkMode === 'true' || storedTheme === 'dark',
-  // Deliberately NOT read from localStorage here: this module also runs during
-  // prerendering, where there is none, so a stored 'ru' would make the client's
-  // first render disagree with the server's HTML and break hydration. The
-  // stored value is applied by hydrateDisplayPreferences on mount instead.
+  // theme, isDarkMode and language are deliberately NOT read from localStorage
+  // here: this module also runs during prerendering, where there is none, so a
+  // stored value would make the client's first render disagree with the
+  // server's HTML and break hydration. hydrateDisplayPreferences applies all
+  // three on mount instead (and migrates a legacy 'paper' theme to 'press').
+  theme: 'mist',
+  isDarkMode: false,
   language: 'en',
   currency: 'ILS',
   weekStart: 'monday',

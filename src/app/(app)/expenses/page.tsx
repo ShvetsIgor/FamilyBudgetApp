@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { format, parseISO, isToday, isYesterday } from 'date-fns';
 import type { Locale } from 'date-fns';
@@ -12,6 +12,7 @@ import { updateRecurringItem } from '@/features/recurring/store/recurringSlice';
 import { ExpenseCard } from '@/features/expenses/components/ExpenseCard';
 import { UpcomingBills } from '@/features/recurring/components/UpcomingBills';
 import { formatAmount } from '@/shared/utils/currency';
+import { toLocalDateKey, toLocalMonthKey } from '@/shared/utils/dateKey';
 import { cn } from '@/shared/utils/cn';
 import type { SavingsContribution, SerializableExpense } from '@/shared/types';
 import {
@@ -35,7 +36,7 @@ import {
 function groupByDate<T extends { date: string }>(items: T[]): [string, T[]][] {
   const map = new Map<string, T[]>();
   for (const item of items) {
-    const day = format(parseISO(item.date), 'yyyy-MM-dd');
+    const day = toLocalDateKey(item.date);
     if (!map.has(day)) map.set(day, []);
     map.get(day)!.push(item);
   }
@@ -118,7 +119,16 @@ export default function ExpensesPage() {
   }, []);
 
   const isCurrentMonth = selectedMonth === currentMonth;
-  const expenses = isCurrentMonth ? reduxExpenses : (localExpenses ?? []);
+  // The Redux list is a shared cache, not «this month»: other screens merge
+  // several months into it (/recurring pulls four for subscription detection),
+  // and `mergeExpenses` flips status to 'ready' so the guard below stops
+  // refetching. Without this filter the header total, the day groups and the
+  // budget bar would all silently span every month that happens to be loaded.
+  const expenses = useMemo(
+    () => (isCurrentMonth ? reduxExpenses : (localExpenses ?? []))
+      .filter((e) => toLocalMonthKey(e.date) === selectedMonth),
+    [isCurrentMonth, reduxExpenses, localExpenses, selectedMonth],
+  );
 
   const loadCurrentExpenses = useCallback(async () => {
     if (!user || expStatus !== 'idle') return;
@@ -147,14 +157,33 @@ export default function ExpensesPage() {
       .catch(() => {});
   }, [user, categories, reduxExpenses, localExpenses, isCurrentMonth, dispatch]);
 
+  // Past months are immutable, so a month once loaded is kept: stepping
+  // Jan → Feb → Jan used to re-issue the range query every time, which on a
+  // 150-expense month is 150 document reads per tap of a chip the user has
+  // already visited.
+  const monthCacheRef = useRef<Map<string, SerializableExpense[]>>(new Map());
+  // A past month is only immutable until the user edits one of its rows, so
+  // every mutation drops that month from the cache and it reloads on the next
+  // visit.
+  const forgetCachedMonth = useCallback((dateIso: string) => {
+    if (!user) return;
+    monthCacheRef.current.delete(`${user.id}|${toLocalMonthKey(dateIso)}`);
+  }, [user]);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the fetch starts here; this app has no server loader, everything comes from Firestore on the client
     if (isCurrentMonth) { setLocalExpenses(null); return; }
+    if (!user) { setLocalExpenses(null); return; }
+
+    const cached = monthCacheRef.current.get(`${user.id}|${selectedMonth}`);
+    if (cached) { setLocalExpenses(cached); return; }
+
     setLocalExpenses(null);
-    if (!user) return;
     setLoading(true);
     fetchMonthExpenses(user.id, selectedMonth)
-      .then(setLocalExpenses)
+      .then((items) => {
+        monthCacheRef.current.set(`${user.id}|${selectedMonth}`, items);
+        setLocalExpenses(items);
+      })
       .finally(() => setLoading(false));
   }, [selectedMonth, isCurrentMonth, user]);
 
@@ -198,48 +227,73 @@ export default function ExpensesPage() {
     if (chip) chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }, [selectedMonth]);
 
-  const filteredExpenses = expenses.filter((e) => {
-    const listMeta = getExpenseListMeta(e, categories, folders, language);
-    const q = search.toLowerCase();
-    const matchesSearch = !q || [e.store, e.comment, categories.find((c) => c.id === e.categoryId)?.name, listMeta?.labelSource]
-      .some((v) => v?.toLowerCase().includes(q));
-    const matchesCat = !filterCatId || matchesExpenseListFilter(e, filterCatId);
-    return matchesSearch && matchesCat;
-  });
+  // `getExpenseListMeta` scans the whole category AND folder list per expense.
+  // It used to be called once per row inside the search filter and again inside
+  // the filter-chip reduce — so a 150-row month with 40 categories re-ran ~6000
+  // comparisons twice on every keystroke, and on every unrelated dispatch. It
+  // is resolved once per (expenses, categories, folders, language) instead, and
+  // the category name lookup becomes a Map instead of a linear find per row.
+  const listMetaById = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof getExpenseListMeta>>();
+    for (const e of expenses) map.set(e.id, getExpenseListMeta(e, categories, folders, language));
+    return map;
+  }, [expenses, categories, folders, language]);
 
-  const filterOptions = expenses.reduce<Array<{ key: string; icon: string; color: string; label: string }>>(
-    (acc, expense) => {
-      const localizedMeta = getExpenseListMeta(expense, categories, folders, language);
-      if (!localizedMeta) return acc;
-      if (acc.some((option) => option.key === localizedMeta.key)) return acc;
-      acc.push({
+  const categoryNameById = useMemo(
+    () => new Map(categories.map((c) => [c.id, c.name])),
+    [categories],
+  );
+
+  const filteredExpenses = useMemo(() => {
+    const q = search.toLowerCase();
+    return expenses.filter((e) => {
+      const listMeta = listMetaById.get(e.id);
+      const matchesSearch = !q || [e.store, e.comment, categoryNameById.get(e.categoryId), listMeta?.labelSource]
+        .some((v) => v?.toLowerCase().includes(q));
+      const matchesCat = !filterCatId || matchesExpenseListFilter(e, filterCatId);
+      return matchesSearch && matchesCat;
+    });
+  }, [expenses, search, filterCatId, listMetaById, categoryNameById]);
+
+  const filterOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const options: Array<{ key: string; icon: string; color: string; label: string }> = [];
+    for (const expense of expenses) {
+      const localizedMeta = listMetaById.get(expense.id);
+      if (!localizedMeta || seen.has(localizedMeta.key)) continue;
+      seen.add(localizedMeta.key);
+      options.push({
         key: localizedMeta.key,
         icon: localizedMeta.icon,
         color: localizedMeta.color,
         label: t.cat(localizedMeta.labelSource),
       });
-      return acc;
-    },
-    [],
-  );
+    }
+    return options;
+  }, [expenses, listMetaById, t]);
 
-  const familyExpenses = familyData?.expenses ?? [];
-  const familyFiltered = familyExpenses.filter((e) => {
+  const familyExpenses = useMemo(() => familyData?.expenses ?? [], [familyData]);
+  const familyFiltered = useMemo(() => {
     const q = search.toLowerCase();
-    if (!q) return true;
-    const catName = familyData?.categoryMeta[e.categoryId]?.name;
-    return [e.store, e.comment, catName, e.memberName].some((v) => v?.toLowerCase().includes(q));
-  });
+    if (!q) return familyExpenses;
+    return familyExpenses.filter((e) => {
+      const catName = familyData?.categoryMeta[e.categoryId]?.name;
+      return [e.store, e.comment, catName, e.memberName].some((v) => v?.toLowerCase().includes(q));
+    });
+  }, [familyExpenses, familyData, search]);
   // Currencies are never summed together — not across family members, and not
   // within one person either (a $12 subscription must not become ₪12). The own
   // currency is the headline; anything else rides alongside it.
-  const familyTotals = groupByCurrency(familyExpenses);
-  const own = splitOwnCurrency(expenses, currency);
+  const familyTotals = useMemo(() => groupByCurrency(familyExpenses), [familyExpenses]);
+  const own = useMemo(() => splitOwnCurrency(expenses, currency), [expenses, currency]);
   // Budget comparisons only make sense inside the budget's own currency
   const monthTotal = isFamilyView
     ? familyExpenses.reduce((s, e) => s + e.amount, 0)
     : own.ownTotal;
-  const expenseGroups = groupByDate(filteredExpenses).sort(([a], [b]) => b.localeCompare(a));
+  const expenseGroups = useMemo(
+    () => groupByDate(filteredExpenses).sort(([a], [b]) => b.localeCompare(a)),
+    [filteredExpenses],
+  );
 
   const monthBar = (
     <div
@@ -410,7 +464,7 @@ export default function ExpensesPage() {
         )}
 
         {/* Upcoming recurring (mobile only) */}
-        {isCurrentMonth && <div className="lg:hidden"><UpcomingBills withinDays={30} /></div>}
+        {isCurrentMonth && <div className="lg:hidden"><UpcomingBills /></div>}
 
         {/* Expense groups */}
         {!isFamilyView && !loading && (
@@ -447,6 +501,7 @@ export default function ExpensesPage() {
                           // Commit the delete to Firestore now. If the tab is
                           // closed before Undo fires, the row stays gone.
                           dispatch(removeExpense(e.id));
+                          forgetCachedMonth(e.date);
                           deleteExpense(user.id, e)
                             .then(async (restored) => {
                               if (restored) dispatch(updateRecurringItem(restored));
@@ -563,7 +618,7 @@ export default function ExpensesPage() {
 
       {/* ── Right column (desktop) ── */}
       <div className="hidden lg:block sticky top-6">
-        {isCurrentMonth && <UpcomingBills withinDays={30} maxItems={5} />}
+        {isCurrentMonth && <UpcomingBills maxItems={5} />}
       </div>
 
       {/* No mobile FAB here: the tab bar's «Add» is the same action, and two
@@ -583,6 +638,7 @@ export default function ExpensesPage() {
               const { expense, reversed } = undoItem;
               setUndoItem(null);
               dispatch(prependExpense(expense));
+              forgetCachedMonth(expense.date);
               restoreExpense(user.id, expense).catch(() => {
                 // Restore failed — revert the optimistic list change so the
                 // user sees the actual server state.

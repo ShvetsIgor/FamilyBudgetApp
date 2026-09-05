@@ -82,21 +82,3 @@ export function findCategoryBlueprint(
   const query = normalize(match.name);
   return blueprints.find((category) => categoryCandidates(category).includes(query));
 }
-
-export function matchFolderSuggestions(type: CategoryType, query: string): LibrarySuggestion[] {
-  const normalized = normalize(query);
-  if (!normalized) return [];
-  return getFolderLibraryBlueprints(type)
-    .filter((folder) => folderCandidates(folder).some((candidate) => candidate.includes(normalized)))
-    .slice(0, 6)
-    .map((b) => folderBlueprintToSuggestion(b));
-}
-
-export function matchCategorySuggestions(type: CategoryType, query: string): LibrarySuggestion[] {
-  const normalized = normalize(query);
-  if (!normalized) return [];
-  return getCategoryLibraryBlueprints(type)
-    .filter((category) => categoryCandidates(category).some((candidate) => candidate.includes(normalized)))
-    .slice(0, 8)
-    .map((b) => categoryBlueprintToSuggestion(b));
-}

@@ -17,19 +17,34 @@ import type { Currency, SerializableExpense } from '@/shared/types';
 import { useRouter } from 'next/navigation';
 import { TrendingUp } from 'lucide-react';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
-import { FamilyAnalyticsView } from '@/features/family/components/FamilyAnalyticsView';
-import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-} from 'recharts';
+import dynamic from 'next/dynamic';
+import type { DowPoint } from './AnalyticsCharts';
+
+// recharts is a fifth of this route's JavaScript and the charts have nothing to
+// draw until Firestore answers, so it is fetched alongside the data instead of
+// ahead of first paint. One module → one lazy chunk for all three charts.
+const chartSkeleton = (height: number) => function ChartSkeleton() {
+  return <div className="animate-pulse rounded-xl bg-muted/40" style={{ height }} />;
+};
+const AvgDailyChart = dynamic(() => import('./AnalyticsCharts').then((m) => m.AvgDailyChart), {
+  ssr: false, loading: chartSkeleton(160),
+});
+const TrendChart = dynamic(() => import('./AnalyticsCharts').then((m) => m.TrendChart), {
+  ssr: false, loading: chartSkeleton(200),
+});
+const DowChart = dynamic(() => import('./AnalyticsCharts').then((m) => m.DowChart), {
+  ssr: false, loading: chartSkeleton(160),
+});
+
+// Only rendered in family mode, and it carries its own recharts import — a
+// static import would put the whole chart library back on the critical path of
+// every solo user's /analytics.
+const FamilyAnalyticsView = dynamic(
+  () => import('@/features/family/components/FamilyAnalyticsView').then((m) => m.FamilyAnalyticsView),
+  { ssr: false, loading: chartSkeleton(320) },
+);
 
 type Period = 1 | 3 | 6 | 9 | 12;
-
-interface DowPoint {
-  name: string;
-  shortDate: string;
-  isoDate: string;
-  amount: number;
-}
 
 export default function AnalyticsPage() {
   const user = useAppSelector((s) => s.auth.user);
@@ -123,8 +138,6 @@ export default function AnalyticsPage() {
 
   const hasTrendData = trendData.some((d) => d.expenses > 0 || d.income > 0);
   const hasDowData = dowData.some((d) => d.amount > 0);
-
-  const tooltipStyle = { borderRadius: 12, border: '1px solid hsl(var(--border))' };
 
   const daysInMonth = new Date().getDate();
   const avgDaily = daysInMonth > 0 ? (thisMonth?.totalExpenses ?? 0) / daysInMonth : 0;
@@ -237,41 +250,19 @@ export default function AnalyticsPage() {
   const avgDailyChart = avgDailyByMonth.some((d) => d.avgDay > 0) && (
     <div className="rounded-[22px] border border-border bg-card p-4 hover:scale-[1.005] transition-transform" style={{ boxShadow: '0 2px 8px rgba(61,44,31,.04)' }}>
       <h2 className="text-sm font-bold mb-3">{t('analytics.avgDayByMonth')}</h2>
-      <ResponsiveContainer width="100%" height={160}>
-        <BarChart data={avgDailyByMonth}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-          <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-          <YAxis tick={{ fontSize: 11 }} width={45} />
-          <Tooltip formatter={(value) => formatAmount(value as number, currency)} contentStyle={tooltipStyle} />
-          <Bar dataKey="avgDay" name={t('analytics.avgDay')} fill="#81B29A" radius={[3, 3, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
+      <AvgDailyChart data={avgDailyByMonth} currency={currency} seriesLabel={t('analytics.avgDay')} />
     </div>
   );
 
   const trendChart = hasTrendData && (
     <div className="rounded-[22px] border border-border bg-card p-4 hover:scale-[1.005] transition-transform" style={{ boxShadow: '0 2px 8px rgba(61,44,31,.04)' }}>
       <h2 className="text-sm font-bold mb-3">{t('analytics.trend')}</h2>
-      <ResponsiveContainer width="100%" height={200}>
-        <AreaChart data={trendData}>
-          <defs>
-            <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#10b981" stopOpacity={0.18} />
-              <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.18} />
-              <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-          <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-          <YAxis tick={{ fontSize: 11 }} width={45} />
-          <Tooltip formatter={(value) => formatAmount(value as number, currency)} contentStyle={tooltipStyle} />
-          <Area dataKey="income" name={t('stats.income')} stroke="#10b981" strokeWidth={2} fill="url(#incomeGrad)" dot={false} />
-          <Area dataKey="expenses" name={t('stats.expenses')} stroke="#ef4444" strokeWidth={2} fill="url(#expenseGrad)" dot={false} />
-        </AreaChart>
-      </ResponsiveContainer>
+      <TrendChart
+        data={trendData}
+        currency={currency}
+        incomeLabel={t('stats.income')}
+        expensesLabel={t('stats.expenses')}
+      />
     </div>
   );
 
@@ -305,15 +296,7 @@ export default function AnalyticsPage() {
   const dowChart = (
     <div className="rounded-[22px] border border-border bg-card p-4 hover:scale-[1.005] transition-transform" style={{ boxShadow: '0 2px 8px rgba(61,44,31,.04)' }}>
       <h2 className="text-sm font-bold mb-3">{t('analytics.byDow')}</h2>
-      <ResponsiveContainer width="100%" height={160}>
-        <BarChart data={dowData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-          <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-          <YAxis tick={{ fontSize: 11 }} width={45} />
-          <Tooltip content={<DowTooltip points={dowData} currency={currency} />} />
-          <Bar dataKey="amount" name="Spent" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
+      <DowChart data={dowData} currency={currency} />
     </div>
   );
 
@@ -500,24 +483,3 @@ export default function AnalyticsPage() {
  * lives at module scope: a component defined inside the page would be a new
  * type on every render and remount the tooltip each time.
  */
-function DowTooltip({
-  active, payload, label, points, currency,
-}: {
-  active?: boolean;
-  payload?: { value: number }[];
-  label?: string;
-  points: { name: string; shortDate: string }[];
-  currency: Currency;
-}) {
-  if (!active || !payload?.length) return null;
-  const point = points.find((d) => d.name === label);
-  return (
-    <div style={{
-      borderRadius: 12, border: '1px solid hsl(var(--border))',
-      background: 'hsl(var(--card))', padding: '8px 12px', fontSize: 12,
-    }}>
-      <p style={{ fontWeight: 700 }}>{label}{point ? ` · ${point.shortDate}` : ''}</p>
-      <p style={{ color: 'hsl(var(--primary))' }}>{formatAmount(payload[0].value, currency)}</p>
-    </div>
-  );
-}

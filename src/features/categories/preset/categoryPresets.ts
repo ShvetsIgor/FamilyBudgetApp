@@ -9,7 +9,6 @@
  *   - config/categoryLabels.ts  (builds alias map from blueprint IDs)
  *   - config/libraryConfig.ts   (exposes LIBRARY_FOLDERS for the add-from-library flow)
  *   - services/defaultCategories.ts  (expands blueprints into Firestore seed entries)
- *   - hooks/useConstructorState.ts   (constructor wizard state)
  *   - components/CategoriesHub.tsx   (library activation)
  *
  * Must NOT be used for:
@@ -246,8 +245,3 @@ export const CATEGORY_BLUEPRINTS: readonly CategoryBlueprint[] = [
   { id: 'investments',       folderId: 'income',        name: 'Investments',        ru: 'Инвестиции',         icon: 'chart_up',    color: '#81B29A' },
   { id: 'in_other',          folderId: 'income',        name: 'Other',              ru: 'Прочее',             icon: 'box',         color: '#81B29A' },
 ];
-
-/** Returns preset category blueprints belonging to a given folder slug. */
-export function getPresetCategoriesForFolder(folderId: string): readonly CategoryBlueprint[] {
-  return CATEGORY_BLUEPRINTS.filter((c) => c.folderId === folderId);
-}

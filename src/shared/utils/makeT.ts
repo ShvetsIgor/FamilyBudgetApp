@@ -1,8 +1,11 @@
 import en from '@/messages/en.json';
 import ru from '@/messages/ru.json';
-import he from '@/messages/he.json';
 
-const messages = { en, ru, he } as Record<string, Record<string, unknown>>;
+// Only the active locales are bundled. Hebrew is paused by the runtime
+// contract, so src/messages/he.json stays on disk for whenever RTL is picked
+// up again, but shipping it to every user costs bytes for a catalog no
+// language setting can select (`Language` is 'en' | 'ru').
+const messages = { en, ru } as Record<string, Record<string, unknown>>;
 
 export type TFunc = ((key: string, params?: Record<string, string | number>) => string) & {
   cat: (name: string) => string;

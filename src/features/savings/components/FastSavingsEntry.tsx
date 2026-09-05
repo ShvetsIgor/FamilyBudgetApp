@@ -11,7 +11,7 @@ import { setGoals, updateGoalItem } from '@/features/savings/store/savingsSlice'
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
 import { addCategory as addCategoryRedux } from '@/features/categories/store/categoriesSlice';
 import { fetchGoals } from '@/features/savings/services/savingsService';
-import { getCurrencySymbol, formatAmount } from '@/shared/utils/currency';
+import { getCurrencySymbol, formatAmount, parseLocalDate } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
 import { applyKey } from '@/features/expenses/hooks/useSplitEditor';
 import { addContributionWithExpense } from '@/features/savings/services/savingsExpenseService';
@@ -73,7 +73,7 @@ export function FastSavingsEntry() {
     try {
       // Contribution + expense land in one atomic WriteBatch
       const { goal: updated, expense: exp, createdCategory } = await addContributionWithExpense({
-        userId: user.id, goal: selectedGoal, amount: amountNum, date: new Date(dateStr),
+        userId: user.id, goal: selectedGoal, amount: amountNum, date: parseLocalDate(dateStr),
         label: t('savings.expenseLabel'), note: comment.trim() || undefined,
         expenseCategories,
       });

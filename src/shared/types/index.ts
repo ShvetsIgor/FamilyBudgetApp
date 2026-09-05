@@ -40,6 +40,12 @@ export interface UserProfile {
   budgetByMonth?: Record<string, { mode: 'auto' | 'daily' | 'monthly'; dailyLimit: number; monthlyLimit: number }>;
   familyId?: string;
   onboarded?: boolean;
+  /**
+   * Expense presets stay a library instead of being seeded as active
+   * categories. Written to this same document by `seedDefaultCategories` and
+   * by the category reset; declared here so readers do not have to cast.
+   */
+  expenseLibraryMode?: boolean;
   createdAt: Timestamp;
 }
 
@@ -178,24 +184,6 @@ export interface SerializableIncome {
 
 // ─── Recurring ───────────────────────────────────────────────────────────────
 
-export interface RecurringPayment {
-  id: string;
-  userId: string;
-  name: string;
-  amount: number;
-  currency: Currency;
-  categoryId: string;
-  frequency: RecurringFrequency;
-  startDate: Timestamp;
-  endDate?: Timestamp;
-  nextDueDate: Timestamp;
-  type: RecurringType;
-  typeLabel?: string;
-  reminderDays: number;
-  comment?: string;
-  isActive: boolean;
-}
-
 export interface SerializableRecurringPayment {
   id: string;
   userId: string;
@@ -246,19 +234,6 @@ export interface SavingsGoal {
 
 // ─── Statistics ───────────────────────────────────────────────────────────────
 
-export interface MonthlyStats {
-  userId: string;
-  month: string; // 'YYYY-MM'
-  totalExpenses: number;
-  totalIncome: number;
-  byCategory: Record<string, number>;
-  totalsByCurrency?: Partial<Record<Currency, number>>;
-  incomeByCurrency?: Partial<Record<Currency, number>>;
-  byCategoryByCurrency?: Partial<Record<Currency, Record<string, number>>>;
-  currencyBreakdownComplete?: boolean;
-  updatedAt: Timestamp;
-}
-
 // ─── Serializable versions for Redux (dates as ISO strings) ──────────────────
 
 export interface SerializableExpense {
@@ -293,29 +268,3 @@ export interface SerializableExpense {
 
 // ─── Store Profiles ───────────────────────────────────────────────────────────
 
-export interface StoreCategoryUsage {
-  categoryId: string;
-  usageCount: number;
-  lastUsed: string; // ISO date YYYY-MM-DD
-}
-
-export interface StoreProfile {
-  id: string; // storeId
-  name: string;
-  storeGroup?: string;
-  probableCategories: StoreCategoryUsage[];
-}
-
-// ─── UI helpers ───────────────────────────────────────────────────────────────
-
-export type DateRange =
-  | 'current-month'
-  | 'last-month'
-  | '3-months'
-  | 'year'
-  | 'custom';
-
-export interface CustomDateRange {
-  from: Date;
-  to: Date;
-}

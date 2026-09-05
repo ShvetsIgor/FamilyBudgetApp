@@ -12,7 +12,7 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
-import type { Category, CategoryType } from '@/shared/types';
+import type { Category, CategoryFolder, CategoryType } from '@/shared/types';
 import {
   DEFAULT_EXPENSE_CATEGORIES,
   DEFAULT_INCOME_CATEGORIES,
@@ -59,29 +59,6 @@ export async function addCategoryWithId(userId: string, id: string, data: Omit<C
 export async function updateCategory(userId: string, category: Category): Promise<void> {
   const { id, ...data } = category;
   await updateDoc(doc(getDb(), 'categories', userId, data.type, id), data);
-}
-
-/**
- * Patch only the metadata fields of a category (tags, aliases, keywords, usageCount, lastUsedAt).
- * Does not overwrite other fields.
- */
-export async function updateCategoryMetadata(
-  userId: string,
-  categoryId: string,
-  type: CategoryType,
-  patch: {
-    tags?: string[];
-    aliases?: string[];
-    keywords?: string[];
-    usageCount?: number;
-    lastUsedAt?: string;
-  },
-): Promise<void> {
-  const clean = Object.fromEntries(
-    Object.entries(patch).filter(([, v]) => v !== undefined),
-  );
-  if (Object.keys(clean).length === 0) return;
-  await updateDoc(doc(getDb(), 'categories', userId, type, categoryId), clean);
 }
 
 /** Hard-deletes a category. Only call when the category has never been used in any expense. */
@@ -156,16 +133,42 @@ export async function resetCategoriesToDefaults(userId: string): Promise<Record<
   return oldIdToNewId;
 }
 
-export async function seedDefaultCategories(userId: string): Promise<void> {
-  const userSnap = await getDoc(userDoc(userId));
-  const expenseLibraryMode =
-    (userSnap.data() as { expenseLibraryMode?: boolean } | undefined)?.expenseLibraryMode === true;
+/** Everything the caller would otherwise have to fetch a second time. */
+export interface SeededCategories {
+  expense: Category[];
+  income: Category[];
+  expenseFolders: CategoryFolder[];
+  incomeFolders: CategoryFolder[];
+}
+
+/**
+ * Seeds first-login defaults and RETURNS the resulting category state.
+ *
+ * The return value is the point: AuthProvider used to await this and then
+ * re-issue the very same four queries, so every cold start paid for two full
+ * reads of the user's categories and folders (plus a second read of the user
+ * document) before the first screen could render. Only the collections this
+ * function actually wrote to are re-read.
+ *
+ * `profile` is the already-loaded user document, so the flag read costs nothing.
+ */
+export async function seedDefaultCategories(
+  userId: string,
+  profile?: { expenseLibraryMode?: boolean },
+): Promise<SeededCategories> {
+  const expenseLibraryMode = profile !== undefined
+    ? profile.expenseLibraryMode === true
+    : ((await getDoc(userDoc(userId))).data() as { expenseLibraryMode?: boolean } | undefined)
+        ?.expenseLibraryMode === true;
   const [existingExpense, existingIncome, existingExpFolders, existingIncFolders] = await Promise.all([
     fetchCategories(userId, 'expense'),
     fetchCategories(userId, 'income'),
     fetchFolders(userId, 'expense'),
     fetchFolders(userId, 'income'),
   ]);
+  let wroteIncomeCategories = false;
+  let wroteIncomeFolders = false;
+  let migratedExpenseCategories = false;
 
   const db = getDb();
 
@@ -175,6 +178,7 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
   }
 
   if (existingIncome.length === 0) {
+    wroteIncomeCategories = true;
     for (const cat of DEFAULT_INCOME_CATEGORIES) {
       const { id, ...rest } = cat;
       const clean = Object.fromEntries(Object.entries({ ...rest, userId }).filter(([, v]) => v !== undefined));
@@ -185,11 +189,15 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
   // Expense folders are also library-only. Existing user-created folders stay untouched.
 
   if (existingIncFolders.length === 0) {
+    wroteIncomeFolders = true;
     await bulkCreateFolders(userId, DEFAULT_INCOME_FOLDER_SEEDS);
   } else {
     const existingFolderIds = new Set(existingIncFolders.map((f) => f.id));
     const missingFolders = DEFAULT_INCOME_FOLDER_SEEDS.filter((f) => !existingFolderIds.has(f.id));
-    if (missingFolders.length > 0) await bulkCreateFolders(userId, missingFolders);
+    if (missingFolders.length > 0) {
+      wroteIncomeFolders = true;
+      await bulkCreateFolders(userId, missingFolders);
+    }
   }
 
   // ── Migrate categories missing folderId (existing users) ────────────────────
@@ -203,6 +211,7 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
       (c) => !c.folderId && blueprintFolderMap.has(c.id),
     );
     if (catsToMigrate.length > 0) {
+      migratedExpenseCategories = true;
       const batch = writeBatch(db);
       for (const cat of catsToMigrate) {
         const folderId = blueprintFolderMap.get(cat.id)!;
@@ -211,17 +220,15 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
       await batch.commit();
     }
   }
+
+  // Only what was actually written is read back; the steady state (every login
+  // after the first) re-reads nothing at all.
+  const [expense, income, incomeFolders] = await Promise.all([
+    migratedExpenseCategories ? fetchCategories(userId, 'expense') : Promise.resolve(existingExpense),
+    wroteIncomeCategories ? fetchCategories(userId, 'income') : Promise.resolve(existingIncome),
+    wroteIncomeFolders ? fetchFolders(userId, 'income') : Promise.resolve(existingIncFolders),
+  ]);
+
+  return { expense, income, expenseFolders: existingExpFolders, incomeFolders };
 }
 
-export async function bulkApplyConstructorDiff(
-  userId: string,
-  toAdd: Array<{ id: string; name: string; ru?: string; icon: string; color?: string; type: CategoryType; order: number; isPrivate: boolean; folderId?: string }>,
-): Promise<void> {
-  const db = getDb();
-  const batch = writeBatch(db);
-  for (const { id, ...cat } of toAdd) {
-    const clean = Object.fromEntries(Object.entries({ ...cat, userId }).filter(([, v]) => v !== undefined));
-    batch.set(doc(db, 'categories', userId, cat.type, id), clean);
-  }
-  await batch.commit();
-}

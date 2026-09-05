@@ -11,8 +11,6 @@ import { setCategories, setFolders } from '@/features/categories/store/categorie
 import { hydrateSuggestionMemory } from '@/features/expenses/store/suggestionMemorySlice';
 import { fetchCategories, seedDefaultCategories } from '@/features/categories/services/categoriesService';
 import { fetchFolders } from '@/features/categories/services/categoryFoldersService';
-import { fetchStoreProfiles } from '@/features/chat/services/storeProfilesService';
-import { setProfiles } from '@/features/chat/store/storeProfilesSlice';
 import type { UserProfile } from '@/shared/types';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -62,24 +60,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Merchant/split/recents memory is account-scoped as well
         dispatch(hydrateSuggestionMemory({ uid: firebaseUser.uid }));
 
-        // Seed categories/folders if first login, then load all
-        await seedDefaultCategories(firebaseUser.uid);
-        const [expenseCats, incomeCats, expenseFolders, incomeFolders] = await Promise.all([
-          fetchCategories(firebaseUser.uid, 'expense'),
-          fetchCategories(firebaseUser.uid, 'income'),
-          fetchFolders(firebaseUser.uid, 'expense'),
-          fetchFolders(firebaseUser.uid, 'income'),
-        ]);
-        dispatch(setCategories({ type: 'expense', categories: expenseCats }));
-        dispatch(setCategories({ type: 'income', categories: incomeCats }));
-        dispatch(setFolders({ type: 'expense', folders: expenseFolders }));
-        dispatch(setFolders({ type: 'income', folders: incomeFolders }));
-
-        // Load storeв†’category learning profiles
-        try {
-          const profiles = await fetchStoreProfiles(firebaseUser.uid);
-          dispatch(setProfiles(profiles));
-        } catch { /* non-critical */ }
+        // Seeds first-login defaults and hands back the loaded state. This used
+        // to be followed by the same four queries all over again — two full
+        // reads of every category and folder before the first screen appeared.
+        const seeded = await seedDefaultCategories(firebaseUser.uid, profile);
+        dispatch(setCategories({ type: 'expense', categories: seeded.expense }));
+        dispatch(setCategories({ type: 'income', categories: seeded.income }));
+        dispatch(setFolders({ type: 'expense', folders: seeded.expenseFolders }));
+        dispatch(setFolders({ type: 'income', folders: seeded.incomeFolders }));
 
       } catch (err) {
         console.error('[AuthProvider] error:', err);

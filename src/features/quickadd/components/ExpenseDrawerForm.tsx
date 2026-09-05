@@ -9,7 +9,7 @@ import { prependExpense } from '@/features/expenses/store/expensesSlice';
 import { addExpense } from '@/features/expenses/services/expensesService';
 import { resolveExpensePrivacy } from '@/features/expenses/utils/expensePrivacy';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
-import { getCurrencySymbol } from '@/shared/utils/currency';
+import { getCurrencySymbol, parseLocalDate } from '@/shared/utils/currency';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import { useT } from '@/shared/hooks/useT';
 import { paymentMethodIcon } from '@/shared/config/domainIcons';
@@ -126,7 +126,7 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
     setSaving(true);
     try {
       const exp = await addExpense({
-        userId: user.id, currency, date: new Date(dateStr),
+        userId: user.id, currency, date: parseLocalDate(dateStr),
         paymentMethod, tags: [],
         // Private category (main or split) → owner-only secret
         privacy: resolveExpensePrivacy({
@@ -194,7 +194,7 @@ export function ExpenseDrawerForm({ accent }: { accent: string }) {
 
 
   const today = toDateInput(new Date());
-  const dateLabel = dateStr === today ? t('common.today') : format(new Date(dateStr + 'T12:00:00'), 'd MMM yyyy');
+  const dateLabel = dateStr === today ? t('common.today') : format(parseLocalDate(dateStr), 'd MMM yyyy');
 
   return (
     <div className="flex flex-col h-full">

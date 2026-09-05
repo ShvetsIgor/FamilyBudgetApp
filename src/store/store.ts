@@ -12,7 +12,6 @@ import budgetReducer from '@/features/budget/store/budgetSlice';
 import quickAddReducer from '@/features/quickadd/store/quickAddSlice';
 import suggestionMemoryReducer from '@/features/expenses/store/suggestionMemorySlice';
 import chatReducer from '@/features/chat/store/chatSlice';
-import storeProfilesReducer from '@/features/chat/store/storeProfilesSlice';
 import notificationsReducer from '@/features/notifications/store/notificationsSlice';
 
 const appReducer = combineReducers({
@@ -28,7 +27,6 @@ const appReducer = combineReducers({
   quickAdd: quickAddReducer,
   suggestionMemory: suggestionMemoryReducer,
   chat: chatReducer,
-  storeProfiles: storeProfilesReducer,
   notifications: notificationsReducer,
 });
 

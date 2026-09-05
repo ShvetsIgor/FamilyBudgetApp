@@ -4,7 +4,7 @@ import {
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import { parseISO } from 'date-fns';
-import { nextOccurrence, isScheduleCompleted } from '../utils/schedule';
+import { nextOccurrence, isScheduleCompleted, resolveUpdatedDueDate } from '../utils/schedule';
 import { queueAddExpense, type AddExpenseInput } from '@/features/expenses/services/expensesService';
 import type {
   SerializableRecurringPayment, SerializableExpense,
@@ -79,31 +79,6 @@ export interface AddRecurringInput {
   comment?: string;
 }
 
-export async function addRecurring(input: AddRecurringInput): Promise<SerializableRecurringPayment> {
-  const { userId, startDate, endDate, comment, ...rest } = input;
-  const nextDueDate = firstFutureOrToday(startDate, input.frequency);
-  // A term that is already fully in the past starts out completed
-  const isActive = !isScheduleCompleted(nextDueDate.toISOString(), endDate?.toISOString());
-  const data = Object.fromEntries(
-    Object.entries({
-      ...rest,
-      userId,
-      comment,
-      startDate: Timestamp.fromDate(startDate),
-      endDate: endDate ? Timestamp.fromDate(endDate) : undefined,
-      nextDueDate: Timestamp.fromDate(nextDueDate),
-      isActive,
-      createdAt: serverTimestamp(),
-    }).filter(([, v]) => v !== undefined)
-  );
-  const ref = await addDoc(col(userId), data);
-  return toSerializable(ref.id, {
-    ...data,
-    startDate: Timestamp.fromDate(startDate),
-    nextDueDate: Timestamp.fromDate(nextDueDate),
-  });
-}
-
 /**
  * Creates a template and, when its start date is today or earlier, its first
  * occurrence — in ONE batch, so saving costs a single round trip.
@@ -172,10 +147,22 @@ export async function addRecurringWithFirstOccurrence(
 export async function updateRecurring(
   userId: string,
   id: string,
-  input: Omit<AddRecurringInput, 'userId'>
+  input: Omit<AddRecurringInput, 'userId'>,
+  /**
+   * Where the schedule currently stands. Editing a name must not rewind the
+   * calendar: `markAsPaid` advances `nextDueDate` past the payment that was
+   * just booked, and recomputing it from `startDate` would walk right back
+   * onto that same date — offering «Оплачено» again and booking the payment
+   * twice. Only a change to the start date or the frequency re-derives it.
+   */
+  current?: { startDate: string; frequency: RecurringFrequency; nextDueDate: string },
 ): Promise<{ nextDueDate: string; isActive?: false }> {
   const { startDate, endDate, comment, ...rest } = input;
-  const nextDueDate = firstFutureOrToday(startDate, input.frequency);
+  const nextDueDate = resolveUpdatedDueDate(
+    { startDate, frequency: input.frequency },
+    current,
+    firstFutureOrToday,
+  );
   const completed = isScheduleCompleted(nextDueDate.toISOString(), endDate?.toISOString());
   const patch = Object.fromEntries(
     Object.entries({

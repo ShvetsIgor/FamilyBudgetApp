@@ -16,7 +16,7 @@ import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups
 import { EntryKindTabs } from '@/features/quickadd/components/EntryKindTabs';
 import { paymentMethodIcon } from '@/shared/config/domainIcons';
 import { haptic } from '@/shared/utils/haptics';
-import { getCurrencySymbol } from '@/shared/utils/currency';
+import { getCurrencySymbol, parseLocalDate } from '@/shared/utils/currency';
 import { useT } from '@/shared/hooks/useT';
 import { applyKey } from '@/features/expenses/hooks/useSplitEditor';
 import { recordSavedCard, buildEntryDateHint } from '@/features/chat/services/savedCardService';
@@ -97,7 +97,8 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
     if (!user || amountNum <= 0 || !category || saving) return;
     setSaving(true);
     try {
-      const date = new Date(dateStr);
+      const date = parseLocalDate(dateStr);
+      let recurringTemplate: Parameters<typeof addRecurringIncome>[0] | null = null;
 
       if (initialIncome) {
         const updated = await updateIncomeService({
@@ -114,7 +115,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
 
       if (isRecurring) {
         const today = new Date(); today.setHours(0, 0, 0, 0);
-        const recurDate = new Date(dateStr); recurDate.setHours(0, 0, 0, 0);
+        const recurDate = parseLocalDate(dateStr);
         const isFuture = recurDate > today;
         const dayNum = recurDate.getDate();
         const nm = recurDate.getMonth() === 11 ? 0 : recurDate.getMonth() + 1;
@@ -124,19 +125,25 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
           ? `${recurDate.getFullYear()}-${String(recurDate.getMonth() + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`
           : `${ny}-${String(nm + 1).padStart(2, '0')}-${String(Math.min(dayNum, daysInNext)).padStart(2, '0')}`;
 
-        const catName = category?.name ?? t('income.title');
-        await addRecurringIncome({
-          userId: user.id, name: catName, amount: amountNum, currency,
+        recurringTemplate = {
+          userId: user.id, name: category?.name ?? t('income.title'),
+          amount: amountNum, currency,
           categoryId, dayOfMonth: dayNum, nextDueDate: nextDue,
-        });
+        };
+
         if (isFuture) {
           // Future-dated recurring income: no income row yet, but still confirm in chat
+          await addRecurringIncome(recurringTemplate);
           await recordIncomeInChat(`${t('income.recurring')} · ${format(recurDate, 'd MMMM', { locale: dfLocale })}`);
           goBack();
           return;
         }
       }
 
+      // The income is written BEFORE the template. The other order meant a
+      // failed income write left a template behind, and the retry the user
+      // was invited to make created a second one — a salary generated twice
+      // every month from then on. This way a failure writes nothing.
       const income = await addIncome({
         userId: user.id, amount: amountNum, currency, categoryId, date,
         method, privacy: 'regular', comment: normalizeName(comment) || undefined,
@@ -144,6 +151,17 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
       });
       dispatch(prependIncome(income));
       haptic('success');
+
+      if (recurringTemplate) {
+        // Secondary, like the chat card below: the money is already recorded,
+        // so a failure here must not invite a retry that doubles it. The
+        // template can be re-created from /recurring.
+        try {
+          await addRecurringIncome(recurringTemplate);
+        } catch (err) {
+          console.error('recurring income template write failed (income already saved)', err);
+        }
+      }
 
       // Secondary chat-history write — must not undo the saved income or
       // block navigation (a retry would duplicate the income).
@@ -342,7 +360,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
               >
                 <p className="text-[12px] font-bold text-muted-foreground">{t('income.creditEvery')}</p>
                 <span className="text-[14px] font-extrabold tabular-nums" style={{ color: catColor }}>
-                  {t('income.dayNum', { day: new Date(dateStr).getDate() })}
+                  {t('income.dayNum', { day: parseLocalDate(dateStr).getDate() })}
                 </span>
               </div>
             )}
@@ -401,7 +419,7 @@ export function FastIncomeEntry({ initialIncome }: { initialIncome?: Serializabl
           {saving ? (
             <span>✓ {t('common.saving')}</span>
           ) : isRecurring ? (
-            <span>+{symbol} {amount} · {new Date(dateStr).getDate()} {t('income.recurringDay')}</span>
+            <span>+{symbol} {amount} · {parseLocalDate(dateStr).getDate()} {t('income.recurringDay')}</span>
           ) : (
             <span>+{symbol} {amount}</span>
           )}

@@ -66,7 +66,6 @@ function makeCtx(overrides: Partial<BotContext> = {}): BotContext {
     incomeCategoriesById: incomeMap,
     topIncomeCategoryIds: ['salary'],
     todaySpent: 0,
-    storeProfiles: {},
     suggestionMemory: {
       merchants: {},
       recents: [],

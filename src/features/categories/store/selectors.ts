@@ -40,9 +40,6 @@ export const selectAllActiveCategories = (s: RootState, type: CategoryType) =>
 export const selectFolderSections = (s: RootState, type: CategoryType): FolderSection[] =>
   buildFolderSections(folders(s, type), cats(s, type).filter(isActiveCategory));
 
-export const selectBudgetFor = (s: RootState, categoryId: string): number =>
-  s.budget.limits[categoryId] ?? 0;
-
 /** Top-level folders only (no parent). */
 export const selectRootFolders = (s: RootState, type: CategoryType) =>
   folders(s, type).filter((f) => !f.parentFolderId);

@@ -14,13 +14,12 @@ import { addNotification } from '@/features/notifications/store/notificationsSli
 
 import { useChatMessages } from '@/features/chat/hooks/useChatMessages';
 import { useLearnedKeywords } from '@/features/chat/hooks/useLearnedKeywords';
-import { useStoreProfiles } from '@/features/chat/hooks/useStoreProfiles';
 
 import { parseMessage } from '@/features/chat/parser/parse';
 import { deleteExpense, fetchMonthExpenses } from '@/features/expenses/services/expensesService';
 import { deleteMessage } from '@/features/chat/services/messagesService';
 import { collectBotContext } from '@/features/chat/bot/context';
-import { respondToUserMessage } from '@/features/chat/bot/respond';
+import { respondToUserMessage, saveErrorPhrase } from '@/features/chat/bot/respond';
 import { addMessage } from '@/features/chat/services/messagesService';
 import {
   shouldSendMorningGreeting,
@@ -104,8 +103,7 @@ export default function HomePage() {
   }
 
   useChatMessages();
-  const [learned] = useLearnedKeywords();
-  useStoreProfiles();
+  const learned = useLearnedKeywords();
 
   const budgetMode = useAppSelector((s) => s.ui.budgetMode);
   const budgetDailyLimit = useAppSelector((s) => s.ui.budgetDailyLimit);
@@ -215,7 +213,13 @@ export default function HomePage() {
     () => allExpenses.filter((expense) => expense.currency === currency),
     [allExpenses, currency],
   );
-  const allExpenseCats = useAppSelector((s) => s.categories.expense.filter((category) => !category.archived));
+  const expenseCats = useAppSelector((s) => s.categories.expense);
+  // A selector that filters returns a fresh array on every store action and
+  // would re-render the whole chat screen; the filter belongs in a memo.
+  const allExpenseCats = useMemo(
+    () => expenseCats.filter((category) => !category.archived),
+    [expenseCats],
+  );
   const allIncomeCats = useAppSelector((s) => s.categories.income);
   const expenseFolders = useAppSelector((s) => s.categories.folders.expense);
   const incomeFolders = useAppSelector((s) => s.categories.folders.income);
@@ -305,6 +309,8 @@ export default function HomePage() {
     };
   }, [appStore, ownCurrencyExpenses, monthBudget, budgetLimits, dailyBudget, savingsGoals]);
 
+  const failureText = useMemo(() => saveErrorPhrase(language), [language]);
+
   const handleSend = useCallback(async (text: string) => {
     if (!userId || sendingRef.current) return;
     sendingRef.current = true;
@@ -356,11 +362,19 @@ export default function HomePage() {
         if (reply.openSplit.date) params.set('date', reply.openSplit.date);
         router.push(`/expenses/new?${params.toString()}`);
       }
+    } catch (err) {
+      // A rejected write used to fall straight through `finally`: the typing
+      // dots cleared and nothing else happened — the message sat «pending»
+      // with no reply and no error, and retyping it could duplicate an expense
+      // that had in fact been saved. `failureText` is read before the try: the
+      // React Compiler cannot compile a selector read inside a catch block.
+      console.error('chat send failed', err);
+      void addMessage({ userId, senderId: 'bot', kind: 'bot', status: 'saved', text: failureText });
     } finally {
       dispatch(setTyping(false));
       sendingRef.current = false;
     }
-  }, [userId, buildEnrichedCtx, learned, dispatch, router]);
+  }, [userId, buildEnrichedCtx, learned, dispatch, router, failureText]);
 
   const handleIncomeClarifyChip = useCallback(async (
     amount: number,
@@ -401,12 +415,25 @@ export default function HomePage() {
         await addMessage(botMsg);
       }
       if (reply.income) dispatch(prependIncome(reply.income));
+    } catch (err) {
+      // A rejected write used to fall straight through `finally`: the typing
+      // dots cleared and nothing else happened — the message sat «pending»
+      // with no reply and no error, and retyping it could duplicate an expense
+      // that had in fact been saved. `failureText` is read before the try: the
+      // React Compiler cannot compile a selector read inside a catch block.
+      console.error('chat send failed', err);
+      void addMessage({ userId, senderId: 'bot', kind: 'bot', status: 'saved', text: failureText });
     } finally {
       dispatch(setTyping(false));
       sendingRef.current = false;
     }
-  }, [userId, buildEnrichedCtx, dispatch]);
+  }, [userId, buildEnrichedCtx, dispatch, failureText]);
 
+  // The deps below are complete; the compiler bails on this one handler once
+  // its catch block captures the language, and it is not enabled for the build
+  // (no `experimental.reactCompiler` in next.config.mjs), so this useCallback
+  // is what actually keeps the identity stable for the clarify cards.
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const handleExpenseClarifyChip = useCallback(async (
     context: ExpenseClarifyContext,
     chip: { id: string; name: string; icon: string; color: string },
@@ -416,6 +443,9 @@ export default function HomePage() {
     if (!originalMessage) return;
     sendingRef.current = true;
     dispatch(setTyping(true));
+    // Resolved before the try: the React Compiler cannot compile a call to an
+    // imported function inside a catch block without losing this useCallback.
+    const failureText = saveErrorPhrase(language);
     try {
       const enrichedCtx = buildEnrichedCtx();
       if (!enrichedCtx) return;
@@ -433,22 +463,31 @@ export default function HomePage() {
       };
       const reply = await respondToUserMessage(originalMessage, parsed, enrichedCtx);
       for (const botMsg of reply.messages) await addMessage(botMsg);
-      if (!reply.expense) return;
-      dispatch(prependExpense(reply.expense));
-      dispatch(recordExpense({
-        merchant: context.storeName,
-        categoryId: chip.id,
-        folderId: appStore.getState().categories.expense.find((category) => category.id === chip.id)?.folderId ?? undefined,
-        date: context.parsedDate ?? toLocalDateKey(new Date()),
-      }));
-      dispatch(removeMessage(context.botMsgId));
-      await deleteMessage(userId, context.botMsgId).catch(() => {});
-      setExpenseCategorySheet(null);
+      if (reply.expense) {
+        dispatch(prependExpense(reply.expense));
+        dispatch(recordExpense({
+          merchant: context.storeName,
+          categoryId: chip.id,
+          folderId: appStore.getState().categories.expense.find((category) => category.id === chip.id)?.folderId ?? undefined,
+          date: context.parsedDate ?? toLocalDateKey(new Date()),
+        }));
+        dispatch(removeMessage(context.botMsgId));
+        await deleteMessage(userId, context.botMsgId).catch(() => {});
+        setExpenseCategorySheet(null);
+      }
+    } catch (err) {
+      // A rejected write used to fall straight through `finally`: the typing
+      // dots cleared and nothing else happened — the message sat «pending»
+      // with no reply and no error, and retyping it could duplicate an expense
+      // that had in fact been saved. `failureText` is read before the try: the
+      // React Compiler cannot compile a selector read inside a catch block.
+      console.error('chat send failed', err);
+      void addMessage({ userId, senderId: 'bot', kind: 'bot', status: 'saved', text: failureText });
     } finally {
       dispatch(setTyping(false));
       sendingRef.current = false;
     }
-  }, [userId, messages, buildEnrichedCtx, dispatch, appStore]);
+  }, [userId, messages, buildEnrichedCtx, dispatch, appStore, language]);
 
   const handleDeferExpense = useCallback(async (context: ExpenseClarifyContext) => {
     if (!userId) return;

@@ -68,17 +68,51 @@ export async function addRecurringIncome(input: AddRecurringIncomeInput): Promis
   };
 }
 
-export async function advanceRecurringIncomeNextDue(userId: string, item: RecurringIncomeItem): Promise<string> {
-  const [year, month] = item.nextDueDate.split('-').map(Number);
+/**
+ * The month after `dueDate`, clamped to the anchor day (a 31st becomes the
+ * 28th in February and stays the 31st in March, because the anchor is kept
+ * separately rather than derived from the last due date).
+ */
+export function nextIncomeDueDate(dueDate: string, dayOfMonth: number): string {
+  const [year, month] = dueDate.split('-').map(Number);
   const nextMonth = month === 12 ? 1 : month + 1;
   const nextYear = month === 12 ? year + 1 : year;
   const daysInNext = new Date(nextYear, nextMonth, 0).getDate();
-  const day = Math.min(item.dayOfMonth, daysInNext);
-  const nextDue = `${nextYear}-${String(nextMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  const day = Math.min(dayOfMonth, daysInNext);
+  return `${nextYear}-${String(nextMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+/**
+ * Every occurrence owed on or before `todayKey`, oldest first.
+ *
+ * Startup used to book only the OLDEST missed occurrence and advance the
+ * template by exactly one month, so someone returning after a three-month
+ * break had to relaunch the app three times to collect three salaries.
+ */
+export function dueIncomeOccurrences(
+  nextDueDate: string,
+  dayOfMonth: number,
+  todayKey: string,
+  maxOccurrences = 120,
+): string[] {
+  const due: string[] = [];
+  let cursor = nextDueDate;
+  while (cursor <= todayKey && due.length < maxOccurrences) {
+    due.push(cursor);
+    cursor = nextIncomeDueDate(cursor, dayOfMonth);
+  }
+  return due;
+}
+
+export async function advanceRecurringIncomeNextDue(userId: string, item: RecurringIncomeItem): Promise<string> {
+  const nextDue = nextIncomeDueDate(item.nextDueDate, item.dayOfMonth);
   await updateDoc(doc(getDb(), 'recurringIncome', userId, 'items', item.id), { nextDueDate: nextDue });
   return nextDue;
 }
 
-export async function deleteRecurringIncome(userId: string, id: string): Promise<void> {
-  await deleteDoc(doc(getDb(), 'recurringIncome', userId, 'items', id));
+/** Moves a template straight to the first occurrence after `todayKey`. */
+export async function setRecurringIncomeNextDue(
+  userId: string, id: string, nextDueDate: string,
+): Promise<void> {
+  await updateDoc(doc(getDb(), 'recurringIncome', userId, 'items', id), { nextDueDate });
 }

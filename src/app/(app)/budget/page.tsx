@@ -49,14 +49,21 @@ export default function BudgetPage() {
 
   // Limits are set in the account currency, so only that currency is compared
   // against them; foreign spend is listed separately below.
-  const monthSpent = useAppSelector((s) =>
-    splitOwnCurrency(s.expenses.list.filter((e) => toLocalMonthKey(e.date) === monthStr), currency).ownTotal
+  // Selected raw and split in a memo: `splitOwnCurrency(...).others` is a fresh
+  // array on every call, so reading it straight from a selector re-rendered
+  // this page on every action dispatched anywhere in the app — and rebuilt the
+  // same month split three times over while doing it.
+  const expensesList = useAppSelector((s) => s.expenses.list);
+  const incomeList = useAppSelector((s) => s.income.list);
+  const monthSplit = useMemo(
+    () => splitOwnCurrency(expensesList.filter((e) => toLocalMonthKey(e.date) === monthStr), currency),
+    [expensesList, monthStr, currency],
   );
-  const monthIncome = useAppSelector((s) =>
-    splitOwnCurrency(s.income.list.filter((i) => toLocalMonthKey(i.date) === monthStr), currency).ownTotal
-  );
-  const foreignSpend = useAppSelector((s) =>
-    splitOwnCurrency(s.expenses.list.filter((e) => toLocalMonthKey(e.date) === monthStr), currency).others
+  const monthSpent = monthSplit.ownTotal;
+  const foreignSpend = monthSplit.others;
+  const monthIncome = useMemo(
+    () => splitOwnCurrency(incomeList.filter((i) => toLocalMonthKey(i.date) === monthStr), currency).ownTotal,
+    [incomeList, monthStr, currency],
   );
 
   const autoDaily = monthIncome > 0
@@ -67,11 +74,10 @@ export default function BudgetPage() {
   const budgetStatus = useAppSelector((s) => s.budget.status);
   const expCategories = useAppSelector((s) => s.categories.expense);
   const categoriesStatus = useAppSelector((s) => s.categories.status);
-  const allExpensesList = useAppSelector((s) => s.expenses.list);
 
   const envelopes = useMemo(
-    () => buildEnvelopes(allExpensesList, budgetLimits, expCategories, monthStr),
-    [allExpensesList, budgetLimits, expCategories, monthStr]
+    () => buildEnvelopes(expensesList, budgetLimits, expCategories, monthStr),
+    [expensesList, budgetLimits, expCategories, monthStr]
   );
 
   // One-time prune of orphaned limits (deleted custom categories, folder-keyed

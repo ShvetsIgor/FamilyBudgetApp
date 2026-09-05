@@ -36,7 +36,6 @@ import { setIncome } from '@/features/income/store/incomeSlice';
 import { setGoals } from '@/features/savings/store/savingsSlice';
 import { setRecurring } from '@/features/recurring/store/recurringSlice';
 import { setMessages } from '@/features/chat/store/chatSlice';
-import { clearProfiles } from '@/features/chat/store/storeProfilesSlice';
 import { clearMemory } from '@/features/expenses/store/suggestionMemorySlice';
 
 const CURRENCIES: { value: Currency; label: string }[] = [
@@ -194,7 +193,6 @@ export default function AccountPage() {
       dispatch(setGoals([]));
       dispatch(setRecurring([]));
       dispatch(setMessages([]));
-      dispatch(clearProfiles());
       dispatch(clearMemory());
       setResetDone(true);
     } finally {

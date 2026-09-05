@@ -372,8 +372,6 @@ export async function reverseContributionByAmount(
  */
 export async function backfillContributionsShape(userId: string, goals: SavingsGoal[]): Promise<void> {
   await Promise.all(goals.map(async (g) => {
-    const snap = (g as unknown as { contributions: unknown }).contributions;
-    void snap;
     // Re-read raw shape cheaply: normalize keeps no marker, so just rewrite
     // goals whose entries lack ids (only legacy arrays produce id-less entries)
     if (g.contributions.length === 0 || g.contributions.every((c) => c.id)) return;

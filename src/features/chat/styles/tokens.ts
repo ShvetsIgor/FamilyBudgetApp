@@ -20,9 +20,6 @@ export const C_THEME = {
   hairline: 'hsl(var(--border))',
 } as const;
 
-export const C_LIGHT = C_THEME;
-export const C_DARK = C_THEME;
-
 /** Backward-compat static export - use useChatTokens() in React components instead. */
 export const C = C_THEME;
 

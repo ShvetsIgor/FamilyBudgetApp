@@ -79,20 +79,6 @@ function toSerializable(id: string, data: Record<string, unknown>): Serializable
   };
 }
 
-export async function fetchExpenses(
-  userId: string,
-  cursor?: DocumentSnapshot,
-): Promise<{ expenses: SerializableExpense[]; cursor: DocumentSnapshot | null }> {
-  const q = cursor
-    ? query(expCol(userId), orderBy('date', 'desc'), limit(PAGE_SIZE), startAfter(cursor))
-    : query(expCol(userId), orderBy('date', 'desc'), limit(PAGE_SIZE));
-
-  const snap = await getDocs(q);
-  const expenses = snap.docs.map((d) => toSerializable(d.id, d.data()));
-  const nextCursor = snap.docs.length === PAGE_SIZE ? snap.docs[snap.docs.length - 1] : null;
-  return { expenses, cursor: nextCursor };
-}
-
 export async function fetchMonthExpenses(userId: string, month: string): Promise<SerializableExpense[]> {
   const [year, m] = month.split('-').map(Number);
   const from = Timestamp.fromDate(new Date(year, m - 1, 1));
@@ -360,6 +346,13 @@ export async function restoreExpense(userId: string, expense: SerializableExpens
       isRecurring: expense.isRecurring ?? false,
       recurringId: expense.recurringId,
       goalId: expense.goalId,
+      // A savings expense can only be rolled back through these two: without
+      // them a restored contribution to a family member's goal is reversed
+      // against the wrong owner on the next delete, and the money silently
+      // stays in their goal. `reactions` are family content, not ours to drop.
+      goalOwnerId: expense.goalOwnerId,
+      contributionId: expense.contributionId,
+      reactions: expense.reactions,
       date: Timestamp.fromDate(new Date(expense.date)),
       createdAt: isoToTimestamp(expense.createdAt),
       updatedAt: serverTimestamp(),
@@ -395,7 +388,7 @@ export async function queueLinkedChatMessageDeletes(
   snap.docs.forEach((d) => batch.delete(d.ref));
 }
 
-interface StatsDelta {
+export interface StatsDelta {
   /** Currency of the expense this delta came from — totals are kept per currency. */
   currency: Currency;
   totalExpenses: number;
@@ -462,6 +455,26 @@ function mergeStatsDelta(
   }
 }
 
+/**
+ * Which halves of the month aggregate a delta touches.
+ *
+ * `byCategoryByCurrency` moves with the category map, NOT with the total.
+ * Gating it on the total meant an edit that changed only the category — same
+ * amount, same month, same currency — updated `byCategory` and left
+ * `byCategoryByCurrency` behind, so the two disagreed for that month forever
+ * after. Nobody noticed while the document was write-only.
+ */
+export function statsPatchShape(delta: StatsDelta): {
+  writesTotals: boolean;
+  writesCategories: boolean;
+} {
+  const movedCategories = Object.values(delta.byCategory).some((value) => value !== 0);
+  return {
+    writesTotals: delta.totalExpenses !== 0,
+    writesCategories: movedCategories,
+  };
+}
+
 function queueMonthlyStatsUpdate(
   batch: WriteBatch | Transaction,
   userId: string,
@@ -474,9 +487,8 @@ function queueMonthlyStatsUpdate(
       .map(([categoryId, value]) => [categoryId, increment(value)]),
   );
 
-  if (delta.totalExpenses === 0 && Object.keys(byCategory).length === 0) {
-    return;
-  }
+  const shape = statsPatchShape(delta);
+  if (!shape.writesTotals && !shape.writesCategories) return;
 
   (batch as WriteBatch).set(
     statsDoc(userId, month),
@@ -485,14 +497,15 @@ function queueMonthlyStatsUpdate(
       month,
       // `totalExpenses` stays as the legacy blind sum; `totalsByCurrency` is the
       // honest one — a nested map so merge:true keeps the other currencies.
-      ...(delta.totalExpenses !== 0
+      ...(shape.writesTotals
         ? {
             totalExpenses: increment(delta.totalExpenses),
             totalsByCurrency: { [delta.currency]: increment(delta.totalExpenses) },
-            byCategoryByCurrency: { [delta.currency]: byCategory },
           }
         : {}),
-      ...(Object.keys(byCategory).length > 0 ? { byCategory } : {}),
+      ...(shape.writesCategories
+        ? { byCategory, byCategoryByCurrency: { [delta.currency]: byCategory } }
+        : {}),
       updatedAt: serverTimestamp(),
     },
     { merge: true },

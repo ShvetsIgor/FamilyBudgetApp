@@ -18,7 +18,6 @@ import {
 } from '@/features/categories/services/categoriesService';
 import { remapExpenseCategories } from '@/features/expenses/store/expensesSlice';
 import { clearMemory } from '@/features/expenses/store/suggestionMemorySlice';
-import { clearProfiles } from '@/features/chat/store/storeProfilesSlice';
 import { clearStoreProfiles } from '@/features/chat/services/storeProfilesService';
 import { clearLearnedKeywords } from '@/features/chat/parser/learning';
 import {
@@ -36,7 +35,6 @@ import type { Category, CategoryFolder, CategoryType } from '@/shared/types';
 import { CategoryEditorSheet } from './CategoryEditorSheet';
 import { CategoryFolderPickerView } from './CategoryFolderPickerSheet';
 import { FolderEditorSheet } from './FolderEditorSheet';
-import { ConstructorWizard } from './constructor/ConstructorWizard';
 import { StickerIcon } from './CategoryIcon';
 import { selectAvailableLibrary } from '../store/librarySelectors';
 import {
@@ -323,7 +321,6 @@ export function CategoriesHub() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const [tab, setTab] = useState<CategoryType>('expense');
-  const [showWizard, setShowWizard] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
   const [editor, setEditor] = useState<EditorState>({ open: false });
   const [folderEditor, setFolderEditor] = useState<FolderEditorState>({ open: false });
@@ -360,7 +357,6 @@ export function CategoriesHub() {
   const categorySuggestions = getCategoryLibraryBlueprints(tab).map((b) => categoryBlueprintToSuggestion(b, language));
   const folderSuggestions = getFolderLibraryBlueprints(tab).map((b) => folderBlueprintToSuggestion(b, language));
 
-  const existingCategoryIds = new Set(allCategories.map((c) => c.id));
   const existingFolderIds = new Set(folders.map((f) => f.id));
 
   const namesMatch = (left: string, right: string) => normalizeNameKey(left) === normalizeNameKey(right);
@@ -648,7 +644,6 @@ export function CategoriesHub() {
     dispatch(setFolders({ type: 'income', folders: DEFAULT_INCOME_FOLDER_SEEDS.map((f) => ({ ...f, userId: user.id })) }));
     if (Object.keys(idMap).length > 0) dispatch(remapExpenseCategories(idMap));
     dispatch(clearMemory());
-    dispatch(clearProfiles());
     // Reset also remapped/pruned budgets/{uid} limits — re-read the doc
     const limits = await fetchBudgets(user.id);
     dispatch(setBudgets(limits));
@@ -1351,13 +1346,6 @@ export function CategoriesHub() {
         } : undefined}
         availableFolders={visibleRootFolders.filter((f) => f.id !== folderEditor.folder?.id)}
         suggestions={folderSuggestions}
-      />
-
-      <ConstructorWizard
-        open={showWizard}
-        onClose={() => setShowWizard(false)}
-        existingCategoryIds={existingCategoryIds}
-        existingFolderIds={existingFolderIds}
       />
     </div>
   );

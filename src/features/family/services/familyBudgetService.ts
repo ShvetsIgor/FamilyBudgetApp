@@ -29,6 +29,47 @@ export interface FamilyMonthData {
  * are resolved with per-doc reads — security rules deny private ones,
  * which then simply fall back to a generic label in the UI.
  */
+/**
+ * A family member's category names, resolved one document at a time.
+ *
+ * The per-document read is not an oversight: `firestore.rules` allows `list`
+ * on `categories/{uid}` to the owner ONLY, so a member can `get` a sibling's
+ * non-private category but can never enumerate the collection. What was
+ * wasteful was doing it again on every month switch and every navigation into
+ * a family view — category names change about never — so the answers (misses
+ * included) are cached for the session.
+ */
+const foreignCategoryCache = new Map<string, FamilyCategoryMeta | null>();
+
+async function resolveForeignCategories(
+  entries: Iterable<[string, string]>,
+  type: 'expense' | 'income',
+  into: Record<string, FamilyCategoryMeta>,
+): Promise<void> {
+  await Promise.all([...entries].map(async ([catId, memberId]) => {
+    const key = `${memberId}|${type}|${catId}`;
+    if (foreignCategoryCache.has(key)) {
+      const cached = foreignCategoryCache.get(key);
+      if (cached) into[catId] = cached;
+      return;
+    }
+    try {
+      const snap = await getDoc(doc(getDb(), 'categories', memberId, type, catId));
+      if (snap.exists()) {
+        const d = snap.data();
+        const meta: FamilyCategoryMeta = { name: d.name, icon: d.icon, color: d.color };
+        foreignCategoryCache.set(key, meta);
+        into[catId] = meta;
+      } else {
+        foreignCategoryCache.set(key, null);
+      }
+    } catch {
+      // private category — keep hidden, and remember not to ask again
+      foreignCategoryCache.set(key, null);
+    }
+  }));
+}
+
 export async function fetchFamilyMonthExpenses(
   members: UserProfile[],
   month: string,
@@ -57,15 +98,7 @@ export async function fetchFamilyMonthExpenses(
   for (const e of expenses) {
     if (e.memberId !== selfId && !categoryMeta[e.categoryId]) foreign.set(e.categoryId, e.memberId);
   }
-  await Promise.all([...foreign.entries()].map(async ([catId, memberId]) => {
-    try {
-      const snap = await getDoc(doc(getDb(), 'categories', memberId, 'expense', catId));
-      if (snap.exists()) {
-        const d = snap.data();
-        categoryMeta[catId] = { name: d.name, icon: d.icon, color: d.color };
-      }
-    } catch { /* private category — keep hidden */ }
-  }));
+  await resolveForeignCategories(foreign.entries(), 'expense', categoryMeta);
 
   return { expenses, categoryMeta };
 }
@@ -107,15 +140,7 @@ export async function fetchFamilyMonthIncomes(
   for (const i of incomes) {
     if (i.memberId !== selfId && !categoryMeta[i.categoryId]) foreign.set(i.categoryId, i.memberId);
   }
-  await Promise.all([...foreign.entries()].map(async ([catId, memberId]) => {
-    try {
-      const snap = await getDoc(doc(getDb(), 'categories', memberId, 'income', catId));
-      if (snap.exists()) {
-        const d = snap.data();
-        categoryMeta[catId] = { name: d.name, icon: d.icon, color: d.color };
-      }
-    } catch { /* private category — keep hidden */ }
-  }));
+  await resolveForeignCategories(foreign.entries(), 'income', categoryMeta);
 
   return { incomes, categoryMeta };
 }
@@ -225,17 +250,11 @@ export async function fetchFamilyAnalytics(
 
   const meta: Record<string, FamilyCategoryMeta> = {};
   for (const c of selfCategories) meta[c.id] = { name: c.name, icon: c.icon, color: c.color };
-  await Promise.all([...catTotals.entries()]
-    .filter(([catId]) => !meta[catId])
-    .map(async ([catId, v]) => {
-      try {
-        const snap = await getDoc(doc(getDb(), 'categories', v.memberId, 'expense', catId));
-        if (snap.exists()) {
-          const d = snap.data();
-          meta[catId] = { name: d.name, icon: d.icon, color: d.color };
-        }
-      } catch { /* private category — keep hidden */ }
-    }));
+  await resolveForeignCategories(
+    [...catTotals.entries()].filter(([catId]) => !meta[catId]).map(([catId, v]) => [catId, v.memberId] as [string, string]),
+    'expense',
+    meta,
+  );
 
   const byName = new Map<string, { name: string; icon: string; color: string; total: number }>();
   for (const [catId, v] of catTotals) {

@@ -37,30 +37,6 @@ export function tokenizeQuery(raw: string): string[] {
 import type { Category } from '@/shared/types';
 
 /**
- * Returns categories sorted by tag match score — matching categories first.
- * Does not filter out non-matching categories.
- * Input ordering preserved within each group.
- *
- * Used in chat/parser to boost tag-matching categories to the top of suggestions.
- */
-export function boostCategoriesByQuery(query: string, cats: Category[]): Category[] {
-  const tokens = tokenizeQuery(query);
-  if (tokens.length === 0) return cats;
-
-  const matched: Category[] = [];
-  const rest: Category[] = [];
-  for (const cat of cats) {
-    const tags = cat.tags ?? [];
-    const nameTokens = tokenizeQuery(cat.name);
-    const allTokens = [...tags.map(normalizeTag), ...nameTokens];
-    const hits = tokens.filter((t) => allTokens.some((a) => a.includes(t) || t.includes(a)));
-    if (hits.length > 0) matched.push(cat);
-    else rest.push(cat);
-  }
-  return [...matched, ...rest];
-}
-
-/**
  * Filters categories by query, checking name, tags, and optional alias map.
  * Returns only matching categories, sorted by relevance (name match first).
  *

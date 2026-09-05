@@ -13,6 +13,11 @@ const instrumentSans = Instrument_Sans({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-instrument-sans',
+  // Only the Press theme binds this family (globals.css), so preloading it put
+  // ~97 kB of woff2 on the critical path of every Mist user for a face they
+  // never render. It also only covers latin, so a Russian Press user falls back
+  // to system-ui for Cyrillic regardless.
+  preload: false,
 });
 
 export const metadata: Metadata = {

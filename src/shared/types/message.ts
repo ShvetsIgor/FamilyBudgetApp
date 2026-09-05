@@ -58,23 +58,6 @@ export interface ParseResult {
   learnedCategoryId?: string;
 }
 
-export interface ChatMessage {
-  id: string;
-  userId: string;
-  senderId: string;
-  kind: 'user' | 'bot';
-
-  text: string;
-  parsed?: ParseResult;
-  expenseId?: string;
-  incomeId?: string;
-  card?: BotCard;
-
-  status: MessageStatus;
-  createdAt: Timestamp;
-  updatedAt?: Timestamp;
-}
-
 export interface SerializableChatMessage {
   id: string;
   userId: string;

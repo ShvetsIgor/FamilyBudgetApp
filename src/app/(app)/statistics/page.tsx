@@ -13,10 +13,19 @@ import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
 import Link from 'next/link';
 import { BarChart2 } from 'lucide-react';
-import {
-  PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
-} from 'recharts';
+import dynamic from 'next/dynamic';
+
+// Lazy for the same reason as /analytics: recharts is a fifth of this route and
+// has nothing to draw until the month queries answer.
+const chartSkeleton = (height: number) => function ChartSkeleton() {
+  return <div className="animate-pulse rounded-xl bg-muted/40" style={{ height }} />;
+};
+const CategoryPie = dynamic(() => import('./StatisticsCharts').then((m) => m.CategoryPie), {
+  ssr: false, loading: chartSkeleton(210),
+});
+const MonthBars = dynamic(() => import('./StatisticsCharts').then((m) => m.MonthBars), {
+  ssr: false, loading: chartSkeleton(180),
+});
 
 type Range = 'month' | 'last' | '3m' | '6m';
 
@@ -202,16 +211,12 @@ export default function StatisticsPage() {
   const barChart = barData.length > 1 && (
     <div className="rounded-[22px] border border-border bg-card p-4 hover:scale-[1.005] transition-transform" style={{ boxShadow: '0 2px 8px rgba(61,44,31,.04)' }}>
       <h2 className="text-sm font-bold mb-3">{t('analytics.trend')}</h2>
-      <ResponsiveContainer width="100%" height={180}>
-        <BarChart data={barData} barGap={4}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-          <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-          <YAxis tick={{ fontSize: 11 }} width={45} />
-          <Tooltip formatter={(value) => formatAmount(value as number, currency)} contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))' }} />
-          <Bar dataKey="expenses" name={t('stats.expenses')} fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="income" name={t('stats.income')} fill="#10b981" radius={[4, 4, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
+      <MonthBars
+        data={barData}
+        currency={currency}
+        expensesLabel={t('stats.expenses')}
+        incomeLabel={t('stats.income')}
+      />
     </div>
   );
 
@@ -261,14 +266,7 @@ export default function StatisticsPage() {
             {pieData.length > 0 && (
               <div className="rounded-[22px] border border-border bg-card p-4" style={{ boxShadow: '0 2px 8px rgba(61,44,31,.04)' }}>
                 <h2 className="text-sm font-bold mb-3">{t('stats.byCategory')}</h2>
-                <ResponsiveContainer width="100%" height={210}>
-                  <PieChart>
-                    <Pie data={pieData} dataKey="amount" nameKey="name" cx="50%" cy="50%" outerRadius={88} innerRadius={62} paddingAngle={2}>
-                      {pieData.map((entry) => <Cell key={entry.catId} fill={entry.color} />)}
-                    </Pie>
-                    <Tooltip formatter={(value) => formatAmount(value as number, currency)} contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))' }} />
-                  </PieChart>
-                </ResponsiveContainer>
+                <CategoryPie data={pieData} currency={currency} height={210} outerRadius={88} innerRadius={62} />
                 <div className="mt-3">{categoryList}</div>
               </div>
             )}
@@ -298,14 +296,7 @@ export default function StatisticsPage() {
                 {/* Left: pie + category list */}
                 <div className="rounded-[22px] border border-border bg-card p-5 hover:scale-[1.005] transition-transform" style={{ boxShadow: '0 2px 8px rgba(61,44,31,.04)' }}>
                   <h2 className="text-sm font-bold mb-3">{t('stats.byCategory')}</h2>
-                  <ResponsiveContainer width="100%" height={230}>
-                    <PieChart>
-                      <Pie data={pieData} dataKey="amount" nameKey="name" cx="50%" cy="50%" outerRadius={100} innerRadius={68} paddingAngle={2}>
-                        {pieData.map((entry) => <Cell key={entry.catId} fill={entry.color} />)}
-                      </Pie>
-                      <Tooltip formatter={(value) => formatAmount(value as number, currency)} contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))' }} />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  <CategoryPie data={pieData} currency={currency} height={230} outerRadius={100} innerRadius={68} />
                   <div className="mt-4">{categoryList}</div>
                 </div>
 

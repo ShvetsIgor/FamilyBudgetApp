@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState, useCallback, useMemo } from 'react';
+import { Suspense, useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { format, parseISO, isToday, isYesterday, subMonths } from 'date-fns';
 import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
@@ -162,13 +162,24 @@ function RecurringPageInner() {
   }, [editId, list, router]);
 
   // Subscription detection needs a few months of history, not just the
-  // current month that /home already loads (merge dedupes by id)
+  // current month that /home already loads (merge dedupes by id).
+  //
+  // Guarded per account and per month: unguarded, four range queries — roughly
+  // six hundred documents for an active user — were re-issued on EVERY visit to
+  // this tab, to recompute a suggestion list that had not changed. Past months
+  // never change, so once fetched they stay; the current month keeps arriving
+  // through the normal /home and /expenses loads.
+  const historyLoadedRef = useRef<string | null>(null);
   useEffect(() => {
     if (!user) return;
-    for (let i = 0; i < 4; i++) {
-      fetchMonthExpenses(user.id, toLocalMonthKey(subMonths(new Date(), i)))
+    const months = Array.from({ length: 4 }, (_, i) => toLocalMonthKey(subMonths(new Date(), i)));
+    const key = `${user.id}|${months[0]}`;
+    if (historyLoadedRef.current === key) return;
+    historyLoadedRef.current = key;
+    for (const month of months) {
+      fetchMonthExpenses(user.id, month)
         .then((items) => dispatch(mergeExpenses(items)))
-        .catch(() => {});
+        .catch(() => { historyLoadedRef.current = null; });
     }
   }, [user, dispatch]);
 
@@ -220,7 +231,11 @@ function RecurringPageInner() {
     if (!user) return;
     try {
       if (formMode?.mode === 'edit') {
-        const { nextDueDate, isActive } = await updateRecurring(user.id, formMode.item.id, data);
+        const { nextDueDate, isActive } = await updateRecurring(user.id, formMode.item.id, data, {
+          startDate: formMode.item.startDate,
+          frequency: formMode.item.frequency,
+          nextDueDate: formMode.item.nextDueDate,
+        });
         dispatch(updateRecurringItem({
           ...formMode.item, ...data,
           startDate: data.startDate.toISOString(),

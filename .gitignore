@@ -12,7 +12,7 @@ dist/
 
 # Environment
 .env.local
-.env.local *
+.env.local.*
 .env.development.local
 .env.test.local
 .env.production.local
@@ -57,3 +57,6 @@ design-archive/
 firestore-debug.log
 firebase-debug.log
 ui-debug.log
+
+# Agent worktrees: full copies of the app, never part of the repo
+.claude/worktrees/

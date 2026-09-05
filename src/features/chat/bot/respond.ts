@@ -16,7 +16,8 @@ function nowTimestamp(): string {
   return new Date().toISOString();
 }
 
-function saveErrorPhrase(language: string): string {
+/** Shared with the chat screen, so a failed send reads the same as a failed save. */
+export function saveErrorPhrase(language: string): string {
   return language === 'ru'
     ? 'Не удалось сохранить 😔 Попробуй ещё раз'
     : "Couldn't save 😔 Please try again";

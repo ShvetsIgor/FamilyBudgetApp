@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { Children, useRef, useEffect } from 'react';
 import { Composer } from './Composer';
 import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 
@@ -15,11 +15,16 @@ export function ChatScreen({ children, onSend, onPlus, disabled }: ChatScreenPro
   const C = useChatTokens();
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Depending on `children` meant this ran on every single render — and
+  // reading scrollHeight forces a synchronous layout, the most expensive
+  // thing a phone can be asked to do in a commit. The scroll only needs to
+  // follow the number of things in the thread.
+  const childCount = Children.count(children);
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [children]);
+  }, [childCount]);
 
   return (
     <div

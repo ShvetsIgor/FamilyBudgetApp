@@ -59,3 +59,35 @@ export function monthlyEquivalent(amount: number, frequency: RecurringFrequency)
     frequency === 'weekly' ? 4.33 : 30;
   return amount * factor;
 }
+
+/**
+ * Where the schedule should sit after an edit.
+ *
+ * Editing a template used to recompute `nextDueDate` from `startDate` every
+ * time, which walks forward to the first occurrence that is not in the past —
+ * i.e. right back onto the payment `markAsPaid` had just advanced past. Fixing
+ * a typo in a name therefore re-armed «Оплачено» for a payment already booked,
+ * and tapping it wrote the expense a second time.
+ *
+ * The stored position is authoritative unless the user actually moved the
+ * schedule (changed the start date or the frequency), or unless it now sits
+ * before the new start date.
+ */
+export function resolveUpdatedDueDate(
+  input: { startDate: Date; frequency: RecurringFrequency },
+  current: { startDate: string; frequency: RecurringFrequency; nextDueDate: string } | undefined,
+  firstFutureOrToday: (start: Date, frequency: RecurringFrequency) => Date,
+): Date {
+  if (!current) return firstFutureOrToday(input.startDate, input.frequency);
+
+  const scheduleMoved =
+    current.frequency !== input.frequency ||
+    dayValue(parseISO(current.startDate)) !== dayValue(input.startDate);
+  if (scheduleMoved) return firstFutureOrToday(input.startDate, input.frequency);
+
+  const storedDue = parseISO(current.nextDueDate);
+  if (dayValue(storedDue) < dayValue(input.startDate)) {
+    return firstFutureOrToday(input.startDate, input.frequency);
+  }
+  return storedDue;
+}

@@ -27,17 +27,6 @@ const CORE_FOLDER_IDS = new Set([
 // ─── Folder seeds ─────────────────────────────────────────────────────────────
 // Only core contexts seeded — the rest live in the Standard Library.
 
-export const DEFAULT_EXPENSE_FOLDER_SEEDS: DefaultFolderEntry[] = FOLDER_BLUEPRINTS
-  .filter((f) => CORE_FOLDER_IDS.has(f.id))
-  .map((f, order) => ({
-    id: f.id,
-    name: f.name,
-    icon: f.icon,
-    color: f.color,
-    order,
-    type: 'expense' as const,
-  }));
-
 export const DEFAULT_INCOME_FOLDER_SEEDS: DefaultFolderEntry[] = FOLDER_BLUEPRINTS
   .filter((f) => f.id === 'income')
   .map((f) => ({

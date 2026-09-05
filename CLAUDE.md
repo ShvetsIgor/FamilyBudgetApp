@@ -22,19 +22,23 @@ Core principle:
 
 - **Framework:** Next.js 16 + App Router (Turbopack in dev)
 - **Language:** TypeScript 6 strict
-- **Styling:** Tailwind CSS v4 + shadcn/ui + custom tokens
+- **Styling:** Tailwind CSS v4 + custom tokens (there is no `components/ui/` — the shadcn scaffold was removed long ago; only `@radix-ui/react-dialog` survives, in `AddDrawer`)
 - **Lint:** ESLint 10, flat config (`eslint.config.mjs`)
 - **State:** Redux Toolkit
 - **Backend:** Firebase Auth + Firestore + Storage
 - **Charts:** Recharts
 - **PWA:** Serwist (`@serwist/next`) — worker source is `src/app/sw.ts`, compiled to `public/sw.js`; webpack-only, hence `next build --webpack`
 - **Date utils:** `date-fns`
+- **i18n:** hand-rolled `makeT`/`useT` over `src/messages/{en,ru}.json` — no i18n library
 - **Tests:** Vitest
 
 ## Active Runtime Contract
 
 - Active locales: `en`, `ru`
-- Hebrew / RTL is intentionally paused and is not part of the active runtime guarantee
+- Hebrew / RTL is intentionally paused and is not part of the active runtime guarantee.
+  `src/messages/he.json` stays on disk for whenever it is picked up, but it is no
+  longer imported by `makeT` — no `Language` value can select it, and shipping it
+  cost every user bytes for a catalog covering ~20% of the keys
 - Visual theme is `mist | press`; dark mode is a separate boolean and must not be inferred from `theme`
 - `<html>` owns `data-theme="mist|press"` and the `dark` class independently through `ThemeProvider`
 - `/home` is the main expense-entry path
@@ -54,9 +58,12 @@ npm test
 Notes on these commands after the 2026-08-22 toolchain upgrade:
 
 - `npm run lint` is plain `eslint .` — `next lint` was removed in Next 16.
-  It exits 0 with ~29 warnings from the React Compiler rules that
-  `eslint-config-next` 16 turns on; they are pre-existing and downgraded to
-  warnings in `eslint.config.mjs`, with the reasoning written there.
+  It exits 0 with **no warnings**: the React Compiler findings were cleared on
+  2026-08-23 and those rules are back to ERROR, so a new violation fails the
+  build. `eslint.config.mjs`'s `rules` block is deliberately empty; the
+  remaining exemptions sit at their own lines with a reason.
+  Note the compiler itself is NOT enabled in `next.config.mjs` — the rules are
+  advisory, and `useCallback`/`useMemo` are still doing the real work.
 - `npm run build` passes `--webpack` on purpose: Turbopack is the Next 16
   default and refuses to build while the PWA plugin injects a webpack config.
   `@serwist/turbopack` would lift that, but it serves the worker from a route
@@ -114,21 +121,26 @@ src/
 
 As of 2026-05-27, chat saves now feed this memory too, not only `FastExpenseEntry`.
 
-### 3. Store profiles still exist
+### 3. Store profiles are gone — `suggestionMemory` is the only merchant memory
 
-`storeProfiles` is a separate chat-facing memory keyed by `storeId`.
+`storeProfiles` was the chat's first merchant memory, keyed by `storeId`. Its
+writers were deleted by the 2026-05-31 chat-page rewrite (`c5440da`) and nothing
+ever read the result afterwards, so on 2026-09-04 the slice, the hook, the
+`ChatContext` field and both login fetches were removed.
 
-Use it for:
+What remains is `clearStoreProfiles`, so the reset path can still delete
+documents left on older accounts. Existing Firestore documents were NOT touched.
 
-- known store clarify chips
-- per-store probable category ordering in the chat UI
+Merchant memory now lives in exactly one place:
 
-Do not confuse it with `suggestionMemory`:
+- `suggestionMemory` — merchant history, recent categories, split combos, tag
+  associations and merchant→folder stats, shared by chat and the entry forms.
 
-- `storeProfiles` is chat-facing merchant memory by canonical store id
-- `suggestionMemory` is the shared deterministic ranking memory across flows
+The same rewrite also removed the writer for **learned keywords**, so
+`useLearnedKeywords` is read-only: it serves words taught before that commit and
+the reset path still clears them, but the chat cannot teach new ones.
 
-### 4. Expense writes must stay batched
+### 4. Financial writes must stay batched — and the aggregate is now READ
 
 `features/expenses/services/expensesService.ts` batches:
 
@@ -136,7 +148,21 @@ Do not confuse it with `suggestionMemory`:
 - expense edit plus old/new `monthlyStats` deltas
 - expense delete plus `monthlyStats`
 
-If you change the expense domain model, preserve this invariant.
+`incomeService` does the same for income create/edit/delete (it did not until
+2026-09-04; add and delete each wrote their stats in a second, unguarded call).
+
+This matters more than it used to. Until 2026-09-04 `fetchMonthStats` ignored
+the stored document entirely and re-queried the raw collections, so the whole
+write path was feeding a collection nothing read. It now reads the aggregate
+first and only falls back to computing. Consequences to respect:
+
+- a write that lands without its delta is a wrong number the user can see
+- `statsPatchShape` decides which halves of the document a delta touches;
+  `byCategoryByCurrency` moves with `byCategory`, never with the total
+- only a document marked `currencyBreakdownComplete` is trusted, and only
+  CLOSED months are cached back (the current month is still moving)
+
+If you change the expense or income domain model, preserve all of this.
 
 ### 5. Auth boundary
 
@@ -285,9 +311,23 @@ Runtime contract update:
 - Category presets and library are still larger than the ideal minimalist product vision.
 - Recurring-expense deletion restores schedule state but does not delete the recurring template; if future UX should offer "delete occurrence vs delete template", that is still a separate product decision.
 - Browser-based verification against local `localhost` may be blocked by Codex browser policy, so UI validation may need production/manual verification when that happens.
+- The chat can no longer TEACH the parser a keyword — the writer was deleted in `c5440da` (2026-05-31) and never replaced. Reading works, so words learned before then still resolve; if the feature is wanted back it needs a new write path, not a bug fix.
+- `byCategory` in `monthlyStats` remains a blind cross-currency sum, so a category holding foreign spend is overstated in the category breakdown while the totals people read are exact.
+- Family category names are resolved one `getDoc` at a time on purpose: `firestore.rules` allows `list` on `categories/{uid}` to the owner only, so members can `get` a sibling's non-private category but never enumerate them. The results are cached for the session.
 
 ## Change Log
 
+- **2026-09-04** — Full code review: 12 bugs fixed, ~4 400 lines of dead code removed, every route 45 kB lighter. Four parallel audits (dead code, correctness, legacy, performance) ran against the tree and every finding was re-verified by hand before it was acted on.
+
+  **Bugs that were breaking things.** `/expenses` showed **four months at once**: `/recurring` merges four months of history into the shared Redux list for subscription detection, and the list screen treated that whole list as «this month» — so after a visit to the Plan tab the September header summed June through September, June's day-groups rendered under it, and the budget bar read far over 100%. It filters by the selected month now. **Editing a recurring template resurrected the payment you had just made**: `updateRecurring` recomputed `nextDueDate` from `startDate` on every save, walking straight back onto the date `markAsPaid` had advanced past — fixing a typo in a name re-armed «Оплачено», and tapping it booked the charge a second time. The rule moved into a pure `resolveUpdatedDueDate`, which keeps the stored position unless the start date or frequency actually moved. **`UpcomingBills` marked tomorrow's bill as due today**: `differenceInDays` counts 24-hour periods, so at 14:00 a bill due tomorrow morning read as 0 days; it booked an expense dated **tomorrow** and advanced the schedule a month early (`status.ts` already used `differenceInCalendarDays` — this widget was never migrated). **Undo-delete silently broke savings**: `restoreExpense` re-created the document without `goalOwnerId` or `contributionId`, so after a reload the next delete reversed the contribution against the wrong owner and the money stayed in the family member's goal. **Missed salaries needed one app launch each**: the recurring-income catch-up advanced a template by exactly one month per startup, and injected a June-dated income into September's list; it now books every owed occurrence in order (pure `dueIncomeOccurrences`) with a single schedule write. **Five entry forms parsed the picked date as UTC** — `new Date('2026-09-01')` is UTC midnight, which in Toronto is 31 August, so the expense vanished from September entirely; they use `parseLocalDate`, as `/recurring` already did. Also: the income form created its recurring template **before** the income, so a failed income write left a template behind and the retry the user was invited to make produced a second one (a salary generated twice a month from then on); the expense form could pin an empty category preselect when it mounted before categories arrived, then demand a category at save; a rejected chat write cleared the typing dots and left the message «pending» with no reply and no error; and a family contribution to an un-migrated goal failed silently, with the form simply never closing.
+
+  **Dead code.** The **category constructor could not be opened** — `showWizard` was initialised `false` and the only setter call passed `false` — so 7 wizard files, its state hook and `bulkApplyConstructorDiff` went, along with 57 orphaned translation keys. **`storeProfiles` turned out to be a fully dead subsystem**: its writers were deleted in the 2026-05-31 chat rewrite and nothing read the result, yet it still cost two unbounded collection reads per session (at login, then again on every `/home` mount). The slice, hook, `ChatContext` field and both fetches are gone; `clearStoreProfiles` stays so old documents can still be wiped, and no Firestore data was deleted. The same commit had removed the **learned-keyword writer**, so that hook is now honestly read-only. Also removed: `ExpenseForm` + `SplitEditor` + `splitAlgorithm` (the pre-atomic save path), 9 other unreferenced files, a test-only cluster of 6 modules describing a design that never shipped (`expenseContext` cites two modules that do not exist in the repo), 28 dead exports, `recalculateMonthStats` (a 90-line duplicate of `computeMonthStats` with zero callers), `firebase/storage` (never used anywhere), **198 unused i18n keys** across three catalogs (−20 kB of JSON), and **7 npm dependencies** — five Radix packages and `class-variance-authority` left behind when the shadcn scaffold was removed, plus `next-intl`, whose single importer was itself unreferenced. Repo hygiene: nine accidental **git submodule entries** (mode 160000) under `.claude/worktrees/` that a fresh clone would choke on, and a stale worktree holding a full copy of the app.
+
+  **`monthlyStats` was write-only.** Every expense and income path had been maintaining a batched, per-currency month aggregate for months — and `fetchMonthStats` ignored it, re-querying the raw collections instead. `/analytics` over six months was twelve range queries reading every expense and income document the user owns, on every visit (~960 document reads); it is six document reads now. Getting there needed three fixes first: `byCategoryByCurrency` was gated on the total changing, so a category-only edit updated one map and left the other behind (pinned by `statsPatchShape` tests); income `add`/`delete` wrote their stats outside the batch, one of them through a `setDoc` that could zero a month's expense totals; and only documents explicitly marked `currencyBreakdownComplete` are trusted, with only CLOSED months cached back — the current month is still moving, and a snapshot of it would be stale on arrival.
+
+  **Performance.** Sentry was **60% of the shared bundle**: `tracesSampleRate: 0.1` pulled the entire browser-tracing build into every route to sample page loads of an app that does no server work. Errors are kept, tracing is tree-shaken via `__SENTRY_TRACING__` — the chunk went 148.7 → 99.2 kB gzip. recharts (100 kB) now loads through `next/dynamic` on `/analytics` and `/statistics`, dropping those two routes by ~150 kB each; `FamilyAnalyticsView` is lazy too, since solo users never render it. `useT` was minting a new translator closure on every render of every component, defeating memoisation wherever it is passed as a prop. `/expenses` resolved `getExpenseListMeta` — a scan of all categories AND folders — once per row inside the search filter and again inside the filter-chip reduce, unmemoised, on every keystroke and every unrelated dispatch. `ChatScreen` depended on `children`, so it read `scrollHeight` (a forced synchronous layout) on every single render. Read volume: `AuthProvider` fetched every category and folder, then `seedDefaultCategories` fetched the same four collections again (~48 wasted reads and a round trip on every cold start — it returns its state now); `/recurring` re-issued its four-month history query on every visit; `/expenses` refetched a past month every time the user stepped back onto its chip; learned keywords and family category names are cached for the session. `he.json` is no longer bundled, and Instrument Sans is no longer preloaded for Mist users who never render it.
+
+  **Measured, gzip First Load JS:** `/analytics` 629 → **476**, `/statistics` 623 → **475**, `/home` 548 → **503**, `/expenses` 530 → **484**; every other route −45 to −49 kB. Verification note: the authenticated walk was again impossible (the Firestore emulator needs Java and this machine has none), so the extracted charts are pinned by render tests and the calendar rules by unit tests. Tests: `recurring.updatedDueDate` (6), `income.recurringCatchUp` (8), `expenses.statsPatchShape` (5), `charts.lazyModules` (5). `AGENTS.md` was regenerated — it still described Next 15, `next-pwa`, `next-intl` and the `paper` theme. Baseline: lint clean, tsc clean, unit **546**, build clean.
 - **2026-08-26** — The chat's «Категория» door was a dead end. Picking it opened a sheet of the chat's own — `CategorySheet` — whose `categories` override was designed for the income case: passing it forced `folders` to an empty array, and `buildFolderSections` with no folders keeps only categories that have **no** `folderId`. Since this app is folder-first, nearly every category has one, so the browse view rendered nothing at all. Search still worked (it filters the flat list), which is exactly what it looked like from the outside: a search box, the categories you already had if you typed, and nothing to tap otherwise — and no way to create the category you actually wanted. The chat now uses the **canonical `CategoryFolderPickerSheet`**, the same picker as the entry forms, the category hub and the recurring form: folder tiles, a category grid inside each, search, and inline creation. `onCreateCategory` opens `CategoryEditorSheet` scoped to the folder being browsed and, once saved, feeds the new category straight back into the clarify flow, so the expense the user was in the middle of lands in it. `onCreateFolder` opens `FolderEditorSheet`, reuses a same-named folder instead of duplicating it, and a freshly created (therefore empty) folder goes straight to category creation. Both the expense and the income clarify paths were switched; `CategorySheet` is deleted, and the note in `folderSections.ts` that blessed its override is gone with it. Verified through a temporary render harness at 375px (the authenticated walk still needs an emulator, and this machine has no Java): folder tiles render, opening one lists its categories with a create tile, selecting fires with the category, and the create tile reports the folder it was opened from. Baseline: lint clean, tsc clean, unit **642**, build clean.
 - **2026-08-23** — React Compiler lint debt cleared, and two bugs it led to. The 29 findings `eslint-config-next` 16 brought in are now **0**: twelve were real and fixed, seventeen are exempted at their own line with a reason, and the rules are back to **error** — a new violation fails the build instead of joining a pile of warnings (verified with a throwaway component). Real fixes: the drawer/entry forms no longer «preselect the first item in an effect» — the default is derived during render (`IncomeDrawerForm`, `FastSavingsEntry`), which closes the window where a save fired before the effect caught up, and the same treatment went to the picker's deleted-folder fallback and the onboarding gate in `(app)/layout`; `DowTooltip` and the savings `RightPanel` were components declared inside a render (a new type every pass, remounting their subtree) and became a module-scope component and a render helper; `/expenses` wrote a ref during render; both quick-add drawers read `handleSave` before its declaration. The exemptions are three deliberate shapes: starting a Firestore fetch (no server loader exists here), syncing from the URL or localStorage, and resetting a form when it reopens. **Hydration bug found on the way**: `uiSlice` read the stored language at module init, which prerendering cannot do — so a Russian user's first client render disagreed with the server's English HTML and React threw a hydration error on every cold load of the auth screens. The read moved into `hydrateDisplayPreferences` (renamed from `hydrateThemePreferences`, dispatched by `ThemeProvider`). That surfaced a **second** bug: `setUser(null)` resets the whole Redux tree, so the freshly hydrated language was wiped ~100 ms later when Firebase reported «nobody» — the sign-in screen came up English regardless of the toggle. The reset now carries `theme`, `isDarkMode` and `language` across: device choices, unlike budget limits or categories, are not account data. Pinned by `store.authReset` (2). **`UpcomingBills`** on `/home` was the third copy of the mark-paid write path — it now goes through `useRecurringActions`, and its rows open `/recurring/[id]` like every other recurring row. Tests: `quickadd.defaultCategory` (2), `store.authReset` (2). Verified in-browser on a production build: stored `ru` renders Russian with `<html lang="ru">` and a clean console, the toggle still persists. Baseline: lint clean **as errors**, tsc clean, unit **642**, build clean.
 - **2026-08-23** — PWA moved from `next-pwa` to **Serwist**. `next-pwa` had not shipped since 2022 and was carrying every remaining security advisory in the tree (5 high, all inside its workbox build chain) as well as blocking Turbopack. `@serwist/next` replaces it: the worker is now real TypeScript at **`src/app/sw.ts`** (inert inside `app/` — the App Router only routes `page`/`layout`/`route` filenames), compiled to `public/sw.js` at build time. `skipWaiting` + `clientsClaim` keep the old behaviour, so `UpdateBanner` still gets its `controllerchange` and offers «Обновить». `next.config.js` became **`next.config.mjs`** (`@serwist/next` is ESM) and the worker is disabled in dev, where it only fights HMR. `tsconfig.json` gains `webworker` in `lib` — TypeScript 6 takes it alongside `dom` without the duplicate-global conflicts this used to cause. **`npm audit` is now 0 vulnerabilities** (from 5 high). The build stays on `--webpack`: `@serwist/next` is a webpack plugin, and the Turbopack-capable `@serwist/turbopack` serves the worker from `app/serwist/[path]/route.ts` — a server route, which the `output: 'export'` build the Capacitor plan needs cannot produce. Trap worth remembering: `globPublicPatterns` defaults to `**/*`, so the stale `public/workbox-*.js` left behind by next-pwa was precached by url — deleting it after a build left the worker stuck in `installing` forever on a 404. Public-dir leftovers must be cleaned BEFORE the build. Migration for people who already have the app installed: `/sw.js` is served `max-age=0, must-revalidate`, so an installed next-pwa worker picks the new one up on the next visit, and the worker deletes any `workbox-`-prefixed cache on activate — a full copy of a build that no longer exists, which nothing would ever read again. Serwist names its own caches under the `serwist` prefix, so that filter cannot hit a live cache; the runtime caches (`others`, `static-js-assets`, …) keep their names across both worlds and are reused. Verified against a real production server (new `prod` profile in `.claude/launch.json`): worker reaches `activated`, controls the page, precaches 98 assets, and — with the server stopped — `/auth/register` still renders in full from cache. The migration was checked on the real update path (byte-different worker against a live registration, since `unregister()` does nothing while a client is still controlled): the seeded `workbox-precache-v2` cache is gone, `others` survives. Baseline: lint clean, tsc clean, unit **638**, build clean.

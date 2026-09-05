@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { format, parseISO, differenceInDays, endOfMonth } from 'date-fns';
+import { format, parseISO, differenceInCalendarDays, endOfMonth } from 'date-fns';
 import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { useAppSelector } from '@/store/store';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
@@ -44,13 +44,12 @@ function DayPill({ days }: { days: number }) {
 }
 
 interface Props {
-  withinDays?: number;
   maxItems?: number;
   compact?: boolean;
   embedded?: boolean;
 }
 
-export function UpcomingBills({ withinDays = 30, maxItems, compact = false, embedded = false }: Props) {
+export function UpcomingBills({ maxItems, compact = false, embedded = false }: Props) {
   const currency = useAppSelector((s) => s.ui.currency);
   const categories = useAppSelector((s) => s.categories.expense);
   const { list } = useAppSelector((s) => s.recurring);
@@ -64,7 +63,7 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false, embe
     .filter((r) => {
       if (!r.isActive) return false;
       const due = parseISO(r.nextDueDate);
-      const days = differenceInDays(due, new Date());
+      const days = differenceInCalendarDays(due, new Date());
       return days >= -7 && due <= monthEnd;
     })
     .sort((a, b) => parseISO(a.nextDueDate).getTime() - parseISO(b.nextDueDate).getTime())
@@ -88,7 +87,7 @@ export function UpcomingBills({ withinDays = 30, maxItems, compact = false, embe
 
   const rows = upcoming.map((item) => {
     const cat = categories.find((c) => c.id === item.categoryId);
-    const days = differenceInDays(parseISO(item.nextDueDate), new Date());
+    const days = differenceInCalendarDays(parseISO(item.nextDueDate), new Date());
     const isDue = days <= 0;
     return (
       <div key={item.id} className="flex items-center gap-3 px-4 py-3">

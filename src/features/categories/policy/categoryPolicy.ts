@@ -19,11 +19,3 @@ import type { Category } from '@/shared/types';
 export function isActiveCategory(c: Category): boolean {
   return !c.archived;
 }
-
-/**
- * True when the category can appear in historical data display.
- * Archived categories are still valid references on old transactions.
- */
-export function isHistoricalCategory(_c: Category): boolean {
-  return true;
-}

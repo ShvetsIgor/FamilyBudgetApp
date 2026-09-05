@@ -63,7 +63,6 @@ export default function IncomePage() {
   const currentMonth = format(new Date(), 'yyyy-MM');
   const yearMonths = getYearMonths();
 
-  const [showForm, setShowForm] = useState(false);
   const [editingIncome, setEditingIncome] = useState<SerializableIncome | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
@@ -91,7 +90,8 @@ export default function IncomePage() {
 
   const isCurrentMonth = selectedMonth === currentMonth;
   const incomes = isCurrentMonth ? reduxIncomes : (localIncomes ?? []);
-  const formOpen = showForm || !!editingIncome;
+  // Adding moved to the /income/new route; this panel is edit-only now.
+  const formOpen = !!editingIncome;
 
   // Current-month incomes (incl. due recurring generation) are loaded once on
   // app start by the (app) layout via loadCurrentMonthIncomes — no local fetch
@@ -117,7 +117,6 @@ export default function IncomePage() {
   async function handleAdd(data: Omit<AddIncomeInput, 'userId'>) {
     if (!user) return;
     dispatch(prependIncome(await addIncome({ ...data, userId: user.id })));
-    setShowForm(false);
   }
 
   async function handleEdit(data: Omit<AddIncomeInput, 'userId'>) {
@@ -148,7 +147,7 @@ export default function IncomePage() {
     <IncomeForm
       initialIncome={editingIncome ?? undefined}
       onSave={editingIncome ? handleEdit : handleAdd}
-      onCancel={() => { setShowForm(false); setEditingIncome(null); }}
+      onCancel={() => setEditingIncome(null)}
     />
   );
 
@@ -323,7 +322,7 @@ export default function IncomePage() {
                   {editingIncome ? t('income.editTitle') : t('income.title')}
                 </h2>
                 <button
-                  onClick={() => { setShowForm(false); setEditingIncome(null); }}
+                  onClick={() => setEditingIncome(null)}
                   className="text-muted-foreground text-xs hover:text-foreground"
                 >
                   ✕

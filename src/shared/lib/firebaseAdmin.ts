@@ -1,14 +1,15 @@
 import 'server-only';
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
+import { getAuth } from 'firebase-admin/auth';
 
 const ADMIN_APP_NAME = 'family-budget-admin';
 
 /** Lazy initialization: importing this module does not require credentials. */
-export function getAdminDb(): Firestore {
+function getAdminApp() {
   // The SDK registry survives module reloads; never reuse an unrelated app.
   const existing = getApps().find((app) => app.name === ADMIN_APP_NAME);
-  if (existing) return getFirestore(existing);
+  if (existing) return existing;
 
   const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID?.trim();
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL?.trim();
@@ -35,5 +36,13 @@ export function getAdminDb(): Firestore {
     throw new Error('Firebase Admin credentials are invalid. Check the service account email and encoded private key.');
   }
 
-  return getFirestore(initializeApp({ projectId, credential }, ADMIN_APP_NAME));
+  return initializeApp({ projectId, credential }, ADMIN_APP_NAME);
+}
+
+export function getAdminDb(): Firestore {
+  return getFirestore(getAdminApp());
+}
+
+export function getAdminAuth() {
+  return getAuth(getAdminApp());
 }

@@ -86,7 +86,8 @@ src/
   features/
     chat/
       bot/                        bot context, save/clarify flow, morning/weekly cards
-      parser/                     legacy dictionary/store parser used by chat
+      parser/                     legacy income parser + merchant dictionaries
+      services/parseChatMessage.ts authenticated Groq expense drafts for chat
       store/                      chat UI state + store profiles
     expenses/
       engine/                     deterministic ranking/memory/split engine
@@ -102,12 +103,22 @@ src/
 
 ## Architecture That Matters
 
-### 1. Two parsing layers exist on purpose
+### 1. AI expense parsing and deterministic suggestions
 
-- Chat still uses `features/chat/parser/parse.ts` for dictionary/store parsing.
+- Ordinary expense messages call `/api/chat/parse-expense` with the Firebase ID
+  token and device timezone. Groq parses one expense using the owner's active
+  categories and profile; the API validates it and returns a draft only.
+- `parseChatMessage` adapts the draft to the existing chat confirmation flow.
+  Amount, currency and date remain pinned through category choice and Split.
+  Only explicit category confirmation saves via the existing expense/stats batch.
+- `+` income and slash commands retain their existing paths. Merchant dictionaries
+  still supply canonical merchant metadata; they do not override AI amount/currency.
 - The newer deterministic expense engine lives in `features/expenses/engine/*`.
-- Current strategy is **alignment, not hard replacement**:
-  chat and manual flows share saved history via `suggestionMemory`, even though the front parser is still the legacy chat parser.
+- Chat and manual flows share `suggestionMemory`. History ranks categories and
+  split options. Provider errors and ambiguous AI results ask for clarification
+  or manual entry, without silently falling back to guessed amounts/currencies.
+- Siri and chat share the per-owner AI quota (10/minute, 100/day), parser,
+  validation and missing-category wording. Only Siri saves on the server.
 
 ### 2. Shared deterministic memory
 
@@ -316,6 +327,8 @@ Runtime contract update:
 - Family category names are resolved one `getDoc` at a time on purpose: `firestore.rules` allows `list` on `categories/{uid}` to the owner only, so members can `get` a sibling's non-private category but never enumerate them. The results are cached for the session.
 
 ## Change Log
+
+- **2026-10-06** — Connected ordinary chat expenses to Groq through `/api/chat/parse-expense`, authenticated with verified/revocation-checked Firebase ID tokens. Server reads the owner's active categories, applies the shared Siri/chat quota and returns validated drafts without financial writes. Chat persists the message and presents amount/currency/date with category confirmation; currency is retained through category choice and Split, including desktop chat navigation. AI descriptions survive merchant saves. Missing categories use shared actionable wording; provider failures, unsupported currencies and ambiguous inputs never fall back to a guessed expense. Stale responses after account changes are discarded. Explicit `+` income and slash commands keep their existing workflows. Added auth/API/client/bot tests and emulator-backed UI checks with stubbed Groq responses.
 
 - **2026-10-05** — Resumed Siri/AI work after the limit reset. Pushed the accumulated integration to `master` (`c3531fe0`). Added an opt-in live Groq evaluation suite (`npm run eval:ai`, synthetic data, no Firebase writes), an in-app setup guide under Siri tokens and `docs/SIRI-SETUP.md`. Missing categories now return a localized `category_required` response with an optional display-only suggested name; a suggestion can never authorize a save or create a category. The parser explicitly refuses income and multiple separate expenses. The legacy chat parser is unchanged; shared category clarification wording is available for future AI chat integration. Live model checks, unit validation and deployment results are recorded in the task.
 

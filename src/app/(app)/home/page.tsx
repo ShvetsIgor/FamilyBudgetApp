@@ -15,9 +15,9 @@ import { addNotification } from '@/features/notifications/store/notificationsSli
 import { useChatMessages } from '@/features/chat/hooks/useChatMessages';
 import { useLearnedKeywords } from '@/features/chat/hooks/useLearnedKeywords';
 
-import { parseMessage } from '@/features/chat/parser/parse';
+import { parseChatMessage, ChatSessionChangedError } from '@/features/chat/services/parseChatMessage';
 import { deleteExpense, fetchMonthExpenses } from '@/features/expenses/services/expensesService';
-import { deleteMessage } from '@/features/chat/services/messagesService';
+import { deleteMessage, updateMessage } from '@/features/chat/services/messagesService';
 import { collectBotContext } from '@/features/chat/bot/context';
 import { respondToUserMessage, saveErrorPhrase } from '@/features/chat/bot/respond';
 import { addMessage } from '@/features/chat/services/messagesService';
@@ -91,6 +91,7 @@ export default function HomePage() {
   const currency = useAppSelector((s) => s.ui.currency) as Currency;
   const messages = useAppSelector((s) => s.chat.messages);
   const typing = useAppSelector((s) => s.chat.typing);
+  const categoriesReady = useAppSelector((s) => s.categories.status === 'ready');
   const language = useAppSelector((s) => s.ui.language);
 
   const dateFnsLocale = getDateFnsLocale(language);
@@ -280,6 +281,7 @@ export default function HomePage() {
     botMsgId: string;
     userMsgId: string;
     amount: number;
+    currency?: Currency;
     storeId?: string;
     storeName?: string;
     storeGroup?: string;
@@ -312,7 +314,7 @@ export default function HomePage() {
   const failureText = useMemo(() => saveErrorPhrase(language), [language]);
 
   const handleSend = useCallback(async (text: string) => {
-    if (!userId || sendingRef.current) return;
+    if (!userId || !categoriesReady || sendingRef.current) return;
     sendingRef.current = true;
 
     dispatch(setTyping(true));
@@ -329,21 +331,30 @@ export default function HomePage() {
         return;
       }
 
-      // Normal expense parsing
-      const parsed = parseMessage(text, { learned });
       const userMsg = await addMessage({
         userId,
         senderId: userId,
         kind: 'user',
         text,
-        parsed,
         status: 'pending',
       });
-
-      await new Promise((r) => setTimeout(r, 250));
-
-      const reply = await respondToUserMessage(userMsg, parsed, enrichedCtx);
+      const outcome = await parseChatMessage(text, { learned, userId, language });
+      if (appStore.getState().auth.user?.id !== userId) return;
+      if (outcome.kind === 'clarification') {
+        await updateMessage(userId, userMsg.id, { status: 'clarifying' });
+        if (appStore.getState().auth.user?.id !== userId) return;
+        await addMessage({ userId, senderId: 'bot', kind: 'bot', status: 'clarifying', text: outcome.message });
+        return;
+      }
+      const { parsed } = outcome;
+      await updateMessage(userId, userMsg.id, { parsed });
+      // Groq can take several seconds. Re-read categories and check the session
+      // instead of replying against a profile captured before the request.
+      const currentCtx = buildEnrichedCtx();
+      if (!currentCtx || currentCtx.userId !== userId) return;
+      const reply = await respondToUserMessage(userMsg, parsed, currentCtx);
       for (const botMsg of reply.messages) {
+        if (appStore.getState().auth.user?.id !== userId) return;
         await addMessage(botMsg);
       }
       if (reply.income) dispatch(prependIncome(reply.income));
@@ -363,6 +374,7 @@ export default function HomePage() {
         router.push(`/expenses/new?${params.toString()}`);
       }
     } catch (err) {
+      if (err instanceof ChatSessionChangedError || appStore.getState().auth.user?.id !== userId) return;
       // A rejected write used to fall straight through `finally`: the typing
       // dots cleared and nothing else happened — the message sat «pending»
       // with no reply and no error, and retyping it could duplicate an expense
@@ -371,10 +383,10 @@ export default function HomePage() {
       console.error('chat send failed', err);
       void addMessage({ userId, senderId: 'bot', kind: 'bot', status: 'saved', text: failureText });
     } finally {
-      dispatch(setTyping(false));
+      if (appStore.getState().auth.user?.id === userId) dispatch(setTyping(false));
       sendingRef.current = false;
     }
-  }, [userId, buildEnrichedCtx, learned, dispatch, router, failureText]);
+  }, [userId, categoriesReady, buildEnrichedCtx, learned, dispatch, router, failureText, language, appStore]);
 
   const handleIncomeClarifyChip = useCallback(async (
     amount: number,
@@ -451,6 +463,7 @@ export default function HomePage() {
       if (!enrichedCtx) return;
       const parsed: ParseResult = {
         amount: context.amount,
+        currency: context.currency,
         categoryId: chip.id,
         confidence: 'high',
         confirmed: true,
@@ -525,6 +538,7 @@ export default function HomePage() {
     if (context.storeName) params.set('storeName', context.storeName);
     if (context.storeGroup) params.set('storeGroup', context.storeGroup);
     if (context.parsedDate) params.set('date', context.parsedDate);
+    if (context.currency) params.set('currency', context.currency);
     router.push(`/expenses/new?${params.toString()}`);
   }, [userId, dispatch, router]);
 
@@ -556,7 +570,7 @@ export default function HomePage() {
 
   return (
     <>
-    <ChatScreen onSend={handleSend} onPlus={() => router.push('/expenses/new')} disabled={typing}>
+    <ChatScreen onSend={handleSend} onPlus={() => router.push('/expenses/new')} disabled={typing || !categoriesReady}>
       {/* Pinned today hero */}
       <PinnedToday
         spent={displaySpent}
@@ -577,6 +591,7 @@ export default function HomePage() {
           <button
             type="button"
             onClick={() => handleSend(t('chat.emptyExample'))}
+            disabled={!categoriesReady}
             className="mt-1 min-h-11 rounded-xl bg-primary/10 px-4 text-sm font-bold text-primary hover:bg-primary/15 transition-colors"
           >
             {t('chat.emptyExample')}
@@ -672,6 +687,7 @@ export default function HomePage() {
                   botMsgId: msg.id,
                   userMsgId: d.userMsgId as string,
                   amount: d.amount as number,
+                  currency: d.currencyCode as Currency | undefined,
                   storeId: d.storeId as string | undefined,
                   storeName: d.storeName as string | undefined,
                   storeGroup: d.storeGroup as string | undefined,
@@ -684,6 +700,7 @@ export default function HomePage() {
                     <ClarifyCard
                       amount={context.amount}
                       currency={(d.currency as string | undefined) ?? getCurrencySymbol(currency)}
+                      dateLabel={context.parsedDate ? format(parseISO(context.parsedDate), 'd MMM yyyy', { locale: dateFnsLocale }) : undefined}
                       chips={d.chips as { id: string; name: string; icon: string; color: string }[]}
                       unknownNote={context.parsedNote}
                       storeName={context.storeName}

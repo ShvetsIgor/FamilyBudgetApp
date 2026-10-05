@@ -2,11 +2,12 @@
 import { generateKeyPairSync } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { deleteApp, getApps, initializeApp } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 
 // Next.js enforces this marker at build time; this test runs directly in Node.
 vi.mock('server-only', () => ({}));
 
-import { getAdminDb } from '@/shared/lib/firebaseAdmin';
+import { getAdminDb, getAdminAuth } from '@/shared/lib/firebaseAdmin';
 
 // Real SDK initialization with a disposable key; no live credentials or reads.
 const { privateKey } = generateKeyPairSync('rsa', {
@@ -29,6 +30,13 @@ afterEach(async () => {
 });
 
 describe('getAdminDb', () => {
+  it('shares the same project/app with Firebase token verification', () => {
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+    expect(getFirestore(auth.app) === db).toBe(true);
+    expect(auth.app.name).toBe('family-budget-admin');
+    expect(getApps()).toHaveLength(1);
+  });
   it('initializes lazily and reuses the database across calls and module reloads', async () => {
     expect(getApps()).toHaveLength(0);
     const db = getAdminDb();

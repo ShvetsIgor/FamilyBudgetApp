@@ -72,7 +72,8 @@ export async function respondToUserMessage(
   parsed: ParseResult,
   ctx: BotContext
 ): Promise<BotReply> {
-  const { userId, currency, categoriesById, foldersById, incomeCategoriesById, topIncomeCategoryIds } = ctx;
+  const { userId, categoriesById, foldersById, incomeCategoriesById, topIncomeCategoryIds } = ctx;
+  const currency = parsed.currency ?? ctx.currency;
   const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
   const sym = symMap[currency] ?? currency;
 
@@ -205,7 +206,7 @@ export async function respondToUserMessage(
         storeId: parsed.storeId,
         storeGroup: parsed.storeGroup,
         tags: [],
-        comment: parsed.storeName ? undefined : parsed.note,
+        comment: parsed.note,
         privacy: category.isPrivate ? 'secret' : 'regular',
         splits: [],
       });
@@ -286,7 +287,7 @@ export async function respondToUserMessage(
   const seen = new Set<string>();
   const chips = candidateIds
     .filter((id) => {
-      if (seen.has(id) || !categoriesById.has(id)) return false;
+      if (seen.has(id) || !categoriesById.has(id) || categoriesById.get(id)!.archived) return false;
       seen.add(id);
       return true;
     })
@@ -306,12 +307,14 @@ export async function respondToUserMessage(
         kind: 'clarify',
         data: {
           amount: parsed.amount,
+          currency: sym,
+          currencyCode: currency,
           chips,
           suggestSplit: splitHabit,
           isIncome: false,
           userMsgId: userMsg.id,
           storeId: parsed.storeId,
-          storeName: parsed.storeName ?? parsed.note,
+          storeName: parsed.storeName,
           storeGroup: parsed.storeGroup,
           parsedDate: parsed.date,
           parsedDateLabel: parsed.dateLabel,

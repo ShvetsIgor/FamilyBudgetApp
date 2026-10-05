@@ -17,7 +17,7 @@ import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
 import { recordSavedCard, buildEntryDateHint } from '@/features/chat/services/savedCardService';
 import { normalizeName, normalizeNameKey } from '@/shared/utils/normalizeName';
-import type { Category, SerializableExpense, SplitItem } from '@/shared/types';
+import type { Category, Currency, SerializableExpense, SplitItem } from '@/shared/types';
 import { useCategoryGroups } from '@/features/categories/hooks/useCategoryGroups';
 import { recordExpense, recordSplitExpense, recordTagAssociation, recordMerchantContext, extractTags, normalizeTag } from '@/features/expenses/store/suggestionMemorySlice';
 import { buildExpenseDraft } from '@/features/expenses/engine/buildExpenseDraft';
@@ -49,6 +49,7 @@ interface Props {
   /** true when opened from chat clarify card ("Разбить") */
   fromChat?: boolean;
   initialAmount?: number;
+  initialCurrency?: Currency;
   initialStore?: string;
   initialStoreId?: string;
   initialStoreGroup?: string;
@@ -69,6 +70,7 @@ export function FastExpenseEntry({
   initialExpense,
   fromChat = false,
   initialAmount,
+  initialCurrency,
   initialStore,
   initialStoreId,
   initialStoreGroup,
@@ -81,7 +83,8 @@ export function FastExpenseEntry({
   const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
-  const currency = useAppSelector((s) => s.ui.currency);
+  const profileCurrency = useAppSelector((s) => s.ui.currency);
+  const currency = initialExpense?.currency ?? initialCurrency ?? profileCurrency;
   const language = useAppSelector((s) => s.ui.language);
   const allCats = useAppSelector((s) => s.categories.expense);
   const memory = useAppSelector((s) => s.suggestionMemory);

@@ -19,6 +19,7 @@ interface ClarifyChip {
 interface ClarifyCardProps {
   amount: number;
   currency: string;
+  dateLabel?: string;
   chips: ClarifyChip[];
   unknownNote?: string;
   storeName?: string;
@@ -81,7 +82,7 @@ function DoorAction({ icon: Icon, label, onClick, C, primary }: {
 }
 
 export function ClarifyCard({
-  amount, currency, chips, unknownNote, storeName, isRepeat, isTagLearning, suggestSplit, categories,
+  amount, currency, dateLabel, chips, unknownNote, storeName, isRepeat, isTagLearning, suggestSplit, categories,
   onSelectChip, onAllCategories, onOtherText, onSplit, onDefer, onCreateFolder,
 }: ClarifyCardProps) {
   const C = useChatTokens();
@@ -173,6 +174,10 @@ export function ClarifyCard({
 
   return (
     <div className="p-3.5">
+      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-lg font-extrabold" style={{ color: C.fg }}>{amount} {currency}</p>
+        {dateLabel && <p className="text-xs" style={{ color: C.sub }}>{dateLabel}</p>}
+      </div>
       <div className="mb-2 flex items-center gap-1.5">
         {(selectedParent || otherMode || createFolderMode) && (
           <button

@@ -178,6 +178,31 @@ describe('respondToUserMessage — progressive expense classification', () => {
     expect(reply.messages[0].card?.kind).toBe('saved');
   });
 
+  it('keeps AI currency, date and description through confirmation and applies category privacy', async () => {
+    const { addExpense } = await import('@/features/expenses/services/expensesService');
+    const ctx = makeCtx();
+    ctx.categoriesById.get('coffee')!.isPrivate = true;
+    const parsed = { amount: 25.5, currency: 'USD' as const, date: '2026-10-05', categoryId: 'coffee',
+      confidence: 'high' as const, storeName: 'Cafe', note: 'Coffee and cake' };
+    const draft = await respondToUserMessage(makeUserMsg('вчера кафе двадцать пять долларов'), parsed, ctx);
+    expect(draft.messages[0].card?.data).toMatchObject({ amount: 25.5, currency: '$', currencyCode: 'USD', parsedDate: '2026-10-05', parsedNote: 'Coffee and cake' });
+    expect(addExpense).not.toHaveBeenCalled();
+    await respondToUserMessage(makeUserMsg('вчера кафе двадцать пять долларов'), { ...parsed, confirmed: true }, ctx);
+    expect(addExpense).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+      amount: 25.5, currency: 'USD', date: new Date(2026, 9, 5, 12), privacy: 'secret', comment: 'Coffee and cake',
+    }));
+  });
+
+  it('does not offer or save a category archived while AI was working', async () => {
+    const { addExpense } = await import('@/features/expenses/services/expensesService');
+    const ctx = makeCtx(); ctx.categoriesById.get('coffee')!.archived = true;
+    const parsed = { amount: 25, categoryId: 'coffee', confidence: 'high' as const };
+    const draft = await respondToUserMessage(makeUserMsg('25'), parsed, ctx);
+    expect((draft.messages[0].card?.data as { chips: { id: string }[] }).chips).not.toContainEqual(expect.objectContaining({ id: 'coffee' }));
+    await respondToUserMessage(makeUserMsg('25'), { ...parsed, confirmed: true }, ctx);
+    expect(addExpense).not.toHaveBeenCalled();
+  });
+
   it('текст без числа → unknown text (нет карточки, нет openSplit)', async () => {
     const parsed = parseMessage('привет', { learned: {} });
     const reply = await respondToUserMessage(makeUserMsg('привет'), parsed, makeCtx());

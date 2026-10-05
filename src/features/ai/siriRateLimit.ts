@@ -7,7 +7,7 @@ const WINDOWS = {
 } as const;
 type Window = { count: number; resetAt: number };
 
-/** Shared by all owner tokens, across server instances; attempts are not refunded. */
+/** Shared by Siri tokens and authenticated chat, across server instances; attempts are not refunded. */
 export async function consumeSiriQuota(uid: string, now = Date.now()): Promise<
   { allowed: true } | { allowed: false; retryAfter: number }
 > {

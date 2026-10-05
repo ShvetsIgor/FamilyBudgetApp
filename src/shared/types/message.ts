@@ -1,4 +1,5 @@
 import type { Timestamp } from 'firebase/firestore';
+import type { Currency } from './index';
 
 export type MessageStatus = 'pending' | 'saved' | 'clarifying' | 'undone' | 'failed';
 
@@ -27,6 +28,8 @@ export interface ParseResultItem {
 
 export interface ParseResult {
   amount: number;
+  /** Recognized currency, pinned through confirmation even if settings change. */
+  currency?: Currency;
   categoryId: string | null;
   matchedKeyword?: string;
   confidence: ParseConfidence;

@@ -5,20 +5,22 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppDispatch } from '@/store/store';
 import { openQuickAdd } from '@/features/quickadd/store/quickAddSlice';
 import { FastExpenseEntry } from '@/features/expenses/components/FastExpenseEntry';
+import { PARSER_CURRENCIES } from '@/features/ai/expenseParser/schema';
 
 export default function NewExpensePage() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const fromChat = searchParams.get('fromChat') === 'true';
 
   useEffect(() => {
-    if (window.innerWidth >= 1024) {
+    if (window.innerWidth >= 1024 && !fromChat) {
       router.back();
       dispatch(openQuickAdd({ tab: 'expense' }));
     }
-  }, [dispatch, router]);
+  }, [dispatch, router, fromChat]);
 
-  const fromChat = searchParams.get('fromChat') === 'true';
+  const initialCurrency = PARSER_CURRENCIES.find((value) => value === searchParams.get('currency'));
   const rawAmount = searchParams.get('amount');
   const initialAmount = rawAmount ? parseFloat(rawAmount) : undefined;
   const initialStore = searchParams.get('storeName') ?? undefined;
@@ -34,6 +36,7 @@ export default function NewExpensePage() {
     <FastExpenseEntry
       fromChat={fromChat}
       initialAmount={initialAmount}
+      initialCurrency={initialCurrency}
       initialStore={initialStore}
       initialStoreId={initialStoreId}
       initialStoreGroup={initialStoreGroup}

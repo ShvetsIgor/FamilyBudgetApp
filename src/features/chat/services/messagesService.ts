@@ -112,7 +112,7 @@ export async function updateMessage(
   const clean = Object.fromEntries(
     Object.entries({ ...updates, updatedAt: serverTimestamp() }).filter(([, v]) => v !== undefined)
   );
-  await updateDoc(doc(col(userId), messageId), clean);
+  await updateDoc(doc(col(userId), messageId), stripUndef(clean) as typeof clean);
 }
 
 /** Delete a single chat message. Does not cascade — entity-side delete handlers own the cascade. */

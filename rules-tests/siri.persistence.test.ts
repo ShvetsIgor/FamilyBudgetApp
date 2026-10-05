@@ -14,7 +14,7 @@ const app = initializeApp({ projectId: 'demo-siri-persistence' }, 'siri-persiste
 const db = getFirestore(app);
 const uid = 'siri-test-user';
 const expense: ValidatedParsedExpense = {
-  type: 'expense', amount: 25, currency: 'CAD', categoryId: 'food', date: '2026-09-01',
+  type: 'expense', amount: 25, currency: 'CAD', categoryId: 'food', suggestedCategoryName: null, date: '2026-09-01',
   confidence: 0.95, needsClarification: false, clarificationQuestion: null, merchant: null, description: null,
 };
 beforeEach(async () => {

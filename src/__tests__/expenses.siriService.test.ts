@@ -10,7 +10,7 @@ vi.mock('@/shared/lib/firebaseAdmin', () => ({ getAdminDb: () => ({
 }) }));
 import { addSiriExpense, SiriExpenseValidationError } from '@/features/expenses/services/siriExpensesService';
 const expense: ValidatedParsedExpense = {
-  type: 'expense', amount: 25, currency: 'CAD', categoryId: 'food', date: '2026-09-01',
+  type: 'expense', amount: 25, currency: 'CAD', categoryId: 'food', suggestedCategoryName: null, date: '2026-09-01',
   confidence: 0.95, needsClarification: false, clarificationQuestion: null, merchant: 'Cafe', description: 'Lunch',
 };
 beforeEach(() => {

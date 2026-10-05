@@ -14,6 +14,7 @@ export default defineConfig({
       'e2e/**',
       'e2e-emulated/**',
       'rules-tests/**',
+      'ai-evals/**',
       // Local backup copies of the repo must not double-run the suite
       'FamilyBudgetApp-migration-safe-*/**',
       '**/FamilyBudgetApp-migration-safe-*/**',

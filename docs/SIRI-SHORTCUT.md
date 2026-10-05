@@ -6,27 +6,21 @@ in the same transaction as the expense and monthly statistics. Cards show “Via
 Retries with the same request ID do not duplicate cards. Expenses saved before
 this integration are not backfilled into chat.
 
-## Ближайший план — не реализовано
+## План и состояние — 2026-10-05
 
-Эти пункты добавлены в план и будут сделаны после восстановления лимита, перед
-расширенным тестированием ИИ:
-
-1. Добавить отдельную понятную инструкцию по созданию Shortcut для Siri: английские
-   названия действий для новой iOS, URL отдельным первым действием, русский
-   `Dictate Text`, `Format Date` для нового `requestId`, JSON-поля, голосовое
-   подтверждение и безопасный повтор запроса с тем же ID. Инструкция должна
-   соответствовать фактическому production-домену и не содержать реального токена.
-2. Предусмотреть сценарий, когда Siri или ИИ распознали категорию, которой нет среди
-   активных категорий пользователя. Расход нельзя сохранять молча в случайную
-   категорию или автоматически создавать новую без явного согласия. Нужно выбрать
-   и реализовать единый поток: понятный ответ с названием ненайденной категории,
-   предложение добавить/активировать категорию в приложении, затем повторить
-   запрос с новым `requestId`; для чата и Siri использовать согласованные коды
-   ошибки и тексты. Отдельно проверить архивную, неактивную и приватную категории.
-3. После восстановления лимита создать коммит из накопленных изменений Siri/ИИ,
-   правил Firestore, тестов и документации и отправить его в `master`. Перед push
-   проверить `git diff --cached`, исключить `graphify-out/`, `.env.local` и любые
-   секреты; затем убедиться, что `master` и `origin/master` совпадают.
+- [x] Накопленные изменения Siri/ИИ отправлены в `master`: `c3531fe0`.
+  Graphify-артефакты и секреты исключены.
+- [x] Инструкция для английского интерфейса iOS: [SIRI-SETUP.md](SIRI-SETUP.md).
+  Краткая инструкция доступна и в аккаунте приложения, внутри Siri tokens.
+- [x] Отсутствующая категория: расход не сохраняется; Siri предлагает название
+  категории и просит добавить/активировать её в приложении либо назвать существующую.
+  Следующая диктовка использует новый requestId. Категории автоматически не создаются.
+- [x] Отдельная opt-in проверка настоящего Groq на вымышленных фразах без записи расходов.
+- [ ] Проверить на iPhone после обновления: карточку в чате, инструкцию и голосовой
+  ответ для категории, которой нет у пользователя.
+- [ ] При будущем подключении ИИ к обычному чату использовать общий
+  `missingCategoryMessage` и контракт `category_required`. Обычный чат пока работает
+  на прежнем парсере; отдельного ИИ-обработчика в нём ещё нет.
 
 ## Deployment
 
@@ -48,7 +42,7 @@ Revoking the token in Account blocks subsequent authenticated requests.
 
 ## Request
 
-`POST https://YOUR_APP_HOST/api/shortcut/expense`
+`POST https://family-budget-app-pi.vercel.app/api/shortcut/expense`
 
 Headers: `Authorization: Bearer YOUR_PERSONAL_TOKEN`, `Content-Type: application/json`.
 
@@ -56,7 +50,7 @@ Headers: `Authorization: Bearer YOUR_PERSONAL_TOKEN`, `Content-Type: application
 {
   "text": "Кофе 18 шекелей",
   "timeZone": "Asia/Jerusalem",
-  "requestId": "A-NEW-UUID-FOR-EACH-EXPENSE"
+  "requestId": "20261005120000123"
 }
 ```
 
@@ -65,9 +59,12 @@ Use the device's IANA timezone; change it when travelling. `text` is limited to
 are supported; currencies are ILS, USD, CAD and RUB. The owner's profile language
 and default currency apply. Categories must already be active in the app.
 
-Generate the UUID once before sending. Keep the same text, timezone and ID on a
-network retry. New dictated expense or corrected text → new UUID. `requestId` is
-optional in the API, but the shortcut should always send it to prevent duplicates.
+Generate a new ID once before sending (the guide uses a timestamp including
+milliseconds; callers may also use a UUID). Keep the same text, timezone and ID on
+a network retry. New expense, corrected text or category setup after a rejected
+request → new ID. `requestId` is optional in the API, but the shortcut should always
+send it. A full restart of the simple timestamp shortcut generates a new ID and
+does not deduplicate an earlier run; see the guide before retrying after a network error.
 
 ## Responses
 
@@ -79,6 +76,11 @@ Read `message` for speech. Treat only `ok: true` as a confirmed save.
 - 401: missing, invalid or revoked token.
 - 409: profile/category setup issue, category changed, or request ID reused for different input.
 - 422: clarification required; no expense saved. Correct the phrase and use a new ID.
+- `category_required` (409 for an empty active list; otherwise 422): `saved: false`,
+  `categoriesPath: "/categories"` and optionally `suggestedCategoryName`. This name is
+  a display-only model suggestion, not an existing category or permission to create
+  one. Add/activate a category in the app or explicitly name an existing one, then
+  dictate again. Archived and unactivated library categories are not parser choices.
 - 429: quota exhausted; wait the `Retry-After` seconds before retrying.
 - 503: a dependency failed. A save may already have committed if its response
   was lost; retry with the SAME request ID, never a new one.
@@ -101,3 +103,14 @@ accepted attempt. Failed new attempts consume quota; completed replays do not.
 Live expense creation changes the owner's real budget. Run these steps only with
 an agreed test account/expense. Emulator tests cover concurrency and quota exhaustion;
 do not consume real Groq requests simply to exhaust a production quota.
+
+## Live AI evaluation (no financial writes)
+
+`npm run eval:ai` uses `GROQ_API_KEY` from the environment or `.env.local` to run
+synthetic phrases against the real model, then applies the production validator.
+It never imports Firebase or the persistence service. It is excluded from `npm test`
+and CI; run it explicitly when needed. Cases cover amounts, supported currencies,
+dates, missing amount/category, category activation, unsupported EUR, income and
+multiple expenses. Requests are spaced to reduce Groq burst-limit errors. A provider
+429 is an infrastructure failure, not evidence of a parsing error. A passing sample
+does not guarantee all natural-language inputs will be interpreted correctly.

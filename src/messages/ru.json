@@ -1,5 +1,20 @@
 {
   "shortcuts": {
+    "guide": {
+      "title": "Как создать команду Siri",
+      "intro": "Откройте Apple Shortcuts и создайте новую команду. Добавьте действия по порядку. Ниже приведены их названия для английского интерфейса iPhone.",
+      "token": "Создайте ниже личный токен Siri и скопируйте его. Не передавайте токен и не публикуйте команду с ним.",
+      "url": "URL — вставьте адрес:",
+      "dictation": "Dictate Text → Language → Russian (Russia). Stop Listening → After Pause.",
+      "date": "Date → Current Date. Затем Format Date с переменной из действия Date. Выберите Date Format → Custom, в Format String введите yyyyMMddHHmmssSSS.",
+      "request": "Get Contents of URL — выберите переменную URL из первого действия. Method → POST. В Headers добавьте Authorization со значением Bearer, одним пробелом и вашим токеном, без кавычек и переносов строк.",
+      "body": "Request Body → JSON. Добавьте три поля типа Text:",
+      "speech": "Get Dictionary Value — Key: message, Dictionary: Contents of URL. Затем Speak Text с переменной Dictionary Value и языком Russian.",
+      "variables": "Dictated Text и Formatted Date выбирайте как переменные, не печатайте их названия. Asia/Jerusalem — обычный текст; в поездке замените его на ваш часовой пояс IANA.",
+      "siri": "Для запуска голосом назовите команду «Трата», скажите «Привет, Siri, Трата» и дождитесь диктовки. Если Siri AI не поддерживает русский: Settings → Siri → Turn Off Siri → Turn On Siri → Use Siri Classic → Language → Russian (если этот пункт доступен).",
+      "retry": "Успешный запуск создаёт настоящий расход и карточку в чате. Полный перезапуск выдаёт новый requestId. После сетевой ошибки сначала проверьте «Траты». Безопасный повтор отправляет прежние text, timeZone и requestId; эта простая команда не хранит их между запусками.",
+      "category": "Если подходящей категории нет, расход не сохраняется. Добавьте или активируйте категорию в приложении, затем повторите диктовку, либо явно назовите существующую категорию."
+    },
     "chatSource": "Через Siri",
     "title": "Токены Siri",
     "description": "Создайте личный токен для «Команд» Apple, чтобы добавлять расходы через Siri. Для каждого устройства можно создать отдельный токен.",

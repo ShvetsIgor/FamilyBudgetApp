@@ -10,7 +10,7 @@ const category: Category = {
 const context = { categories: [category], todayKey: '2026-09-21' };
 const parsed: ParsedExpenseResult = {
   type: 'expense', amount: 187.5, currency: 'ILS', merchant: 'Shufersal',
-  description: 'Продукты', categoryId: 'groceries', date: null,
+  description: 'Продукты', categoryId: 'groceries', suggestedCategoryName: null, date: null,
   confidence: 0.9, needsClarification: false, clarificationQuestion: null,
 };
 
@@ -51,6 +51,10 @@ describe('validateParsedExpense', () => {
 
   it('rejects a category removed after parsing', () => {
     expect(validateParsedExpense(parsed, { ...context, categories: [] }))
+      .toEqual({ valid: false, reason: 'invalid_category' });
+  });
+  it('never treats a proposed category name as approval to save', () => {
+    expect(validateParsedExpense({ ...parsed, suggestedCategoryName: 'Veterinary' }, context))
       .toEqual({ valid: false, reason: 'invalid_category' });
   });
 

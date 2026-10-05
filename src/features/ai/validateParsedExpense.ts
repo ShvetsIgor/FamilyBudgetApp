@@ -43,7 +43,7 @@ export function validateParsedExpense(
   if (!currency || !(PARSER_CURRENCIES as readonly string[]).includes(currency)) {
     return { valid: false, reason: 'invalid_currency' };
   }
-  if (!categoryId || !context.categories.some((category) => (
+  if (parsed.suggestedCategoryName || !categoryId || !context.categories.some((category) => (
     category.id === categoryId && category.type === 'expense' && isActiveCategory(category)
   ))) {
     return { valid: false, reason: 'invalid_category' };

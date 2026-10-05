@@ -1,5 +1,20 @@
 {
   "shortcuts": {
+    "guide": {
+      "title": "Set up a Siri shortcut",
+      "intro": "In Apple Shortcuts, create a new shortcut. Add these actions in order. The action names below match the English iPhone interface.",
+      "token": "Create a personal Siri token below and copy it once. Keep it private; do not share a shortcut containing your token.",
+      "url": "URL — paste this address:",
+      "dictation": "Dictate Text — choose the language you speak (Russian for Russian expenses). Stop Listening → After Pause.",
+      "date": "Date → Current Date. Then Format Date, using the Date action's output. Choose Date Format → Custom and enter yyyyMMddHHmmssSSS as Format String.",
+      "request": "Get Contents of URL — select the URL variable from the first action. Method → POST. In Headers add Authorization with the value Bearer followed by one space and your token, without quotes or line breaks.",
+      "body": "Request Body → JSON. Add three Text fields:",
+      "speech": "Get Dictionary Value — Key: message, Dictionary: Contents of URL. Then Speak Text using Dictionary Value. Choose the language of your app profile.",
+      "variables": "Select Dictated Text and Formatted Date as variables; do not type their names. Asia/Jerusalem is plain text; replace it with your local IANA time zone when travelling.",
+      "siri": "Name the shortcut in Siri's language and say its name, then wait for dictation. For Russian voice launch, use Russian Siri. If Siri AI does not support Russian, Settings → Siri → Turn Off Siri → Turn On Siri → Use Siri Classic → Language → Russian (where available).",
+      "retry": "A successful run creates a real expense and a chat card. Every full run generates a new request ID. After a network error, check Expenses before running again. A safe retry must send the same text, time zone and original request ID; this basic shortcut does not retain them across runs.",
+      "category": "If no category fits, nothing is saved. Add or activate a category in the app, then dictate again, or explicitly name an existing category."
+    },
     "chatSource": "Via Siri",
     "title": "Siri tokens",
     "description": "Create a personal token for Apple Shortcuts to add expenses through Siri. Each device can have its own token.",

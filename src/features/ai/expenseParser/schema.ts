@@ -36,6 +36,8 @@ export interface ParsedExpenseResult {
   description: string | null;
   /** Must be one of the categoryIds passed into the parser, or null — never invented. */
   categoryId: string | null;
+  /** Display-only suggestion when no active category fits. Never creates a category. */
+  suggestedCategoryName: string | null;
   date: string | null;
   confidence: number;
   needsClarification: boolean;
@@ -44,7 +46,7 @@ export interface ParsedExpenseResult {
 
 const PARSED_EXPENSE_PROPERTY_ORDER = [
   'type', 'amount', 'currency', 'merchant', 'description',
-  'categoryId', 'date', 'confidence', 'needsClarification', 'clarificationQuestion',
+  'categoryId', 'suggestedCategoryName', 'date', 'confidence', 'needsClarification', 'clarificationQuestion',
 ] as const satisfies readonly (keyof ParsedExpenseResult)[];
 
 /**
@@ -70,6 +72,7 @@ export function buildExpenseParserJsonSchema(categoryIds: readonly string[]) {
         merchant: { type: ['string', 'null'] },
         description: { type: ['string', 'null'] },
         categoryId: { type: ['string', 'null'], enum: [...categoryIds, null] },
+        suggestedCategoryName: { type: ['string', 'null'] },
         date: { type: ['string', 'null'] },
         confidence: { type: 'number', minimum: 0, maximum: 1 },
         needsClarification: { type: 'boolean' },

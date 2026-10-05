@@ -5,6 +5,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { KeyRound, X } from 'lucide-react';
 import { useT } from '@/shared/hooks/useT';
 import { createShortcutToken, fetchShortcutTokens, revokeShortcutToken, type ShortcutToken } from '../services/shortcutTokenService';
+import { ShortcutSetupGuide } from './ShortcutSetupGuide';
 
 export function ShortcutTokens({ uid }: { uid: string }) {
   const t = useT();
@@ -24,6 +25,7 @@ export function ShortcutTokens({ uid }: { uid: string }) {
             <Dialog.Close asChild><button aria-label={t('common.close')} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl hover:bg-muted"><X className="h-5 w-5" /></button></Dialog.Close>
           </div>
           <Dialog.Description className="mb-4 text-sm text-muted-foreground">{t('shortcuts.description')}</Dialog.Description>
+          <ShortcutSetupGuide />
           <TokenManager key={uid} uid={uid} />
         </Dialog.Content>
       </Dialog.Portal>

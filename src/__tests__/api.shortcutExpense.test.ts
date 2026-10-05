@@ -60,7 +60,8 @@ it('asks the user to activate a category when their list is empty', async () => 
   auth.mockResolvedValue('alice'); context.mockResolvedValue({ categories: [], language: 'ru' });
   const response = await POST(request());
   expect(response.status).toBe(409);
-  expect((await response.json()).error).toBe('no_active_categories');
+  expect(await response.json()).toMatchObject({ error: 'category_required', saved: false, categoriesPath: '/categories' });
+  expect(parser).not.toHaveBeenCalled(); expect(save).not.toHaveBeenCalled();
 });
 it('sanitizes context read failures', async () => {
   auth.mockResolvedValue('alice'); context.mockRejectedValue(new Error('private details'));
@@ -82,7 +83,19 @@ it('returns the model clarification without a save', async () => {
 it('independently rejects a category outside the user list', async () => {
   auth.mockResolvedValue('alice'); parser.mockResolvedValue({ amount: 10, currency: 'CAD', categoryId: 'foreign', confidence: 1, date: null, needsClarification: false });
   const response = await POST(request());
-  expect(response.status).toBe(422); expect((await response.json()).error).toBe('clarification_required');
+  expect(response.status).toBe(422); expect((await response.json()).error).toBe('category_required');
+  expect(save).not.toHaveBeenCalled();
+});
+it.each(['ru', 'en'] as const)('returns an actionable category suggestion in %s without saving', async (language) => {
+  auth.mockResolvedValue('alice');
+  context.mockResolvedValue({ categories: [{ id: 'food', type: 'expense', name: 'Food' }], language, currency: 'ILS' });
+  parser.mockResolvedValue({ amount: 250, currency: null, categoryId: null, suggestedCategoryName: 'Veterinary', needsClarification: true });
+  const response = await POST(request());
+  expect(response.status).toBe(422);
+  const body = await response.json();
+  expect(body).toMatchObject({ ok: false, saved: false, error: 'category_required', categoriesPath: '/categories', suggestedCategoryName: 'Veterinary' });
+  expect(body.message).toContain(language === 'ru' ? 'Расход не сохранён' : 'Expense not saved');
+  expect(save).not.toHaveBeenCalled();
 });
 it('sanitizes parser failures', async () => {
   auth.mockResolvedValue('alice'); parser.mockRejectedValue(new Error('private provider information'));

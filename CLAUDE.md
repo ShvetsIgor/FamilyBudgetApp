@@ -317,6 +317,8 @@ Runtime contract update:
 
 ## Change Log
 
+- **2026-10-05** — Resumed Siri/AI work after the limit reset. Pushed the accumulated integration to `master` (`c3531fe0`). Added an opt-in live Groq evaluation suite (`npm run eval:ai`, synthetic data, no Firebase writes), an in-app setup guide under Siri tokens and `docs/SIRI-SETUP.md`. Missing categories now return a localized `category_required` response with an optional display-only suggested name; a suggestion can never authorize a save or create a category. The parser explicitly refuses income and multiple separate expenses. The legacy chat parser is unchanged; shared category clarification wording is available for future AI chat integration. Live model checks, unit validation and deployment results are recorded in the task.
+
 - **2026-10-04** — Recorded the next Siri/AI work in `docs/SIRI-SHORTCUT.md` without implementing it yet: publish a complete English-iOS Shortcut setup guide, then define a safe shared flow for recognized categories that are missing, inactive or archived. Such a flow must never silently choose or create a category and must use explicit user confirmation/retry semantics.
 - **2026-10-05** — Added a follow-up plan item to commit and push the accumulated Siri/AI changes to `master` after the usage limit recovers, with a staged-diff and secret check and without local Graphify artifacts.
 

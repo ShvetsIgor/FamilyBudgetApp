@@ -1,5 +1,6 @@
 import type { Currency, Language } from '@/shared/types';
 import { toLocalDateKey } from '@/shared/utils/dateKey';
+import { missingCategoryMessage } from './categoryClarification';
 import {
   buildExpenseParserJsonSchema,
   PARSER_CURRENCIES,
@@ -119,10 +120,13 @@ function buildSystemPrompt(input: ParseExpenseTextInput, todayKey: string): stri
     '2. currency: only set it if the message states or clearly implies one; otherwise null — a default is applied outside this step, not by you.',
     'If an explicitly stated currency is not ILS, USD, CAD or RUB, return currency null and needsClarification true. Never convert or replace it with another currency.',
     '3. merchant: a normalized merchant/company name (e.g. "Шуферсаль" -> "Shufersal"), or null if none is mentioned.',
-    '4. categoryId: choose ONLY from the list below by its id, or null if none fits or none are available. Never invent a category id or name.',
+    '4. categoryId: choose ONLY from the list below by its id, or null if none fits or none are available. Never invent a category id. Never force an unrelated expense into the nearest category just to save it.',
+    'If the user explicitly names a category, respect that choice. If it is absent from the active list, do not substitute a different category.',
+    `When no active category fits, return categoryId null, needsClarification true and a short suggestedCategoryName in ${input.language === 'ru' ? 'Russian' : 'English'}. This is only a suggestion for the user to add or activate in the app. If a category fits or the category is merely ambiguous, suggestedCategoryName must be null.`,
     '5. date: an explicit or clearly implied YYYY-MM-DD, or null if the message gives no date (the app defaults to today itself).',
     '6. confidence: your own 0–1 confidence that this can be safely recorded as-is.',
     '7. If the amount is missing or the message is too ambiguous to safely create an expense, set needsClarification true.',
+    'This endpoint supports one expense only. Income, transfers, refunds and multiple separate expenses must ask for clarification; never turn income into an expense, sum separate purchases or silently drop one of them.',
     `8. clarificationQuestion: a short question in ${input.language === 'ru' ? 'Russian' : 'English'}, only when needsClarification is true, otherwise null.`,
     '',
     'Active categories (id: name):',
@@ -181,7 +185,11 @@ function sanitizeParsedResult(
   // model ignoring the schema must not slip an invented id through to the
   // API route's own (separately re-fetched) validation.
   const rawCategoryId = typeof r.categoryId === 'string' && r.categoryId.trim() ? r.categoryId : null;
-  const categoryId = rawCategoryId && allowedCategoryIds.includes(rawCategoryId) ? rawCategoryId : null;
+  const suggestedCategoryName = typeof r.suggestedCategoryName === 'string' && r.suggestedCategoryName.trim()
+    ? r.suggestedCategoryName.replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 80) || null
+    : null;
+  // Conflicting suggestion + ID is a refusal, never permission to silently save.
+  const categoryId = !suggestedCategoryName && rawCategoryId && allowedCategoryIds.includes(rawCategoryId) ? rawCategoryId : null;
   const date = typeof r.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.date) ? r.date : null;
   // Only an explicit null means no date was mentioned. Preserve a malformed
   // or missing field as a refusal, so validation cannot default it to today.
@@ -190,10 +198,12 @@ function sanitizeParsedResult(
     ? Math.min(1, Math.max(0, r.confidence))
     : 0;
 
-  const needsClarification = amount === null || invalidCurrency || invalidDate || r.needsClarification === true;
+  const needsClarification = amount === null || invalidCurrency || invalidDate || categoryId === null || r.needsClarification === true;
   const invalidFieldQuestion = invalidCurrency
     ? CURRENCY_CLARIFICATION[language]
-    : invalidDate ? DATE_CLARIFICATION[language] : null;
+    : invalidDate ? DATE_CLARIFICATION[language]
+      : categoryId === null && (suggestedCategoryName || r.needsClarification !== true)
+        ? missingCategoryMessage(language, suggestedCategoryName) : null;
   const clarificationQuestion = needsClarification
     ? (invalidFieldQuestion && amount !== null
       ? invalidFieldQuestion
@@ -204,7 +214,7 @@ function sanitizeParsedResult(
 
   return {
     type: 'expense',
-    amount, currency, merchant, description, categoryId, date,
+    amount, currency, merchant, description, categoryId, suggestedCategoryName, date,
     confidence, needsClarification, clarificationQuestion,
   };
 }
@@ -217,6 +227,7 @@ function fallbackClarification(language: Language): ParsedExpenseResult {
     merchant: null,
     description: null,
     categoryId: null,
+    suggestedCategoryName: null,
     date: null,
     confidence: 0,
     needsClarification: true,

@@ -28,6 +28,36 @@ afterEach(() => {
 });
 
 describe('parseExpenseText', () => {
+  it.each([null, 'groceries'])('refuses a proposed category even alongside an allowed ID (%s)', async (categoryId) => {
+    vi.spyOn(global, 'fetch').mockResolvedValue(mockGroqResponse({
+      type: 'expense', amount: 250, currency: 'ILS', categoryId, suggestedCategoryName: 'Ветеринар',
+      date: null, confidence: 1, needsClarification: false,
+    }));
+    const result = await parseExpenseText({ text: 'Ветеринар 250', categories: CATEGORIES, defaultCurrency: 'ILS', language: 'ru' });
+    expect(result).toMatchObject({ categoryId: null, suggestedCategoryName: 'Ветеринар', needsClarification: true });
+    expect(result.clarificationQuestion).toContain('Расход не сохранён');
+    expect(result.clarificationQuestion).toContain('Ветеринар');
+  });
+
+  it('refuses a missing category even if the provider claims the expense is complete', async () => {
+    vi.spyOn(global, 'fetch').mockResolvedValue(mockGroqResponse({
+      amount: 25, currency: 'ILS', categoryId: null, date: null, confidence: 1, needsClarification: false,
+    }));
+    const result = await parseExpenseText({ text: 'покупка 25', categories: CATEGORIES, defaultCurrency: 'ILS', language: 'en' });
+    expect(result.needsClarification).toBe(true);
+    expect(result.clarificationQuestion).toContain('Open Categories');
+  });
+
+  it('preserves a non-expense clarification instead of suggesting a new expense category', async () => {
+    vi.spyOn(global, 'fetch').mockResolvedValue(mockGroqResponse({
+      amount: 10000, currency: 'ILS', categoryId: null, suggestedCategoryName: null, date: null,
+      confidence: 0.3, needsClarification: true, clarificationQuestion: 'Это доход. Назовите расход.',
+    }));
+    const result = await parseExpenseText({ text: 'зарплата 10000', categories: CATEGORIES, defaultCurrency: 'ILS', language: 'ru' });
+    expect(result.clarificationQuestion).toBe('Это доход. Назовите расход.');
+    expect(result.needsClarification).toBe(true);
+  });
+
   it('throws a clear error when GROQ_API_KEY is missing — never a silent no-op', async () => {
     vi.unstubAllEnvs();
     await expect(
@@ -71,7 +101,7 @@ describe('parseExpenseText', () => {
 
     expect(result).toEqual({
       type: 'expense', amount: 187, currency: 'USD', merchant: 'Shufersal', description: 'Shufersal',
-      categoryId: 'groceries', date: null, confidence: 0.97, needsClarification: false, clarificationQuestion: null,
+      categoryId: 'groceries', suggestedCategoryName: null, date: null, confidence: 0.97, needsClarification: false, clarificationQuestion: null,
     });
   });
 

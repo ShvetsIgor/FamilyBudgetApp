@@ -3,6 +3,7 @@ import { findSiriReceipt, siriRequestFingerprint, SiriRequestConflictError } fro
 import { addSiriExpense, SiriExpenseValidationError } from '@/features/expenses/services/siriExpensesService';
 import { resolveShortcutAuthorization } from '@/features/ai/siriAuth';
 import { parseExpenseText } from '@/features/ai/expenseParser/parseExpenseText';
+import { missingCategoryMessage } from '@/features/ai/expenseParser/categoryClarification';
 import { validateParsedExpense } from '@/features/ai/validateParsedExpense';
 import { readSiriRequest, SiriRequestError } from '@/features/ai/siriRequest';
 import { loadSiriContext, SiriProfileError, type SiriContext } from '@/features/ai/siriContext';
@@ -77,8 +78,8 @@ export async function POST(request: Request): Promise<Response> {
     context = await loadSiriContext(uid);
     if (context.categories.length === 0) {
       return Response.json(
-        { ok: false, error: 'no_active_categories', message: context.language === 'ru'
-          ? 'Добавьте категорию расходов в приложении.' : 'Add an expense category in the app.' },
+        { ok: false, saved: false, error: 'category_required', needsClarification: true,
+          message: missingCategoryMessage(context.language), categoriesPath: '/categories' },
         { status: 409, headers: { 'Cache-Control': 'no-store' } },
       );
     }
@@ -107,6 +108,15 @@ export async function POST(request: Request): Promise<Response> {
   }
   const validation = validateParsedExpense(parsed, { categories: context.categories, todayKey: input.todayKey });
   if (!validation.valid) {
+    if (validation.reason === 'invalid_category' || (parsed.amount !== null && parsed.amount > 0
+      && parsed.suggestedCategoryName)) {
+      return Response.json(
+        { ok: false, saved: false, error: 'category_required', needsClarification: true,
+          suggestedCategoryName: parsed.suggestedCategoryName ?? null, categoriesPath: '/categories',
+          message: missingCategoryMessage(context.language, parsed.suggestedCategoryName) },
+        { status: 422, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
     const question = parsed.needsClarification && parsed.clarificationQuestion
       ? parsed.clarificationQuestion
       : context.language === 'ru' ? 'Уточните сумму, валюту, категорию и дату расхода.' : 'Please clarify the amount, currency, category and date.';
@@ -135,8 +145,8 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json(
       { ok: false, error: invalid ? 'category_changed' : 'save_unavailable',
         message: context.language === 'ru'
-          ? invalid ? 'Категория изменилась. Уточните категорию расхода.' : 'Не удалось подтвердить сохранение. Проверьте список расходов в приложении.'
-          : invalid ? 'The category changed. Please clarify the expense category.' : 'Could not confirm the save. Check your expenses in the app.' },
+          ? invalid ? 'Расход не сохранён: категория изменилась. Добавьте или активируйте категорию в приложении и повторите диктовку.' : 'Не удалось подтвердить сохранение. Проверьте список расходов в приложении.'
+          : invalid ? 'Expense not saved: the category changed. Add or activate a category in the app and dictate again.' : 'Could not confirm the save. Check your expenses in the app.' },
       { status: invalid ? 409 : 503, headers: { 'Cache-Control': 'no-store' } },
     );
   }

@@ -1,3 +1,5 @@
+import { buildStatsDelta, buildMonthlyStatsPatch, type StatsDelta } from '../utils/expenseStats';
+export { statsPatchShape, type StatsDelta } from '../utils/expenseStats';
 import {
   collection,
   doc,
@@ -388,39 +390,6 @@ export async function queueLinkedChatMessageDeletes(
   snap.docs.forEach((d) => batch.delete(d.ref));
 }
 
-export interface StatsDelta {
-  /** Currency of the expense this delta came from — totals are kept per currency. */
-  currency: Currency;
-  totalExpenses: number;
-  byCategory: Record<string, number>;
-}
-
-function buildStatsDelta(
-  categoryId: string,
-  amount: number,
-  splits: SplitItem[],
-  sign: 1 | -1,
-  currency: Currency,
-): StatsDelta {
-  const splitTotal = splits.reduce((sum, split) => sum + split.amount, 0);
-  const mainAmount = amount - splitTotal;
-  const byCategory: Record<string, number> = {
-    [categoryId]: sign * mainAmount,
-  };
-
-  for (const split of splits) {
-    if (split.categoryId && split.amount > 0) {
-      byCategory[split.categoryId] = (byCategory[split.categoryId] ?? 0) + sign * split.amount;
-    }
-  }
-
-  return {
-    currency,
-    totalExpenses: sign * amount,
-    byCategory,
-  };
-}
-
 /**
  * Deltas are merged per month AND per currency: an edit may move an expense
  * between currencies, and folding those into one delta would corrupt the
@@ -455,61 +424,14 @@ function mergeStatsDelta(
   }
 }
 
-/**
- * Which halves of the month aggregate a delta touches.
- *
- * `byCategoryByCurrency` moves with the category map, NOT with the total.
- * Gating it on the total meant an edit that changed only the category — same
- * amount, same month, same currency — updated `byCategory` and left
- * `byCategoryByCurrency` behind, so the two disagreed for that month forever
- * after. Nobody noticed while the document was write-only.
- */
-export function statsPatchShape(delta: StatsDelta): {
-  writesTotals: boolean;
-  writesCategories: boolean;
-} {
-  const movedCategories = Object.values(delta.byCategory).some((value) => value !== 0);
-  return {
-    writesTotals: delta.totalExpenses !== 0,
-    writesCategories: movedCategories,
-  };
-}
-
 function queueMonthlyStatsUpdate(
   batch: WriteBatch | Transaction,
   userId: string,
   month: string,
   delta: StatsDelta,
 ) {
-  const byCategory = Object.fromEntries(
-    Object.entries(delta.byCategory)
-      .filter(([, value]) => value !== 0)
-      .map(([categoryId, value]) => [categoryId, increment(value)]),
-  );
-
-  const shape = statsPatchShape(delta);
-  if (!shape.writesTotals && !shape.writesCategories) return;
-
-  (batch as WriteBatch).set(
-    statsDoc(userId, month),
-    {
-      userId,
-      month,
-      // `totalExpenses` stays as the legacy blind sum; `totalsByCurrency` is the
-      // honest one — a nested map so merge:true keeps the other currencies.
-      ...(shape.writesTotals
-        ? {
-            totalExpenses: increment(delta.totalExpenses),
-            totalsByCurrency: { [delta.currency]: increment(delta.totalExpenses) },
-          }
-        : {}),
-      ...(shape.writesCategories
-        ? { byCategory, byCategoryByCurrency: { [delta.currency]: byCategory } }
-        : {}),
-      updatedAt: serverTimestamp(),
-    },
-    { merge: true },
-  );
+  const patch = buildMonthlyStatsPatch(userId, month, delta, increment, serverTimestamp());
+  if (patch) (batch as WriteBatch).set(statsDoc(userId, month), patch, { merge: true });
 }
 
 async function fetchExpenseById(userId: string, expenseId: string): Promise<SerializableExpense> {

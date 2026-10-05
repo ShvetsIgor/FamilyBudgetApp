@@ -217,6 +217,26 @@ service cloud.firestore {
       match /learnedKeywords/{keyword} {
         allow read, write: if isOwner(uid);
       }
+
+      // Bearer secrets never belong in Firestore. The client stores only
+      // their SHA-256 hashes; Admin SDK resolves them and stamps lastUsedAt.
+      // Family profile access above does not extend to these documents.
+      match /shortcutTokens/{tokenId} {
+        allow read, delete: if isOwner(uid);
+        allow create: if isOwner(uid)
+          && request.resource.data.keys().hasAll(['tokenHash', 'label', 'createdAt', 'lastUsedAt'])
+          && request.resource.data.keys().hasOnly(['tokenHash', 'label', 'createdAt', 'lastUsedAt'])
+          && request.resource.data.tokenHash is string
+          && request.resource.data.tokenHash.matches('^[0-9a-f]{64}$')
+          && request.resource.data.label is string
+          && request.resource.data.label.size() > 0
+          && request.resource.data.label.size() <= 80
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.lastUsedAt == null;
+        // Revoke and create a new token to rotate it. Usage metadata is
+        // server-managed; clients cannot rewrite hashes or timestamps.
+        allow update: if false;
+      }
     }
 
     // ── Families ─────────────────────────────────────────────────────────

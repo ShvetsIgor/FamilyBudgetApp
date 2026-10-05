@@ -24,7 +24,7 @@ import {
 } from '@firebase/rules-unit-testing';
 import {
   doc, getDoc, getDocs, setDoc, updateDoc, writeBatch,
-  collection, query, where, arrayUnion, deleteField, Timestamp,
+  collection, collectionGroup, query, where, arrayUnion, deleteField, deleteDoc, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 
 const PROJECT = 'family-budget-rules-test';
@@ -84,6 +84,64 @@ beforeAll(async () => {
 
 afterAll(async () => { await env?.cleanup(); });
 beforeEach(seed);
+
+describe('personal shortcut tokens', () => {
+  const tokenData = () => ({
+    tokenHash: 'a'.repeat(64), label: 'Siri iPhone', createdAt: serverTimestamp(), lastUsedAt: null,
+  });
+
+  it('owner can create, read, list and revoke their own token', async () => {
+    const db = ctx('alice');
+    const ref = doc(db, 'users', 'alice', 'shortcutTokens', 'phone');
+    await assertSucceeds(setDoc(ref, tokenData()));
+    await assertSucceeds(getDoc(ref));
+    await assertSucceeds(getDocs(collection(db, 'users', 'alice', 'shortcutTokens')));
+    await assertSucceeds(deleteDoc(ref));
+  });
+
+  it.each(['bob', 'mallory', null])('family member, outsider or guest %s cannot access tokens', async (uid) => {
+    await assertSucceeds(setDoc(doc(ctx('alice'), 'users', 'alice', 'shortcutTokens', 'phone'), tokenData()));
+    const db = uid ? ctx(uid) : env.unauthenticatedContext().firestore();
+    const ref = doc(db, 'users', 'alice', 'shortcutTokens', 'phone');
+    await assertFails(getDoc(ref));
+    await assertFails(getDocs(collection(db, 'users', 'alice', 'shortcutTokens')));
+    await assertFails(setDoc(doc(db, 'users', 'alice', 'shortcutTokens', 'new'), tokenData()));
+    await assertFails(updateDoc(ref, { label: 'Changed' }));
+    await assertFails(deleteDoc(ref));
+  });
+
+  it('owner cannot rewrite a token hash or server-managed metadata', async () => {
+    const ref = doc(ctx('alice'), 'users', 'alice', 'shortcutTokens', 'phone');
+    await assertSucceeds(setDoc(ref, tokenData()));
+    await assertFails(updateDoc(ref, { tokenHash: 'b'.repeat(64) }));
+    await assertFails(updateDoc(ref, { createdAt: serverTimestamp() }));
+    await assertFails(updateDoc(ref, { lastUsedAt: serverTimestamp() }));
+    await assertFails(setDoc(ref, tokenData()));
+  });
+
+  it.each([
+    { tokenHash: 'not-a-hash' }, { tokenHash: 'A'.repeat(64) }, { tokenHash: 42 },
+    { label: '' }, { label: 'x'.repeat(81) }, { label: 42 },
+    { rawToken: 'must-not-be-stored' }, { createdAt: Timestamp.fromMillis(0) },
+    { lastUsedAt: Timestamp.fromMillis(0) },
+  ])('rejects malformed or additional token data %j', async (patch) => {
+    const ref = doc(ctx('alice'), 'users', 'alice', 'shortcutTokens', 'phone');
+    await assertFails(setDoc(ref, { ...tokenData(), ...patch }));
+  });
+
+  it('requires all token metadata fields', async () => {
+    const ref = doc(ctx('alice'), 'users', 'alice', 'shortcutTokens', 'phone');
+    const data = tokenData();
+    for (const key of Object.keys(data)) {
+      await assertFails(setDoc(ref, Object.fromEntries(Object.entries(data).filter(([field]) => field !== key))));
+    }
+  });
+
+  it('does not expose cross-user token lookup to clients even when the hash is known', async () => {
+    await assertSucceeds(setDoc(doc(ctx('alice'), 'users', 'alice', 'shortcutTokens', 'phone'), tokenData()));
+    await assertFails(getDocs(query(collectionGroup(ctx('alice'), 'shortcutTokens'), where('tokenHash', '==', 'a'.repeat(64)))));
+  });
+});
 
 // ── Family membership / join ─────────────────────────────────────────────
 
@@ -324,5 +382,31 @@ describe('goal contributions (map shape)', () => {
   it('owner keeps full control of their own goal', async () => {
     const own = doc(ctx('alice', 'alice@x.com'), 'savingsGoals', 'alice', 'goals', 'goal-open');
     await assertSucceeds(updateDoc(own, { currentAmount: 0, contributions: {} }));
+  });
+});
+
+describe('server-only Siri request receipts', () => {
+  it('prevents owners and family members from forging or reading receipts', async () => {
+    await env.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'users/alice/shortcutRequests/one'), { fingerprint: 'hash' });
+    });
+    for (const uid of ['alice', 'bob', 'mallory']) {
+      const ref = doc(ctx(uid), 'users/alice/shortcutRequests/one');
+      await assertFails(getDoc(ref));
+      await assertFails(setDoc(ref, { fingerprint: 'forged' }));
+      await assertFails(deleteDoc(ref));
+    }
+  });
+});
+
+describe('server-only Siri usage quota', () => {
+  it('prevents the owner from resetting the rate limit', async () => {
+    const path = 'users/alice/shortcutUsage/rateLimit';
+    await env.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), path), { minute: { count: 10, resetAt: 9999999999999 } });
+    });
+    await assertFails(getDoc(doc(ctx('alice'), path)));
+    await assertFails(setDoc(doc(ctx('alice'), path), {}));
+    await assertFails(deleteDoc(doc(ctx('alice'), path)));
   });
 });

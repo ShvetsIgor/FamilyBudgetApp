@@ -6,6 +6,7 @@ import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setDarkMode, setTheme, setCurrency, setLanguage, setWeekStart, type WeekStart } from '@/features/ui/store/uiSlice';
 import { signOut, hasPasswordProvider } from '@/features/auth/services/authService';
 import { ChangePasswordSheet } from '@/features/auth/components/ChangePasswordSheet';
+import { ShortcutTokens } from '@/features/shortcuts/components/ShortcutTokens';
 import { KeyRound } from 'lucide-react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
@@ -764,6 +765,7 @@ export default function AccountPage() {
         {/* Account security */}
         {mobileLabel(t('account.password.row'))}
         {mobileCard(passwordRow)}
+        <ShortcutTokens key={user.id} uid={user.id} />
 
         {/* Sign out */}
         {signOutBtn}
@@ -792,6 +794,7 @@ export default function AccountPage() {
           {notificationsBlock}
           {quickLinks}
           <div className="fb-card overflow-hidden">{passwordRow}</div>
+          <ShortcutTokens key={user.id} uid={user.id} />
           {debugBlock}
           {signOutBtn}
         </div>

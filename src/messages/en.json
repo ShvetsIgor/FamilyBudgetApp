@@ -1,4 +1,24 @@
 {
+  "shortcuts": {
+    "chatSource": "Via Siri",
+    "title": "Siri tokens",
+    "description": "Create a personal token for Apple Shortcuts to add expenses through Siri. Each device can have its own token.",
+    "once": "Copy this token now. After you close this window, it cannot be shown again. Keep it private.",
+    "secret": "Personal Siri token",
+    "copy": "Copy token",
+    "copied": "Copied",
+    "hide": "I saved the token",
+    "label": "Token name",
+    "placeholder": "My iPhone",
+    "create": "Create token",
+    "revoke": "Revoke",
+    "confirmRevoke": "Revoke this token? Any shortcut using it will lose access.",
+    "empty": "No tokens yet.",
+    "loadFailed": "Could not load tokens. Close this window and try again.",
+    "createFailed": "Could not create the token. Try again.",
+    "revokeFailed": "Could not revoke the token. Try again.",
+    "copyFailed": "Could not copy. Select the token and copy it manually."
+  },
   "nav": {
     "chat": "Chat",
     "add": "Add",

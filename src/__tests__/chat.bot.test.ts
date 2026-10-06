@@ -4,6 +4,9 @@ import { respondToUserMessage } from '@/features/chat/bot/respond';
 import type { SerializableChatMessage } from '@/shared/types/message';
 import type { BotContext } from '@/features/chat/bot/context';
 import type { Category, CategoryFolder } from '@/shared/types';
+import { toChatParseResult } from '@/features/chat/services/parseChatMessage';
+import { parseMerchantDraft } from '@/features/chat/parser/merchantDraft';
+import memoryReducer, { recordExpense, recordSplitExpense } from '@/features/expenses/store/suggestionMemorySlice';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -78,6 +81,61 @@ function makeCtx(overrides: Partial<BotContext> = {}): BotContext {
 }
 
 // ── Parser tests (additional) ─────────────────────────────────────────────────
+
+describe('chat supermarket shorthand', () => {
+  const parsed = () => toChatParseResult(parseMerchantDraft('Рами Леви 250', 'ILS', '2026-10-06')!);
+  const card = async (ctx: BotContext, input = parsed()) => {
+    const reply = await respondToUserMessage(makeUserMsg('Рами Леви 250'), input, ctx);
+    expect(reply.expense).toBeUndefined();
+    expect(reply.messages[0].card?.kind).toBe('clarify');
+    return reply.messages[0].card!.data as { chips: { id: string }[]; suggestSplit: boolean; isRepeat: boolean };
+  };
+  it('offers owned Groceries, including a custom category ID, on the first visit', async () => {
+    const ctx = makeCtx();
+    const groceries = { ...ctx.categoriesById.get('groceries')!, id: 'custom-food', name: 'Groceries' };
+    ctx.categoriesById.delete('groceries');
+    ctx.categoriesById.set(groceries.id, groceries);
+    expect((await card(ctx)).chips.map((chip) => chip.id)).toEqual(['custom-food']);
+  });
+  it('uses one confirmed merchant choice across English/Russian spellings, without mutating memory', async () => {
+    const ctx = makeCtx();
+    ctx.suggestionMemory = memoryReducer(ctx.suggestionMemory, recordExpense({
+      merchant: 'Rami Levy', categoryId: 'coffee', date: '2026-10-06',
+    }));
+    const before = JSON.stringify(ctx.suggestionMemory);
+    const result = await card(ctx);
+    expect(result.chips.map((chip) => chip.id)).toEqual(['coffee']);
+    expect(result.isRepeat).toBe(true);
+    expect(JSON.stringify(ctx.suggestionMemory)).toBe(before);
+    // Another account starts with its own empty memory.
+    expect((await card(makeCtx({ userId: 'u2' }))).chips.map((chip) => chip.id)).toEqual(['groceries']);
+  });
+  it('keeps the picker available without inventing or reactivating a category', async () => {
+    const ctx = makeCtx();
+    ctx.categoriesById.set('groceries', { ...ctx.categoriesById.get('groceries')!, archived: true });
+    ctx.suggestionMemory = memoryReducer(ctx.suggestionMemory, recordExpense({
+      merchant: 'rami levi', categoryId: 'groceries', date: '2026-10-06',
+    }));
+    expect((await card(ctx)).chips).toEqual([]);
+  });
+  it('keeps an explicit AI category ahead of supermarket history', async () => {
+    const ctx = makeCtx();
+    ctx.suggestionMemory = memoryReducer(ctx.suggestionMemory, recordExpense({
+      merchant: 'Rami Levy', categoryId: 'groceries', date: '2026-10-06',
+    }));
+    expect((await card(ctx, { ...parsed(), merchantOnly: undefined, categoryId: 'coffee' })).chips[0].id).toBe('coffee');
+  });
+  it('preserves split habits across merchant aliases instead of filing the whole receipt as groceries', async () => {
+    const ctx = makeCtx();
+    for (const merchant of ['Rami Levy', 'Рами Леви']) {
+      ctx.suggestionMemory = memoryReducer(ctx.suggestionMemory, recordExpense({ merchant, categoryId: 'groceries', date: '2026-10-06' }));
+      ctx.suggestionMemory = memoryReducer(ctx.suggestionMemory, recordSplitExpense({ merchant, categoryIds: ['groceries', 'coffee'], date: '2026-10-06' }));
+    }
+    const result = await card(ctx);
+    expect(result.suggestSplit).toBe(true);
+    expect(result.chips).toEqual([]);
+  });
+});
 
 describe('parseMessage — bot flow inputs', () => {
   const noLearned = { learned: {} };

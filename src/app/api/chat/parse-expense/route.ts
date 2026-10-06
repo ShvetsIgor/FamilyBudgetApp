@@ -5,6 +5,7 @@ import { readSiriRequest, SiriRequestError } from '@/features/ai/siriRequest';
 import { consumeSiriQuota } from '@/features/ai/siriRateLimit';
 import { loadSiriContext, SiriProfileError } from '@/features/ai/siriContext';
 import { validateParsedExpense } from '@/features/ai/validateParsedExpense';
+import { parseMerchantDraft } from '@/features/chat/parser/merchantDraft';
 
 export const runtime = 'nodejs';
 
@@ -24,13 +25,6 @@ export async function POST(request: Request): Promise<Response> {
   catch (error) {
     return json({ ok: false, error: 'invalid_request' }, error instanceof SiriRequestError ? error.status : 400);
   }
-  try {
-    // One budget per owner across Siri and chat; neither entry point bypasses it.
-    const quota = await consumeSiriQuota(uid);
-    if (!quota.allowed) return json({ ok: false, error: 'rate_limited', retryAfter: quota.retryAfter },
-      429, { 'Retry-After': String(quota.retryAfter) });
-  } catch { return json({ ok: false, error: 'rate_limit_unavailable' }, 503); }
-
   let context;
   try { context = await loadSiriContext(uid); }
   catch (error) {
@@ -39,6 +33,16 @@ export async function POST(request: Request): Promise<Response> {
   }
   const missingCategory = (name?: string | null) => missingCategoryMessage(context.language, name, 'chat');
   if (!context.categories.length) return json({ ok: false, error: 'category_required', message: missingCategory() }, 422);
+
+  const merchantDraft = parseMerchantDraft(input.text, context.currency, input.todayKey);
+  if (merchantDraft) return json({ ok: true, expense: merchantDraft });
+
+  try {
+    // One AI budget per owner across Siri and chat. Dictionary drafts use no AI.
+    const quota = await consumeSiriQuota(uid);
+    if (!quota.allowed) return json({ ok: false, error: 'rate_limited', retryAfter: quota.retryAfter },
+      429, { 'Retry-After': String(quota.retryAfter) });
+  } catch { return json({ ok: false, error: 'rate_limit_unavailable' }, 503); }
 
   let parsed;
   try {

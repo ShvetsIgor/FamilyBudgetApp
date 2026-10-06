@@ -11,6 +11,7 @@ import { makeT } from '@/shared/utils/makeT';
 import { unknownPhrase } from './templates';
 import { buildExpenseDraft } from '@/features/expenses/engine/buildExpenseDraft';
 import { prefersSplit } from '@/features/expenses/engine/merchantMemory';
+import { alignMerchantMemory, merchantCategorySuggestions } from './merchantSuggestions';
 
 function nowTimestamp(): string {
   return new Date().toISOString();
@@ -259,12 +260,14 @@ export async function respondToUserMessage(
   // for silent categorisation. History only ranks suggestions; the user still
   // chooses single category, Split, all categories, or "sort later".
   const categories = [...categoriesById.values()].filter((category) => !category.archived);
+  const merchantKey = parsed.storeName ?? parsed.storeId ?? '';
+  const memory = alignMerchantMemory(merchantKey, ctx.suggestionMemory);
   const draft = buildExpenseDraft(
     { raw: userMsg.text, merchant: parsed.storeName, amount: parsed.amount },
     categories,
-    ctx.suggestionMemory,
+    memory,
   );
-  // Only EARNED suggestions: a dictionary hit, a learned word, or something
+  // Only grounded suggestions: a dictionary hit, a learned word, or something
   // the engine backed with merchant history (it already refuses to surface
   // recency-only guesses). Padding this list with the user's overall top
   // categories filled the card up to five confident-looking chips even when
@@ -274,14 +277,16 @@ export async function respondToUserMessage(
   // A merchant you always split (a supermarket receipt covers groceries,
   // household and kids at once) must NOT be offered single-category chips:
   // tapping one would file the whole amount under it. Lead with split instead.
-  const merchantKey = parsed.storeName ?? parsed.storeId ?? '';
-  const splitHabit = merchantKey ? prefersSplit(merchantKey, ctx.suggestionMemory) : false;
+  const splitHabit = merchantKey ? prefersSplit(merchantKey, memory) : false;
+  const merchantSuggestions = parsed.merchantOnly
+    ? merchantCategorySuggestions(merchantKey, memory, categories) : [];
 
   // Split-combo members are deliberately NOT candidates here — they are the
   // parts of a divided receipt, not a category for the whole of it.
   const candidateIds = splitHabit ? [] : [
     parsed.categoryId,
     parsed.learnedCategoryId,
+    ...merchantSuggestions,
     ...draft.suggestedCategories.map((suggestion) => suggestion.categoryId),
   ].filter((id): id is string => Boolean(id));
   const seen = new Set<string>();
@@ -319,7 +324,7 @@ export async function respondToUserMessage(
           parsedDate: parsed.date,
           parsedDateLabel: parsed.dateLabel,
           parsedNote: parsed.note,
-          isRepeat: draft.hasMerchantHistory,
+          isRepeat: draft.hasMerchantHistory || (!!parsed.merchantOnly && !!memory.merchants[merchantKey.toLowerCase().trim()]?.length),
           hasSplitPreset: draft.splitPresets.length > 0,
         },
       },

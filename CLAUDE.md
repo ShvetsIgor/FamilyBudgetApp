@@ -108,6 +108,10 @@ src/
 - Ordinary expense messages call `/api/chat/parse-expense` with the Firebase ID
   token and device timezone. Groq parses one expense using the owner's active
   categories and profile; the API validates it and returns a draft only.
+- Exact known supermarket + amount input uses a dictionary draft before Groq,
+  with the owner's currency and local today. The card suggests the previous
+  category after one confirmed save, or active Groceries when there is no history.
+  Known merchant aliases share history; split habits still lead with Split.
 - `parseChatMessage` adapts the draft to the existing chat confirmation flow.
   Amount, currency and date remain pinned through category choice and Split.
   Only explicit category confirmation saves via the existing expense/stats batch.
@@ -327,6 +331,8 @@ Runtime contract update:
 - Family category names are resolved one `getDoc` at a time on purpose: `firestore.rules` allows `list` on `categories/{uid}` to the owner only, so members can `get` a sibling's non-private category but never enumerate them. The results are cached for the session.
 
 ## Change Log
+
+- **2026-10-06** — Fixed supermarket shorthand being rejected by Groq with invented missing categories. Chat recognizes exact known supermarket + numeric amount before AI, returns an unconfirmed category-less draft with the owner's currency/local today, and offers the user's previous category after one confirmed save or active Groceries without history. Exact store aliases (including Rami Levy) are canonicalized; old alias histories are combined at read time without modifying account memory. Split habits and explicit AI categories remain intact; richer input still uses strict AI validation, and Siri auto-save validation is unchanged. Dictionary drafts do not consume AI quota.
 
 - **2026-10-06** — Production cold-start follow-up: Firebase Admin Auth imports `jwks-rsa`, whose synchronous require of ESM-only `jose@6` crashes in Vercel's runtime loader even on Node 24. Scoped the npm override to `jwks-rsa -> jose@5.10.0` (dual CJS/ESM); added a real child-process regression test with require(esm) disabled and RSA key conversion. API production smoke checks must exercise both `/api/chat/parse-expense` and `/api/shortcut/expense`, not only the dependency-free connectivity route.
 

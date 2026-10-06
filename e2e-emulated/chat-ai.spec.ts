@@ -76,3 +76,27 @@ test('provider failure shows an actionable message instead of a guessed expense'
   await expect(page.getByText('AI is temporarily unavailable. Expense not saved. Try later or add it manually using “+”.').filter({ visible: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Groceries', exact: true })).toHaveCount(0);
 });
+
+test('supermarket shorthand offers Groceries and works again after confirmation and reload', async ({ page }) => {
+  await page.route('**/api/chat/parse-expense', async (route) => {
+    const text = route.request().postDataJSON().text;
+    await route.fulfill({ json: { ok: true, expense: {
+      amount: text.endsWith('250') ? 250 : 100, currency: 'ILS', date: expense.date,
+      merchant: 'Рами Леви', categoryId: null, description: null, merchantOnly: true,
+    } } });
+  });
+  await login(page, ALICE.email);
+  await send(page, 'Рами Леви 250');
+  await expect(page.getByText('250 ₪', { exact: true }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Split receipt', exact: true }).filter({ visible: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Groceries', exact: true }).filter({ visible: true }).click();
+  await expect(page.getByRole('button', { name: 'Groceries', exact: true })).toHaveCount(0);
+  await page.reload();
+  await send(page, 'Рами Леви 100');
+  await expect(page.getByText('100 ₪', { exact: true }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Groceries', exact: true }).filter({ visible: true })).toBeVisible();
+  const history = await page.evaluate(() => Object.keys(localStorage)
+    .filter((key) => key.startsWith('suggestionMemory_v2_'))
+    .map((key) => JSON.parse(localStorage.getItem(key)!).merchants['рами леви']));
+  expect(history).toContainEqual([expect.objectContaining({ categoryId: 'cat-groceries', count: 1 })]);
+});

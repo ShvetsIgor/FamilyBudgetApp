@@ -27,6 +27,8 @@ export interface ParseResultItem {
 }
 
 export interface ParseResult {
+  /** Exact supermarket + amount input; rank category choices from merchant history. */
+  merchantOnly?: boolean;
   amount: number;
   /** Recognized currency, pinned through confirmation even if settings change. */
   currency?: Currency;

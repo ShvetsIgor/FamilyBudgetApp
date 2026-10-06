@@ -48,6 +48,24 @@ it('enforces the shared Siri/chat quota', async () => {
   expect(response.status).toBe(429); expect(response.headers.get('Retry-After')).toBe('45');
   expect(mocks.parser).not.toHaveBeenCalled();
 });
+it.each(['Рами Леви 250', 'Rami Levy 100'])('returns a category-choice draft for %s without asking Groq to guess', async (text) => {
+  mocks.quota.mockResolvedValue({ allowed: false, retryAfter: 45 });
+  mocks.parser.mockResolvedValue({ ...expense, categoryId: null, suggestedCategoryName: 'Одежда', needsClarification: true });
+  const response = await POST(request({ text, timeZone: 'Asia/Jerusalem', currency: 'USD' }));
+  expect(response.status).toBe(200);
+  expect(await response.json()).toMatchObject({ ok: true, expense: {
+    amount: text.endsWith('250') ? 250 : 100, currency: 'ILS',
+    merchant: 'Рами Леви', categoryId: null, merchantOnly: true,
+  } });
+  expect(mocks.parser).not.toHaveBeenCalled();
+  expect(mocks.quota).not.toHaveBeenCalled();
+  expect(mocks.save).not.toHaveBeenCalled();
+});
+it('keeps explicit categories and currencies on the validated AI path', async () => {
+  await POST(request({ text: 'Рами Леви одежда 250 USD', timeZone: 'UTC' }));
+  expect(mocks.parser).toHaveBeenCalled();
+  expect(mocks.quota).toHaveBeenCalledWith('alice');
+});
 it.each(['auth', 'quota', 'context', 'parser'] as const)('sanitizes %s failures', async (key) => {
   mocks[key].mockRejectedValue(new Error('secret token and internal details'));
   const response = await POST(request());

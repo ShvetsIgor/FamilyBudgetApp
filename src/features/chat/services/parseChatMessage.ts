@@ -4,21 +4,23 @@ import type { Language } from '@/shared/types';
 import { parseMessage, type ParserContext } from '@/features/chat/parser/parse';
 import { detectMerchant } from '@/features/chat/parser/pipeline';
 import { PARSER_CURRENCIES } from '@/features/ai/expenseParser/schema';
-import type { ValidatedParsedExpense } from '@/features/ai/validateParsedExpense';
+import { exactMerchant, type ChatExpenseDraft } from '@/features/chat/parser/merchantDraft';
 
 export type ChatParseOutcome = { kind: 'parsed'; parsed: ParseResult }
   | { kind: 'clarification'; message: string };
 
 export class ChatSessionChangedError extends Error {}
 
-export function toChatParseResult(expense: ValidatedParsedExpense): ParseResult {
-  const merchant = expense.merchant ? detectMerchant(expense.merchant.toLowerCase()) : undefined;
+export function toChatParseResult(expense: ChatExpenseDraft): ParseResult {
+  const exact = expense.merchant ? exactMerchant(expense.merchant) : undefined;
+  const merchant = exact ?? (expense.merchant ? detectMerchant(expense.merchant.toLowerCase()) : undefined);
   return {
     amount: expense.amount, currency: expense.currency, categoryId: expense.categoryId,
     confidence: 'high', needsConfirmation: true, date: expense.date,
     ...(expense.description ? { note: expense.description } : {}),
-    ...(expense.merchant ? { storeName: expense.merchant } : {}),
+    ...(expense.merchant ? { storeName: exact?.name ?? expense.merchant } : {}),
     ...(merchant ? { storeId: merchant.id, storeGroup: merchant.storeGroup } : {}),
+    ...(expense.merchantOnly ? { merchantOnly: true } : {}),
   };
 }
 
@@ -51,7 +53,8 @@ export async function parseChatMessage(text: string, context: ParserContext & {
     const body = await response.json();
     assertSession();
     if (response.ok && body.ok === true && body.expense?.amount > 0
-      && PARSER_CURRENCIES.includes(body.expense.currency) && body.expense.categoryId && body.expense.date) {
+      && PARSER_CURRENCIES.includes(body.expense.currency) && body.expense.date
+      && (body.expense.categoryId || (body.expense.categoryId === null && body.expense.merchantOnly === true))) {
       return { kind: 'parsed', parsed: toChatParseResult(body.expense) };
     }
     if (response.status === 422 && typeof body.message === 'string') {

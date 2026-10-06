@@ -20,8 +20,18 @@ it('sends only text/timezone with Firebase auth, preserving currency/date withou
   }));
   const body = JSON.parse(fetchMock.mock.calls[0][1].body);
   expect(Object.keys(body).sort()).toEqual(['text', 'timeZone']);
-  expect(result).toMatchObject({ kind: 'parsed', parsed: { amount: 25.5, currency: 'USD', date: '2026-10-05', note: 'Milk', storeName: 'Dabbah' } });
+  expect(result).toMatchObject({ kind: 'parsed', parsed: { amount: 25.5, currency: 'USD', date: '2026-10-05', note: 'Milk', storeName: 'Даббах' } });
   if (result.kind === 'parsed') expect(result.parsed.confirmed).toBeUndefined();
+});
+it('accepts a marked merchant draft without a category and never confirms it automatically', async () => {
+  fetchMock.mockResolvedValue(Response.json({ ok: true, expense: { ...expense, categoryId: null, merchant: 'Rami Levy', merchantOnly: true } }));
+  expect(await parseChatMessage('Рами Леви 25.5', context)).toMatchObject({ kind: 'parsed', parsed: {
+    categoryId: null, merchantOnly: true, storeName: 'Рами Леви', storeId: 'rami_levi', needsConfirmation: true,
+  } });
+});
+it('rejects an unmarked category-less AI response', async () => {
+  fetchMock.mockResolvedValue(Response.json({ ok: true, expense: { ...expense, categoryId: null } }));
+  expect(await parseChatMessage('Рами Леви одежда 25.5', context)).toMatchObject({ kind: 'clarification' });
 });
 it('keeps explicit income on the existing path without Groq', async () => {
   expect(await parseChatMessage('+100 зарплата', context)).toMatchObject({ kind: 'parsed', parsed: { isIncome: true, amount: 100 } });

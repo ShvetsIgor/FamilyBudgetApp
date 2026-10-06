@@ -6,6 +6,17 @@ The card displays the recognized amount, currency and date. Selecting a category
 saves the expense; All categories, Split receipt and Sort later remain available.
 No expense is saved just by sending a message.
 
+Exact supermarket-and-amount shorthand (`Рами Леви 250`, `Rami Levy 100`)
+uses the merchant dictionary instead of asking Groq to invent a category. It
+uses the profile currency and the request's local today, then opens the same
+confirmation card. Extra category, currency or date words still go through Groq.
+One confirmed category choice is enough to rank it on the next merchant-only
+input. Known English/Russian/Hebrew spellings share the existing account-local
+merchant history; history is kept on this device, not synced across devices.
+Without history, supermarkets offer an active owned Groceries category if it
+exists (custom IDs supported). Missing/archived categories are never activated.
+Split habits still take precedence over single-category suggestions.
+
 `+100 salary` retains the existing income parser; slash commands bypass Groq.
 Each AI message is independent. After a clarification, send the complete expense
 again, including the amount. Multiple separate expenses in one message are not
@@ -40,12 +51,14 @@ after an upstream fix and a deployed API cold-start check.
 Siri tokens do not authorize this endpoint. API key and Admin credentials stay on
 the server. Responses have `Cache-Control: no-store`.
 
-- 200: `{ ok: true, expense: ValidatedParsedExpense }`, a draft only.
+- 200: `{ ok: true, expense: ChatExpenseDraft }`, a draft only. Category is null
+  only for a dictionary shorthand marked `merchantOnly: true`.
 - 422: `{ ok: false, error: "clarification_required" | "category_required", message }`.
 - 401: invalid/expired/revoked auth; 409: missing supported profile settings.
 - 400/413: invalid input; 429: shared quota; 503: unavailable infrastructure.
 
-Quota is shared with Siri: 10 attempts/minute, 100/day per owner. Existing quota
+AI quota is shared with Siri: 10 attempts/minute, 100/day per owner. Dictionary
+shorthand does not call the provider or consume AI quota. Existing quota
 documents retain their location under `shortcutUsage`; no migration is required.
 This endpoint never writes expenses, monthlyStats, categories or messages.
 The browser uses existing message writes and expense + monthlyStats batches.
@@ -60,12 +73,15 @@ category privacy. `e2e-emulated/chat-ai.spec.ts` exercises real Firebase emulato
 chat/expense persistence and the mobile UI with only the Groq response stubbed.
 The existing opt-in `npm run eval:ai` covers the actual shared Groq parser.
 
-Verified on 2026-10-06: 788 unit tests passed (including the Vercel loader regression); lint, non-incremental TypeScript
-and production-mode build passed; all 3 chat UI scenarios passed against Auth +
+Verified on 2026-10-07: 819 unit tests passed (including the Vercel loader and
+supermarket shorthand regressions); lint, non-incremental TypeScript
+and production-mode build passed; all 4 chat UI scenarios passed against Auth +
 Firestore emulators. The confirmation test checks the stored USD expense and
 its USD monthly/category aggregates. Firebase Admin Auth user-read permission
 was also verified in the configured project. Initial chat input waits for category
 loading, preventing a fast AI response from losing its category suggestion.
+The supermarket UI scenario confirms Groceries, reloads the page and checks
+the next shorthand input and persisted merchant history.
 
 On the deployed PWA, accept the update, type an expense and confirm the category.
 Check the saved card and Expenses list. Test a foreign currency, a relative date,

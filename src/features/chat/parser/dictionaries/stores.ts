@@ -11,7 +11,7 @@ export interface StoreEntry {
 
 export const STORES: StoreEntry[] = [
   // ── Supermarkets ────────────────────────────────────────────────────────────
-  { id: 'rami_levi', name: 'Рами Леви', storeGroup: 'supermarket', needsContext: true, aliases: ['рами леви', 'rami levi', 'רמי לוי'] },
+  { id: 'rami_levi', name: 'Рами Леви', storeGroup: 'supermarket', needsContext: true, aliases: ['рами леви', 'rami levi', 'rami levy', 'רמי לוי'] },
   { id: 'shufersal', name: 'Шуферсал', storeGroup: 'supermarket', needsContext: true, aliases: ['шуферсал', 'шуперсаль', 'shufersal', 'שופרסל'] },
   { id: 'victory', name: 'Виктори', storeGroup: 'supermarket', needsContext: true, aliases: ['виктори', 'victory', 'ויקטורי'] },
   { id: 'yochananof', name: 'Йоханов', storeGroup: 'supermarket', needsContext: true, aliases: ['йоханов', 'йохананов', 'yochananof', 'יוחננוף'] },

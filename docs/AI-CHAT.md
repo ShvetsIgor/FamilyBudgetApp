@@ -29,6 +29,14 @@ owner's profile. Firebase Admin checks token signature, expiry and revocation.
 The service account therefore needs Firebase Auth user-read permission in addition
 to the existing Firestore access. No new environment variables are needed.
 
+`package.json` overrides only `jwks-rsa`'s `jose` dependency to the dual CJS/ESM
+version 5.10.0. Its default v6 dependency crashes during Firebase Auth module
+initialization under Vercel's loader (`ERR_REQUIRE_ESM`), even on Node 24.
+See [upstream issue](https://github.com/auth0/node-jwks-rsa/issues/507).
+`firebaseAdmin.runtime.test.ts` reproduces that loader constraint in a child
+process and checks real RSA signing-key conversion. Remove the override only
+after an upstream fix and a deployed API cold-start check.
+
 Siri tokens do not authorize this endpoint. API key and Admin credentials stay on
 the server. Responses have `Cache-Control: no-store`.
 
@@ -52,7 +60,7 @@ category privacy. `e2e-emulated/chat-ai.spec.ts` exercises real Firebase emulato
 chat/expense persistence and the mobile UI with only the Groq response stubbed.
 The existing opt-in `npm run eval:ai` covers the actual shared Groq parser.
 
-Verified on 2026-10-06: 787 unit tests passed; lint, non-incremental TypeScript
+Verified on 2026-10-06: 788 unit tests passed (including the Vercel loader regression); lint, non-incremental TypeScript
 and production-mode build passed; all 3 chat UI scenarios passed against Auth +
 Firestore emulators. The confirmation test checks the stored USD expense and
 its USD monthly/category aggregates. Firebase Admin Auth user-read permission

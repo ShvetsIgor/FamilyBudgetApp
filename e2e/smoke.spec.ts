@@ -36,3 +36,9 @@ test.describe('smoke', () => {
     await expect(page.getByText('404')).toBeVisible();
   });
 });
+
+test('privacy and support are accessible without an account', async ({ page }) => {
+  await page.goto('/privacy');
+  await expect(page.locator('a[href="mailto:ishveps@gmail.com"]')).toBeVisible();
+  await expect(page).toHaveURL(/\/privacy$/);
+});

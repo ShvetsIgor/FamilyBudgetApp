@@ -1,0 +1,23 @@
+import { expect,it,vi } from 'vitest';
+import { render,act } from '@testing-library/react';
+import { Provider } from 'react-redux';
+const m=vi.hoisted(()=>({callback:null as any,resolveA:null as any}));
+vi.mock('firebase/auth',()=>({onAuthStateChanged:(_:unknown,cb:any)=>{m.callback=cb;return ()=>{};}}));
+vi.mock('firebase/firestore',()=>({doc:(_:unknown,...p:string[])=>p.join('/'),getDoc:(path:string)=>path==='users/A'?new Promise(resolve=>{m.resolveA=resolve;}):Promise.resolve({exists:()=>true,data:()=>({id:'B',currency:'ILS',language:'en'})})}));
+vi.mock('@/shared/lib/firebase',()=>({getFirebaseAuth:()=>({}),getDb:()=>({}),isFirebaseConfigured:()=>true}));
+vi.mock('@/features/categories/services/categoriesService',()=>({seedDefaultCategories:vi.fn().mockResolvedValue({expense:[],income:[],expenseFolders:[],incomeFolders:[]}),fetchCategories:vi.fn()}));
+vi.mock('@/features/categories/services/categoryFoldersService',()=>({fetchFolders:vi.fn()}));
+import {AuthProvider} from '@/features/auth/components/AuthProvider';
+import {store} from '@/store/store';
+import {setUser} from '@/features/auth/store/authSlice';
+it('reproduces stale profile response switching Redux back to logged-out account A',async()=>{
+ store.dispatch(setUser(null));
+ const view=render(<Provider store={store}><AuthProvider><div/></AuthProvider></Provider>);
+ let pending:any;
+ await act(async()=>{pending=m.callback({uid:'A'});});
+ await act(async()=>{await m.callback(null);await m.callback({uid:'B'});});
+ expect(store.getState().auth.user?.id).toBe('B');
+ await act(async()=>{m.resolveA({exists:()=>true,data:()=>({id:'A',currency:'USD',language:'ru'})});await pending;});
+ expect(store.getState().auth.user?.id).toBe('A');
+ view.unmount();
+});

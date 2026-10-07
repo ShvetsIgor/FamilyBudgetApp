@@ -473,7 +473,7 @@ export function FastExpenseEntry({
         dispatch(updateExpenseAction(updated));
         router.push(`/expenses/${initialExpense.id}`);
       } else {
-        const exp = await addExpense(base);
+        const exp = await addExpense({ ...base, ...(initialUserMsgId ? { operationId: `chat-${initialUserMsgId}` } : {}) });
         dispatch(prependExpense(exp));
         haptic('success');
         const effectiveCat = activeExpCats.find((c) => c.id === effectiveCatId);
@@ -529,7 +529,9 @@ export function FastExpenseEntry({
         }
         router.push(fromChat ? '/home' : '/expenses');
       }
-    } catch {
+    } catch (error) {
+      window.alert(error instanceof Error && error.message === 'linked-expense-use-original-flow'
+        ? t('expenses.linkedEditError') : t('common.error'));
       // Only the FINANCIAL write reaches here — re-enable retry.
       setSaving(false);
     }

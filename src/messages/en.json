@@ -150,7 +150,9 @@
     "creditEvery": "Credited on the",
     "dayNum": "day {day}",
     "familyEmpty": "No family income this month",
-    "add": "Add income"
+    "add": "Add income",
+    "recurringErrorTitle": "Recurring income needs attention",
+    "recurringError": "Check the recurring income category and your connection. The app will retry on its next launch."
   },
   "expenses": {
     "search": "Search by store, comment, category…",
@@ -165,7 +167,8 @@
     "viewMine": "Mine",
     "viewFamily": "Family",
     "familyEmpty": "No family expenses this month",
-    "you": "You"
+    "you": "You",
+    "linkedEditError": "To change the amount or date of a savings contribution or recurring payment, delete the entry and add it again from its goal or payment."
   },
   "stats": {
     "title": "Statistics",
@@ -533,7 +536,14 @@
     "resetEmailSent": "Password reset link sent. Check your inbox.",
     "resetEmailFailed": "Could not send the reset link. Check the email and try again.",
     "showPassword": "Show password",
-    "hidePassword": "Hide password"
+    "hidePassword": "Hide password",
+    "verifyTitle": "Verify your email",
+    "verifyDescription": "You can keep using your personal budget. Verify your email to receive and accept family invitations.",
+    "verifySend": "Send verification email",
+    "verifyCheck": "I have verified my email",
+    "verifySent": "Email sent. Open the link, then return here to check.",
+    "verifyPending": "The email is not verified yet. Open the link in your inbox first.",
+    "verifyError": "Could not complete verification. Please try again later."
   },
   "notifications": {
     "title": "Notifications",

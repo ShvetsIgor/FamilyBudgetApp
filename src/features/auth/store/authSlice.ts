@@ -6,6 +6,8 @@ interface AuthState {
   loading: boolean;
   error: string | null;
   initialized: boolean;
+  emailVerified: boolean;
+  sessionVersion: number;
 }
 
 const initialState: AuthState = {
@@ -13,17 +15,23 @@ const initialState: AuthState = {
   loading: true,
   error: null,
   initialized: false,
+  emailVerified: false,
+  sessionVersion: 0,
 };
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
+    beginSession() { return { ...initialState }; },
     setUser(state, action: PayloadAction<UserProfile | null>) {
       state.user = action.payload;
       state.loading = false;
       state.initialized = true;
       state.error = null;
+    },
+    setEmailVerified(state, action: PayloadAction<boolean>) {
+      state.emailVerified = action.payload;
     },
     setLoading(state, action: PayloadAction<boolean>) {
       state.loading = action.payload;
@@ -40,5 +48,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, setLoading, setError, clearAuth } = authSlice.actions;
+export const { beginSession, setUser, setEmailVerified, setLoading, setError, clearAuth } = authSlice.actions;
 export default authSlice.reducer;

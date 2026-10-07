@@ -20,8 +20,9 @@
   Instrument Sans for the Press theme only.
 - **State:** Redux Toolkit — `src/store/store.ts`.
 - **Backend:** Firebase Auth + Firestore, **Spark free tier**. No Cloud
-  Functions, no server push, no server-side triggers: every feature has to work
-  from the client. Firebase Storage is *not* used.
+  Functions, no server push, no server-side triggers: regular financial features run from the client. Next.js server routes on Vercel
+  use Firebase Admin and Groq for authenticated chat parsing and Siri requests.
+  Firebase Storage is *not* used.
 - **i18n:** hand-rolled — `src/shared/utils/makeT.ts` + `src/shared/hooks/useT.ts`
   over `src/messages/{en,ru}.json`. There is no i18n library. `he.json` exists on
   disk but is not bundled and cannot be selected (`Language` is `'en' | 'ru'`).
@@ -120,10 +121,11 @@ Ship `firebase deploy --only firestore:rules` with any change to them.
 
 - No backend: notifications are pull-based on launch, and anything requiring a
   server has to wait for the Blaze plan (see `docs/MOBILE-ROADMAP.md`).
-- The chat still uses the legacy parser (`features/chat/parser/`) for
-  dictionaries, merchants and date phrases; the deterministic engine
-  (`features/expenses/engine/`) contributes ranking. Alignment, not replacement.
+- Chat expense text uses authenticated Groq parsing (`features/ai/expenseParser/`);
+  income commands, legacy dictionaries and deterministic suggestions remain in
+  the client. Do not silently fall back to guessed AI expenses.
 - Split purchases are one `Expense` document with `splits[]`; there is no
   separate split entity.
-- The Firestore emulator needs Java, which is not installed on the primary dev
-  machine, so authenticated E2E and rules tests cannot run there.
+- The Firestore emulator needs Java 21. A temporary JRE can run authenticated
+  E2E/rules locally; CI installs Java with setup-java. After emulator E2E, rebuild
+  normally before deploying: its build embeds demo Firebase configuration.

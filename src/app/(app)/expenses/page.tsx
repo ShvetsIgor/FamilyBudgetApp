@@ -7,19 +7,16 @@ import type { Locale } from 'date-fns';
 import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { mergeExpenses, removeExpense, prependExpense } from '@/features/expenses/store/expensesSlice';
-import { fetchMonthExpenses, deleteExpense, restoreExpense, backfillPrivateCategoryExpenses } from '@/features/expenses/services/expensesService';
+import { fetchMonthExpenses, deleteExpense, restoreExpense, backfillPrivateCategoryExpenses, type ExpenseDeletion } from '@/features/expenses/services/expensesService';
 import { updateRecurringItem } from '@/features/recurring/store/recurringSlice';
 import { ExpenseCard } from '@/features/expenses/components/ExpenseCard';
 import { UpcomingBills } from '@/features/recurring/components/UpcomingBills';
 import { formatAmount } from '@/shared/utils/currency';
 import { toLocalDateKey, toLocalMonthKey } from '@/shared/utils/dateKey';
 import { cn } from '@/shared/utils/cn';
-import type { SavingsContribution, SerializableExpense } from '@/shared/types';
-import {
-  applyContribution, newContributionId,
-  reverseContributionById, reverseContributionByAmount,
-} from '@/features/savings/services/savingsService';
-import { updateGoalItem } from '@/features/savings/store/savingsSlice';
+import type { SerializableExpense } from '@/shared/types';
+import { fetchGoals } from '@/features/savings/services/savingsService';
+import { setGoals } from '@/features/savings/store/savingsSlice';
 import { setExpensesSearch } from '@/features/ui/store/uiSlice';
 import { useT } from '@/shared/hooks/useT';
 import { Search } from 'lucide-react';
@@ -103,7 +100,7 @@ export default function ExpensesPage() {
   const [undoItem, setUndoItem] = useState<{
     expense: SerializableExpense;
     timerId: ReturnType<typeof setTimeout>;
-    reversed?: { goalOwnerId: string; contribution: SavingsContribution };
+    deletion: ExpenseDeletion;
   } | null>(null);
   // The unmount cleanup needs the LATEST pending undo, so it reads a ref
   // rather than a captured value. The ref is written in an effect: assigning
@@ -277,7 +274,7 @@ export default function ExpensesPage() {
     const q = search.toLowerCase();
     if (!q) return familyExpenses;
     return familyExpenses.filter((e) => {
-      const catName = familyData?.categoryMeta[e.categoryId]?.name;
+      const catName = familyData?.categoryMeta[`${e.memberId}|${e.categoryId}`]?.name;
       return [e.store, e.comment, catName, e.memberName].some((v) => v?.toLowerCase().includes(q));
     });
   }, [familyExpenses, familyData, search]);
@@ -503,35 +500,17 @@ export default function ExpensesPage() {
                           dispatch(removeExpense(e.id));
                           forgetCachedMonth(e.date);
                           deleteExpense(user.id, e)
-                            .then(async (restored) => {
-                              if (restored) dispatch(updateRecurringItem(restored));
-                              // Savings-linked expense: roll back exactly the
-                              // linked contribution (idempotent by id) and keep
-                              // it for Undo re-apply.
-                              if (!e.goalId) return;
-                              const goalOwnerId = e.goalOwnerId ?? user.id;
-                              try {
-                                const reversed = e.contributionId
-                                  ? await reverseContributionById(goalOwnerId, e.goalId, e.contributionId)
-                                  : goalOwnerId === user.id
-                                    ? await reverseContributionByAmount(user.id, e.goalId, e.amount)
-                                    : null;
-                                if (!reversed) return;
-                                if (goalOwnerId === user.id) dispatch(updateGoalItem(reversed.goal));
-                                setUndoItem((prev) => prev && prev.expense.id === e.id
-                                  ? { ...prev, reversed: { goalOwnerId, contribution: reversed.removed } }
-                                  : prev);
-                              } catch (err) {
-                                console.error('contribution rollback failed', err);
-                              }
+                            .then((deletion) => {
+                              if (deletion.recurring) dispatch(updateRecurringItem(deletion.recurring));
+                              if (e.goalId) void fetchGoals(user.id).then(goals => dispatch(setGoals(goals))).catch(() => {});
+                              if (!deletion.expense) return;
+                              const timerId = setTimeout(() => setUndoItem(null), 5000);
+                              setUndoItem({ expense: deletion.expense, deletion, timerId });
                             })
                             .catch(() => {
-                              // Network failure: surface the expense again so
-                              // the list doesn't lie about the deletion.
                               dispatch(prependExpense(e));
+                              window.alert(t('common.error'));
                             });
-                          const timerId = setTimeout(() => setUndoItem(null), 5000);
-                          setUndoItem({ expense: e, timerId });
                         }}
                       />
                     ))}
@@ -567,7 +546,7 @@ export default function ExpensesPage() {
                   </div>
                   <div className="divide-y divide-border/20">
                     {rows.map((e) => {
-                      const meta = familyData?.categoryMeta[e.categoryId];
+                      const meta = familyData?.categoryMeta[`${e.memberId}|${e.categoryId}`];
                       const isMine = e.memberId === user?.id;
                       const rowKey = `${e.memberId}-${e.id}`;
                       const reactionValues = Object.values(e.reactions ?? {});
@@ -635,30 +614,14 @@ export default function ExpensesPage() {
             onClick={() => {
               if (!user) { setUndoItem(null); return; }
               clearTimeout(undoItem.timerId);
-              const { expense, reversed } = undoItem;
+              const { expense, deletion } = undoItem;
               setUndoItem(null);
-              dispatch(prependExpense(expense));
               forgetCachedMonth(expense.date);
-              restoreExpense(user.id, expense).catch(() => {
-                // Restore failed — revert the optimistic list change so the
-                // user sees the actual server state.
-                dispatch(removeExpense(expense.id));
-              });
-              // Re-apply the rolled-back contribution under its original id
-              // (idempotent — a duplicate id is a no-op).
-              if (reversed && expense.goalId) {
-                const c = reversed.contribution;
-                applyContribution(reversed.goalOwnerId, expense.goalId, {
-                  id: c.id ?? newContributionId(),
-                  amount: c.amount,
-                  note: c.note,
-                  byId: c.byId ?? user.id,
-                  byName: c.byName,
-                  date: c.date,
-                }).then((goal) => {
-                  if (reversed.goalOwnerId === user.id) dispatch(updateGoalItem(goal));
-                }).catch((err) => console.error('contribution re-apply failed', err));
-              }
+              restoreExpense(user.id, deletion).then(recurring => {
+                dispatch(prependExpense(expense));
+                if (recurring) dispatch(updateRecurringItem(recurring));
+                if (expense.goalId) void fetchGoals(user.id).then(goals => dispatch(setGoals(goals))).catch(() => {});
+              }).catch(() => window.alert(t('common.error')));
             }}
             className="shrink-0 rounded-xl bg-background/20 px-3 py-1.5 text-sm font-bold text-background hover:bg-background/30 transition-colors"
           >

@@ -36,7 +36,7 @@ const inFuture = () => Timestamp.fromDate(new Date(Date.now() + 86_400_000));
 const inPast = () => Timestamp.fromDate(new Date(Date.now() - 86_400_000));
 
 function ctx(uid: string, email?: string) {
-  return env.authenticatedContext(uid, email ? { email } : {}).firestore();
+  return env.authenticatedContext(uid, email ? { email, email_verified: true } : {}).firestore();
 }
 
 async function seed() {
@@ -408,5 +408,27 @@ describe('server-only Siri usage quota', () => {
     await assertFails(getDoc(doc(ctx('alice'), path)));
     await assertFails(setDoc(doc(ctx('alice'), path), {}));
     await assertFails(deleteDoc(doc(ctx('alice'), path)));
+  });
+});
+
+describe('launch security regressions', () => {
+  it('unverified email cannot discover, accept or use a family invitation', async () => {
+    const id = `${F}_target@x.com`;
+    await env.withSecurityRulesDisabled(c => setDoc(doc(c.firestore(),'invites',id), {
+      familyId:F,fromUserId:'alice',toEmail:'target@x.com',status:'pending',expiresAt:inFuture(),
+    }));
+    const db = env.authenticatedContext('mallory',{email:'target@x.com',email_verified:false}).firestore();
+    await assertFails(getDoc(doc(db,'invites',id)));
+    await assertFails(updateDoc(doc(db,'invites',id),{status:'accepted'}));
+    await assertFails(updateDoc(doc(db,'families',F),{memberIds:arrayUnion('mallory')}));
+  });
+  it('departed sender cannot reissue an old invitation, nor admit an outstanding invite', async () => {
+    const id = `${F}_mallory@x.com`;
+    await env.withSecurityRulesDisabled(async c => {
+      await setDoc(doc(c.firestore(),'invites',id),{familyId:F,fromUserId:'former',toEmail:'mallory@x.com',status:'accepted',expiresAt:inFuture()});
+    });
+    await assertFails(updateDoc(doc(ctx('former'),'invites',id),{status:'pending',expiresAt:inFuture()}));
+    await env.withSecurityRulesDisabled(c => updateDoc(doc(c.firestore(),'invites',id),{status:'pending'}));
+    await assertFails(updateDoc(doc(ctx('mallory','mallory@x.com'),'families',F),{memberIds:arrayUnion('mallory')}));
   });
 });

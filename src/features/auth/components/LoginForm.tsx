@@ -2,12 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useAppDispatch } from '@/store/store';
-import { setUser } from '@/features/auth/store/authSlice';
-import { signInWithEmail, getUserProfile, requestPasswordReset } from '@/features/auth/services/authService';
-import { getAuth } from 'firebase/auth';
-import { getFirebaseApp } from '@/shared/lib/firebase';
+import { signInWithEmail, requestPasswordReset } from '@/features/auth/services/authService';
 import { GoogleButton } from './GoogleButton';
 import { useT } from '@/shared/hooks/useT';
 import { cn } from '@/shared/utils/cn';
@@ -21,8 +16,6 @@ export function LoginForm() {
   const [notice, setNotice] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [resetting, setResetting] = useState(false);
-  const dispatch = useAppDispatch();
-  const router = useRouter();
   const t = useT();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -34,13 +27,6 @@ export function LoginForm() {
 
     try {
       await signInWithEmail(email, password);
-      const auth = getAuth(getFirebaseApp());
-      const uid = auth.currentUser?.uid;
-      if (uid) {
-        const profile = await getUserProfile(uid);
-        dispatch(setUser(profile));
-      }
-      router.replace('/home');
     } catch (e: unknown) {
       const code = (e as { code?: string }).code;
       if (code === 'auth/invalid-credential' || code === 'auth/wrong-password') {

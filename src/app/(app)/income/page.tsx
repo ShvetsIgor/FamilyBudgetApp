@@ -286,7 +286,7 @@ export default function IncomePage() {
                   </div>
                   <div className="divide-y divide-border/20">
                     {rows.map((i) => {
-                      const meta = familyData?.categoryMeta[i.categoryId];
+                      const meta = familyData?.categoryMeta[`${i.memberId}|${i.categoryId}`];
                       const isMine = i.memberId === user?.id;
                       return (
                         <div key={`${i.memberId}-${i.id}`} className="flex items-center gap-3 px-4 py-3 lg:px-0">

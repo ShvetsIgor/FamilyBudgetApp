@@ -12,7 +12,12 @@ import {
   serverTimestamp,
   Timestamp,
   writeBatch,
+  runTransaction,
+  deleteField,
+  type Transaction,
+  type WriteBatch,
 } from 'firebase/firestore';
+import { readEntryPrivacy } from '@/shared/services/entryPrivacy';
 import { getDb } from '@/shared/lib/firebase';
 import { queueLinkedChatMessageDeletes } from '@/features/expenses/services/expensesService';
 import { toLocalMonthKey } from '@/shared/utils/dateKey';
@@ -108,6 +113,7 @@ export interface AddIncomeInput {
   comment?: string;
   tags?: string[];
   privacy: Privacy;
+  operationId?: string;
 }
 
 export interface UpdateIncomeInput extends AddIncomeInput {
@@ -147,12 +153,12 @@ export function buildIncomeStatsDeltas(
 }
 
 function queueMonthlyIncomeUpdate(
-  batch: ReturnType<typeof writeBatch>,
+  batch: WriteBatch | Transaction,
   userId: string,
   { month, amount, currency }: IncomeStatsDelta,
 ) {
   if (amount === 0) return;
-  batch.set(statsDoc(userId, month), {
+  (batch as WriteBatch).set(statsDoc(userId, month), {
     userId,
     month,
     totalIncome: increment(amount),
@@ -161,78 +167,65 @@ function queueMonthlyIncomeUpdate(
   }, { merge: true });
 }
 
+export function queueAddIncome(batch: Transaction | WriteBatch, input: AddIncomeInput, id?: string): SerializableIncome {
+  if (!Number.isFinite(input.amount) || input.amount <= 0 || !input.categoryId || Number.isNaN(input.date.getTime())) throw new Error('invalid-income');
+  const { userId, date, operationId: _operationId, ...rest } = input;
+  const ref = id ? doc(getDb(), 'incomes', userId, 'items', id) : doc(incCol(userId));
+  const data = Object.fromEntries(Object.entries({ ...rest, userId, tags: input.tags ?? [],
+    date: Timestamp.fromDate(date), createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  }).filter(([,v]) => v !== undefined));
+  (batch as WriteBatch).set(ref, data);
+  queueMonthlyIncomeUpdate(batch, userId, { month: toLocalMonthKey(date), amount: input.amount, currency: input.currency });
+  return toSerializable(ref.id, { ...data, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+}
+
 export async function addIncome(input: AddIncomeInput): Promise<SerializableIncome> {
-  const { userId, date, comment, ...rest } = input;
-
-  const data = Object.fromEntries(
-    Object.entries({
-      ...rest,
-      userId,
-      comment,
-      tags: input.tags ?? [],
-      date: Timestamp.fromDate(date),
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    }).filter(([, v]) => v !== undefined)
-  );
-
-  // One batch, like the expense path: the income and its month aggregate are
-  // now READ back by /statistics and /analytics, so a write that lands without
-  // its stats update is a number the user sees and cannot explain.
-  const ref = doc(incCol(userId));
-  const batch = writeBatch(getDb());
-  batch.set(ref, data);
-  queueMonthlyIncomeUpdate(batch, userId, {
-    month: toLocalMonthKey(date),
-    amount: input.amount,
-    currency: input.currency,
-  });
-  await batch.commit();
-
-  return toSerializable(ref.id, {
-    ...data,
-    date: Timestamp.fromDate(date),
-    createdAt: Timestamp.fromDate(new Date()),
-    updatedAt: Timestamp.fromDate(new Date()),
+  const ref = doc(incCol(input.userId));
+  const receipt = input.operationId ? doc(getDb(), 'users', input.userId, 'entryOperations', input.operationId) : null;
+  return runTransaction(getDb(), async tx => {
+    if (receipt) {
+      const prior = await tx.get(receipt);
+      if (prior.exists()) {
+        if (prior.data().kind !== 'income') throw new Error('operation-conflict');
+        const saved = await tx.get(doc(getDb(), 'incomes', input.userId, 'items', prior.data().entryId));
+        if (!saved.exists()) throw new Error('entry-already-deleted');
+        return toSerializable(saved.id, saved.data());
+      }
+    }
+    const privacy = await readEntryPrivacy(tx, input.userId, 'income', [input.categoryId], input.privacy);
+    const income = queueAddIncome(tx, { ...input, privacy }, ref.id);
+    if (receipt) tx.set(receipt, { kind: 'income', entryId: ref.id, createdAt: serverTimestamp() });
+    return income;
   });
 }
 
 export async function updateIncome(input: UpdateIncomeInput): Promise<SerializableIncome> {
-  const { userId, id, previous, date, comment, ...rest } = input;
-  const data = Object.fromEntries(
-    Object.entries({
-      ...rest,
-      userId,
-      comment,
-      date: Timestamp.fromDate(date),
-      updatedAt: serverTimestamp(),
-    }).filter(([, v]) => v !== undefined)
-  );
-
-  const batch = writeBatch(getDb());
-  batch.update(doc(getDb(), 'incomes', userId, 'items', id), data);
-  for (const delta of buildIncomeStatsDeltas(previous, input)) {
-    queueMonthlyIncomeUpdate(batch, userId, delta);
-  }
-  await batch.commit();
-
-  return toSerializable(id, {
-    ...previous,
-    ...data,
-    date: Timestamp.fromDate(date),
-    createdAt: previous.createdAt,
-    updatedAt: Timestamp.fromDate(new Date()),
+  if (!Number.isFinite(input.amount) || input.amount <= 0 || !input.categoryId || Number.isNaN(input.date.getTime())) throw new Error('invalid-income');
+  const { userId, id, previous: _previous, operationId: _operationId, date, ...rest } = input;
+  return runTransaction(getDb(), async tx => {
+    const ref = doc(getDb(), 'incomes', userId, 'items', id);
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error('income-not-found');
+    const previous = toSerializable(snap.id, snap.data());
+    const privacy = await readEntryPrivacy(tx, userId, 'income', [input.categoryId], previous.privacy === 'secret' ? 'secret' : input.privacy, true);
+    const data = Object.fromEntries(Object.entries({ ...rest, userId, privacy,
+      comment: input.comment ?? deleteField(), date: Timestamp.fromDate(date), updatedAt: serverTimestamp(),
+    }).filter(([,v]) => v !== undefined));
+    tx.update(ref, data);
+    for (const delta of buildIncomeStatsDeltas(previous, input)) queueMonthlyIncomeUpdate(tx, userId, delta);
+    return { ...previous, ...rest, userId, id, privacy, date: date.toISOString(), updatedAt: new Date().toISOString() };
   });
 }
 
 export async function deleteIncome(userId: string, income: SerializableIncome): Promise<void> {
-  const batch = writeBatch(getDb());
-  batch.delete(doc(getDb(), 'incomes', userId, 'items', income.id));
-  await queueLinkedChatMessageDeletes(batch, userId, 'incomeId', income.id);
-  queueMonthlyIncomeUpdate(batch, userId, {
-    month: toLocalMonthKey(income.date),
-    amount: -income.amount,
-    currency: income.currency,
+  const messages = await getDocs(query(collection(getDb(), 'messages', userId, 'items'), where('incomeId', '==', income.id)));
+  await runTransaction(getDb(), async tx => {
+    const ref = doc(getDb(), 'incomes', userId, 'items', income.id);
+    const snap = await tx.get(ref);
+    if (!snap.exists()) return;
+    const current = toSerializable(snap.id, snap.data());
+    tx.delete(ref);
+    messages.docs.forEach(d => tx.delete(d.ref));
+    queueMonthlyIncomeUpdate(tx, userId, { month: toLocalMonthKey(current.date), amount: -current.amount, currency: current.currency });
   });
-  await batch.commit();
 }

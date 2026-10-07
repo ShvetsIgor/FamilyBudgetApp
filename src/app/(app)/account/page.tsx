@@ -663,6 +663,7 @@ export default function AccountPage() {
 
         {/* Profile card */}
         {profileCard}
+        <Link href="/privacy" className="text-sm underline">{language === 'ru' ? 'Приватность, поддержка и удаление аккаунта' : 'Privacy, support and account deletion'}</Link>
 
         {/* Family */}
         {mobileLabel(t('account.family'))}
@@ -784,6 +785,7 @@ export default function AccountPage() {
             </div>
           </div>
           {profileCard}
+        <Link href="/privacy" className="text-sm underline">{language === 'ru' ? 'Приватность, поддержка и удаление аккаунта' : 'Privacy, support and account deletion'}</Link>
           {familyBlock}
           {exportBlock}
         </div>

@@ -5,11 +5,12 @@ import {
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
   sendPasswordResetEmail,
+  sendEmailVerification,
   updatePassword,
   reauthenticateWithCredential,
   EmailAuthProvider,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { getFirebaseAuth, getDb } from '@/shared/lib/firebase';
 import type { UserProfile } from '@/shared/types';
 
@@ -26,8 +27,13 @@ export async function createUserProfile(uid: string, data: { name: string; email
     onboarded: false,
     createdAt: serverTimestamp(),
   };
-  await setDoc(doc(getDb(), 'users', uid), profile);
-  return profile as UserProfile;
+  return runTransaction(getDb(), async tx => {
+    const ref = doc(getDb(), 'users', uid);
+    const existing = await tx.get(ref);
+    if (existing.exists()) return { ...existing.data(), id: uid } as UserProfile;
+    tx.set(ref, profile);
+    return profile as UserProfile;
+  });
 }
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
@@ -45,11 +51,15 @@ export async function signInWithGoogle(): Promise<UserProfile> {
       email: user.email ?? '',
     });
   }
+  await user.getIdToken(true);
   return profile;
 }
 
 export async function signInWithEmail(email: string, password: string): Promise<void> {
-  await signInWithEmailAndPassword(getFirebaseAuth(), email, password);
+  const { user } = await signInWithEmailAndPassword(getFirebaseAuth(), email, password);
+  // Recover an interrupted registration without overwriting an existing profile.
+  await createUserProfile(user.uid, { name: user.displayName ?? email.split('@')[0], email: user.email ?? email });
+  await user.getIdToken(true);
 }
 
 export async function requestPasswordReset(email: string): Promise<void> {
@@ -106,9 +116,27 @@ export async function changePassword(
 
 export async function registerWithEmail(name: string, email: string, password: string): Promise<UserProfile> {
   const result = await createUserWithEmailAndPassword(getFirebaseAuth(), email, password);
-  return createUserProfile(result.user.uid, { name, email });
+  const profile = await createUserProfile(result.user.uid, { name, email });
+  await result.user.getIdToken(true);
+  return profile;
 }
 
 export async function signOut(): Promise<void> {
   await firebaseSignOut(getFirebaseAuth());
+}
+
+/** Sending can be retried from the account banner without creating another account. */
+export async function sendVerificationEmail(): Promise<void> {
+  const user = getFirebaseAuth().currentUser;
+  if (!user) throw new Error('not-signed-in');
+  await sendEmailVerification(user);
+}
+export async function refreshEmailVerification(): Promise<boolean> {
+  const auth = getFirebaseAuth();
+  const user = auth.currentUser;
+  if (!user) return false;
+  await user.reload();
+  if (auth.currentUser !== user) return false;
+  await user.getIdToken(true);
+  return user.emailVerified;
 }

@@ -128,6 +128,7 @@ export async function respondToUserMessage(
     try {
       income = await addIncome({
         userId,
+        operationId: `chat-${userMsg.id}`,
         amount: parsed.amount,
         currency,
         categoryId: parsed.categoryId,
@@ -198,6 +199,7 @@ export async function respondToUserMessage(
     try {
       expense = await addExpense({
         userId,
+        operationId: `chat-${userMsg.id}`,
         amount: parsed.amount,
         currency,
         categoryId: category.id,

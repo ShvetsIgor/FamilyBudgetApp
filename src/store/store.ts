@@ -1,6 +1,7 @@
+import { useCallback } from 'react';
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { TypedUseSelectorHook, useDispatch, useSelector, useStore } from 'react-redux';
-import authReducer, { clearAuth, setUser } from '@/features/auth/store/authSlice';
+import authReducer, { beginSession, clearAuth, setUser } from '@/features/auth/store/authSlice';
 import uiReducer from '@/features/ui/store/uiSlice';
 import categoriesReducer from '@/features/categories/store/categoriesSlice';
 import expensesReducer from '@/features/expenses/store/expensesSlice';
@@ -33,8 +34,10 @@ const appReducer = combineReducers({
 const rootReducer: typeof appReducer = (state, action) => {
   const payload = 'payload' in action ? action.payload : undefined;
   const shouldResetAppState =
-    action.type === clearAuth.type ||
-    (action.type === setUser.type && payload === null);
+    action.type === clearAuth.type || action.type === beginSession.type ||
+    (action.type === setUser.type && (payload === null
+      || (payload && typeof payload === 'object' && 'id' in payload
+        && state?.auth?.user?.id !== payload.id)));
 
   if (!shouldResetAppState) return appReducer(state, action);
 
@@ -42,7 +45,8 @@ const rootReducer: typeof appReducer = (state, action) => {
   // for user B. Theme, dark mode and language are device preferences, not
   // account data: they are chosen on the sign-in screen itself and must
   // survive the reset that fires when auth resolves to «nobody».
-  const fresh = appReducer(undefined, action);
+  const reset = appReducer(undefined, action);
+  const fresh = { ...reset, auth: { ...reset.auth, sessionVersion: (state?.auth?.sessionVersion ?? 0) + 1 } };
   const previousUi = state?.ui;
   if (!previousUi) return fresh;
   return {
@@ -70,6 +74,15 @@ export const store = configureStore({
 export type RootState = ReturnType<typeof appReducer>;
 export type AppDispatch = typeof store.dispatch;
 
-export const useAppDispatch = () => useDispatch<AppDispatch>();
+/** Async handlers retain the session they started in; stale dispatches are discarded. */
+export const useAppDispatch = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const instance = useStore<RootState>();
+  const version = useSelector((state: RootState) => state.auth.sessionVersion);
+  return useCallback((action: Parameters<AppDispatch>[0]) => {
+    if (instance.getState().auth.sessionVersion !== version) return action;
+    return dispatch(action);
+  }, [dispatch, instance, version]) as AppDispatch;
+};
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 export const useAppStore = () => useStore<RootState>();

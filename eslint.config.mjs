@@ -12,6 +12,8 @@ export default defineConfig([
     'out/**',
     'build/**',
     'coverage/**',
+    'test-results/**',
+    'playwright-report/**',
     'public/sw.js',
     'next-env.d.ts',
     'FamilyBudgetApp-migration-safe-*/**',

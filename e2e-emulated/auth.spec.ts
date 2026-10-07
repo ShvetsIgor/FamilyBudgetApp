@@ -46,3 +46,26 @@ test.describe('authenticated flows (emulated)', () => {
     await expect(page.getByText('Shufersal')).toHaveCount(0);
   });
 });
+
+test('expense detail and editor load after a direct refresh', async ({ page }) => {
+  await login(page, ALICE.email);
+  await page.goto('/expenses/exp-shared');
+  await page.reload();
+  await expect(page.getByText('Shufersal').first()).toBeVisible({ timeout: 15_000 });
+  await page.goto('/expenses/exp-shared/edit');
+  await page.reload();
+  await expect(page.locator('#login-email')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /save/i }).first()).toBeVisible({ timeout: 15_000 });
+});
+
+test('new registration reaches onboarding and survives a refresh', async ({ page }) => {
+  await page.goto('/auth/register');
+  await page.locator('#register-name').fill('New User');
+  await page.locator('#register-email').fill(`new-${Date.now()}@example.test`);
+  await page.locator('#register-password').fill('TestPassword123!');
+  await page.locator('form button[type="submit"]').click();
+  await expect(page).toHaveURL(/\/home$/, { timeout: 15_000 });
+  await page.reload();
+  await expect(page.locator('#login-email')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /начать|get started/i }).first()).toBeVisible({ timeout: 15_000 });
+});

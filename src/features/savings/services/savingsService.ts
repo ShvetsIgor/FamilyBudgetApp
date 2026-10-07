@@ -151,7 +151,7 @@ export async function addGoal(input: AddGoalInput): Promise<SavingsGoal> {
       userId,
       currentAmount: initialAmount ?? 0,
       isPrivate: input.isPrivate ?? false,
-      contributions: [],
+      contributions: {},
       monthlyContribution,
       deadline: deadline ? Timestamp.fromDate(deadline) : undefined,
       createdAt: serverTimestamp(),
@@ -371,14 +371,12 @@ export async function reverseContributionByAmount(
  * every load — already-migrated goals are skipped.
  */
 export async function backfillContributionsShape(userId: string, goals: SavingsGoal[]): Promise<void> {
-  await Promise.all(goals.map(async (g) => {
-    // Re-read raw shape cheaply: normalize keeps no marker, so just rewrite
-    // goals whose entries lack ids (only legacy arrays produce id-less entries)
-    if (g.contributions.length === 0 || g.contributions.every((c) => c.id)) return;
-    await updateDoc(goalDoc(userId, g.id), {
-      contributions: contributionsToMap(g.contributions),
-    }).catch(() => {});
-  }));
+  await Promise.all(goals.map(g => runTransaction(getDb(), async tx => {
+    const ref = goalDoc(userId, g.id);
+    const snap = await tx.get(ref);
+    if (!snap.exists() || !Array.isArray(snap.data().contributions)) return;
+    tx.update(ref, { contributions: contributionsToMap(normalizeContributions(snap.data().contributions)) });
+  })));
 }
 
 export async function deleteGoal(userId: string, goalId: string): Promise<void> {

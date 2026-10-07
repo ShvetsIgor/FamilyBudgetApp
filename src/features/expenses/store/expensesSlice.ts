@@ -24,7 +24,7 @@ const expensesSlice = createSlice({
       state.status = 'ready';
     },
     prependExpense(state, action: PayloadAction<SerializableExpense>) {
-      state.list.unshift(action.payload);
+      state.list = [action.payload, ...state.list.filter(item => item.id !== action.payload.id)];
     },
     updateExpense(state, action: PayloadAction<SerializableExpense>) {
       const idx = state.list.findIndex((e) => e.id === action.payload.id);

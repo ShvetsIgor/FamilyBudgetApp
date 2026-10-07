@@ -1,7 +1,7 @@
 import type { Currency } from '@/shared/types';
 import {
   Timestamp, collection, doc, getDoc, getDocs, query, where, orderBy, setDoc,
-  serverTimestamp, type DocumentData,
+  serverTimestamp, runTransaction, getDocsFromServer, type DocumentData,
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import { format, subMonths } from 'date-fns';
@@ -101,25 +101,19 @@ export async function fetchMonthStats(userId: string, month: string): Promise<Mo
   try {
     const snap = await getDoc(ref);
     before = snap.data();
-    if (before?.currencyBreakdownComplete === true) return fromStoredStats(month, before);
+    if (before?.currencyBreakdownComplete === true && before?.aggregateVersion === 2) return fromStoredStats(month, before);
   } catch { /* offline or denied: fall through to computing it */ }
 
   const computed = await computeMonthStats(userId, month);
 
   if (isClosedMonth(month)) {
     try {
-      const now = await getDoc(ref);
-      const unchanged =
-        (now.data()?.updatedAt?.toMillis?.() ?? null) === (before?.updatedAt?.toMillis?.() ?? null);
-      // A delta that landed mid-computation would be overwritten by our
-      // pre-edit snapshot; leave the document alone and cache on a later visit.
-      if (unchanged) {
-        await setDoc(ref, {
-          ...computed,
-          userId,
-          updatedAt: serverTimestamp(),
-        }, { merge: true });
-      }
+      await runTransaction(getDb(), async tx => {
+        const now = await tx.get(ref);
+        const stamp = (data?: DocumentData) => JSON.stringify(data?.updatedAt ?? null);
+        if (stamp(now.data()) !== stamp(before)) return;
+        tx.set(ref, { ...computed, userId, aggregateVersion: 2, updatedAt: serverTimestamp() });
+      });
     } catch { /* caching is an optimisation, never a failure */ }
   }
 
@@ -155,13 +149,13 @@ async function computeMonthStats(userId: string, month: string): Promise<MonthSt
   const to = Timestamp.fromDate(new Date(year, m, 1));
 
   const [expSnap, incSnap] = await Promise.all([
-    getDocs(query(
+    getDocsFromServer(query(
       collection(getDb(), 'expenses', userId, 'items'),
       where('date', '>=', from),
       where('date', '<', to),
       orderBy('date', 'desc')
     )),
-    getDocs(query(
+    getDocsFromServer(query(
       collection(getDb(), 'incomes', userId, 'items'),
       where('date', '>=', from),
       where('date', '<', to),

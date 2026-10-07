@@ -1,0 +1,31 @@
+const {createRequire}=require('node:module');
+const req=createRequire('/Users/sofia/WebstormProjects/FamilyBudgetApp/package.json');
+const {initializeTestEnvironment,assertSucceeds,assertFails}=req('@firebase/rules-unit-testing');
+const {doc,setDoc,getDoc,updateDoc,writeBatch,arrayUnion,arrayRemove,Timestamp}=req('firebase/firestore');
+const fs=require('node:fs');
+(async()=>{
+ const env=await initializeTestEnvironment({projectId:'family-budget-rules-test',firestore:{host:'127.0.0.1',port:8090,rules:fs.readFileSync('/Users/sofia/WebstormProjects/FamilyBudgetApp/firestore.rules','utf8')}});
+ try {
+ await env.clearFirestore();
+ await env.withSecurityRulesDisabled(async c=>{
+  const db=c.firestore();
+  for(const [path,data] of [
+   ['users/owner',{familyId:'f',id:'owner'}],['users/attacker',{familyId:null,id:'attacker'}],['users/former',{familyId:null,id:'former'}],
+   ['families/f',{ownerId:'owner',memberIds:['owner']}],
+   ['expenses/owner/items/shared',{amount:123,privacy:'regular'}],
+   ['invites/f_target@example.test',{familyId:'f',fromUserId:'owner',toEmail:'target@example.test',status:'pending',expiresAt:Timestamp.fromMillis(Date.now()+86400000)}],
+   ['invites/f_friend@example.test',{familyId:'f',fromUserId:'former',toEmail:'friend@example.test',status:'accepted',expiresAt:Timestamp.fromMillis(Date.now()+86400000)}],
+   ['savingsGoals/owner/goals/empty',{userId:'owner',name:'New goal',currentAmount:0,isPrivate:false,contributions:[]}]
+  ]) await setDoc(doc(db,path),data);
+ });
+ const attacker=env.authenticatedContext('attacker',{email:'target@example.test',email_verified:false}).firestore();
+ const b=writeBatch(attacker);b.update(doc(attacker,'invites/f_target@example.test'),{status:'accepted'});b.update(doc(attacker,'families/f'),{memberIds:arrayUnion('attacker')});b.update(doc(attacker,'users/attacker'),{familyId:'f'});
+ await assertSucceeds(b.commit());await assertSucceeds(getDoc(doc(attacker,'expenses/owner/items/shared')));
+ console.log('CONFIRMED: email_verified=false can accept invitation and read shared financial data');
+ const former=env.authenticatedContext('former',{email:'former@example.test',email_verified:true}).firestore();
+ await assertSucceeds(updateDoc(doc(former,'invites/f_friend@example.test'),{status:'pending',expiresAt:Timestamp.fromMillis(Date.now()+86400000)}));
+ console.log('CONFIRMED: departed sender can reissue accepted invite to old family');
+ await assertFails(updateDoc(doc(attacker,'savingsGoals/owner/goals/empty'),{contributions:{c1:{amount:10,byId:'attacker'}},currentAmount:10,lastContributionId:'c1'}));
+ console.log('CONFIRMED: empty array contributions on new shared goal denies first family contribution');
+ } finally {await env.cleanup()}
+})().catch(e=>{console.error(e);process.exitCode=1});

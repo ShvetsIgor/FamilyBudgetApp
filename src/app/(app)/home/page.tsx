@@ -559,7 +559,7 @@ export default function HomePage() {
       await deleteMessage(userId, userMsgId);
       if (expense) {
         const restored = await deleteExpense(userId, expense);
-        if (restored) dispatch(updateRecurringItem(restored));
+        if (restored.recurring) dispatch(updateRecurringItem(restored.recurring));
       }
     } catch { /* ignore */ }
   }, [userId, allExpenses, dispatch]);

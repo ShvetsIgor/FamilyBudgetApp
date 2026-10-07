@@ -17,7 +17,7 @@ const incomeSlice = createSlice({
       state.status = 'ready';
     },
     prependIncome(state, action: PayloadAction<SerializableIncome>) {
-      state.list.unshift(action.payload);
+      state.list = [action.payload, ...state.list.filter(item => item.id !== action.payload.id)];
     },
     updateIncome(state, action: PayloadAction<SerializableIncome>) {
       const idx = state.list.findIndex((i) => i.id === action.payload.id);

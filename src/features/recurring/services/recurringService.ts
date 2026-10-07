@@ -1,7 +1,9 @@
 import {
   collection, doc, addDoc, updateDoc, deleteDoc, deleteField,
-  getDoc, getDocs, query, orderBy, serverTimestamp, Timestamp, writeBatch,
+  getDoc, getDocs, query, orderBy, serverTimestamp, Timestamp, writeBatch, runTransaction,
 } from 'firebase/firestore';
+import { readEntryPrivacy } from '@/shared/services/entryPrivacy';
+import { toLocalDateKey } from '@/shared/utils/dateKey';
 import { getDb } from '@/shared/lib/firebase';
 import { parseISO } from 'date-fns';
 import { nextOccurrence, isScheduleCompleted, resolveUpdatedDueDate } from '../utils/schedule';
@@ -235,4 +237,29 @@ export async function advanceToNextFutureDue(
     ...(completed ? { isActive: false } : {}),
   });
   return { ...item, nextDueDate: next.toISOString(), isActive: item.isActive && !completed };
+}
+
+/** The due date is the concurrency guard; an old screen cannot book it twice. */
+export async function payRecurringOccurrence(userId: string, item: SerializableRecurringPayment, amountOverride?: number) {
+  return runTransaction(getDb(), async tx => {
+    const ref = doc(getDb(), 'recurringPayments', userId, 'items', item.id);
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error('recurring-not-found');
+    const current = toSerializable(snap.id, snap.data());
+    if (toLocalDateKey(current.nextDueDate) !== toLocalDateKey(item.nextDueDate)) return { recurring: current, expense: null };
+    if (!current.isActive) throw new Error('recurring-inactive');
+    const amount = amountOverride ?? current.amount;
+    const expenseId = `recurring-${item.id}-${toLocalDateKey(current.nextDueDate)}`;
+    const existing = await tx.get(doc(getDb(), 'expenses', userId, 'items', expenseId));
+    const privacy = await readEntryPrivacy(tx, userId, 'expense', [current.categoryId]);
+    const next = nextOccurrence(parseISO(current.nextDueDate), current.frequency);
+    const isActive = !isScheduleCompleted(next.toISOString(), current.endDate);
+    const expense = existing.exists() ? null : queueAddExpense(tx, {
+      userId, amount, currency: current.currency, categoryId: current.categoryId,
+      date: parseISO(current.nextDueDate), paymentMethod: 'card', splits: [], tags: ['recurring'],
+      privacy, store: current.name, comment: current.comment, recurringId: item.id,
+    }, expenseId);
+    tx.update(ref, { nextDueDate: Timestamp.fromDate(next), isActive, amount });
+    return { recurring: { ...current, amount, nextDueDate: next.toISOString(), isActive }, expense };
+  });
 }

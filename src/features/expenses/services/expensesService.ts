@@ -11,6 +11,8 @@ import {
   startAfter,
   where,
   writeBatch,
+  runTransaction,
+  deleteField,
   increment,
   serverTimestamp,
   Timestamp,
@@ -21,7 +23,8 @@ import {
 import { format } from 'date-fns';
 import { getDb } from '@/shared/lib/firebase';
 import { toLocalMonthKey } from '@/shared/utils/dateKey';
-import { restoreRecurringDueFromDeletedExpense } from '@/features/recurring/services/recurringExpenseSync';
+import { prepareExpenseLinks, type ExpenseLinksUndo } from './expenseLinks';
+import { readEntryPrivacy } from '@/shared/services/entryPrivacy';
 import type {
   Currency,
   Expense,
@@ -165,6 +168,8 @@ export interface AddExpenseInput {
   contributionId?: string;
   recurringId?: string;
   isRecurring?: boolean;
+  /** Stable retry key for the originating chat message or form submission. */
+  operationId?: string;
 }
 
 /**
@@ -172,10 +177,10 @@ export interface AddExpenseInput {
  * batch without committing. Lets multi-entity flows (e.g. savings
  * contribution + expense) stay atomic in a single WriteBatch.
  */
-export function queueAddExpense(batch: WriteBatch | Transaction, input: AddExpenseInput): SerializableExpense {
+export function queueAddExpense(batch: WriteBatch | Transaction, input: AddExpenseInput, expenseId?: string): SerializableExpense {
   validateExpenseInput(input);
-  const { userId, date, store, storeId, storeGroup, comment, ...rest } = input;
-  const ref = expenseDoc(userId);
+  const { userId, date, store, storeId, storeGroup, comment, operationId: _operationId, ...rest } = input;
+  const ref = expenseDoc(userId, expenseId);
   const data = Object.fromEntries(
     Object.entries({
       ...rest,
@@ -210,10 +215,23 @@ export function queueAddExpense(batch: WriteBatch | Transaction, input: AddExpen
 }
 
 export async function addExpense(input: AddExpenseInput): Promise<SerializableExpense> {
-  const batch = writeBatch(getDb());
-  const expense = queueAddExpense(batch, input);
-  await batch.commit();
-  return expense;
+  const ref = expenseDoc(input.userId);
+  const receipt = input.operationId ? doc(getDb(), 'users', input.userId, 'entryOperations', input.operationId) : null;
+  return runTransaction(getDb(), async tx => {
+    if (receipt) {
+      const prior = await tx.get(receipt);
+      if (prior.exists()) {
+        if (prior.data().kind !== 'expense') throw new Error('operation-conflict');
+        const saved = await tx.get(expenseDoc(input.userId, prior.data().entryId));
+        if (!saved.exists()) throw new Error('entry-already-deleted');
+        return toSerializable(saved.id, saved.data());
+      }
+    }
+    const privacy = await readEntryPrivacy(tx, input.userId, 'expense', [input.categoryId, ...input.splits.map(s => s.categoryId)], input.privacy);
+    const expense = queueAddExpense(tx, { ...input, privacy }, ref.id);
+    if (receipt) tx.set(receipt, { kind: 'expense', entryId: ref.id, createdAt: serverTimestamp() });
+    return expense;
+  });
 }
 
 export interface UpdateExpenseInput extends AddExpenseInput {
@@ -223,60 +241,32 @@ export interface UpdateExpenseInput extends AddExpenseInput {
 
 export async function updateExpense(input: UpdateExpenseInput): Promise<SerializableExpense> {
   validateExpenseInput(input);
-  const {
-    userId,
-    id,
-    date,
-    store,
-    storeId,
-    storeGroup,
-    comment,
-    goalId,
-    previousExpense,
-    ...rest
-  } = input;
-  const existing = previousExpense ?? await fetchExpenseById(userId, id);
-  const data = Object.fromEntries(
-    Object.entries({
-      ...rest,
-      userId,
-      store,
-      storeId,
-      storeGroup,
-      comment,
-      goalId,
-      date: Timestamp.fromDate(date),
-      isRecurring: input.isRecurring ?? Boolean(input.recurringId),
-      updatedAt: serverTimestamp(),
-    }).filter(([, value]) => value !== undefined),
-  );
-
-  const batch = writeBatch(getDb());
-  batch.update(expenseDoc(userId, id), data);
-
-  const statsByMonth = new Map<string, { month: string; delta: StatsDelta }>();
-  mergeStatsDelta(
-    statsByMonth,
-    toLocalMonthKey(existing.date),
-    buildStatsDelta(existing.categoryId, existing.amount, existing.splits, -1, existing.currency),
-  );
-  mergeStatsDelta(
-    statsByMonth,
-    format(date, 'yyyy-MM'),
-    buildStatsDelta(input.categoryId, input.amount, input.splits, 1, input.currency),
-  );
-
-  for (const { month, delta } of statsByMonth.values()) {
-    queueMonthlyStatsUpdate(batch, userId, month, delta);
-  }
-
-  await batch.commit();
-
-  return toSerializable(id, {
-    ...data,
-    date: Timestamp.fromDate(date),
-    createdAt: isoToTimestamp(existing.createdAt),
-    updatedAt: Timestamp.fromDate(new Date()),
+  const { userId, id, previousExpense: _previous, operationId: _operation, goalId: _goalId, goalOwnerId: _goalOwnerId, contributionId: _contributionId, recurringId: _recurringId, isRecurring: _isRecurring, date, ...changes } = input;
+  return runTransaction(getDb(), async tx => {
+    const ref = expenseDoc(userId, id);
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error('expense-not-found');
+    const existing = toSerializable(id, snap.data());
+    // Linked entries have their own lifecycle. Preserve their identity and do
+    // not let the generic editor change the linked money/date/currency.
+    if ((existing.goalId || existing.recurringId) && (existing.amount !== input.amount
+      || existing.currency !== input.currency || toLocalMonthKey(existing.date) !== toLocalMonthKey(date)
+      || new Date(existing.date).toDateString() !== date.toDateString())) {
+      throw new Error('linked-expense-use-original-flow');
+    }
+    const privacy = await readEntryPrivacy(tx, userId, 'expense', [input.categoryId, ...input.splits.map(s => s.categoryId)],
+      existing.privacy === 'secret' ? 'secret' : input.privacy, true);
+    const data = Object.fromEntries(Object.entries({ ...changes, userId, privacy,
+      date: Timestamp.fromDate(date), isRecurring: existing.isRecurring,
+      comment: input.comment ?? deleteField(), updatedAt: serverTimestamp(),
+    }).filter(([, value]) => value !== undefined));
+    tx.update(ref, data);
+    const statsByMonth = new Map<string, { month: string; delta: StatsDelta }>();
+    mergeStatsDelta(statsByMonth, toLocalMonthKey(existing.date), buildStatsDelta(existing.categoryId, existing.amount, existing.splits, -1, existing.currency));
+    mergeStatsDelta(statsByMonth, toLocalMonthKey(date), buildStatsDelta(input.categoryId, input.amount, input.splits, 1, input.currency));
+    for (const { month, delta } of statsByMonth.values()) queueMonthlyStatsUpdate(tx, userId, month, delta);
+    return { ...existing, ...changes, userId, id, privacy, isRecurring: existing.isRecurring,
+      date: date.toISOString(), comment: input.comment, updatedAt: new Date().toISOString() };
   });
 }
 
@@ -308,70 +298,46 @@ function validateExpenseInput(input: AddExpenseInput) {
   }
 }
 
-export async function deleteExpense(userId: string, expense: SerializableExpense) {
-  const batch = writeBatch(getDb());
-  batch.delete(expenseDoc(userId, expense.id));
-  await queueLinkedChatMessageDeletes(batch, userId, 'expenseId', expense.id);
-  queueMonthlyStatsUpdate(
-    batch,
-    userId,
-    toLocalMonthKey(expense.date),
-    buildStatsDelta(expense.categoryId, expense.amount, expense.splits, -1, expense.currency),
-  );
-  await batch.commit();
-  return restoreRecurringDueFromDeletedExpense(userId, expense);
+export interface ExpenseDeletion {
+  expense: SerializableExpense | null;
+  links: ExpenseLinksUndo;
+  recurring: import('@/shared/types').SerializableRecurringPayment | null;
 }
 
-/**
- * Re-creates an expense at its original Firestore id (used by the Undo flow
- * after a delete). Stats are reversed back, but recurring state is left
- * untouched — callers may explicitly re-run recurring sync if needed.
- */
-export async function restoreExpense(userId: string, expense: SerializableExpense): Promise<void> {
-  const ref = expenseDoc(userId, expense.id);
-  const data = Object.fromEntries(
-    Object.entries({
-      userId,
-      amount: expense.amount,
-      currency: expense.currency,
-      categoryId: expense.categoryId,
-      paymentMethod: expense.paymentMethod,
-      store: expense.store,
-      storeId: expense.storeId,
-      storeGroup: expense.storeGroup,
-      tags: expense.tags ?? [],
-      comment: expense.comment,
-      photoUrl: expense.photoUrl,
-      privacy: expense.privacy,
-      splits: expense.splits ?? [],
-      items: expense.items,
-      isRecurring: expense.isRecurring ?? false,
-      recurringId: expense.recurringId,
-      goalId: expense.goalId,
-      // A savings expense can only be rolled back through these two: without
-      // them a restored contribution to a family member's goal is reversed
-      // against the wrong owner on the next delete, and the money silently
-      // stays in their goal. `reactions` are family content, not ours to drop.
-      goalOwnerId: expense.goalOwnerId,
-      contributionId: expense.contributionId,
-      reactions: expense.reactions,
-      date: Timestamp.fromDate(new Date(expense.date)),
-      createdAt: isoToTimestamp(expense.createdAt),
-      updatedAt: serverTimestamp(),
-    }).filter(([, value]) => value !== undefined),
-  );
+export async function deleteExpense(userId: string, expense: SerializableExpense): Promise<ExpenseDeletion> {
+  const messages = await getDocs(query(collection(getDb(), 'messages', userId, 'items'), where('expenseId', '==', expense.id)));
+  return runTransaction(getDb(), async tx => {
+    const ref = expenseDoc(userId, expense.id);
+    const snap = await tx.get(ref);
+    if (!snap.exists()) return { expense: null, links: {}, recurring: null };
+    const current = toSerializable(snap.id, snap.data());
+    const links = await prepareExpenseLinks(tx, userId, current);
+    links.apply();
+    tx.delete(ref);
+    messages.docs.forEach(d => tx.delete(d.ref));
+    queueMonthlyStatsUpdate(tx, userId, toLocalMonthKey(current.date), buildStatsDelta(current.categoryId, current.amount, current.splits, -1, current.currency));
+    return { expense: current, links: links.undo, recurring: links.recurring };
+  });
+}
 
-  const batch = writeBatch(getDb());
-  // WriteBatch.set and Transaction.set differ only in return type — TS cannot
-  // call the union directly, the runtime shape is identical.
-  (batch as WriteBatch).set(ref, data);
-  queueMonthlyStatsUpdate(
-    batch,
-    userId,
-    toLocalMonthKey(expense.date),
-    buildStatsDelta(expense.categoryId, expense.amount, expense.splits ?? [], 1, expense.currency),
-  );
-  await batch.commit();
+/** Undo uses the actual deleted snapshot, and commits linked state with the money. */
+export async function restoreExpense(userId: string, deletion: ExpenseDeletion) {
+  const expense = deletion.expense;
+  if (!expense) return null;
+  return runTransaction(getDb(), async tx => {
+    const ref = expenseDoc(userId, expense.id);
+    if ((await tx.get(ref)).exists()) return null;
+    const links = await prepareExpenseLinks(tx, userId, expense, deletion.links);
+    const privacy = await readEntryPrivacy(tx, userId, 'expense', [expense.categoryId, ...expense.splits.map(s => s.categoryId)], expense.privacy, true);
+    links.apply();
+    const { id: _id, ...fields } = expense;
+    const data = Object.fromEntries(Object.entries({ ...fields, userId, privacy,
+      date: Timestamp.fromDate(new Date(expense.date)), createdAt: isoToTimestamp(expense.createdAt), updatedAt: serverTimestamp(),
+    }).filter(([,v]) => v !== undefined));
+    tx.set(ref, data);
+    queueMonthlyStatsUpdate(tx, userId, toLocalMonthKey(expense.date), buildStatsDelta(expense.categoryId, expense.amount, expense.splits, 1, expense.currency));
+    return links.recurring;
+  });
 }
 
 /**
@@ -434,10 +400,10 @@ function queueMonthlyStatsUpdate(
   if (patch) (batch as WriteBatch).set(statsDoc(userId, month), patch, { merge: true });
 }
 
-async function fetchExpenseById(userId: string, expenseId: string): Promise<SerializableExpense> {
+export async function fetchExpenseById(userId: string, expenseId: string): Promise<SerializableExpense> {
   const snap = await getDoc(expenseDoc(userId, expenseId));
   if (!snap.exists()) {
-    throw new Error(`Expense ${expenseId} not found`);
+    throw new Error('expense-not-found');
   }
 
   return toSerializable(snap.id, snap.data());

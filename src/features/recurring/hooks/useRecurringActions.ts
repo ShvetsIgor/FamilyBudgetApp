@@ -8,7 +8,7 @@ import {
 } from '@/features/recurring/store/recurringSlice';
 import {
   advanceToNextFutureDue, completeRecurring, deleteRecurring, markAsPaid,
-  toggleRecurring, updateRecurringAmount,
+  toggleRecurring, updateRecurringAmount, payRecurringOccurrence,
 } from '@/features/recurring/services/recurringService';
 import { addExpense } from '@/features/expenses/services/expensesService';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
@@ -40,28 +40,16 @@ export function useRecurringActions() {
     const amount = amountOverride ?? item.amount;
     if (amount <= 0) return false;
     try {
-      if (item.categoryId) {
-        const exp = await addExpense({
-          userId: user.id, amount, currency: item.currency,
-          categoryId: item.categoryId, date: parseISO(item.nextDueDate),
-          paymentMethod: 'card', splits: [], tags: ['recurring'],
-          privacy: resolveExpensePrivacy({ categories, categoryId: item.categoryId }),
-          store: item.name,
-          comment: item.comment || undefined,
-          recurringId: item.id,
-        });
-        dispatch(prependExpense(exp));
-      }
-      // «Сумма изменилась»: the new price sticks to the template from now on
-      if (amount !== item.amount) await updateRecurringAmount(user.id, item.id, amount);
-      dispatch(updateRecurringItem(await markAsPaid(user.id, { ...item, amount })));
+      const result = await payRecurringOccurrence(user.id, item, amountOverride);
+      if (result.expense) dispatch(prependExpense(result.expense));
+      dispatch(updateRecurringItem(result.recurring));
       haptic('success');
       return true;
     } catch (e) {
       console.error('markPaid error:', e);
       return false;
     }
-  }, [user, categories, dispatch]);
+  }, [user, dispatch]);
 
   /** Skip a missed occurrence without creating an expense. */
   const skip = useCallback(async (item: SerializableRecurringPayment): Promise<boolean> => {

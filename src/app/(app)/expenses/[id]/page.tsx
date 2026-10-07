@@ -1,4 +1,6 @@
 'use client';
+import { useExpenseById } from '@/features/expenses/hooks/useExpenseById';
+import { LoadingScreen } from '@/shared/components/LoadingScreen';
 import { Search } from 'lucide-react';
 
 import { use } from 'react';
@@ -23,7 +25,7 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const currency = useAppSelector((s) => s.ui.currency);
-  const expense = useAppSelector((s) => s.expenses.list.find((e) => e.id === id));
+  const { expense, loading, error } = useExpenseById(id);
   const categories = useAppSelector((s) => s.categories.expense);
   const goals = useAppSelector((s) => s.savings.list);
   const t = useT();
@@ -35,11 +37,12 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
     other: t('expense.other'),
   };
 
+  if (loading) return <LoadingScreen />;
   if (!expense) {
     return (
       <div className="flex flex-col items-center py-20 px-4 text-center">
         <Search className="mx-auto mb-3 h-9 w-9 text-muted-foreground" strokeWidth={1.6} />
-        <p className="font-medium">{t('expense.notFound')}</p>
+        <p className="font-medium">{t(error ? 'common.error' : 'expense.notFound')}</p>
         <button onClick={() => router.back()} className="mt-4 text-sm text-primary hover:underline">
           {t('expense.goBack')}
         </button>
@@ -59,26 +62,11 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
   async function handleDelete() {
     if (!user) return;
     if (!confirm(t('expense.confirmDelete'))) return;
-    const restored = await deleteExpense(user.id, expense!);
-    dispatch(removeExpense(expense!.id));
-    if (restored) dispatch(updateRecurringItem(restored));
-
-    if (expense!.goalId) {
-      // Roll back exactly the linked contribution (idempotent by id); the
-      // goal may belong to another family member. Legacy expenses without a
-      // contributionId fall back to amount-matching on OWN goals only.
-      const goalOwnerId = expense!.goalOwnerId ?? user.id;
-      try {
-        const reversed = expense!.contributionId
-          ? await reverseContributionById(goalOwnerId, expense!.goalId, expense!.contributionId)
-          : goalOwnerId === user.id
-            ? await reverseContributionByAmount(user.id, expense!.goalId, expense!.amount)
-            : null;
-        if (reversed && goals.some((g) => g.id === reversed.goal.id)) dispatch(updateGoalItem(reversed.goal));
-      } catch (err) {
-        console.error('contribution rollback failed', err);
-      }
-    }
+    try {
+      const deletion = await deleteExpense(user.id, expense!);
+      dispatch(removeExpense(expense!.id));
+      if (deletion.recurring) dispatch(updateRecurringItem(deletion.recurring));
+    } catch { window.alert(t('common.error')); return; }
 
     router.back();
   }

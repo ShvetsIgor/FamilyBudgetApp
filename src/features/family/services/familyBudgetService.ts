@@ -35,11 +35,11 @@ export interface FamilyMonthData {
  * The per-document read is not an oversight: `firestore.rules` allows `list`
  * on `categories/{uid}` to the owner ONLY, so a member can `get` a sibling's
  * non-private category but can never enumerate the collection. What was
- * wasteful was doing it again on every month switch and every navigation into
- * a family view — category names change about never — so the answers (misses
- * included) are cached for the session.
+ * Read again on each load so privacy changes and account switches cannot
+ * reuse metadata authorized for an earlier session.
  */
-const foreignCategoryCache = new Map<string, FamilyCategoryMeta | null>();
+export function familyCategoryKey(ownerId: string, categoryId: string) { return `${ownerId}|${categoryId}`; }
+
 
 async function resolveForeignCategories(
   entries: Iterable<[string, string]>,
@@ -47,25 +47,15 @@ async function resolveForeignCategories(
   into: Record<string, FamilyCategoryMeta>,
 ): Promise<void> {
   await Promise.all([...entries].map(async ([catId, memberId]) => {
-    const key = `${memberId}|${type}|${catId}`;
-    if (foreignCategoryCache.has(key)) {
-      const cached = foreignCategoryCache.get(key);
-      if (cached) into[catId] = cached;
-      return;
-    }
     try {
       const snap = await getDoc(doc(getDb(), 'categories', memberId, type, catId));
       if (snap.exists()) {
         const d = snap.data();
         const meta: FamilyCategoryMeta = { name: d.name, icon: d.icon, color: d.color };
-        foreignCategoryCache.set(key, meta);
-        into[catId] = meta;
-      } else {
-        foreignCategoryCache.set(key, null);
+        into[familyCategoryKey(memberId, catId)] = meta;
       }
     } catch {
-      // private category — keep hidden, and remember not to ask again
-      foreignCategoryCache.set(key, null);
+      // A private or inaccessible category keeps its generic UI label.
     }
   }));
 }
@@ -91,14 +81,14 @@ export async function fetchFamilyMonthExpenses(
 
   const categoryMeta: Record<string, FamilyCategoryMeta> = {};
   for (const c of selfCategories) {
-    categoryMeta[c.id] = { name: c.name, icon: c.icon, color: c.color };
+    categoryMeta[familyCategoryKey(selfId, c.id)] = { name: c.name, icon: c.icon, color: c.color };
   }
 
-  const foreign = new Map<string, string>();
+  const foreign: Array<[string, string]> = [];
   for (const e of expenses) {
-    if (e.memberId !== selfId && !categoryMeta[e.categoryId]) foreign.set(e.categoryId, e.memberId);
+    if (e.memberId !== selfId && !categoryMeta[familyCategoryKey(e.memberId, e.categoryId)]) foreign.push([e.categoryId, e.memberId]);
   }
-  await resolveForeignCategories(foreign.entries(), 'expense', categoryMeta);
+  await resolveForeignCategories(foreign, 'expense', categoryMeta);
 
   return { expenses, categoryMeta };
 }
@@ -134,13 +124,13 @@ export async function fetchFamilyMonthIncomes(
 
   const categoryMeta: Record<string, FamilyCategoryMeta> = {};
   for (const c of selfIncomeCategories) {
-    categoryMeta[c.id] = { name: c.name, icon: c.icon, color: c.color };
+    categoryMeta[familyCategoryKey(selfId, c.id)] = { name: c.name, icon: c.icon, color: c.color };
   }
-  const foreign = new Map<string, string>();
+  const foreign: Array<[string, string]> = [];
   for (const i of incomes) {
-    if (i.memberId !== selfId && !categoryMeta[i.categoryId]) foreign.set(i.categoryId, i.memberId);
+    if (i.memberId !== selfId && !categoryMeta[familyCategoryKey(i.memberId, i.categoryId)]) foreign.push([i.categoryId, i.memberId]);
   }
-  await resolveForeignCategories(foreign.entries(), 'income', categoryMeta);
+  await resolveForeignCategories(foreign, 'income', categoryMeta);
 
   return { incomes, categoryMeta };
 }

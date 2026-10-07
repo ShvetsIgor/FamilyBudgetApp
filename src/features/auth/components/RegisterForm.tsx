@@ -2,11 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useAppDispatch } from '@/store/store';
-import { setUser } from '@/features/auth/store/authSlice';
 import { registerWithEmail } from '@/features/auth/services/authService';
-import { setCurrency, setLanguage, setTheme } from '@/features/ui/store/uiSlice';
 import { GoogleButton } from './GoogleButton';
 import { useT } from '@/shared/hooks/useT';
 import { cn } from '@/shared/utils/cn';
@@ -19,8 +15,6 @@ export function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const dispatch = useAppDispatch();
-  const router = useRouter();
   const t = useT();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -34,15 +28,7 @@ export function RegisterForm() {
     setError('');
 
     try {
-      const profile = await registerWithEmail(name, email, password);
-      dispatch(setUser(profile));
-      dispatch(setCurrency(profile.currency));
-      dispatch(setLanguage(profile.language));
-      // Same widening as AuthProvider: 'paper' predates the Press migration and
-      // can still sit in an existing profile document, outside the Theme union.
-      const profileTheme = profile.theme as typeof profile.theme | 'paper';
-      dispatch(setTheme(profileTheme === 'press' || profileTheme === 'paper' ? 'press' : 'mist'));
-      router.replace('/home');
+      await registerWithEmail(name, email, password);
     } catch (e: unknown) {
       const code = (e as { code?: string }).code;
       if (code === 'auth/email-already-in-use') {

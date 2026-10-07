@@ -214,6 +214,12 @@ service cloud.firestore {
           ))
         || (signedIn() && isFamilyDetachByOwner());
 
+      // Client entry retry receipts survive deletion so old chat actions cannot recreate money.
+      match /entryOperations/{operationId} {
+        allow read, create: if isOwner(uid);
+        allow update, delete: if false;
+      }
+
       match /learnedKeywords/{keyword} {
         allow read, write: if isOwner(uid);
       }
@@ -263,6 +269,8 @@ service cloud.firestore {
           && resource.data.memberIds.toSet()
                .difference(request.resource.data.memberIds.toSet()).size() == 0
           && request.auth.token.email != null
+          && request.auth.token.email_verified == true
+          && joinInvite().fromUserId in resource.data.memberIds
           && joinInvite().status == 'pending'
           && joinInvite().familyId == familyId
           && joinInvite().expiresAt > request.time;
@@ -291,6 +299,7 @@ service cloud.firestore {
     function isInvitee() {
       return signedIn()
         && request.auth.token.email != null
+        && request.auth.token.email_verified == true
         && request.auth.token.email.lower() == resource.data.toEmail;
     }
 
@@ -313,10 +322,13 @@ service cloud.firestore {
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
             && resource.data.status == 'pending'
             && (request.resource.data.status == 'rejected'
-                || resource.data.expiresAt > request.time))
+                || (request.resource.data.status == 'accepted' && resource.data.expiresAt > request.time)))
         || (signedIn()
             && resource.data.fromUserId == request.auth.uid
             && request.resource.data.fromUserId == request.auth.uid
+            && request.auth.uid in get(/databases/$(database)/documents/families/$(resource.data.familyId)).data.memberIds
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'createdAt', 'expiresAt'])
+            && request.resource.data.status in ['pending', 'rejected']
             && request.resource.data.familyId == resource.data.familyId
             && request.resource.data.toEmail == resource.data.toEmail
             && (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])

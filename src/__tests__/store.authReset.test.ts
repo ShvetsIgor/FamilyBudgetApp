@@ -5,7 +5,7 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { store } from '@/store/store';
-import { setUser } from '@/features/auth/store/authSlice';
+import { beginSession, setUser } from '@/features/auth/store/authSlice';
 import { setCategories } from '@/features/categories/store/categoriesSlice';
 import { setLanguage, setTheme, setDarkMode, setBudgetMonthlyLimit } from '@/features/ui/store/uiSlice';
 import type { Category, UserProfile } from '@/shared/types';
@@ -45,4 +45,11 @@ describe('auth reset', () => {
     expect(ui.theme).toBe('press');
     expect(ui.isDarkMode).toBe(true);
   });
+});
+
+it('clears the previous account while keeping auth unresolved during profile loading', () => {
+  store.dispatch(beginSession());
+  expect(store.getState().auth.initialized).toBe(false);
+  expect(store.getState().auth.user).toBeNull();
+  expect(store.getState().categories.expense).toEqual([]);
 });

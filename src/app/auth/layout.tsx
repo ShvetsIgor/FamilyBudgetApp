@@ -1,6 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { setLanguage } from '@/features/ui/store/uiSlice';
@@ -9,6 +12,10 @@ import type { Language } from '@/shared/types';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
+  const router = useRouter();
+  const user = useAppSelector(s => s.auth.user);
+  // Navigation waits for AuthProvider to load the profile, including first registration.
+  useEffect(() => { if (user) router.replace('/home'); }, [user, router]);
   const language = useAppSelector((s) => s.ui.language);
   const t = useT();
   const features = [
@@ -67,6 +74,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <Image src="/logo-wordmark.svg" alt="Family Budget" width={200} height={56} priority className="h-14 w-auto" style={{ width: 'auto' }} />
           </div>
           {children}
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            <Link href="/privacy" className="underline">{language === 'ru' ? 'Приватность и поддержка' : 'Privacy and support'}</Link>
+          </p>
         </div>
       </div>
     </div>

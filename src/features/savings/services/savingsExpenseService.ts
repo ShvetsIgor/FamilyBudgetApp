@@ -2,7 +2,8 @@ import { doc, runTransaction } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import { addCategory } from '@/features/categories/services/categoriesService';
 import { queueAddExpense } from '@/features/expenses/services/expensesService';
-import { newContributionId } from './savingsService';
+import { readEntryPrivacy } from '@/shared/services/entryPrivacy';
+import { newContributionId, normalizeContributions } from './savingsService';
 import { buildSavingsExpenseComment } from '../utils/savingsExpenseComment';
 import type { Category, SavingsContribution, SavingsGoal, SerializableExpense } from '@/shared/types';
 
@@ -69,6 +70,7 @@ export async function addContributionWithExpense(params: {
     const snap = await tx.get(goalRef);
     if (!snap.exists()) throw new Error('goal-not-found');
     const data = snap.data();
+    const privacy = await readEntryPrivacy(tx, userId, 'expense', [catId], data.isPrivate ? 'secret' : 'regular');
 
     const rawContribs = data.contributions;
     const legacyArray = Array.isArray(rawContribs);
@@ -108,10 +110,10 @@ export async function addContributionWithExpense(params: {
     // would otherwise see its name in the comment and its amounts in the
     // feed, so the expense itself becomes owner-only.
     const expense = queueAddExpense(tx, {
-      userId, amount, currency: goal.currency, categoryId: catId,
+      userId, amount, currency: data.currency, categoryId: catId,
       date, paymentMethod: 'other',
-      comment: buildSavingsExpenseComment(label, goal.name, note),
-      tags: ['savings'], privacy: goal.isPrivate ? 'secret' : 'regular',
+      comment: buildSavingsExpenseComment(label, data.name, note),
+      tags: ['savings'], privacy,
       splits: [], goalId: goal.id, goalOwnerId: goal.userId, contributionId,
     });
 
@@ -126,7 +128,7 @@ export async function addContributionWithExpense(params: {
     const updatedGoal: SavingsGoal = {
       ...goal,
       currentAmount,
-      contributions: [...goal.contributions, appliedContribution],
+      contributions: [...normalizeContributions(data.contributions), appliedContribution],
     };
     return { goal: updatedGoal, expense };
   });

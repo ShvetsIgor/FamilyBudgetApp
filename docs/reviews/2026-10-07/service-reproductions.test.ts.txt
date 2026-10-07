@@ -1,0 +1,53 @@
+import { beforeEach, expect, it, vi } from 'vitest';
+const mock = vi.hoisted(() => ({ batches: [] as any[], seq: 0 }));
+vi.mock('@/shared/lib/firebase', () => ({ getDb: () => ({}) }));
+vi.mock('@/features/recurring/services/recurringExpenseSync', () => ({ restoreRecurringDueFromDeletedExpense: vi.fn().mockResolvedValue(null) }));
+vi.mock('firebase/firestore', async (load) => {
+ const actual = await load<typeof import('firebase/firestore')>();
+ return { ...actual,
+  collection: (_:unknown,...p:string[])=>({path:p.join('/')}),
+  doc: (db:any,...p:string[])=>({path:p.length?p.join('/'):`${db.path}/id${++mock.seq}`,id:`id${mock.seq}`}),
+  query: (...args:unknown[])=>args,
+  getDocs: vi.fn().mockResolvedValue({docs:[]}),
+  increment: (n:number)=>({increment:n}), serverTimestamp: ()=> 'SERVER_TIME',
+  writeBatch: ()=>{const b={set:vi.fn(),update:vi.fn(),delete:vi.fn(),commit:vi.fn().mockResolvedValue(undefined)};mock.batches.push(b);return b;},
+ };
+});
+import { updateExpense, deleteExpense } from '@/features/expenses/services/expensesService';
+import type { SerializableExpense } from '@/shared/types';
+const previous: SerializableExpense={id:'e',userId:'u',amount:100,currency:'ILS',categoryId:'c',date:'2026-09-10T12:00:00Z',paymentMethod:'other',tags:['savings'],privacy:'regular',splits:[],isRecurring:true,recurringId:'r',goalId:'g',goalOwnerId:'u',contributionId:'ct',createdAt:'2026-09-10T12:00:00Z',updatedAt:'2026-09-10T12:00:00Z'};
+beforeEach(()=>{mock.batches.length=0;});
+it('reproduces editing through form input: returned expense loses savings and recurring links',async()=>{
+ const updated=await updateExpense({userId:'u',id:'e',amount:150,currency:'ILS',categoryId:'c',date:new Date(previous.date),paymentMethod:'other',tags:['savings'],privacy:'regular',splits:[],previousExpense:previous});
+ expect(updated.goalId).toBeUndefined();expect(updated.contributionId).toBeUndefined();expect(updated.recurringId).toBeUndefined();expect(updated.isRecurring).toBe(false);
+ expect(mock.batches[0].update.mock.calls[0][1].isRecurring).toBe(false);
+});
+it('reproduces stale concurrent edits: 100 -> 150 and 100 -> 200 both apply increments',async()=>{
+ for(const amount of [150,200])await updateExpense({userId:'u',id:'e',amount,currency:'ILS',categoryId:'c',date:new Date(previous.date),paymentMethod:'other',tags:[],privacy:'regular',splits:[],previousExpense:previous});
+ const deltas=mock.batches.map(b=>b.set.mock.calls[0][1].totalExpenses.increment);
+ expect(100+deltas.reduce((a,b)=>a+b,0)).toBe(250);
+ expect(mock.batches[1].update.mock.calls[0][1].amount).toBe(200);
+});
+it('reproduces repeat delete: two successful delete requests subtract the same expense twice',async()=>{
+ await deleteExpense('u',previous);await deleteExpense('u',previous);
+ expect(mock.batches.map(b=>b.set.mock.calls[0][1].totalExpenses.increment)).toEqual([-100,-100]);
+});
+const incomeMocks = vi.hoisted(() => ({saved: [] as any[], advance:vi.fn()}));
+vi.mock('@/features/income/services/incomeService',()=>({fetchMonthIncome:vi.fn().mockResolvedValue([]),addIncome:vi.fn(async(input:any)=>{incomeMocks.saved.push(input);return {...input,id:String(incomeMocks.saved.length),date:input.date.toISOString()};})}));
+vi.mock('@/features/income/services/recurringIncomeService',async(load)=>({...await load<typeof import('@/features/income/services/recurringIncomeService')>(),fetchRecurringIncome:vi.fn().mockResolvedValue([{id:'r',isActive:true,nextDueDate:'2026-10-01',dayOfMonth:1,amount:100,currency:'ILS',categoryId:'c',name:'Salary'}]),setRecurringIncomeNextDue:incomeMocks.advance}));
+import {loadCurrentMonthIncomes} from '@/features/income/services/incomeStartupService';
+it('reproduces salary duplicate after schedule-write failure and next startup',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-07T12:00:00Z'));incomeMocks.saved.length=0;
+ incomeMocks.advance.mockRejectedValueOnce(new Error('unavailable')).mockResolvedValue(undefined);
+ await loadCurrentMonthIncomes('u');await loadCurrentMonthIncomes('u');
+ expect(incomeMocks.saved).toHaveLength(2);expect(incomeMocks.saved[0].date).toEqual(incomeMocks.saved[1].date);vi.useRealTimers();
+});
+vi.mock('@/features/chat/services/messagesService',()=>({updateMessage:vi.fn().mockRejectedValue(new Error('message write unavailable'))}));
+import {respondToUserMessage} from '@/features/chat/bot/respond';
+it('reproduces chat retry duplicating an expense after message update fails',async()=>{
+ const ctx:any={userId:'u',currency:'ILS',language:'en',categoriesById:new Map([['c',{id:'c',name:'Food',isPrivate:false}]]),foldersById:new Map()};
+ const msg:any={id:'message',userId:'u'};const parsed:any={confirmed:true,categoryId:'c',amount:100,currency:'ILS'};
+ await expect(respondToUserMessage(msg,parsed,ctx)).rejects.toThrow('message write unavailable');
+ await expect(respondToUserMessage(msg,parsed,ctx)).rejects.toThrow('message write unavailable');
+ expect(mock.batches).toHaveLength(2);expect(mock.batches.every(b=>b.commit.mock.calls.length===1)).toBe(true);
+});

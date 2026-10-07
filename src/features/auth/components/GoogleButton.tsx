@@ -1,9 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAppDispatch } from '@/store/store';
-import { setUser } from '@/features/auth/store/authSlice';
 import { signInWithGoogle } from '@/features/auth/services/authService';
 import { useT } from '@/shared/hooks/useT';
 import { cn } from '@/shared/utils/cn';
@@ -17,16 +14,12 @@ export function GoogleButton({ label }: Props) {
   const [error, setError] = useState('');
   const t = useT();
   const buttonLabel = label ?? t('auth.withGoogle');
-  const dispatch = useAppDispatch();
-  const router = useRouter();
 
   async function handleClick() {
     setLoading(true);
     setError('');
     try {
-      const profile = await signInWithGoogle();
-      dispatch(setUser(profile));
-      router.replace('/home');
+      await signInWithGoogle();
     } catch (e: unknown) {
       if (e instanceof Error && e.message.includes('popup-closed')) return;
       setError(t('auth.googleFailed'));

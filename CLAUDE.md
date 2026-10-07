@@ -25,7 +25,7 @@ Core principle:
 - **Styling:** Tailwind CSS v4 + custom tokens (there is no `components/ui/` — the shadcn scaffold was removed long ago; only `@radix-ui/react-dialog` survives, in `AddDrawer`)
 - **Lint:** ESLint 10, flat config (`eslint.config.mjs`)
 - **State:** Redux Toolkit
-- **Backend:** Firebase Auth + Firestore + Storage
+- **Backend:** Firebase Auth + Firestore (Spark); Next.js server routes use Firebase Admin and Groq for chat/Siri. Firebase Storage is not used.
 - **Charts:** Recharts
 - **PWA:** Serwist (`@serwist/next`) — worker source is `src/app/sw.ts`, compiled to `public/sw.js`; webpack-only, hence `next build --webpack`
 - **Date utils:** `date-fns`
@@ -331,6 +331,8 @@ Runtime contract update:
 - Family category names are resolved one `getDoc` at a time on purpose: `firestore.rules` allows `list` on `categories/{uid}` to the owner only, so members can `get` a sibling's non-private category but never enumerate them. The results are cached for the session.
 
 ## Change Log
+
+- **2026-10-07** — Release hardening: verified-email/current-inviter family joins; generation-scoped auth hydration and Redux dispatch; transactional expense/income edits, deletes and linked Undo; atomic/idempotent recurring occurrences and chat retries; current category/goal privacy; owner-qualified family category metadata; direct expense URLs; versioned aggregate rebuilds; contribution maps including empty goals. Public EN/RU `/privacy` and centralized support contact. Upgraded Next/Firebase/Serwist and pinned patched gRPC. New emulator concurrency and auth race regressions. See `docs/RELEASE-2026-10-07.md` for validation and remaining operational limits.
 
 - **2026-10-06** — Fixed supermarket shorthand being rejected by Groq with invented missing categories. Chat recognizes exact known supermarket + numeric amount before AI, returns an unconfirmed category-less draft with the owner's currency/local today, and offers the user's previous category after one confirmed save or active Groceries without history. Exact store aliases (including Rami Levy) are canonicalized; old alias histories are combined at read time without modifying account memory. Split habits and explicit AI categories remain intact; richer input still uses strict AI validation, and Siri auto-save validation is unchanged. Dictionary drafts do not consume AI quota.
 

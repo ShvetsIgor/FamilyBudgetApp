@@ -7,7 +7,9 @@ import { PARSER_CURRENCIES } from '@/features/ai/expenseParser/schema';
 import { exactMerchant, type ChatExpenseDraft } from '@/features/chat/parser/merchantDraft';
 
 export type ChatParseOutcome = { kind: 'parsed'; parsed: ParseResult }
-  | { kind: 'clarification'; message: string };
+  | { kind: 'clarification'; message: string }
+  /** The account has no active expense category: the chat offers starter setup. */
+  | { kind: 'needs_categories' };
 
 export class ChatSessionChangedError extends Error {}
 
@@ -24,9 +26,13 @@ export function toChatParseResult(expense: ChatExpenseDraft): ParseResult {
   };
 }
 
-/** No expense writes, automatic retries, or amount/currency guesses on failure. */
+/**
+ * No expense writes, automatic retries, or amount/currency guesses on failure.
+ * `referenceDate` (local YYYY-MM-DD) is the day the message was originally
+ * written, for messages finished later; the server only honours a recent one.
+ */
 export async function parseChatMessage(text: string, context: ParserContext & {
-  userId: string; language: Language;
+  userId: string; language: Language; referenceDate?: string;
 }): Promise<ChatParseOutcome> {
   // Income still has its own explicit + workflow; slash commands are handled by the page.
   if (text.trimStart().startsWith('+')) return { kind: 'parsed', parsed: parseMessage(text, context) };
@@ -47,7 +53,10 @@ export async function parseChatMessage(text: string, context: ParserContext & {
     assertSession();
     const response = await fetch('/api/chat/parse-expense', {
       method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ text, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }),
+      body: JSON.stringify({
+        text, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        ...(context.referenceDate ? { referenceDate: context.referenceDate } : {}),
+      }),
       signal: controller.signal, cache: 'no-store',
     });
     const body = await response.json();
@@ -57,13 +66,20 @@ export async function parseChatMessage(text: string, context: ParserContext & {
       && (body.expense.categoryId || (body.expense.categoryId === null && body.expense.merchantOnly === true))) {
       return { kind: 'parsed', parsed: toChatParseResult(body.expense) };
     }
+    if (response.status === 422 && body.reason === 'no_categories') return { kind: 'needs_categories' };
     if (response.status === 422 && typeof body.message === 'string') {
       return { kind: 'clarification', message: body.message };
     }
     const message = response.status === 401
       ? ru ? 'Войди в аккаунт заново и повтори сообщение. Расход не сохранён.' : 'Sign in again and resend the message. Expense not saved.'
       : response.status === 429
-        ? ru ? 'Лимит ИИ временно исчерпан. Расход не сохранён. Попробуй позже или добавь вручную через «+».' : 'AI request limit reached. Expense not saved. Try later or add it manually using “+”.'
+        // 'ai_capacity' is the service-wide ceiling, 'request_rate_limited' the
+        // per-owner message pace (no AI involved); only 'rate_limited' is the AI quota
+        ? body.error === 'ai_capacity'
+          ? ru ? 'ИИ сейчас перегружен у всех. Расход не сохранён. Попробуй позже или добавь вручную через «+».' : 'The AI is busy for everyone right now. Expense not saved. Try later or add it manually using “+”.'
+          : body.error === 'request_rate_limited'
+            ? ru ? 'Слишком много сообщений подряд. Расход не сохранён. Подожди немного или добавь вручную через «+».' : 'Too many messages in a row. Expense not saved. Wait a moment or add it manually using “+”.'
+            : ru ? 'Лимит ИИ временно исчерпан. Расход не сохранён. Попробуй позже или добавь вручную через «+».' : 'AI request limit reached. Expense not saved. Try later or add it manually using “+”.'
         : response.status === 400 || response.status === 413
           ? ru ? 'Опиши один расход сообщением до 2000 символов.' : 'Describe one expense in a message of up to 2000 characters.'
           : body.error === 'profile_required'

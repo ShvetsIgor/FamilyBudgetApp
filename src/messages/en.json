@@ -795,7 +795,18 @@
     },
     "emptyTitle": "Write your first expense",
     "emptyHint": "For example: «coffee 30» or «Shufersal 250»",
-    "emptyExample": "coffee 30"
+    "emptyExample": "coffee 30",
+    "starter": {
+      "title": "First, categories",
+      "botText": "Let's pick your categories first, then I'll record the expense.",
+      "intro": "Pick what you usually spend on — I'll add these categories and record",
+      "introExisting": "Categories are ready. Record",
+      "add": "Add and record",
+      "continue": "Record",
+      "custom": "Create my own category",
+      "resolved": "Categories added: {n}",
+      "resolvedExisting": "Continued with your categories"
+    }
   },
   "onboarding": {
     "hi": "Hi{name}!",

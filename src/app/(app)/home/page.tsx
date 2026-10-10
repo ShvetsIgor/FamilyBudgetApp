@@ -58,10 +58,15 @@ import { splitOwnCurrency } from '@/shared/utils/currencyTotals';
 import { monthlyEquivalent } from '@/features/recurring/utils/schedule';
 import { groupByCurrency, formatCurrencyTotals } from '@/features/family/utils/familyCurrency';
 
-import type { SerializableChatMessage } from '@/shared/types/message';
+import type { SerializableChatMessage, StarterCardData } from '@/shared/types/message';
 import type { ParseResult } from '@/shared/types/message';
-import { addCategoryWithId } from '@/features/categories/services/categoriesService';
+import { addCategoryWithId, fetchCategories } from '@/features/categories/services/categoriesService';
+import { fetchFolders } from '@/features/categories/services/categoryFoldersService';
 import { addCategory as addCategoryAction } from '@/features/categories/store/categoriesSlice';
+import { activateStarterCategories, needsStarterCategories } from '@/features/categories/services/starterCategories';
+import { StarterCategoriesCard } from '@/features/chat/components/BotCard/StarterCategoriesCard';
+import { readStarterCard } from '@/features/chat/components/BotCard/starterCardData';
+import { createStarterFlow } from '@/features/chat/services/starterFlow';
 import { recordExpense } from '@/features/expenses/store/suggestionMemorySlice';
 
 function msgTime(iso: string): string {
@@ -221,6 +226,7 @@ export default function HomePage() {
     () => expenseCats.filter((category) => !category.archived),
     [expenseCats],
   );
+  const needsStarter = useMemo(() => needsStarterCategories(expenseCats), [expenseCats]);
   const allIncomeCats = useAppSelector((s) => s.categories.income);
   const expenseFolders = useAppSelector((s) => s.categories.folders.expense);
   const incomeFolders = useAppSelector((s) => s.categories.folders.income);
@@ -297,6 +303,8 @@ export default function HomePage() {
   const [clarifyCatEditor, setClarifyCatEditor] = useState<{ type: 'expense' | 'income'; folderId: string | null } | null>(null);
   const [clarifyFolderEditor, setClarifyFolderEditor] = useState<'expense' | 'income' | null>(null);
   const [clarifyCreating, setClarifyCreating] = useState(false);
+  // «Create my own category» from the starter card reuses the editor above
+  const [starterEditor, setStarterEditor] = useState<{ botMsgId: string; card: StarterCardData } | null>(null);
 
   const buildEnrichedCtx = useCallback(() => {
     const ctx = collectBotContext(appStore.getState());
@@ -312,6 +320,68 @@ export default function HomePage() {
   }, [appStore, ownCurrencyExpenses, monthBudget, budgetLimits, dailyBudget, savingsGoals]);
 
   const failureText = useMemo(() => saveErrorPhrase(language), [language]);
+
+  // Parsed message → saved card, clarify chips or Split. The parse itself and
+  // the first-expense setup around it live in `createStarterFlow`.
+  const replyToParsed = useCallback(async (uid: string, userMsg: SerializableChatMessage, parsed: ParseResult) => {
+    await updateMessage(uid, userMsg.id, { parsed });
+    // Groq can take several seconds. Re-read categories and check the session
+    // instead of replying against a profile captured before the request.
+    const currentCtx = buildEnrichedCtx();
+    if (!currentCtx || currentCtx.userId !== uid) return;
+    const reply = await respondToUserMessage(userMsg, parsed, currentCtx);
+    for (const botMsg of reply.messages) {
+      if (appStore.getState().auth.user?.id !== uid) return;
+      await addMessage(botMsg);
+    }
+    if (reply.income) dispatch(prependIncome(reply.income));
+
+    // Explicit Split requests can still be forwarded by specialized bot flows.
+    // Normal merchant + amount input now stays in chat for user classification.
+    if (reply.openSplit) {
+      const params = new URLSearchParams({
+        fromChat: 'true',
+        amount: String(reply.openSplit.amount),
+        userMsgId: reply.openSplit.userMsgId,
+      });
+      if (reply.openSplit.storeId) params.set('storeId', reply.openSplit.storeId);
+      if (reply.openSplit.storeName) params.set('storeName', reply.openSplit.storeName);
+      if (reply.openSplit.storeGroup) params.set('storeGroup', reply.openSplit.storeGroup);
+      if (reply.openSplit.date) params.set('date', reply.openSplit.date);
+      router.push(`/expenses/new?${params.toString()}`);
+    }
+  }, [appStore, buildEnrichedCtx, dispatch, router]);
+
+  // The starter card shares the one-chat-operation-at-a-time guard with sends
+  const sendLock = useMemo(() => ({
+    acquire: () => {
+      if (sendingRef.current) return false;
+      sendingRef.current = true;
+      return true;
+    },
+    release: () => { sendingRef.current = false; },
+  }), []);
+
+  // Built per call, not during render: the flow holds the send lock (a ref)
+  const starterBotText = t('chat.starter.botText');
+  const starterFlow = useCallback(() => createStarterFlow({
+    currentUserId: () => appStore.getState().auth.user?.id,
+    lock: sendLock,
+    setTyping: (on) => { dispatch(setTyping(on)); },
+    addMessage,
+    updateMessage,
+    parse: (text, uid, referenceDate) => parseChatMessage(text, { learned, userId: uid, language, referenceDate }),
+    reply: replyToParsed,
+    expenseCategories: () => appStore.getState().categories.expense,
+    messages: () => appStore.getState().chat.messages,
+    fetchCategories,
+    fetchFolders,
+    activateStarterCategories,
+    dispatch,
+    language,
+    botText: starterBotText,
+    failureText,
+  }), [appStore, sendLock, dispatch, learned, language, replyToParsed, starterBotText, failureText]);
 
   const handleSend = useCallback(async (text: string) => {
     if (!userId || !categoriesReady || sendingRef.current) return;
@@ -331,48 +401,7 @@ export default function HomePage() {
         return;
       }
 
-      const userMsg = await addMessage({
-        userId,
-        senderId: userId,
-        kind: 'user',
-        text,
-        status: 'pending',
-      });
-      const outcome = await parseChatMessage(text, { learned, userId, language });
-      if (appStore.getState().auth.user?.id !== userId) return;
-      if (outcome.kind === 'clarification') {
-        await updateMessage(userId, userMsg.id, { status: 'clarifying' });
-        if (appStore.getState().auth.user?.id !== userId) return;
-        await addMessage({ userId, senderId: 'bot', kind: 'bot', status: 'clarifying', text: outcome.message });
-        return;
-      }
-      const { parsed } = outcome;
-      await updateMessage(userId, userMsg.id, { parsed });
-      // Groq can take several seconds. Re-read categories and check the session
-      // instead of replying against a profile captured before the request.
-      const currentCtx = buildEnrichedCtx();
-      if (!currentCtx || currentCtx.userId !== userId) return;
-      const reply = await respondToUserMessage(userMsg, parsed, currentCtx);
-      for (const botMsg of reply.messages) {
-        if (appStore.getState().auth.user?.id !== userId) return;
-        await addMessage(botMsg);
-      }
-      if (reply.income) dispatch(prependIncome(reply.income));
-
-      // Explicit Split requests can still be forwarded by specialized bot flows.
-      // Normal merchant + amount input now stays in chat for user classification.
-      if (reply.openSplit) {
-        const params = new URLSearchParams({
-          fromChat: 'true',
-          amount: String(reply.openSplit.amount),
-          userMsgId: reply.openSplit.userMsgId,
-        });
-        if (reply.openSplit.storeId) params.set('storeId', reply.openSplit.storeId);
-        if (reply.openSplit.storeName) params.set('storeName', reply.openSplit.storeName);
-        if (reply.openSplit.storeGroup) params.set('storeGroup', reply.openSplit.storeGroup);
-        if (reply.openSplit.date) params.set('date', reply.openSplit.date);
-        router.push(`/expenses/new?${params.toString()}`);
-      }
+      await starterFlow().sendExpense(userId, text);
     } catch (err) {
       if (err instanceof ChatSessionChangedError || appStore.getState().auth.user?.id !== userId) return;
       // A rejected write used to fall straight through `finally`: the typing
@@ -386,7 +415,7 @@ export default function HomePage() {
       if (appStore.getState().auth.user?.id === userId) dispatch(setTyping(false));
       sendingRef.current = false;
     }
-  }, [userId, categoriesReady, buildEnrichedCtx, learned, dispatch, router, failureText, language, appStore]);
+  }, [userId, categoriesReady, buildEnrichedCtx, dispatch, failureText, appStore, starterFlow]);
 
   const handleIncomeClarifyChip = useCallback(async (
     amount: number,
@@ -679,6 +708,26 @@ export default function HomePage() {
               );
             }
 
+            const starterCard = msg.card?.kind === 'starter' ? readStarterCard(msg.card.data) : null;
+            if (starterCard) {
+              return (
+                <BotCardBubble key={msg.id} tail={tail}>
+                  <StarterCategoriesCard
+                    pendingText={starterCard.pendingText}
+                    resolvedCount={starterCard.resolved?.count}
+                    hasCategories={!needsStarter && !starterCard.fromServer}
+                    busy={typing}
+                    onActivate={(ids) => starterFlow().activate(msg.id, starterCard, ids)}
+                    onContinue={() => starterFlow().continueWithExisting(msg.id, starterCard)}
+                    onCustom={() => {
+                      setStarterEditor({ botMsgId: msg.id, card: starterCard });
+                      setClarifyCatEditor({ type: 'expense', folderId: null });
+                    }}
+                  />
+                </BotCardBubble>
+              );
+            }
+
             if (msg.card?.kind === 'clarify') {
               const d = msg.card.data as Record<string, unknown>;
               const cardIsIncome = !!(d.isIncome as boolean | undefined);
@@ -798,7 +847,7 @@ export default function HomePage() {
     {/* Create a category without leaving the clarify flow, then use it right away */}
     <CategoryEditorSheet
       open={!!clarifyCatEditor}
-      onClose={() => setClarifyCatEditor(null)}
+      onClose={() => { setClarifyCatEditor(null); setStarterEditor(null); }}
       type={clarifyCatEditor?.type ?? 'expense'}
       folderId={clarifyCatEditor?.folderId ?? undefined}
       initial={{ folderId: clarifyCatEditor?.folderId ?? undefined }}
@@ -832,6 +881,10 @@ export default function HomePage() {
               incomeCategorySheet.parsedDate, incomeCategorySheet.parsedDateLabel, incomeCategorySheet.parsedNote,
             );
             setIncomeCategorySheet(null);
+          } else if (starterEditor) {
+            setStarterEditor(null);
+            // Not awaited: the sheet is already closing and the parse can take seconds
+            void starterFlow().continueAfterCustom(starterEditor.botMsgId, starterEditor.card);
           } else {
             if (!expenseCategorySheet) return;
             await handleExpenseClarifyChip(expenseCategorySheet, chip);

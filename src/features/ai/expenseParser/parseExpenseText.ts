@@ -28,7 +28,25 @@ const DATE_CLARIFICATION: Record<Language, string> = {
 };
 
 /** Server-only — thrown for transport/config failures, never for "the model said something odd" (see sanitize). */
-export class ExpenseParserError extends Error {}
+export class ExpenseParserError extends Error {
+  readonly status?: number;
+  constructor(message: string, options?: ErrorOptions & { status?: number }) {
+    super(message, options);
+    this.status = options?.status;
+  }
+}
+
+/** Groq answered 429: callers report capacity to the user, not an outage. */
+export class ExpenseParserCapacityError extends ExpenseParserError {
+  constructor(readonly retryAfter: number) { super('Groq rate limit reached', { status: 429 }); }
+}
+
+/** Seconds or an HTTP date, clamped to 1..3600; anything unreadable means 60. */
+export function retryAfterSeconds(header: string | null, now = Date.now()): number {
+  const value = header?.trim() ?? '';
+  const seconds = /^\d+(\.\d+)?$/.test(value) ? Number(value) : value ? (Date.parse(value) - now) / 1000 : NaN;
+  return Number.isFinite(seconds) ? Math.min(3600, Math.max(1, Math.ceil(seconds))) : 60;
+}
 
 export interface ParseExpenseCategoryOption {
   id: string;
@@ -82,8 +100,11 @@ export async function parseExpenseText(input: ParseExpenseTextInput): Promise<Pa
         response_format: { type: 'json_schema', json_schema: jsonSchema },
       }),
     });
+    if (response.status === 429) {
+      throw new ExpenseParserCapacityError(retryAfterSeconds(response.headers.get('retry-after')));
+    }
     if (!response.ok) {
-      throw new ExpenseParserError(`Groq request failed: HTTP ${response.status}`);
+      throw new ExpenseParserError(`Groq request failed: HTTP ${response.status}`, { status: response.status });
     }
 
     const payload: unknown = await response.json();

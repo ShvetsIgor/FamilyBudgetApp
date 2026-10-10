@@ -85,6 +85,21 @@ beforeAll(async () => {
 afterAll(async () => { await env?.cleanup(); });
 beforeEach(seed);
 
+describe('server-only usage counters', () => {
+  it.each([
+    'users/alice/shortcutUsage/rateLimit', 'users/alice/shortcutUsage/chatRequests', 'aiUsage/global',
+  ])('a signed-in owner can neither read nor write %s', async (path) => {
+    await env.withSecurityRulesDisabled(async (c) => {
+      await setDoc(doc(c.firestore(), path), { minute: { count: 1, resetAt: 0 }, day: { count: 1, resetAt: 0 } });
+    });
+    const ref = doc(ctx('alice'), path);
+    await assertFails(getDoc(ref));
+    await assertFails(setDoc(ref, { minute: { count: 0, resetAt: 0 }, day: { count: 0, resetAt: 0 } }));
+    await assertFails(updateDoc(ref, { 'minute.count': 0 }));
+    await assertFails(deleteDoc(ref));
+  });
+});
+
 describe('personal shortcut tokens', () => {
   const tokenData = () => ({
     tokenHash: 'a'.repeat(64), label: 'Siri iPhone', createdAt: serverTimestamp(), lastUsedAt: null,

@@ -77,12 +77,16 @@ Read `message` for speech. Treat only `ok: true` as a confirmed save.
 - 401: missing, invalid or revoked token.
 - 409: profile/category setup issue, category changed, or request ID reused for different input.
 - 422: clarification required; no expense saved. Correct the phrase and use a new ID.
-- `category_required` (409 for an empty active list; otherwise 422): `saved: false`,
+- `category_required` (409 for an empty active list, or one holding only the
+  app-managed Savings bucket; otherwise 422): `saved: false`,
   `categoriesPath: "/categories"` and optionally `suggestedCategoryName`. This name is
   a display-only model suggestion, not an existing category or permission to create
   one. Add/activate a category in the app or explicitly name an existing one, then
   dictate again. Archived and unactivated library categories are not parser choices.
-- 429: quota exhausted; wait the `Retry-After` seconds before retrying.
+- 429: wait the `Retry-After` seconds (also in `retryAfter`) before retrying.
+  `error: "rate_limited"` is this account's quota; `error: "ai_capacity"` means
+  recognition is busy service-wide (the global ceiling, or Groq's own limit and
+  the cooldown it set) and is not the account's fault.
 - 503: a dependency failed. A save may already have committed if its response
   was lost; retry with the SAME request ID, never a new one.
 

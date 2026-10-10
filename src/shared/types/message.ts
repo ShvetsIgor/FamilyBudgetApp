@@ -3,11 +3,30 @@ import type { Currency } from './index';
 
 export type MessageStatus = 'pending' | 'saved' | 'clarifying' | 'undone' | 'failed';
 
-export type BotCardKind = 'morning' | 'saved' | 'clarify' | 'weekly' | 'envelopes' | 'goal' | 'undone' | 'alert' | 'future';
+export type BotCardKind = 'morning' | 'saved' | 'clarify' | 'weekly' | 'envelopes' | 'goal' | 'undone' | 'alert' | 'future' | 'starter';
 
 export interface BotCard {
   kind: BotCardKind;
   data: unknown;
+}
+
+/**
+ * First-expense setup: the user wrote an expense before having any category.
+ * `pendingText` is the original message, finished after setup without
+ * retyping; `resolved` is persisted so the card never offers setup twice.
+ */
+export interface StarterCardData {
+  pendingText: string;
+  userMsgId: string;
+  /** The server found no category although this device had some (archived elsewhere). */
+  fromServer?: boolean;
+  /**
+   * Local YYYY-MM-DD the user wrote the message. Sent as the parse reference
+   * date when the message is finished later, so «yesterday» keeps its meaning.
+   * Absent on cards created before the field existed.
+   */
+  writtenOn?: string;
+  resolved?: { count: number };
 }
 
 export type ParseConfidence = 'high' | 'medium' | 'low' | 'failed';

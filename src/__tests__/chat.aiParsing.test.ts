@@ -68,3 +68,40 @@ it('bounds slow provider responses and does not retry', async () => {
   await vi.advanceTimersByTimeAsync(25_000);
   expect(await pending).toMatchObject({ kind: 'clarification' }); expect(fetchMock).toHaveBeenCalledTimes(1);
 });
+it('maps the zero-categories refusal to starter setup instead of a long instruction', async () => {
+  fetchMock.mockResolvedValue(Response.json({ error: 'category_required', reason: 'no_categories', message: 'Открой «Категории»…' }, { status: 422 }));
+  expect(await parseChatMessage('кофе 20', context)).toEqual({ kind: 'needs_categories' });
+});
+it('keeps an ordinary category_required refusal as a clarification', async () => {
+  fetchMock.mockResolvedValue(Response.json({ error: 'category_required', message: 'Нет категории «Кофе»' }, { status: 422 }));
+  expect(await parseChatMessage('кофе 20', context)).toEqual({ kind: 'clarification', message: 'Нет категории «Кофе»' });
+});
+it('tells the service-wide AI ceiling apart from the personal limit', async () => {
+  fetchMock.mockResolvedValue(Response.json({ error: 'ai_capacity', retryAfter: 30 }, { status: 429 }));
+  const capacity = await parseChatMessage('кофе 20', context);
+  expect(capacity).toMatchObject({ kind: 'clarification', message: expect.stringContaining('перегружен у всех') });
+  expect(capacity).toMatchObject({ message: expect.stringContaining('не сохранён') });
+  fetchMock.mockResolvedValue(Response.json({ error: 'rate_limited' }, { status: 429 }));
+  expect(await parseChatMessage('кофе 20', context)).toMatchObject({ message: expect.stringContaining('Лимит ИИ') });
+  fetchMock.mockResolvedValue(Response.json({ error: 'ai_capacity', retryAfter: 30 }, { status: 429 }));
+  expect(await parseChatMessage('coffee 20', { ...context, language: 'en' }))
+    .toMatchObject({ message: expect.stringContaining('busy for everyone') });
+});
+it('words the per-owner message pace neutrally, keeping «AI limit» for the AI quota only', async () => {
+  fetchMock.mockImplementation(async () => Response.json({ ok: false, error: 'request_rate_limited', retryAfter: 20 }, { status: 429 }));
+  const ru = await parseChatMessage('кофе 20', context);
+  expect(ru).toEqual({ kind: 'clarification',
+    message: 'Слишком много сообщений подряд. Расход не сохранён. Подожди немного или добавь вручную через «+».' });
+  expect(await parseChatMessage('coffee 20', { ...context, language: 'en' })).toEqual({ kind: 'clarification',
+    message: 'Too many messages in a row. Expense not saved. Wait a moment or add it manually using “+”.' });
+  fetchMock.mockResolvedValue(Response.json({ ok: false, error: 'rate_limited' }, { status: 429 }));
+  expect(await parseChatMessage('coffee 20', { ...context, language: 'en' }))
+    .toMatchObject({ message: expect.stringContaining('AI request limit') });
+});
+it('sends the original writing day as referenceDate only when one is given', async () => {
+  await parseChatMessage('вчера кофе 20', { ...context, referenceDate: '2026-10-08' });
+  const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+  expect(body).toMatchObject({ text: 'вчера кофе 20', referenceDate: '2026-10-08' });
+  await parseChatMessage('кофе 20', { ...context, referenceDate: undefined });
+  expect(Object.keys(JSON.parse(fetchMock.mock.calls[1][1].body)).sort()).toEqual(['text', 'timeZone']);
+});

@@ -1,20 +1,31 @@
-import { consumeSiriQuota } from '@/features/ai/siriRateLimit';
+import { consumeAiQuota, recordAiCooldown } from '@/features/ai/siriRateLimit';
+import { isAppManagedSavingsCategory } from '@/features/categories/policy/categoryPolicy';
 import { findSiriReceipt, siriRequestFingerprint, SiriRequestConflictError } from '@/features/ai/siriIdempotency';
 import { addSiriExpense, SiriExpenseValidationError } from '@/features/expenses/services/siriExpensesService';
 import { resolveShortcutAuthorization } from '@/features/ai/siriAuth';
-import { parseExpenseText } from '@/features/ai/expenseParser/parseExpenseText';
+import { ExpenseParserCapacityError, parseExpenseText } from '@/features/ai/expenseParser/parseExpenseText';
 import { missingCategoryMessage } from '@/features/ai/expenseParser/categoryClarification';
 import { validateParsedExpense } from '@/features/ai/validateParsedExpense';
 import { readSiriRequest, SiriRequestError } from '@/features/ai/siriRequest';
 import { loadSiriContext, SiriProfileError, type SiriContext } from '@/features/ai/siriContext';
+import { reportProviderCapacity, reportServerFailure } from '@/shared/lib/serverMonitoring';
 
 export const runtime = 'nodejs';
+const ROUTE = 'siri_expense';
+
+function limited(error: 'rate_limited' | 'ai_capacity', retryAfter: number, message: string) {
+  return Response.json(
+    { ok: false, error, retryAfter, message },
+    { status: 429, headers: { 'Cache-Control': 'no-store', 'Retry-After': String(retryAfter) } },
+  );
+}
 
 export async function POST(request: Request): Promise<Response> {
   let uid: string | null;
   try {
     uid = await resolveShortcutAuthorization(request.headers.get('authorization'));
-  } catch {
+  } catch (error) {
+    reportServerFailure({ route: ROUTE, stage: 'auth', error });
     // Never expose SDK diagnostics, credentials or the submitted bearer value.
     return Response.json(
       { ok: false, error: 'auth_unavailable', message: 'Authorization is temporarily unavailable. Try again later.' },
@@ -51,6 +62,7 @@ export async function POST(request: Request): Promise<Response> {
       );
     } catch (error) {
       const conflict = error instanceof SiriRequestConflictError;
+      if (!conflict) reportServerFailure({ route: ROUTE, stage: 'request_check', error });
       return Response.json(
         { ok: false, error: conflict ? 'request_conflict' : 'request_check_unavailable',
           message: conflict ? 'Use a new requestId for a different expense.' : 'Could not check the previous request. Retry with the same requestId.' },
@@ -60,13 +72,13 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   try {
-    const quota = await consumeSiriQuota(uid);
-    if (!quota.allowed) return Response.json(
-      { ok: false, error: 'rate_limited', retryAfter: quota.retryAfter,
-        message: `Too many Siri requests. Try again in ${quota.retryAfter} seconds.` },
-      { status: 429, headers: { 'Cache-Control': 'no-store', 'Retry-After': String(quota.retryAfter) } },
-    );
-  } catch {
+    const quota = await consumeAiQuota(uid);
+    if (!quota.allowed) return limited(quota.reason === 'global' ? 'ai_capacity' : 'rate_limited', quota.retryAfter,
+      quota.reason === 'global'
+        ? `Expense recognition is busy. Try again in ${quota.retryAfter} seconds.`
+        : `Too many Siri requests. Try again in ${quota.retryAfter} seconds.`);
+  } catch (error) {
+    reportServerFailure({ route: ROUTE, stage: 'rate_limit', error });
     return Response.json(
       { ok: false, error: 'rate_limit_unavailable', message: 'Could not check the request limit. Try again later.' },
       { status: 503, headers: { 'Cache-Control': 'no-store' } },
@@ -76,7 +88,8 @@ export async function POST(request: Request): Promise<Response> {
   let context: SiriContext;
   try {
     context = await loadSiriContext(uid);
-    if (context.categories.length === 0) {
+    // The app-managed Savings bucket alone is not a category to file spending under.
+    if (!context.categories.some((category) => !isAppManagedSavingsCategory(category))) {
       return Response.json(
         { ok: false, saved: false, error: 'category_required', needsClarification: true,
           message: missingCategoryMessage(context.language), categoriesPath: '/categories' },
@@ -85,6 +98,7 @@ export async function POST(request: Request): Promise<Response> {
     }
   } catch (error) {
     const invalidProfile = error instanceof SiriProfileError;
+    if (!invalidProfile) reportServerFailure({ route: ROUTE, stage: 'context', error });
     return Response.json(
       { ok: false, error: invalidProfile ? 'profile_required' : 'context_unavailable',
         message: invalidProfile ? 'Set a supported currency and language in your account.' : 'Account data is temporarily unavailable. Try again later.' },
@@ -99,7 +113,15 @@ export async function POST(request: Request): Promise<Response> {
       categories: context.categories.map(({ id, name }) => ({ id, name })),
       defaultCurrency: context.currency, language: context.language,
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof ExpenseParserCapacityError) {
+      reportProviderCapacity(ROUTE);
+      await recordAiCooldown(error.retryAfter);
+      return limited('ai_capacity', error.retryAfter, context.language === 'ru'
+        ? `Распознавание сейчас перегружено. Попробуйте через ${error.retryAfter} с.`
+        : `Expense recognition is busy. Try again in ${error.retryAfter} seconds.`);
+    }
+    reportServerFailure({ route: ROUTE, stage: 'parser', error });
     return Response.json(
       { ok: false, error: 'parser_unavailable', message: context.language === 'ru'
         ? 'Распознавание временно недоступно. Попробуйте позже.' : 'Expense recognition is temporarily unavailable. Try again later.' },
@@ -142,6 +164,7 @@ export async function POST(request: Request): Promise<Response> {
       { status: 409, headers: { 'Cache-Control': 'no-store' } },
     );
     const invalid = error instanceof SiriExpenseValidationError;
+    if (!invalid) reportServerFailure({ route: ROUTE, stage: 'save', error });
     return Response.json(
       { ok: false, error: invalid ? 'category_changed' : 'save_unavailable',
         message: context.language === 'ru'

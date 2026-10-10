@@ -19,3 +19,12 @@ import type { Category } from '@/shared/types';
 export function isActiveCategory(c: Category): boolean {
   return !c.archived;
 }
+
+/**
+ * The savings flow's own bucket, not a category the user chose. It carries the
+ * stable id 'savings' when seeded, but `savingsExpenseService` historically
+ * created it under a random id and finds it by name — both shapes count.
+ */
+export function isAppManagedSavingsCategory(c: Pick<Category, 'id' | 'name' | 'type'>): boolean {
+  return c.id === 'savings' || (c.type === 'expense' && c.name === 'Savings');
+}

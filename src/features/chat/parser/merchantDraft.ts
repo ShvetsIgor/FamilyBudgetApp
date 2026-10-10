@@ -20,7 +20,7 @@ export function exactMerchant(name: string) {
 }
 
 /** No fallback for free text: extra words, currencies, dates and signs go to AI. */
-export function parseMerchantDraft(text: string, currency: ParserCurrency, date: string): ChatExpenseDraft | null {
+function matchMerchantDraft(text: string) {
   const input = text.trim();
   const trailing = /^(.+?)\s+(\d+(?:[.,]\d{1,2})?)$/.exec(input);
   const leading = /^(\d+(?:[.,]\d{1,2})?)\s+(.+)$/.exec(input);
@@ -30,5 +30,16 @@ export function parseMerchantDraft(text: string, currency: ParserCurrency, date:
   const store = exactMerchant(name);
   const amount = Number(rawAmount.replace(',', '.'));
   if (store?.storeGroup !== 'supermarket' || !Number.isFinite(amount) || amount <= 0) return null;
-  return { amount, currency, date, merchant: store.name, description: null, categoryId: null, merchantOnly: true };
+  return { store, amount };
+}
+
+/** Text-only answer to «would parseMerchantDraft draft this?», for gating before profile reads. */
+export function isMerchantDraftText(text: string): boolean {
+  return matchMerchantDraft(text) !== null;
+}
+
+export function parseMerchantDraft(text: string, currency: ParserCurrency, date: string): ChatExpenseDraft | null {
+  const match = matchMerchantDraft(text);
+  if (!match) return null;
+  return { amount: match.amount, currency, date, merchant: match.store.name, description: null, categoryId: null, merchantOnly: true };
 }

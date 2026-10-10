@@ -65,7 +65,7 @@ export function monthlyEquivalent(amount: number, frequency: RecurringFrequency)
  *
  * Editing a template used to recompute `nextDueDate` from `startDate` every
  * time, which walks forward to the first occurrence that is not in the past —
- * i.e. right back onto the payment `markAsPaid` had just advanced past. Fixing
+ * i.e. right back onto the payment `payRecurringOccurrence` had just advanced past. Fixing
  * a typo in a name therefore re-armed «Оплачено» for a payment already booked,
  * and tapping it wrote the expense a second time.
  *

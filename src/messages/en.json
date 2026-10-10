@@ -323,6 +323,7 @@
     "saveError": "Save failed. Please try again.",
     "selectToEdit": "Click an item to edit or add a new one",
     "markPaid": "Mark paid",
+    "payNeedsCategory": "This payment has no category. Open it, choose a category, then mark it paid.",
     "upcomingBills": "Upcoming bills",
     "seeAll": "See all",
     "overdue": "Overdue",

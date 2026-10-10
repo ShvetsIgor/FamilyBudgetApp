@@ -28,7 +28,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     let generation = 0;
     let stopWaitingForProfile: (() => void) | undefined;
+    // The Firebase user whose profile is loaded or loading. The SDK keeps one
+    // User object per sign-in, so the same object again is a token refresh.
+    let sessionUser: User | null = null;
+
+    // onIdTokenChanged also fires hourly and on every getIdToken(true). Those
+    // change claims, not the profile: reloading it (and re-reading every
+    // category and folder) each time cost a full cold start's worth of reads.
+    async function onToken(firebaseUser: User | null) {
+      if (firebaseUser && firebaseUser === sessionUser) {
+        // A load still in flight reads emailVerified itself when it lands
+        if (appStore.getState().auth.user?.id === firebaseUser.uid) {
+          dispatch(setEmailVerified(firebaseUser.emailVerified));
+        }
+        return;
+      }
+      await syncUser(firebaseUser);
+    }
+
     async function syncUser(firebaseUser: User | null) {
+      sessionUser = firebaseUser;
       stopWaitingForProfile?.();
       stopWaitingForProfile = undefined;
       const current = ++generation;
@@ -49,7 +68,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // token refresh can return the same token, so it is not a readiness signal.
           stopWaitingForProfile = onSnapshot(doc(db, 'users', firebaseUser.uid), snapshot => {
             if (isCurrent() && snapshot.exists()) void syncUser(firebaseUser);
-          }, () => { if (isCurrent()) dispatch(setUser(null)); });
+          }, () => {
+            if (!isCurrent()) return;
+            sessionUser = null;
+            dispatch(setUser(null));
+          });
           return;
         }
 
@@ -89,11 +112,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (err) {
         if (!isCurrent()) return;
         console.error('[AuthProvider] error:', err);
+        // Let the next token change retry the load instead of passing as a refresh
+        sessionUser = null;
         if (!appStore.getState().auth.user) dispatch(setUser(null));
         else dispatch(setLoading(false));
       }
     }
-    const unsubscribe = onIdTokenChanged(auth, syncUser);
+    const unsubscribe = onIdTokenChanged(auth, onToken);
     return () => { generation++; stopWaitingForProfile?.(); unsubscribe(); };
   }, [dispatch, appStore]);
 

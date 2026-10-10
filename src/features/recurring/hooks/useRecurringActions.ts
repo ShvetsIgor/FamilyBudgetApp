@@ -1,18 +1,15 @@
 'use client';
 
 import { useCallback } from 'react';
-import { parseISO } from 'date-fns';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import {
   removeRecurringItem, toggleRecurringItem, updateRecurringItem,
 } from '@/features/recurring/store/recurringSlice';
 import {
-  advanceToNextFutureDue, completeRecurring, deleteRecurring, markAsPaid,
-  toggleRecurring, updateRecurringAmount, payRecurringOccurrence,
+  advanceToNextFutureDue, completeRecurring, deleteRecurring,
+  toggleRecurring, payRecurringOccurrence,
 } from '@/features/recurring/services/recurringService';
-import { addExpense } from '@/features/expenses/services/expensesService';
 import { prependExpense } from '@/features/expenses/store/expensesSlice';
-import { resolveExpensePrivacy } from '@/features/expenses/utils/expensePrivacy';
 import { haptic } from '@/shared/utils/haptics';
 import { useT } from '@/shared/hooks/useT';
 import type { SerializableRecurringPayment } from '@/shared/types';
@@ -23,12 +20,12 @@ import type { SerializableRecurringPayment } from '@/shared/types';
  *
  * Each action resolves to `true` when it went through, so a caller can react
  * (the detail screen navigates back after a delete). Failures are logged and
- * resolve to `false`; the caller's state is left untouched.
+ * resolve to `false`; the caller's state is left untouched. A refused payment
+ * is also explained to the user, since every pay button relies on this hook.
  */
 export function useRecurringActions() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
-  const categories = useAppSelector((s) => s.categories.expense);
   const t = useT();
 
   /** Books the pending occurrence as a real expense and moves the due date on. */
@@ -47,9 +44,11 @@ export function useRecurringActions() {
       return true;
     } catch (e) {
       console.error('markPaid error:', e);
+      window.alert(e instanceof Error && e.message === 'recurring-category-required'
+        ? t('recurring.payNeedsCategory') : t('common.error'));
       return false;
     }
-  }, [user, dispatch]);
+  }, [user, dispatch, t]);
 
   /** Skip a missed occurrence without creating an expense. */
   const skip = useCallback(async (item: SerializableRecurringPayment): Promise<boolean> => {

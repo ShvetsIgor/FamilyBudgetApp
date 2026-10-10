@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { fetchExpenseById } from '@/features/expenses/services/expensesService';
-import { mergeExpenses } from '@/features/expenses/store/expensesSlice';
+import { prependExpense } from '@/features/expenses/store/expensesSlice';
 
 export function useExpenseById(id: string) {
   const userId = useAppSelector(s => s.auth.user?.id);
@@ -15,7 +15,9 @@ export function useExpenseById(id: string) {
     let active = true;
     fetchExpenseById(userId, id).then(value => {
       if (!active) return;
-      dispatch(mergeExpenses([value]));
+      // Not mergeExpenses: that marks the list 'ready', and /expenses would
+      // then skip loading the month — leaving this single expense as «the month».
+      dispatch(prependExpense(value));
       setResult({ key, error: false });
     }).catch(error => {
       if (active) setResult({ key, error: error instanceof Error && error.message !== 'expense-not-found' });

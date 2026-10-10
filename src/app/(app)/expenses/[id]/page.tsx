@@ -11,8 +11,8 @@ import { useAppSelector, useAppDispatch } from '@/store/store';
 import { removeExpense } from '@/features/expenses/store/expensesSlice';
 import { deleteExpense } from '@/features/expenses/services/expensesService';
 import { updateRecurringItem } from '@/features/recurring/store/recurringSlice';
-import { reverseContributionById, reverseContributionByAmount } from '@/features/savings/services/savingsService';
-import { updateGoalItem } from '@/features/savings/store/savingsSlice';
+import { fetchGoals } from '@/features/savings/services/savingsService';
+import { setGoals } from '@/features/savings/store/savingsSlice';
 import { localizeSavingsExpenseComment } from '@/features/savings/utils/savingsExpenseComment';
 import { CategoryIcon, StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { paymentMethodIcon } from '@/shared/config/domainIcons';
@@ -27,7 +27,6 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
   const currency = useAppSelector((s) => s.ui.currency);
   const { expense, loading, error } = useExpenseById(id);
   const categories = useAppSelector((s) => s.categories.expense);
-  const goals = useAppSelector((s) => s.savings.list);
   const t = useT();
   const dfLocale = useDateFnsLocale();
 
@@ -66,6 +65,8 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
       const deletion = await deleteExpense(user.id, expense!);
       dispatch(removeExpense(expense!.id));
       if (deletion.recurring) dispatch(updateRecurringItem(deletion.recurring));
+      // The goal balance moved with the expense, and /savings only loads while idle
+      if (expense!.goalId) void fetchGoals(user.id).then(goals => dispatch(setGoals(goals))).catch(() => {});
     } catch { window.alert(t('common.error')); return; }
 
     router.back();

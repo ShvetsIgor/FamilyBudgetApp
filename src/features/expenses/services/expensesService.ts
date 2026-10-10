@@ -306,18 +306,28 @@ export interface ExpenseDeletion {
 
 export async function deleteExpense(userId: string, expense: SerializableExpense): Promise<ExpenseDeletion> {
   const messages = await getDocs(query(collection(getDb(), 'messages', userId, 'items'), where('expenseId', '==', expense.id)));
-  return runTransaction(getDb(), async tx => {
+  const run = (skipGoal: boolean) => runTransaction(getDb(), async tx => {
     const ref = expenseDoc(userId, expense.id);
     const snap = await tx.get(ref);
     if (!snap.exists()) return { expense: null, links: {}, recurring: null };
     const current = toSerializable(snap.id, snap.data());
-    const links = await prepareExpenseLinks(tx, userId, current);
+    const links = await prepareExpenseLinks(tx, userId, current, undefined, { skipGoal });
     links.apply();
     tx.delete(ref);
     messages.docs.forEach(d => tx.delete(d.ref));
     queueMonthlyStatsUpdate(tx, userId, toLocalMonthKey(current.date), buildStatsDelta(current.categoryId, current.amount, current.splits, -1, current.currency));
     return { expense: current, links: links.undo, recurring: links.recurring };
   });
+  try {
+    return await run(false);
+  } catch (error) {
+    // Another member's goal can stop being readable or writable for us: made
+    // private, deleted, or we left the family. Its contribution cannot be
+    // rolled back then, but our own expense must still be deletable.
+    const foreignGoal = !!expense.goalId && (expense.goalOwnerId ?? userId) !== userId;
+    if (!foreignGoal || (error as { code?: string }).code !== 'permission-denied') throw error;
+    return run(true);
+  }
 }
 
 /** Undo uses the actual deleted snapshot, and commits linked state with the money. */

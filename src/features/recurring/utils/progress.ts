@@ -23,8 +23,8 @@ export interface RecurringProgress {
   /** ISO date of the final scheduled payment; null when open-ended */
   lastPaymentDate: string | null;
   /**
-   * Money already paid / still owed AT THE CURRENT PRICE. `updateRecurringAmount`
-   * («сумма изменилась») rewrites the template price, so for a schedule whose
+   * Money already paid / still owed AT THE CURRENT PRICE. Paying a different
+   * amount («сумма изменилась») rewrites the template price, so for a schedule whose
    * price changed mid-way these are estimates — the paid history on the detail
    * screen comes from real expenses, not from this number.
    */

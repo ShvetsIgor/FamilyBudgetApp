@@ -104,9 +104,22 @@ export async function fetchMonthStats(userId: string, month: string): Promise<Mo
     if (before?.currencyBreakdownComplete === true && before?.aggregateVersion === 2) return fromStoredStats(month, before);
   } catch { /* offline or denied: fall through to computing it */ }
 
-  const computed = await computeMonthStats(userId, month);
+  // Only a server-confirmed computation may be cached: an offline read can come
+  // from a partial local cache. Showing that cache still beats failing, so a
+  // closed month falls back to it without being written back, and the current
+  // month (never cached) reads like any other query.
+  const closed = isClosedMonth(month);
+  let computed: MonthStats;
+  let cacheable = closed;
+  try {
+    computed = await computeMonthStats(userId, month, closed);
+  } catch (error) {
+    if (!closed) throw error;
+    computed = await computeMonthStats(userId, month, false);
+    cacheable = false;
+  }
 
-  if (isClosedMonth(month)) {
+  if (cacheable) {
     try {
       await runTransaction(getDb(), async tx => {
         const now = await tx.get(ref);
@@ -143,19 +156,20 @@ function fromStoredStats(month: string, data: DocumentData): MonthStats {
   };
 }
 
-async function computeMonthStats(userId: string, month: string): Promise<MonthStats> {
+async function computeMonthStats(userId: string, month: string, fromServer: boolean): Promise<MonthStats> {
   const [year, m] = month.split('-').map(Number);
   const from = Timestamp.fromDate(new Date(year, m - 1, 1));
   const to = Timestamp.fromDate(new Date(year, m, 1));
+  const read = fromServer ? getDocsFromServer : getDocs;
 
   const [expSnap, incSnap] = await Promise.all([
-    getDocsFromServer(query(
+    read(query(
       collection(getDb(), 'expenses', userId, 'items'),
       where('date', '>=', from),
       where('date', '<', to),
       orderBy('date', 'desc')
     )),
-    getDocsFromServer(query(
+    read(query(
       collection(getDb(), 'incomes', userId, 'items'),
       where('date', '>=', from),
       where('date', '<', to),

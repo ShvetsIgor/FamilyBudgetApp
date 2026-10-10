@@ -152,7 +152,7 @@ export async function updateRecurring(
   input: Omit<AddRecurringInput, 'userId'>,
   /**
    * Where the schedule currently stands. Editing a name must not rewind the
-   * calendar: `markAsPaid` advances `nextDueDate` past the payment that was
+   * calendar: `payRecurringOccurrence` advances `nextDueDate` past the payment that was
    * just booked, and recomputing it from `startDate` would walk right back
    * onto that same date — offering «Оплачено» again and booking the payment
    * twice. Only a change to the start date or the frequency re-derives it.
@@ -190,11 +190,6 @@ export async function toggleRecurring(userId: string, id: string, isActive: bool
   await updateDoc(doc(getDb(), 'recurringPayments', userId, 'items', id), { isActive });
 }
 
-/** «Сумма изменилась» at pay time: the price is different from now on. */
-export async function updateRecurringAmount(userId: string, id: string, amount: number): Promise<void> {
-  await updateDoc(doc(getDb(), 'recurringPayments', userId, 'items', id), { amount });
-}
-
 /**
  * Terminates a payment ("я отменил подписку"): nothing more is due, including
  * a payment pending today. The template stays in the list as «Завершено».
@@ -208,20 +203,6 @@ export async function completeRecurring(userId: string, id: string): Promise<{ e
     isActive: false,
   });
   return { endDate: end.toISOString() };
-}
-
-export async function markAsPaid(
-  userId: string,
-  item: SerializableRecurringPayment,
-): Promise<SerializableRecurringPayment> {
-  const next = nextOccurrence(parseISO(item.nextDueDate), item.frequency);
-  // Last payment of a fixed term: the schedule is done, deactivate the template
-  const completed = isScheduleCompleted(next.toISOString(), item.endDate);
-  await updateDoc(doc(getDb(), 'recurringPayments', userId, 'items', item.id), {
-    nextDueDate: Timestamp.fromDate(next),
-    ...(completed ? { isActive: false } : {}),
-  });
-  return { ...item, nextDueDate: next.toISOString(), isActive: item.isActive && !completed };
 }
 
 export async function advanceToNextFutureDue(
@@ -248,6 +229,9 @@ export async function payRecurringOccurrence(userId: string, item: SerializableR
     const current = toSerializable(snap.id, snap.data());
     if (toLocalDateKey(current.nextDueDate) !== toLocalDateKey(item.nextDueDate)) return { recurring: current, expense: null };
     if (!current.isActive) throw new Error('recurring-inactive');
+    // Templates saved before a category became mandatory have none. Booking
+    // needs a real one, and advancing without an expense would lose the payment.
+    if (!current.categoryId) throw new Error('recurring-category-required');
     const amount = amountOverride ?? current.amount;
     const expenseId = `recurring-${item.id}-${toLocalDateKey(current.nextDueDate)}`;
     const existing = await tx.get(doc(getDb(), 'expenses', userId, 'items', expenseId));

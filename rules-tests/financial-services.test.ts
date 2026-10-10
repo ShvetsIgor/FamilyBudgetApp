@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { beforeAll, afterAll, beforeEach, expect, it, vi } from 'vitest';
 import { initializeTestEnvironment, type RulesTestEnvironment } from '@firebase/rules-unit-testing';
-import { doc, setDoc, getDoc, getDocs, collection, Timestamp, type Firestore } from 'firebase/firestore';
+import { doc, setDoc, getDoc, getDocs, updateDoc, collection, Timestamp, type Firestore } from 'firebase/firestore';
 const current = vi.hoisted(() => ({ db: null as Firestore | null }));
 vi.mock('@/shared/lib/firebase', () => ({ getDb: () => current.db }));
 import { addExpense, updateExpense, deleteExpense, restoreExpense } from '@/features/expenses/services/expensesService';
@@ -107,4 +107,22 @@ it('concurrent mark-paid and delete/Undo preserve recurring schedule', async () 
   expect(toLocalDateKey(deletion.recurring!.nextDueDate)).toBe(toLocalDateKey(recurring.nextDueDate));
   const restored = await restoreExpense('alice',deletion);
   expect(toLocalDateKey(restored!.nextDueDate)).toBe(toLocalDateKey(paid.recurring.nextDueDate));
+});
+it('a contributor can still delete their expense after the goal owner hides the goal', async () => {
+  const goal = await addGoal({userId:'alice',name:'Trip',icon:'star',color:'#fff',targetAmount:1000,currency:'ILS'});
+  current.db = env.authenticatedContext('bob',{email_verified:true}).firestore() as unknown as Firestore;
+  const {expense} = await addContributionWithExpense({userId:'bob',goal,amount:50,date,label:'Savings',expenseCategories:[],categoryId:'food'});
+  await env.withSecurityRulesDisabled(c => updateDoc(doc(c.firestore(),'savingsGoals','alice','goals',goal.id),{isPrivate:true}));
+  const deletion = await deleteExpense('bob',expense);
+  expect(deletion.expense?.id).toBe(expense.id);
+  expect(deletion.links.contribution).toBeUndefined();
+  expect((await getDoc(doc(current.db!,'expenses','bob','items',expense.id))).exists()).toBe(false);
+});
+it('a template without category is refused instead of advancing without an expense', async () => {
+  const tomorrow = new Date();tomorrow.setDate(tomorrow.getDate()+1);
+  const {recurring} = await addRecurringWithFirstOccurrence({userId:'alice',name:'Bill',amount:100,currency:'ILS',categoryId:'food',frequency:'monthly',startDate:tomorrow,type:'subscription',reminderDays:1},(id,due)=>({...base,recurringId:id,date:due}));
+  await updateDoc(doc(current.db!,'recurringPayments','alice','items',recurring.id),{categoryId:''});
+  await expect(payRecurringOccurrence('alice',{...recurring,categoryId:''})).rejects.toThrow('recurring-category-required');
+  const saved = await getDoc(doc(current.db!,'recurringPayments','alice','items',recurring.id));
+  expect(toLocalDateKey((saved.data()!.nextDueDate as Timestamp).toDate())).toBe(toLocalDateKey(recurring.nextDueDate));
 });

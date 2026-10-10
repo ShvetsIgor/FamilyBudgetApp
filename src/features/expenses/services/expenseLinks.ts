@@ -11,10 +11,16 @@ export interface ExpenseLinksUndo {
 }
 const iso = (v: unknown): string => v instanceof Timestamp ? v.toDate().toISOString() : String(v);
 
-/** Read every linked document before the caller queues any transaction writes. */
+/**
+ * Read every linked document before the caller queues any transaction writes.
+ * `skipGoal` leaves a goal this account can no longer read (another member
+ * made it private or deleted it, or we left the family) out of the deletion.
+ */
 export async function prepareExpenseLinks(tx: Transaction, userId: string, expense: SerializableExpense,
-  restore?: ExpenseLinksUndo) {
-  const goalRef = expense.goalId ? doc(getDb(), 'savingsGoals', expense.goalOwnerId ?? userId, 'goals', expense.goalId) : null;
+  restore?: ExpenseLinksUndo, { skipGoal = false } = {}) {
+  // Undo touches the goal only when the deletion really removed a contribution.
+  const goalId = restore ? restore.contribution && expense.goalId : !skipGoal && expense.goalId;
+  const goalRef = goalId ? doc(getDb(), 'savingsGoals', expense.goalOwnerId ?? userId, 'goals', goalId) : null;
   const recurringRef = expense.recurringId && expense.isRecurring
     ? doc(getDb(), 'recurringPayments', userId, 'items', expense.recurringId) : null;
   const [goalSnap, recurringSnap] = await Promise.all([
@@ -28,11 +34,13 @@ export async function prepareExpenseLinks(tx: Transaction, userId: string, expen
   if (goalSnap?.exists()) {
     const data = goalSnap.data();
     const entries = normalizeContributions(data.contributions);
-    const match = restore?.contribution ?? (expense.contributionId
+    // Undo re-applies exactly what the deletion removed. A fresh lookup could
+    // match an unrelated legacy entry of the same amount and add it twice.
+    const match = restore ? restore.contribution : expense.contributionId
       ? entries.find(c => c.id === expense.contributionId)
       : (expense.goalOwnerId ?? userId) === userId
         ? entries.filter(c => c.amount === expense.amount && (!c.byId || c.byId === userId)).at(-1)
-        : undefined);
+        : undefined;
     if (match) {
       const cid = match.id ?? expense.contributionId ?? `legacy-${expense.id}`;
       const exists = entries.some(c => c.id === cid);

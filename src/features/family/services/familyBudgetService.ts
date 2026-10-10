@@ -23,24 +23,19 @@ export interface FamilyMonthData {
   categoryMeta: Record<string, FamilyCategoryMeta>;
 }
 
-/**
- * Aggregates the month's shared (non-secret) expenses of every family
- * member. Own categories come from Redux; other members' category names
- * are resolved with per-doc reads — security rules deny private ones,
- * which then simply fall back to a generic label in the UI.
- */
+/** Category ids are only unique per owner, so family metadata is keyed by both. */
+export function familyCategoryKey(ownerId: string, categoryId: string) { return `${ownerId}|${categoryId}`; }
+
 /**
  * A family member's category names, resolved one document at a time.
  *
  * The per-document read is not an oversight: `firestore.rules` allows `list`
  * on `categories/{uid}` to the owner ONLY, so a member can `get` a sibling's
- * non-private category but can never enumerate the collection. What was
- * Read again on each load so privacy changes and account switches cannot
- * reuse metadata authorized for an earlier session.
+ * non-private category but can never enumerate the collection. Each distinct
+ * (member, category) pair is read once per load, and nothing is cached across
+ * loads: a privacy change or an account switch must not reuse metadata that
+ * was authorized for an earlier session.
  */
-export function familyCategoryKey(ownerId: string, categoryId: string) { return `${ownerId}|${categoryId}`; }
-
-
 async function resolveForeignCategories(
   entries: Iterable<[string, string]>,
   type: 'expense' | 'income',
@@ -60,6 +55,12 @@ async function resolveForeignCategories(
   }));
 }
 
+/**
+ * Aggregates the month's shared (non-secret) expenses of every family
+ * member. Own categories come from Redux; other members' category names
+ * are resolved with per-doc reads — security rules deny private ones,
+ * which then simply fall back to a generic label in the UI.
+ */
 export async function fetchFamilyMonthExpenses(
   members: UserProfile[],
   month: string,
@@ -84,11 +85,13 @@ export async function fetchFamilyMonthExpenses(
     categoryMeta[familyCategoryKey(selfId, c.id)] = { name: c.name, icon: c.icon, color: c.color };
   }
 
-  const foreign: Array<[string, string]> = [];
+  // One read per distinct (member, category), not one per row
+  const foreign = new Map<string, [string, string]>();
   for (const e of expenses) {
-    if (e.memberId !== selfId && !categoryMeta[familyCategoryKey(e.memberId, e.categoryId)]) foreign.push([e.categoryId, e.memberId]);
+    const key = familyCategoryKey(e.memberId, e.categoryId);
+    if (e.memberId !== selfId && !categoryMeta[key]) foreign.set(key, [e.categoryId, e.memberId]);
   }
-  await resolveForeignCategories(foreign, 'expense', categoryMeta);
+  await resolveForeignCategories(foreign.values(), 'expense', categoryMeta);
 
   return { expenses, categoryMeta };
 }
@@ -126,11 +129,13 @@ export async function fetchFamilyMonthIncomes(
   for (const c of selfIncomeCategories) {
     categoryMeta[familyCategoryKey(selfId, c.id)] = { name: c.name, icon: c.icon, color: c.color };
   }
-  const foreign: Array<[string, string]> = [];
+  // One read per distinct (member, category), not one per row
+  const foreign = new Map<string, [string, string]>();
   for (const i of incomes) {
-    if (i.memberId !== selfId && !categoryMeta[familyCategoryKey(i.memberId, i.categoryId)]) foreign.push([i.categoryId, i.memberId]);
+    const key = familyCategoryKey(i.memberId, i.categoryId);
+    if (i.memberId !== selfId && !categoryMeta[key]) foreign.set(key, [i.categoryId, i.memberId]);
   }
-  await resolveForeignCategories(foreign, 'income', categoryMeta);
+  await resolveForeignCategories(foreign.values(), 'income', categoryMeta);
 
   return { incomes, categoryMeta };
 }

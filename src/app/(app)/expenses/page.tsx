@@ -94,9 +94,9 @@ export default function ExpensesPage() {
 
   // Undo-delete state. The delete is committed to Firestore *immediately* so
   // closing the tab can't strand a half-deleted item; the toast just offers a
-  // 5-second window to restore via setDoc on the original id. For savings-
-  // linked expenses the rolled-back contribution rides along so Undo can
-  // re-apply it under the same id.
+  // 5-second window to restore it on the original id. `deletion` carries what
+  // the delete transaction undid (goal contribution, recurring due date), so
+  // Undo re-applies exactly that in the same transaction as the expense.
   const [undoItem, setUndoItem] = useState<{
     expense: SerializableExpense;
     timerId: ReturnType<typeof setTimeout>;

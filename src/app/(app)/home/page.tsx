@@ -45,7 +45,7 @@ import { PinnedToday } from '@/features/chat/components/PinnedToday';
 import { DateChip } from '@/features/chat/components/DateChip';
 import { BotBubble, BotCardBubble } from '@/features/chat/components/BotBubble';
 import { UserBubble, type UserBubbleStatus } from '@/features/chat/components/UserBubble';
-import { chatRecoveryAction, isChatOperationCommitted } from '@/features/chat/services/chatSaveRecovery';
+import { answeredMessageIds, chatRecoveryAction, isChatOperationCommitted } from '@/features/chat/services/chatSaveRecovery';
 import { SavedCard } from '@/features/chat/components/BotCard/SavedCard';
 import { ClarifyCard } from '@/features/chat/components/BotCard/ClarifyCard';
 import { EnvelopesCard } from '@/features/chat/components/BotCard/EnvelopesCard';
@@ -279,6 +279,9 @@ export default function HomePage() {
   const sendingRef = useRef(false);
 
   type IncomeClarifyContext = {
+    botMsgId: string;
+    /** Absent on cards written before the save was anchored to the original message */
+    userMsgId?: string;
     amount: number;
     parsedDate?: string;
     parsedDateLabel?: string;
@@ -333,6 +336,9 @@ export default function HomePage() {
     const reply = await respondToUserMessage(userMsg, parsed, currentCtx);
     if (reply.saveFailed || reply.alreadyDeleted) {
       await updateMessage(uid, userMsg.id, { status: reply.saveFailed ? 'failed' : 'undone' });
+    } else if (!reply.expense && !reply.income) {
+      // Answered with a card or a question: waiting on the user, not stuck
+      await updateMessage(uid, userMsg.id, { status: 'clarifying' });
     }
     for (const botMsg of reply.messages) {
       if (appStore.getState().auth.user?.id !== uid) return;
@@ -421,58 +427,63 @@ export default function HomePage() {
     }
   }, [userId, categoriesReady, buildEnrichedCtx, dispatch, failureText, appStore, starterFlow]);
 
+  // Same shape and same compiler bail-out as handleExpenseClarifyChip below; deps are complete.
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const handleIncomeClarifyChip = useCallback(async (
-    amount: number,
+    context: IncomeClarifyContext,
     chip: { id: string; name: string; icon: string; color: string },
-    parsedDate?: string,
-    parsedDateLabel?: string,
-    parsedNote?: string,
   ) => {
     if (!userId || sendingRef.current) return;
+    // The save hangs off the message that asked — the original «+500», or the
+    // card itself on cards written before they stored userMsgId — so a second
+    // tap or a retry reuses one operation id and can never book twice.
+    const anchor = messages.find((message) => message.id === (context.userMsgId ?? context.botMsgId));
+    if (!anchor) return;
     sendingRef.current = true;
     dispatch(setTyping(true));
+    const failureText = unconfirmedSavePhrase(language);
+    const tracked = !!context.userMsgId;
+    const markFailed = () => tracked
+      ? updateMessage(userId, anchor.id, { status: 'failed' }).catch(() => {})
+      : Promise.resolve();
     try {
       const enrichedCtx = buildEnrichedCtx();
       if (!enrichedCtx) return;
-
-      const userMsg = await addMessage({
-        userId,
-        senderId: userId,
-        kind: 'user',
-        text: `+${amount} ${chip.name.toLowerCase()}${parsedDateLabel ? ` · ${parsedDateLabel}` : ''}`,
-        status: 'saved',
-      });
-
-      await new Promise((r) => setTimeout(r, 150));
-
-      const parsed: import('@/shared/types/message').ParseResult = {
-        amount,
+      if (tracked) {
+        void updateMessage(userId, anchor.id, {
+          status: 'saving',
+          saveAttempt: { categoryId: chip.id, startedAt: new Date().toISOString() },
+        }).catch(() => {});
+      }
+      const parsed: ParseResult = {
+        amount: context.amount,
         categoryId: chip.id,
         confidence: 'high',
         isIncome: true,
-        date: parsedDate,
-        dateLabel: parsedDateLabel,
-        note: parsedNote,
+        date: context.parsedDate,
+        dateLabel: context.parsedDateLabel,
+        note: context.parsedNote,
       };
-
-      const reply = await respondToUserMessage(userMsg, parsed, enrichedCtx);
-      for (const botMsg of reply.messages) {
-        await addMessage(botMsg);
+      const reply = await respondToUserMessage(anchor, parsed, enrichedCtx);
+      if (reply.saveFailed) await markFailed();
+      if (reply.alreadyDeleted && tracked) await updateMessage(userId, anchor.id, { status: 'undone' });
+      // Once booked (or known to be deleted) the card must not be tappable again
+      if (reply.income || reply.alreadyDeleted) {
+        dispatch(removeMessage(context.botMsgId));
+        await deleteMessage(userId, context.botMsgId).catch(() => {});
+        setIncomeCategorySheet(null);
       }
+      for (const botMsg of reply.messages) await addMessage(botMsg);
       if (reply.income) dispatch(prependIncome(reply.income));
     } catch (err) {
-      // A rejected write used to fall straight through `finally`: the typing
-      // dots cleared and nothing else happened — the message sat «pending»
-      // with no reply and no error, and retyping it could duplicate an expense
-      // that had in fact been saved. `failureText` is read before the try: the
-      // React Compiler cannot compile a selector read inside a catch block.
       console.error('chat send failed', err);
+      void markFailed();
       void addMessage({ userId, senderId: 'bot', kind: 'bot', status: 'saved', text: failureText });
     } finally {
       dispatch(setTyping(false));
       sendingRef.current = false;
     }
-  }, [userId, buildEnrichedCtx, dispatch, failureText]);
+  }, [userId, messages, buildEnrichedCtx, dispatch, language]);
 
   // The deps below are complete; the compiler bails on this one handler once
   // its catch block captures the language, and it is not enabled for the build
@@ -522,15 +533,20 @@ export default function HomePage() {
         dispatch(removeMessage(context.botMsgId));
         if (context.botMsgId) await deleteMessage(userId, context.botMsgId).catch(() => {});
       }
-      for (const botMsg of reply.messages) await addMessage(botMsg);
       if (reply.expense) {
+        // Recorded as soon as the money is booked, before the chat writes, and
+        // under the category the entry REALLY has (a retry returns the first one)
+        const savedCategoryId = reply.expense.categoryId;
         dispatch(prependExpense(reply.expense));
         dispatch(recordExpense({
           merchant: context.storeName,
-          categoryId: chip.id,
-          folderId: appStore.getState().categories.expense.find((category) => category.id === chip.id)?.folderId ?? undefined,
+          categoryId: savedCategoryId,
+          folderId: appStore.getState().categories.expense.find((category) => category.id === savedCategoryId)?.folderId ?? undefined,
           date: context.parsedDate ?? toLocalDateKey(new Date()),
         }));
+      }
+      for (const botMsg of reply.messages) await addMessage(botMsg);
+      if (reply.expense) {
         if (context.botMsgId) {
           dispatch(removeMessage(context.botMsgId));
           await deleteMessage(userId, context.botMsgId).catch(() => {});
@@ -604,9 +620,26 @@ export default function HomePage() {
     };
   }, [messages]);
 
-  /** Repeats the stored save exactly; the operation receipt rules out a second expense. */
+  /** Repeats the stored save exactly; the operation receipt rules out a second entry. */
   const retrySave = useCallback(async (userMsg: SerializableChatMessage) => {
     if (!userId || !userMsg.saveAttempt) return;
+    if (userMsg.parsed?.isIncome || userMsg.text.trimStart().startsWith('+')) {
+      const card = messages.find((m) => m.card?.kind === 'clarify'
+        && (m.card.data as { userMsgId?: string }).userMsgId === userMsg.id);
+      const d = card?.card?.data as Record<string, unknown> | undefined;
+      const category = appStore.getState().categories.income.find((c) => c.id === userMsg.saveAttempt!.categoryId);
+      if (!card || !d || !category) {
+        await updateMessage(userId, userMsg.id, { status: 'clarifying' }).catch(() => {});
+        return;
+      }
+      await handleIncomeClarifyChip({
+        botMsgId: card.id, userMsgId: userMsg.id, amount: d.amount as number,
+        parsedDate: d.parsedDate as string | undefined,
+        parsedDateLabel: d.parsedDateLabel as string | undefined,
+        parsedNote: d.parsedNote as string | undefined,
+      }, { id: category.id, name: category.name, icon: category.icon, color: category.color });
+      return;
+    }
     const context = clarifyContextFor(userMsg);
     const category = appStore.getState().categories.expense.find((c) => c.id === userMsg.saveAttempt!.categoryId);
     if (!context || !category) {
@@ -615,7 +648,7 @@ export default function HomePage() {
       return;
     }
     await handleExpenseClarifyChip(context, { id: category.id, name: category.name, icon: category.icon, color: category.color });
-  }, [userId, clarifyContextFor, appStore, handleExpenseClarifyChip]);
+  }, [userId, messages, clarifyContextFor, appStore, handleExpenseClarifyChip, handleIncomeClarifyChip]);
 
   /** Runs a message that never got a reply through the normal flow again. */
   const retryParse = useCallback(async (userMsg: SerializableChatMessage) => {
@@ -644,6 +677,26 @@ export default function HomePage() {
     return () => clearInterval(id);
   }, []);
 
+  // A clarify card whose message is already booked (or undone). The card is
+  // deleted right after a save, but that delete can be lost — a reload before
+  // Firestore acknowledges it drops the pending write — and the card would come
+  // back looking unsaved. Hidden at once, cleaned up in the background.
+  const settledClarifyIds = useMemo(() => {
+    const settled = new Set(messages.filter((m) => m.kind === 'user' && (m.status === 'saved' || m.status === 'undone')).map((m) => m.id));
+    return new Set(messages
+      .filter((m) => m.card?.kind === 'clarify' && settled.has((m.card.data as { userMsgId?: string }).userMsgId ?? ''))
+      .map((m) => m.id));
+  }, [messages]);
+  const cleanedCardsRef = useRef(new Set<string>());
+  useEffect(() => {
+    if (!userId) return;
+    for (const id of settledClarifyIds) {
+      if (cleanedCardsRef.current.has(id)) continue;
+      cleanedCardsRef.current.add(id);
+      deleteMessage(userId, id).catch(() => { cleanedCardsRef.current.delete(id); });
+    }
+  }, [userId, settledClarifyIds]);
+
   // A save that was in flight when the app went away: the receipt says
   // whether it committed. Committed → finish it (the retry returns the saved
   // entry and writes its card); not committed → offer the retry.
@@ -651,7 +704,7 @@ export default function HomePage() {
   useEffect(() => {
     if (!userId || typing || sendingRef.current) return;
     for (const msg of messages) {
-      if (checkedSavesRef.current.has(msg.id) || chatRecoveryAction(msg, clock, false) !== 'check_save') continue;
+      if (checkedSavesRef.current.has(msg.id) || chatRecoveryAction(msg, clock, false, true) !== 'check_save') continue;
       checkedSavesRef.current.add(msg.id);
       isChatOperationCommitted(userId, msg.id)
         .then((committed) => committed
@@ -702,6 +755,7 @@ export default function HomePage() {
   }, [userId, allExpenses, dispatch]);
 
   const groups = groupByDay(messages);
+  const answeredIds = useMemo(() => answeredMessageIds(messages), [messages]);
 
   if (!userId) return null;
 
@@ -746,7 +800,7 @@ export default function HomePage() {
             const time = msgTime(msg.createdAt);
 
             if (msg.kind === 'user') {
-              const recovery = chatRecoveryAction(msg, clock, typing);
+              const recovery = chatRecoveryAction(msg, clock, typing, answeredIds.has(msg.id));
               const canRetry = recovery === 'retry_save' || recovery === 'retry_parse';
               return (
                 <div key={msg.id}>
@@ -854,6 +908,7 @@ export default function HomePage() {
             }
 
             if (msg.card?.kind === 'clarify') {
+              if (settledClarifyIds.has(msg.id)) return null;
               const d = msg.card.data as Record<string, unknown>;
               const cardIsIncome = !!(d.isIncome as boolean | undefined);
               if (!cardIsIncome) {
@@ -889,6 +944,14 @@ export default function HomePage() {
                   </BotCardBubble>
                 );
               }
+              const incomeContext: IncomeClarifyContext = {
+                botMsgId: msg.id,
+                userMsgId: d.userMsgId as string | undefined,
+                amount: d.amount as number,
+                parsedDate: d.parsedDate as string | undefined,
+                parsedDateLabel: d.parsedDateLabel as string | undefined,
+                parsedNote: d.parsedNote as string | undefined,
+              };
               return (
                 <BotCardBubble key={msg.id} tail={tail}>
                   <ClarifyCard
@@ -897,21 +960,8 @@ export default function HomePage() {
                     chips={d.chips as { id: string; name: string; icon: string; color: string }[]}
                     unknownNote={d.parsedNote as string | undefined}
                     categories={allIncomeCats}
-                    onSelectChip={(chip) =>
-                      handleIncomeClarifyChip(
-                        d.amount as number,
-                        chip,
-                        d.parsedDate as string | undefined,
-                        d.parsedDateLabel as string | undefined,
-                        d.parsedNote as string | undefined,
-                      )
-                    }
-                    onAllCategories={() => setIncomeCategorySheet({
-                      amount: d.amount as number,
-                      parsedDate: d.parsedDate as string | undefined,
-                      parsedDateLabel: d.parsedDateLabel as string | undefined,
-                      parsedNote: d.parsedNote as string | undefined,
-                    })}
+                    onSelectChip={(chip) => handleIncomeClarifyChip(incomeContext, chip)}
+                    onAllCategories={() => setIncomeCategorySheet(incomeContext)}
                   />
                 </BotCardBubble>
               );
@@ -938,13 +988,8 @@ export default function HomePage() {
       categories={allIncomeCats.filter((category) => !category.archived)}
       onSelectCategory={(category) => {
         if (!incomeCategorySheet) return;
-        handleIncomeClarifyChip(
-          incomeCategorySheet.amount,
-          { id: category.id, name: category.name, icon: category.icon, color: category.color },
-          incomeCategorySheet.parsedDate,
-          incomeCategorySheet.parsedDateLabel,
-          incomeCategorySheet.parsedNote,
-        );
+        handleIncomeClarifyChip(incomeCategorySheet,
+          { id: category.id, name: category.name, icon: category.icon, color: category.color });
         setIncomeCategorySheet(null);
       }}
       onCreateCategory={(folderId) => setClarifyCatEditor({ type: 'income', folderId })}
@@ -1001,10 +1046,7 @@ export default function HomePage() {
           const chip = { id: created.id, name: created.name, icon: created.icon, color: created.color };
           if (type === 'income') {
             if (!incomeCategorySheet) return;
-            handleIncomeClarifyChip(
-              incomeCategorySheet.amount, chip,
-              incomeCategorySheet.parsedDate, incomeCategorySheet.parsedDateLabel, incomeCategorySheet.parsedNote,
-            );
+            handleIncomeClarifyChip(incomeCategorySheet, chip);
             setIncomeCategorySheet(null);
           } else if (starterEditor) {
             setStarterEditor(null);

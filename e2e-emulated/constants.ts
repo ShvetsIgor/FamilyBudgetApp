@@ -12,3 +12,7 @@ export const PASSWORD = 'e2e-password-123';
 
 export const ALICE = { email: 'alice@e2e.test', name: 'Alice' };
 export const BOB = { email: 'bob@e2e.test', name: 'Bob' };
+/** No expense categories at all — exercises the first-expense starter card. */
+export const CAROL = { email: 'carol@e2e.test', name: 'Carol' };
+/** Owns a little data and is deleted by the account-deletion spec. */
+export const DAVE = { email: 'dave@e2e.test', name: 'Dave' };

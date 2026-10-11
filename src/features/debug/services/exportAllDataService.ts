@@ -1,9 +1,15 @@
 import { collection, doc, getDoc, getDocs, Timestamp } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
 import { suggestionMemoryStorageKey } from '@/features/expenses/store/suggestionMemorySlice';
+import { TIMESTAMP_TAG } from './restorePlan';
 
 /**
- * Recursively converts Firestore Timestamps to ISO strings.
+ * Recursively converts Firestore Timestamps to `{ "$timestamp": iso }`.
+ *
+ * Tagged, not a bare ISO string: some fields are genuinely strings (a
+ * contribution's date, a recurring income's next due day), and a restore
+ * must know which values to turn back into Timestamps — a month query never
+ * finds an expense whose date came back as a string.
  *
  * This must run BEFORE JSON.stringify: Timestamp has its own toJSON()
  * (returning {seconds, nanoseconds}), and JSON.stringify calls toJSON before
@@ -11,7 +17,7 @@ import { suggestionMemoryStorageKey } from '@/features/expenses/store/suggestion
  * never fires.
  */
 export function normalizeForExport(value: unknown): unknown {
-  if (value instanceof Timestamp) return value.toDate().toISOString();
+  if (value instanceof Timestamp) return { [TIMESTAMP_TAG]: value.toDate().toISOString() };
   if (Array.isArray(value)) return value.map(normalizeForExport);
   if (value !== null && typeof value === 'object' && value.constructor === Object) {
     return Object.fromEntries(
@@ -47,7 +53,7 @@ export async function exportAllDataJson(userId: string): Promise<string> {
   ];
 
   const result: Record<string, unknown> = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     exportedAt: new Date().toISOString(),
     userId,
     derivedCollections: ['monthlyStats'],

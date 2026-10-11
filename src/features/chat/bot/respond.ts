@@ -137,6 +137,8 @@ export async function respondToUserMessage(
                 amount: parsed.amount,
                 chips,
                 isIncome: true,
+                // The save is anchored to this message: one operation id, one income
+                userMsgId: userMsg.id,
                 parsedDate: parsed.date,
                 parsedDateLabel: parsed.dateLabel,
                 parsedNote: parsed.note,

@@ -23,7 +23,7 @@ import { addIncome } from '@/features/income/services/incomeService';
 import { updateMessage } from '@/features/chat/services/messagesService';
 import { respondToUserMessage } from '@/features/chat/bot/respond';
 import {
-  CHAT_STALL_MS, chatOperationId, chatRecoveryAction, isChatOperationCommitted,
+  CHAT_STALL_MS, answeredMessageIds, chatOperationId, chatRecoveryAction, isChatOperationCommitted,
 } from '@/features/chat/services/chatSaveRecovery';
 import type { BotContext } from '@/features/chat/bot/context';
 import type { Category } from '@/shared/types';
@@ -132,5 +132,39 @@ describe('respondToUserMessage save failures', () => {
     const card = reply.messages[0].card?.data as { catName: string; icon: string };
     expect(card.catName).toBe('Продукты');
     expect(card.icon).toBe('cart');
+  });
+});
+
+describe('answered messages are never «not processed»', () => {
+  it('a pending message followed by a bot reply needs no retry', () => {
+    const old = userMsg({ createdAt: ago(10 * CHAT_STALL_MS) });
+    expect(chatRecoveryAction(old, NOW, false, true)).toBe('none');
+    expect(chatRecoveryAction(old, NOW, false, false)).toBe('retry_parse');
+  });
+
+  it('marks every user message that a bot message follows', () => {
+    const msgs = [
+      userMsg({ id: 'a' }), { ...userMsg({ id: 'b1' }), kind: 'bot' as const },
+      userMsg({ id: 'c' }), userMsg({ id: 'd' }), { ...userMsg({ id: 'b2' }), kind: 'bot' as const },
+      userMsg({ id: 'last' }),
+    ];
+    expect([...answeredMessageIds(msgs)].sort()).toEqual(['a', 'c', 'd']);
+  });
+});
+
+describe('income clarify card', () => {
+  it('anchors the save to the original «+» message', async () => {
+    const reply = await respondToUserMessage(userMsg({ id: 'plus-msg', text: '+500' }),
+      { amount: 500, categoryId: null, confidence: 'failed', isIncome: true }, ctx());
+    expect((reply.messages[0].card?.data as { userMsgId?: string }).userMsgId).toBe('plus-msg');
+  });
+
+  it('a repeated choice reuses the same operation id', async () => {
+    vi.mocked(addIncome).mockResolvedValue({ id: 'i1', categoryId: 'salary', amount: 500 } as never);
+    const parsed = { amount: 500, categoryId: 'salary', confidence: 'high' as const, isIncome: true };
+    await respondToUserMessage(userMsg({ id: 'plus-msg' }), parsed, ctx());
+    await respondToUserMessage(userMsg({ id: 'plus-msg' }), parsed, ctx());
+    const ids = vi.mocked(addIncome).mock.calls.map(([input]) => input.operationId);
+    expect(ids).toEqual(['chat-plus-msg', 'chat-plus-msg']);
   });
 });

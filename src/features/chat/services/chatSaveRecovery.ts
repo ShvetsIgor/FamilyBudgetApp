@@ -24,6 +24,8 @@ export function chatRecoveryAction(
   message: SerializableChatMessage,
   now: number,
   busy: boolean,
+  /** A bot message follows it. Older chats leave answered messages «pending». */
+  answered = false,
 ): ChatRecoveryAction {
   // While this session is working on the chat, nothing is abandoned yet
   if (message.kind !== 'user' || busy) return 'none';
@@ -34,9 +36,21 @@ export function chatRecoveryAction(
     return message.saveAttempt ? 'check_save' : 'retry_parse';
   }
   if (message.status === 'pending') {
-    return now - Date.parse(message.createdAt) > CHAT_STALL_MS ? 'retry_parse' : 'none';
+    return !answered && now - Date.parse(message.createdAt) > CHAT_STALL_MS ? 'retry_parse' : 'none';
   }
   return 'none';
+}
+
+/** User messages that a bot message follows — answered, whatever their stored status. */
+export function answeredMessageIds(messages: readonly SerializableChatMessage[]): Set<string> {
+  const answered = new Set<string>();
+  let botLater = false;
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    const message = messages[i];
+    if (message.kind === 'bot') botLater = true;
+    else if (botLater) answered.add(message.id);
+  }
+  return answered;
 }
 
 /** The chat's retry key: `respond.ts` writes every chat entry under `chat-{userMsgId}`. */

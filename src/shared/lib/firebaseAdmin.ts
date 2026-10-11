@@ -11,6 +11,14 @@ function getAdminApp() {
   const existing = getApps().find((app) => app.name === ADMIN_APP_NAME);
   if (existing) return existing;
 
+  // Emulator runs (authenticated E2E) have no service account. Allowed only
+  // when BOTH emulator hosts are set and the project is a `demo-` project,
+  // which the SDK never sends to real Google Cloud.
+  const demoProject = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim();
+  if (demoProject?.startsWith('demo-') && process.env.FIRESTORE_EMULATOR_HOST && process.env.FIREBASE_AUTH_EMULATOR_HOST) {
+    return initializeApp({ projectId: demoProject }, ADMIN_APP_NAME);
+  }
+
   const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID?.trim();
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL?.trim();
   const encodedKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY_BASE64?.trim();

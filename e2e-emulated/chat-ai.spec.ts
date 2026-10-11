@@ -91,6 +91,10 @@ test('supermarket shorthand offers Groceries and works again after confirmation 
   await expect(page.getByRole('button', { name: 'Split receipt', exact: true }).filter({ visible: true })).toBeVisible();
   await page.getByRole('button', { name: 'Groceries', exact: true }).filter({ visible: true }).click();
   await expect(page.getByRole('button', { name: 'Groceries', exact: true })).toHaveCount(0);
+  // The card hides as soon as the message is booked; wait for the save to finish
+  await expect(page.getByRole('button', { name: 'Undo', exact: true }).last()).toBeVisible();
+  await expect.poll(() => page.evaluate(() => Object.keys(localStorage)
+    .some((key) => key.startsWith('suggestionMemory_v2_') && localStorage.getItem(key)!.includes('рами леви')))).toBe(true);
   await page.reload();
   await send(page, 'Рами Леви 100');
   await expect(page.getByText('100 ₪', { exact: true }).filter({ visible: true })).toBeVisible();

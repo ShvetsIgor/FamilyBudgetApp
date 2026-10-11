@@ -11,7 +11,7 @@ import { initializeTestEnvironment, type RulesTestEnvironment } from '@firebase/
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import {
   E2E_PROJECT_ID, AUTH_EMULATOR, FIRESTORE_EMULATOR_HOST, FIRESTORE_EMULATOR_PORT,
-  PASSWORD, ALICE, BOB,
+  PASSWORD, ALICE, BOB, CAROL, DAVE,
 } from './constants';
 
 async function createAuthUser(email: string, password: string): Promise<string> {
@@ -31,6 +31,8 @@ async function createAuthUser(email: string, password: string): Promise<string> 
 export interface SeededUsers {
   aliceUid: string;
   bobUid: string;
+  carolUid: string;
+  daveUid: string;
 }
 
 function profile(uid: string, name: string, email: string, extra: Record<string, unknown> = {}) {
@@ -46,6 +48,8 @@ function profile(uid: string, name: string, email: string, extra: Record<string,
 export async function seedEmulators(): Promise<SeededUsers> {
   const aliceUid = await createAuthUser(ALICE.email, PASSWORD);
   const bobUid = await createAuthUser(BOB.email, PASSWORD);
+  const carolUid = await createAuthUser(CAROL.email, PASSWORD);
+  const daveUid = await createAuthUser(DAVE.email, PASSWORD);
 
   const testEnv: RulesTestEnvironment = await initializeTestEnvironment({
     projectId: E2E_PROJECT_ID,
@@ -103,8 +107,25 @@ export async function seedEmulators(): Promise<SeededUsers> {
       id: 'inc-salary', userId: bobUid, name: 'Salary', icon: 'cash', color: '#10b981',
       type: 'income', order: 0, isPrivate: false,
     });
+
+    // Carol: a brand-new library-first account — no expense categories yet
+    await setDoc(doc(db, 'users', carolUid), profile(carolUid, CAROL.name, CAROL.email, { expenseLibraryMode: true }));
+
+    // Dave: a little of everything the deletion must remove
+    await setDoc(doc(db, 'users', daveUid), profile(daveUid, DAVE.name, DAVE.email));
+    await setDoc(doc(db, 'categories', daveUid, 'expense', 'cat-food'), {
+      id: 'cat-food', userId: daveUid, name: 'Food', icon: 'cart', color: '#E07A5F',
+      type: 'expense', order: 0, isPrivate: false,
+    });
+    await setDoc(doc(db, 'expenses', daveUid, 'items', 'dave-exp'), {
+      userId: daveUid, amount: 33, currency: 'ILS', categoryId: 'cat-food',
+      date: Timestamp.now(), paymentMethod: 'card', tags: [], privacy: 'regular', splits: [],
+      isRecurring: false, createdAt: Timestamp.now(), updatedAt: Timestamp.now(),
+    });
+    await setDoc(doc(db, 'budgets', daveUid), { limits: { 'cat-food': 500 } });
+    await setDoc(doc(db, 'users', daveUid, 'shortcutTokens', 'tok1'), { name: 'iPhone', tokenHash: 'f'.repeat(64), createdAt: Timestamp.now() });
   });
 
   await testEnv.cleanup();
-  return { aliceUid, bobUid };
+  return { aliceUid, bobUid, carolUid, daveUid };
 }

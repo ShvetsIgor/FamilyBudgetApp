@@ -12,7 +12,7 @@ import { useT } from '@/shared/hooks/useT';
 import { toLocalDateKey, toLocalMonthKey } from '@/shared/utils/dateKey';
 import { monthStatsFromExpenses, isRecurringExpense } from '@/features/analytics/utils/monthStatsFromExpenses';
 import { toOwnCurrency, foreignTotals } from '@/features/stats/services/statsService';
-import { formatCurrencyTotals } from '@/shared/utils/currencyTotals';
+import { formatCurrencyTotals, groupByCurrency } from '@/shared/utils/currencyTotals';
 import type { Currency, SerializableExpense } from '@/shared/types';
 import { useRouter } from 'next/navigation';
 import { TrendingUp } from 'lucide-react';
@@ -83,6 +83,8 @@ export default function AnalyticsPage() {
           allExpenses.filter((expense) => expense.currency === currency),
           monthKeys,
         ));
+        // The foreign note must describe THIS view, not the unfiltered one before it
+        setForeign(groupByCurrency(allExpenses.filter((expense) => expense.currency !== currency)));
       } else {
         const [stats, m0, m1] = await Promise.all([
           fetchLastNMonths(user.id, period),

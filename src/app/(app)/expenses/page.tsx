@@ -23,6 +23,7 @@ import { Search } from 'lucide-react';
 import { getEffectiveBudget } from '@/features/budget/utils/effectiveBudget';
 import { buildMemberColorMap } from '@/features/family/utils/memberColors';
 import { fetchFamilyMonthExpenses, setExpenseReaction, type FamilyExpense, type FamilyMonthData } from '@/features/family/services/familyBudgetService';
+import { FamilyLoadNotice } from '@/features/family/components/FamilyLoadNotice';
 import { groupByCurrency, formatCurrencyTotals, splitOwnCurrency } from '@/shared/utils/currencyTotals';
 import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import {
@@ -87,6 +88,9 @@ export default function ExpensesPage() {
   const [viewMode, setViewMode] = useState<'mine' | 'family'>('mine');
   const [familyData, setFamilyData] = useState<FamilyMonthData | null>(null);
   const [familyLoading, setFamilyLoading] = useState(false);
+  // Total failure is not «no family expenses»: the notice offers a retry instead
+  const [familyFailed, setFamilyFailed] = useState(false);
+  const [familyReload, setFamilyReload] = useState(0);
   const [reactTarget, setReactTarget] = useState<string | null>(null);
   const memberColorMap = buildMemberColorMap(members);
   const familyAvailable = !!family && members.length > 1;
@@ -189,11 +193,15 @@ export default function ExpensesPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the fetch starts here; this app has no server loader, everything comes from Firestore on the client
     if (!isFamilyView || !user) { setFamilyData(null); return; }
     setFamilyLoading(true);
+    setFamilyFailed(false);
     fetchFamilyMonthExpenses(members, selectedMonth, user.id, categories)
       .then(setFamilyData)
-      .catch(() => setFamilyData({ expenses: [], categoryMeta: {} }))
+      .catch(() => {
+        setFamilyData({ expenses: [], categoryMeta: {}, failedMemberIds: [] });
+        setFamilyFailed(true);
+      })
       .finally(() => setFamilyLoading(false));
-  }, [isFamilyView, user, members, selectedMonth, categories]);
+  }, [isFamilyView, user, members, selectedMonth, categories, familyReload]);
 
   const REACTION_EMOJIS = ['👍', '❤️', '😮', '🤔'];
 
@@ -522,7 +530,15 @@ export default function ExpensesPage() {
         )}
 
         {/* Family expense groups */}
-        {isFamilyView && !familyLoading && familyFiltered.length === 0 && (
+        {isFamilyView && !familyLoading && (
+          <FamilyLoadNotice
+            failedMemberIds={familyData?.failedMemberIds ?? []}
+            members={members}
+            failedEntirely={familyFailed}
+            onRetry={() => setFamilyReload((n) => n + 1)}
+          />
+        )}
+        {isFamilyView && !familyLoading && !familyFailed && familyFiltered.length === 0 && (
           <div className="flex flex-col items-center py-16 px-8 text-center">
             <p className="text-4xl mb-3">👨‍👩‍👧</p>
             <p className="font-medium">{t('expenses.familyEmpty')}</p>

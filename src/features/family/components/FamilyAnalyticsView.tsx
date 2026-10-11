@@ -9,6 +9,7 @@ import { StickerIcon } from '@/features/categories/components/CategoryIcon';
 import { fetchFamilyAnalytics, type FamilyAnalyticsData } from '@/features/family/services/familyBudgetService';
 import { formatCurrencyTotals } from '@/features/family/utils/familyCurrency';
 import { buildMemberColorMap } from '@/features/family/utils/memberColors';
+import { FamilyLoadNotice } from './FamilyLoadNotice';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -27,6 +28,9 @@ export function FamilyAnalyticsView({ period }: { period: number }) {
 
   const [data, setData] = useState<FamilyAnalyticsData | null>(null);
   const [loading, setLoading] = useState(false);
+  // A failed load used to leave `data` null, which renders the spinner forever
+  const [failed, setFailed] = useState(false);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     if (!user || members.length === 0) return;
@@ -34,11 +38,18 @@ export function FamilyAnalyticsView({ period }: { period: number }) {
       format(subMonths(new Date(), period - 1 - i), 'yyyy-MM'));
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the fetch starts here; this app has no server loader, everything comes from Firestore on the client
     setLoading(true);
+    setFailed(false);
     fetchFamilyAnalytics(members, monthKeys, user.id, categories, currency)
       .then(setData)
-      .catch(() => setData(null))
+      .catch(() => { setData(null); setFailed(true); })
       .finally(() => setLoading(false));
-  }, [user, members, period, categories, currency]);
+  }, [user, members, period, categories, currency, reload]);
+
+  const retry = () => setReload((n) => n + 1);
+
+  if (!loading && failed) {
+    return <FamilyLoadNotice failedMemberIds={[]} members={members} failedEntirely onRetry={retry} />;
+  }
 
   if (loading || !data) {
     return (
@@ -67,6 +78,7 @@ export function FamilyAnalyticsView({ period }: { period: number }) {
 
   return (
     <div className="flex flex-col gap-4">
+      <FamilyLoadNotice failedMemberIds={data.failedMemberIds} members={members} onRetry={retry} />
       {/* Stat cards */}
       <div className="grid grid-cols-2 gap-3">
         <div className={card} style={{ boxShadow: '0 2px 8px rgba(61,44,31,.06)' }}>

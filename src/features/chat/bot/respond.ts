@@ -4,6 +4,7 @@ import { getDateFnsLocale } from '@/shared/utils/dateLocale';
 import { addExpense } from '@/features/expenses/services/expensesService';
 import { addIncome } from '@/features/income/services/incomeService';
 import { updateMessage } from '@/features/chat/services/messagesService';
+import { chatOperationId } from '@/features/chat/services/chatSaveRecovery';
 import { getPresetDisplayName } from '@/features/categories/config/categoryLabels';
 import type { SerializableChatMessage, ParseResult } from '@/shared/types/message';
 import type { BotContext } from './context';
@@ -18,6 +19,23 @@ function nowTimestamp(): string {
 }
 
 /** Shared with the chat screen, so a failed send reads the same as a failed save. */
+/**
+ * A rejected write is not proof that nothing was saved: the commit can land
+ * and only the acknowledgement get lost. Retrying reuses the operation id,
+ * so it either finds the saved entry or writes it once.
+ */
+export function unconfirmedSavePhrase(language: string): string {
+  return language === 'ru'
+    ? 'Не удалось подтвердить сохранение. Нажми «Повторить» под сообщением — дубля не будет.'
+    : "Couldn't confirm the save. Tap “Retry” under your message — it won't be recorded twice.";
+}
+
+export function alreadyDeletedPhrase(language: string): string {
+  return language === 'ru'
+    ? 'Эта запись уже была сохранена и потом удалена — заново не создаю.'
+    : 'This entry was saved and later deleted — not recreating it.';
+}
+
 export function saveErrorPhrase(language: string): string {
   return language === 'ru'
     ? 'Не удалось сохранить 😔 Попробуй ещё раз'
@@ -66,6 +84,17 @@ export interface BotReply {
   userMsgUpdate?: { messageId: string; expenseId: string };
   /** Signal: host should navigate to Split entry instead of saving an expense in chat. */
   openSplit?: OpenSplitRequest;
+  /** The write threw; the user message must show «not confirmed» with a retry. */
+  saveFailed?: boolean;
+  /** The receipt points to an entry the user has since deleted (Undo). */
+  alreadyDeleted?: boolean;
+}
+
+function saveFailure(userId: string, error: unknown, language: string): BotReply {
+  if (error instanceof Error && error.message === 'entry-already-deleted') {
+    return { messages: [makeBotMsg(userId, { text: alreadyDeletedPhrase(language) })], alreadyDeleted: true };
+  }
+  return { messages: [makeBotMsg(userId, { text: unconfirmedSavePhrase(language) })], saveFailed: true };
 }
 
 export async function respondToUserMessage(
@@ -128,7 +157,7 @@ export async function respondToUserMessage(
     try {
       income = await addIncome({
         userId,
-        operationId: `chat-${userMsg.id}`,
+        operationId: chatOperationId(userMsg.id),
         amount: parsed.amount,
         currency,
         categoryId: parsed.categoryId,
@@ -137,8 +166,8 @@ export async function respondToUserMessage(
         privacy: 'regular',
         comment: parsed.note || undefined,
       });
-    } catch {
-      return { messages: [makeBotMsg(userId, { text: saveErrorPhrase(ctx.language) })] };
+    } catch (error) {
+      return saveFailure(userId, error, ctx.language);
     }
 
     await updateMessage(userId, userMsg.id, { status: 'saved', incomeId: income.id });
@@ -199,7 +228,7 @@ export async function respondToUserMessage(
     try {
       expense = await addExpense({
         userId,
-        operationId: `chat-${userMsg.id}`,
+        operationId: chatOperationId(userMsg.id),
         amount: parsed.amount,
         currency,
         categoryId: category.id,
@@ -213,19 +242,22 @@ export async function respondToUserMessage(
         privacy: category.isPrivate ? 'secret' : 'regular',
         splits: [],
       });
-    } catch {
-      return { messages: [makeBotMsg(userId, { text: saveErrorPhrase(ctx.language) })] };
+    } catch (error) {
+      return saveFailure(userId, error, ctx.language);
     }
 
     await updateMessage(userId, userMsg.id, { status: 'saved', expenseId: expense.id });
-    const categoryName = getPresetDisplayName(category.id, ctx.language) ?? category.name;
-    const folder = category.folderId ? foldersById.get(category.folderId) : undefined;
+    // A retry returns the entry the FIRST attempt committed — if the user
+    // picked another chip meanwhile, the card must show what was really saved.
+    const saved = categoriesById.get(expense.categoryId) ?? category;
+    const categoryName = getPresetDisplayName(saved.id, ctx.language) ?? saved.name;
+    const folder = saved.folderId ? foldersById.get(saved.folderId) : undefined;
     const folderName = folder ? (getPresetDisplayName(folder.id, ctx.language) ?? folder.name) : null;
     const todayStr = toLocalDateKey(new Date());
     const dateHint = parsed.date && parsed.date !== todayStr
       ? format(parseISO(parsed.date), 'd MMMM', { locale: getDateFnsLocale(ctx.language) })
       : undefined;
-    const hint = category.id === 'unsorted'
+    const hint = saved.id === 'unsorted'
       ? makeT(ctx.language)('chat.clarify.deferHint')
       : dateHint;
 
@@ -237,8 +269,8 @@ export async function respondToUserMessage(
           card: {
             kind: 'saved',
             data: {
-              icon: category.icon,
-              color: category.color,
+              icon: saved.icon,
+              color: saved.color,
               title: parsed.storeName ?? categoryName,
               catName: categoryName,
               groupName: folderName,

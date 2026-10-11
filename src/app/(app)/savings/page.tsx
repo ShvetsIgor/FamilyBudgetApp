@@ -16,7 +16,8 @@ import { addCategory as addCategoryRedux } from '@/features/categories/store/cat
 import { addContributionWithExpense } from '@/features/savings/services/savingsExpenseService';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
-import { fetchFamilyGoals, type FamilyGoal } from '@/features/family/services/familyBudgetService';
+import { FamilyLoadNotice } from '@/features/family/components/FamilyLoadNotice';
+import { fetchFamilyGoals, type FamilyGoalsData } from '@/features/family/services/familyBudgetService';
 import { buildMemberColorMap } from '@/features/family/utils/memberColors';
 import type { SavingsGoal } from '@/shared/types';
 import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
@@ -34,8 +35,10 @@ export default function SavingsPage() {
   const family = useAppSelector((st) => st.family.family);
   const members = useAppSelector((st) => st.family.members);
   const [viewMode, setViewMode] = useState<'mine' | 'family'>('mine');
-  const [familyGoals, setFamilyGoals] = useState<FamilyGoal[] | null>(null);
+  const [familyGoals, setFamilyGoals] = useState<FamilyGoalsData | null>(null);
   const [familyLoading, setFamilyLoading] = useState(false);
+  const [familyFailed, setFamilyFailed] = useState(false);
+  const [familyReload, setFamilyReload] = useState(0);
   const familyAvailable = !!family && members.length > 1;
   const isFamilyView = viewMode === 'family' && familyAvailable;
   const expenseCategories = useAppSelector((s) => s.categories.expense);
@@ -87,9 +90,9 @@ export default function SavingsPage() {
 
     if (isForeignGoal) {
       setFamilyGoals((prev) => prev
-        ? prev.map((g) => (g.id === updated.id && g.memberId === goal.userId
+        ? { ...prev, goals: prev.goals.map((g) => (g.id === updated.id && g.memberId === goal.userId
             ? { ...g, currentAmount: updated.currentAmount, contributions: updated.contributions }
-            : g))
+            : g)) }
         : prev);
     } else {
       dispatch(updateGoalItem(updated));
@@ -108,11 +111,15 @@ export default function SavingsPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the fetch starts here; this app has no server loader, everything comes from Firestore on the client
     if (!isFamilyView) { setFamilyGoals(null); return; }
     setFamilyLoading(true);
+    setFamilyFailed(false);
     fetchFamilyGoals(members)
       .then(setFamilyGoals)
-      .catch(() => setFamilyGoals([]))
+      .catch(() => {
+        setFamilyGoals({ goals: [], failedMemberIds: [] });
+        setFamilyFailed(true);
+      })
       .finally(() => setFamilyLoading(false));
-  }, [isFamilyView, members]);
+  }, [isFamilyView, members, familyReload]);
 
   // ── Right panel content ──────────────────────────────────────────────────────
   // A render helper, not a component: declaring a component inside the page
@@ -229,7 +236,7 @@ export default function SavingsPage() {
 
   // ── List content ─────────────────────────────────────────────────────────────
   const memberColorMap = buildMemberColorMap(members);
-  const familyList = familyGoals ?? [];
+  const familyList = familyGoals?.goals ?? [];
   const listContent = (
     <>
       {familyAvailable && (
@@ -263,7 +270,15 @@ export default function SavingsPage() {
         </div>
       )}
 
-      {isFamilyView && !familyLoading && familyList.length === 0 && (
+      {isFamilyView && !familyLoading && (
+        <FamilyLoadNotice
+          failedMemberIds={familyGoals?.failedMemberIds ?? []}
+          members={members}
+          failedEntirely={familyFailed}
+          onRetry={() => setFamilyReload((n) => n + 1)}
+        />
+      )}
+      {isFamilyView && !familyLoading && !familyFailed && familyList.length === 0 && (
         <div className="flex flex-col items-center py-16 text-center">
           <Users className="mb-3 h-10 w-10 text-muted-foreground" strokeWidth={1.6} />
           <p className="font-medium">{t('savings.familyEmpty')}</p>

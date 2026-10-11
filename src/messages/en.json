@@ -279,6 +279,21 @@
       "forgot": "Forgot the current password? Send a reset link",
       "resetSent": "Reset link sent to your email",
       "row": "Password"
+    },
+    "delete": {
+      "row": "Delete account",
+      "title": "Delete account",
+      "what": "Your account and all your data will be deleted: expenses, income, savings, recurring payments, categories, budgets, chat and Siri tokens. This cannot be undone.",
+      "familyNote": "If you are in a family, you will leave it. Your contributions to other members’ goals stay with them, without your name.",
+      "exportHint": "You can download all your data (JSON) in the export section first.",
+      "familyOwner": "You own a family that has members. Dissolve the family in Family first, then delete your account.",
+      "confirmWord": "DELETE",
+      "typeWord": "Type “{word}”",
+      "googleHint": "A Google sign-in window will open to confirm.",
+      "reauthCancelled": "Sign-in confirmation was not completed. Please try again.",
+      "failed": "Couldn’t delete the account. Please try again — retrying is safe.",
+      "deleting": "Deleting…",
+      "submit": "Delete forever"
     }
   },
   "recurring": {
@@ -620,7 +635,10 @@
     "close": "Close",
     "pageNotFound": "Page not found",
     "goHome": "Go home",
-    "entryNotFound": "Entry not found"
+    "entryNotFound": "Entry not found",
+    "retry": "Retry",
+    "familyLoadPartial": "Couldn’t load data for {names}. Totals are incomplete.",
+    "familyLoadFailed": "Couldn’t load family data."
   },
   "chat": {
     "today": {
@@ -806,6 +824,11 @@
       "custom": "Create my own category",
       "resolved": "Categories added: {n}",
       "resolvedExisting": "Continued with your categories"
+    },
+    "recovery": {
+      "unconfirmed": "Save not confirmed.",
+      "unprocessed": "Message not processed.",
+      "retry": "Retry"
     }
   },
   "onboarding": {

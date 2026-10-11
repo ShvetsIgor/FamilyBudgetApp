@@ -1,7 +1,18 @@
 import type { Timestamp } from 'firebase/firestore';
 import type { Currency } from './index';
 
-export type MessageStatus = 'pending' | 'saved' | 'clarifying' | 'undone' | 'failed';
+/**
+ * `saving`: the user chose a category and the expense write is in flight.
+ * `failed`: the write threw, so whether money was recorded is unknown until
+ * the retry (same operation id, never a duplicate) or the receipt check says.
+ */
+export type MessageStatus = 'pending' | 'saving' | 'saved' | 'clarifying' | 'undone' | 'failed';
+
+/** The category a chat expense was being saved under — enough to retry it exactly. */
+export interface ChatSaveAttempt {
+  categoryId: string;
+  startedAt: string;
+}
 
 export type BotCardKind = 'morning' | 'saved' | 'clarify' | 'weekly' | 'envelopes' | 'goal' | 'undone' | 'alert' | 'future' | 'starter';
 
@@ -93,6 +104,7 @@ export interface SerializableChatMessage {
   expenseId?: string;
   incomeId?: string;
   card?: BotCard;
+  saveAttempt?: ChatSaveAttempt;
 
   status: MessageStatus;
   createdAt: string;

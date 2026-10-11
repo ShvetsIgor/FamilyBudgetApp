@@ -21,6 +21,13 @@ export interface FamilyCategoryMeta {
 export interface FamilyMonthData {
   expenses: FamilyExpense[];
   categoryMeta: Record<string, FamilyCategoryMeta>;
+  /** Members whose entries could not be read: the totals above leave them out. */
+  failedMemberIds: string[];
+}
+
+/** Member order, not completion order: the notice lists names the same way every load. */
+function inMemberOrder(members: UserProfile[], failed: Set<string>): string[] {
+  return members.map((m) => m.id).filter((id) => failed.has(id));
 }
 
 /** Category ids are only unique per owner, so family metadata is keyed by both. */
@@ -67,13 +74,15 @@ export async function fetchFamilyMonthExpenses(
   selfId: string,
   selfCategories: Category[],
 ): Promise<FamilyMonthData> {
+  const failed = new Set<string>();
   const perMember = await Promise.all(
     members.map(async (m) => {
       try {
         const list = await fetchSharedMonthExpenses(m.id, month);
         return list.map((e) => ({ ...e, memberId: m.id, memberName: m.name }));
       } catch {
-        // Member detached or rules denied — skip instead of failing the view
+        // The view still renders the others, but must say the total is partial
+        failed.add(m.id);
         return [] as FamilyExpense[];
       }
     }),
@@ -93,7 +102,7 @@ export async function fetchFamilyMonthExpenses(
   }
   await resolveForeignCategories(foreign.values(), 'expense', categoryMeta);
 
-  return { expenses, categoryMeta };
+  return { expenses, categoryMeta, failedMemberIds: inMemberOrder(members, failed) };
 }
 
 export interface FamilyIncome extends SerializableIncome {
@@ -104,6 +113,7 @@ export interface FamilyIncome extends SerializableIncome {
 export interface FamilyIncomeData {
   incomes: FamilyIncome[];
   categoryMeta: Record<string, FamilyCategoryMeta>;
+  failedMemberIds: string[];
 }
 
 /** Same aggregation as expenses, for the family's non-secret incomes. */
@@ -113,12 +123,14 @@ export async function fetchFamilyMonthIncomes(
   selfId: string,
   selfIncomeCategories: Category[],
 ): Promise<FamilyIncomeData> {
+  const failed = new Set<string>();
   const perMember = await Promise.all(
     members.map(async (m) => {
       try {
         const list = await fetchSharedMonthIncome(m.id, month);
         return list.map((i) => ({ ...i, memberId: m.id, memberName: m.name }));
       } catch {
+        failed.add(m.id);
         return [] as FamilyIncome[];
       }
     }),
@@ -137,7 +149,7 @@ export async function fetchFamilyMonthIncomes(
   }
   await resolveForeignCategories(foreign.values(), 'income', categoryMeta);
 
-  return { incomes, categoryMeta };
+  return { incomes, categoryMeta, failedMemberIds: inMemberOrder(members, failed) };
 }
 
 export interface FamilyGoal extends SavingsGoal {
@@ -145,19 +157,26 @@ export interface FamilyGoal extends SavingsGoal {
   memberName: string;
 }
 
+export interface FamilyGoalsData {
+  goals: FamilyGoal[];
+  failedMemberIds: string[];
+}
+
 /** Savings goals of every family member, with progress. */
-export async function fetchFamilyGoals(members: UserProfile[]): Promise<FamilyGoal[]> {
+export async function fetchFamilyGoals(members: UserProfile[]): Promise<FamilyGoalsData> {
+  const failed = new Set<string>();
   const perMember = await Promise.all(
     members.map(async (m) => {
       try {
         const goals = await fetchSharedGoals(m.id);
         return goals.map((g) => ({ ...g, memberId: m.id, memberName: m.name }));
       } catch {
+        failed.add(m.id);
         return [] as FamilyGoal[];
       }
     }),
   );
-  return perMember.flat();
+  return { goals: perMember.flat(), failedMemberIds: inMemberOrder(members, failed) };
 }
 
 export interface FamilyAnalyticsData {
@@ -173,6 +192,8 @@ export interface FamilyAnalyticsData {
   primaryCurrency: Currency;
   /** Other currencies present, shown separately in the stat cards. */
   otherCurrencies: Currency[];
+  /** Members with an unreadable expense or income range: every figure leaves them out. */
+  failedMemberIds: string[];
 }
 
 /**
@@ -194,10 +215,11 @@ export async function fetchFamilyAnalytics(
   const from = new Date(fy, fm - 1, 1);
   const to = new Date(ly, lm, 1);
 
+  const failed = new Set<string>();
   const perMember = await Promise.all(members.map(async (m) => {
     const [expenses, incomes] = await Promise.all([
-      fetchSharedExpensesInRange(m.id, from, to).catch(() => [] as SerializableExpense[]),
-      fetchSharedIncomeInRange(m.id, from, to).catch(() => [] as SerializableIncome[]),
+      fetchSharedExpensesInRange(m.id, from, to).catch(() => { failed.add(m.id); return [] as SerializableExpense[]; }),
+      fetchSharedIncomeInRange(m.id, from, to).catch(() => { failed.add(m.id); return [] as SerializableIncome[]; }),
     ]);
     return { member: m, expenses, incomes };
   }));
@@ -268,6 +290,7 @@ export async function fetchFamilyAnalytics(
   return {
     byMonth: [...monthAgg.values()], byMember, topCategories, totalSpent, totalIncome,
     spentByCurrency, incomeByCurrency, primaryCurrency, otherCurrencies,
+    failedMemberIds: inMemberOrder(members, failed),
   };
 }
 

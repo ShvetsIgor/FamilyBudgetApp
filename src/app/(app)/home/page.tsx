@@ -19,7 +19,7 @@ import { parseChatMessage, ChatSessionChangedError } from '@/features/chat/servi
 import { deleteExpense, fetchMonthExpenses } from '@/features/expenses/services/expensesService';
 import { deleteMessage, updateMessage } from '@/features/chat/services/messagesService';
 import { collectBotContext } from '@/features/chat/bot/context';
-import { respondToUserMessage, saveErrorPhrase } from '@/features/chat/bot/respond';
+import { respondToUserMessage, saveErrorPhrase, unconfirmedSavePhrase } from '@/features/chat/bot/respond';
 import { addMessage } from '@/features/chat/services/messagesService';
 import {
   shouldSendMorningGreeting,
@@ -44,7 +44,8 @@ import { normalizeNameKey } from '@/shared/utils/normalizeName';
 import { PinnedToday } from '@/features/chat/components/PinnedToday';
 import { DateChip } from '@/features/chat/components/DateChip';
 import { BotBubble, BotCardBubble } from '@/features/chat/components/BotBubble';
-import { UserBubble } from '@/features/chat/components/UserBubble';
+import { UserBubble, type UserBubbleStatus } from '@/features/chat/components/UserBubble';
+import { chatRecoveryAction, isChatOperationCommitted } from '@/features/chat/services/chatSaveRecovery';
 import { SavedCard } from '@/features/chat/components/BotCard/SavedCard';
 import { ClarifyCard } from '@/features/chat/components/BotCard/ClarifyCard';
 import { EnvelopesCard } from '@/features/chat/components/BotCard/EnvelopesCard';
@@ -330,6 +331,9 @@ export default function HomePage() {
     const currentCtx = buildEnrichedCtx();
     if (!currentCtx || currentCtx.userId !== uid) return;
     const reply = await respondToUserMessage(userMsg, parsed, currentCtx);
+    if (reply.saveFailed || reply.alreadyDeleted) {
+      await updateMessage(uid, userMsg.id, { status: reply.saveFailed ? 'failed' : 'undone' });
+    }
     for (const botMsg of reply.messages) {
       if (appStore.getState().auth.user?.id !== uid) return;
       await addMessage(botMsg);
@@ -486,10 +490,18 @@ export default function HomePage() {
     dispatch(setTyping(true));
     // Resolved before the try: the React Compiler cannot compile a call to an
     // imported function inside a catch block without losing this useCallback.
-    const failureText = saveErrorPhrase(language);
+    const failureText = unconfirmedSavePhrase(language);
+    const markFailed = () => updateMessage(userId, originalMessage.id, { status: 'failed' }).catch(() => {});
     try {
       const enrichedCtx = buildEnrichedCtx();
       if (!enrichedCtx) return;
+      // Persisted before the write, not awaited: offline the local snapshot
+      // shows «saving» at once, and after a reload the stored category lets
+      // the chat finish or check exactly this save.
+      void updateMessage(userId, originalMessage.id, {
+        status: 'saving',
+        saveAttempt: { categoryId: chip.id, startedAt: new Date().toISOString() },
+      }).catch(() => {});
       const parsed: ParseResult = {
         amount: context.amount,
         currency: context.currency,
@@ -504,6 +516,12 @@ export default function HomePage() {
         note: context.parsedNote,
       };
       const reply = await respondToUserMessage(originalMessage, parsed, enrichedCtx);
+      if (reply.saveFailed) await markFailed();
+      if (reply.alreadyDeleted) {
+        await updateMessage(userId, originalMessage.id, { status: 'undone' });
+        dispatch(removeMessage(context.botMsgId));
+        if (context.botMsgId) await deleteMessage(userId, context.botMsgId).catch(() => {});
+      }
       for (const botMsg of reply.messages) await addMessage(botMsg);
       if (reply.expense) {
         dispatch(prependExpense(reply.expense));
@@ -513,8 +531,10 @@ export default function HomePage() {
           folderId: appStore.getState().categories.expense.find((category) => category.id === chip.id)?.folderId ?? undefined,
           date: context.parsedDate ?? toLocalDateKey(new Date()),
         }));
-        dispatch(removeMessage(context.botMsgId));
-        await deleteMessage(userId, context.botMsgId).catch(() => {});
+        if (context.botMsgId) {
+          dispatch(removeMessage(context.botMsgId));
+          await deleteMessage(userId, context.botMsgId).catch(() => {});
+        }
         setExpenseCategorySheet(null);
       }
     } catch (err) {
@@ -524,6 +544,7 @@ export default function HomePage() {
       // that had in fact been saved. `failureText` is read before the try: the
       // React Compiler cannot compile a selector read inside a catch block.
       console.error('chat send failed', err);
+      void markFailed();
       void addMessage({ userId, senderId: 'bot', kind: 'bot', status: 'saved', text: failureText });
     } finally {
       dispatch(setTyping(false));
@@ -552,6 +573,93 @@ export default function HomePage() {
       color: category.color,
     });
   }, [userId, appStore, dispatch, handleExpenseClarifyChip]);
+
+  // ── Unfinished messages ──────────────────────────────────────────────────
+  // A clarify card survives a failed save; once a save committed it may be
+  // gone already — the parse stored on the user message is enough then.
+  const clarifyContextFor = useCallback((userMsg: SerializableChatMessage): ExpenseClarifyContext | null => {
+    const card = messages.find((m) => m.card?.kind === 'clarify'
+      && (m.card.data as { userMsgId?: string }).userMsgId === userMsg.id);
+    const d = card?.card?.data as Record<string, unknown> | undefined;
+    if (card && d && !d.isIncome) {
+      return {
+        botMsgId: card.id,
+        userMsgId: userMsg.id,
+        amount: d.amount as number,
+        currency: d.currencyCode as Currency | undefined,
+        storeId: d.storeId as string | undefined,
+        storeName: d.storeName as string | undefined,
+        storeGroup: d.storeGroup as string | undefined,
+        parsedDate: d.parsedDate as string | undefined,
+        parsedDateLabel: d.parsedDateLabel as string | undefined,
+        parsedNote: d.parsedNote as string | undefined,
+      };
+    }
+    const p = userMsg.parsed;
+    if (!p || !(p.amount > 0) || p.isIncome) return null;
+    return {
+      botMsgId: '', userMsgId: userMsg.id, amount: p.amount, currency: p.currency,
+      storeId: p.storeId, storeName: p.storeName, storeGroup: p.storeGroup,
+      parsedDate: p.date, parsedDateLabel: p.dateLabel, parsedNote: p.note,
+    };
+  }, [messages]);
+
+  /** Repeats the stored save exactly; the operation receipt rules out a second expense. */
+  const retrySave = useCallback(async (userMsg: SerializableChatMessage) => {
+    if (!userId || !userMsg.saveAttempt) return;
+    const context = clarifyContextFor(userMsg);
+    const category = appStore.getState().categories.expense.find((c) => c.id === userMsg.saveAttempt!.categoryId);
+    if (!context || !category) {
+      // The chosen category is gone: back to choosing, through the card if it survived
+      await updateMessage(userId, userMsg.id, { status: 'clarifying' }).catch(() => {});
+      return;
+    }
+    await handleExpenseClarifyChip(context, { id: category.id, name: category.name, icon: category.icon, color: category.color });
+  }, [userId, clarifyContextFor, appStore, handleExpenseClarifyChip]);
+
+  /** Runs a message that never got a reply through the normal flow again. */
+  const retryParse = useCallback(async (userMsg: SerializableChatMessage) => {
+    if (!userId || sendingRef.current) return;
+    sendingRef.current = true;
+    dispatch(setTyping(true));
+    try {
+      await updateMessage(userId, userMsg.id, { status: 'pending' });
+      // The day it was written, so «yesterday» still means that day
+      await starterFlow().continueMessage(userId, { ...userMsg, status: 'pending' }, toLocalDateKey(userMsg.createdAt));
+    } catch (err) {
+      if (err instanceof ChatSessionChangedError || appStore.getState().auth.user?.id !== userId) return;
+      console.error('chat retry failed', err);
+      void addMessage({ userId, senderId: 'bot', kind: 'bot', status: 'saved', text: failureText });
+    } finally {
+      if (appStore.getState().auth.user?.id === userId) dispatch(setTyping(false));
+      sendingRef.current = false;
+    }
+  }, [userId, dispatch, starterFlow, appStore, failureText]);
+
+  // Abandonment is a matter of time, so the chat needs a clock it can render
+  // from — reading Date.now() during render would be impure.
+  const [clock, setClock] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setClock(Date.now()), 15_000);
+    return () => clearInterval(id);
+  }, []);
+
+  // A save that was in flight when the app went away: the receipt says
+  // whether it committed. Committed → finish it (the retry returns the saved
+  // entry and writes its card); not committed → offer the retry.
+  const checkedSavesRef = useRef(new Set<string>());
+  useEffect(() => {
+    if (!userId || typing || sendingRef.current) return;
+    for (const msg of messages) {
+      if (checkedSavesRef.current.has(msg.id) || chatRecoveryAction(msg, clock, false) !== 'check_save') continue;
+      checkedSavesRef.current.add(msg.id);
+      isChatOperationCommitted(userId, msg.id)
+        .then((committed) => committed
+          ? retrySave(msg)
+          : updateMessage(userId, msg.id, { status: 'failed' }))
+        .catch(() => { checkedSavesRef.current.delete(msg.id); });
+    }
+  }, [userId, typing, messages, clock, retrySave]);
 
   const handleOpenExpenseSplit = useCallback((context: ExpenseClarifyContext) => {
     if (!userId) return;
@@ -638,14 +746,31 @@ export default function HomePage() {
             const time = msgTime(msg.createdAt);
 
             if (msg.kind === 'user') {
+              const recovery = chatRecoveryAction(msg, clock, typing);
+              const canRetry = recovery === 'retry_save' || recovery === 'retry_parse';
               return (
-                <UserBubble
-                  key={msg.id}
-                  text={msg.text}
-                  time={time}
-                  status={msg.status as 'pending' | 'saved' | 'sent'}
-                  tail={tail}
-                />
+                <div key={msg.id}>
+                  <UserBubble
+                    text={msg.text}
+                    time={time}
+                    status={recovery === 'retry_parse' ? 'failed' : msg.status as UserBubbleStatus}
+                    tail={tail}
+                  />
+                  {canRetry && (
+                    <div className="flex items-center justify-end gap-2 px-4 pb-1 text-[12px]" role="status">
+                      <span className="text-muted-foreground">
+                        {t(recovery === 'retry_save' ? 'chat.recovery.unconfirmed' : 'chat.recovery.unprocessed')}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => { void (recovery === 'retry_save' ? retrySave(msg) : retryParse(msg)); }}
+                        className="min-h-11 rounded-lg px-2 font-bold text-primary active:opacity-60"
+                      >
+                        {t('chat.recovery.retry')}
+                      </button>
+                    </div>
+                  )}
+                </div>
               );
             }
 

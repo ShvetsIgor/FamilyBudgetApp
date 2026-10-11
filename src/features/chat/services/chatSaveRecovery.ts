@@ -1,0 +1,51 @@
+import { doc, getDoc } from 'firebase/firestore';
+import { getDb } from '@/shared/lib/firebase';
+import type { SerializableChatMessage } from '@/shared/types/message';
+
+/**
+ * How long a chat message may sit unfinished before it is treated as
+ * abandoned (app closed, reload, lost connection) rather than in progress.
+ * A Groq parse times out at 25 s on the client, a transaction well before this.
+ */
+export const CHAT_STALL_MS = 60_000;
+
+/**
+ * - `retry_parse`: never got a reply (or an income save threw) — run the
+ *   original text through the normal flow again. No money moved without a
+ *   reply, and income saves reuse the message's operation id.
+ * - `retry_save`: the expense write threw — repeat it with the stored
+ *   category; the operation receipt makes a second write impossible.
+ * - `check_save`: the write was in flight when the app went away — read the
+ *   receipt before claiming anything either way.
+ */
+export type ChatRecoveryAction = 'none' | 'retry_parse' | 'retry_save' | 'check_save';
+
+export function chatRecoveryAction(
+  message: SerializableChatMessage,
+  now: number,
+  busy: boolean,
+): ChatRecoveryAction {
+  // While this session is working on the chat, nothing is abandoned yet
+  if (message.kind !== 'user' || busy) return 'none';
+  if (message.status === 'failed') return message.saveAttempt ? 'retry_save' : 'retry_parse';
+  if (message.status === 'saving') {
+    const started = Date.parse(message.saveAttempt?.startedAt ?? message.updatedAt ?? message.createdAt);
+    if (!(now - started > CHAT_STALL_MS)) return 'none';
+    return message.saveAttempt ? 'check_save' : 'retry_parse';
+  }
+  if (message.status === 'pending') {
+    return now - Date.parse(message.createdAt) > CHAT_STALL_MS ? 'retry_parse' : 'none';
+  }
+  return 'none';
+}
+
+/** The chat's retry key: `respond.ts` writes every chat entry under `chat-{userMsgId}`. */
+export function chatOperationId(userMsgId: string): string {
+  return `chat-${userMsgId}`;
+}
+
+/** True once the transaction that records this message's entry has committed. */
+export async function isChatOperationCommitted(userId: string, userMsgId: string): Promise<boolean> {
+  const receipt = await getDoc(doc(getDb(), 'users', userId, 'entryOperations', chatOperationId(userMsgId)));
+  return receipt.exists();
+}

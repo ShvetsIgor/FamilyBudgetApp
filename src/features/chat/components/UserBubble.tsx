@@ -3,10 +3,12 @@
 import { SHADOW, RAD } from '@/features/chat/styles/tokens';
 import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 
+export type UserBubbleStatus = 'pending' | 'saving' | 'saved' | 'sent' | 'clarifying' | 'undone' | 'failed';
+
 interface UserBubbleProps {
   text: string;
   time?: string;
-  status?: 'pending' | 'saved' | 'sent';
+  status?: UserBubbleStatus;
   tail?: boolean;
 }
 
@@ -38,6 +40,12 @@ export function UserBubble({ text, time, status = 'sent', tail = true }: UserBub
               <path d="M1 4.5L4.5 8L10 1" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M3.5 4.5L7 8L12 1" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
+          )}
+          {status === 'saving' && (
+            <span role="img" aria-label="saving" className="ml-0.5 inline-block h-2 w-2 animate-pulse rounded-full bg-white" />
+          )}
+          {status === 'failed' && (
+            <span role="img" aria-label="not confirmed" className="ml-0.5 text-[11px] font-black leading-none">!</span>
           )}
           {status === 'pending' && (
             <svg width="10" height="9" viewBox="0 0 10 9" fill="none" className="ml-0.5">

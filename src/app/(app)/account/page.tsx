@@ -6,6 +6,7 @@ import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setDarkMode, setTheme, setCurrency, setLanguage, setWeekStart, type WeekStart } from '@/features/ui/store/uiSlice';
 import { signOut, hasPasswordProvider } from '@/features/auth/services/authService';
 import { ChangePasswordSheet } from '@/features/auth/components/ChangePasswordSheet';
+import { DeleteAccountSheet } from '@/features/account/DeleteAccountSheet';
 import { ShortcutTokens } from '@/features/shortcuts/components/ShortcutTokens';
 import { KeyRound } from 'lucide-react';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -69,6 +70,7 @@ export default function AccountPage() {
   const [signingOut, setSigningOut] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   // Google-only accounts have no password credential to change
   const canChangePassword = hasPasswordProvider();
   const [nameInput, setNameInput] = useState(user?.name ?? '');
@@ -580,10 +582,17 @@ export default function AccountPage() {
   );
 
   const signOutBtn = (
-    <button onClick={handleSignOut} disabled={signingOut}
-      className="rounded-2xl border border-destructive/40 bg-destructive/5 py-3.5 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50">
-      {signingOut ? '…' : t('account.signOut')}
-    </button>
+    <>
+      <button onClick={handleSignOut} disabled={signingOut}
+        className="rounded-2xl border border-destructive/40 bg-destructive/5 py-3.5 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50">
+        {signingOut ? '…' : t('account.signOut')}
+      </button>
+      {/* Quiet on purpose: irreversible, and the sheet asks for proof again */}
+      <button onClick={() => setDeleteOpen(true)}
+        className="min-h-11 text-xs font-bold text-muted-foreground underline-offset-2 hover:text-destructive hover:underline">
+        {t('account.delete.row')}
+      </button>
+    </>
   );
 
   const debugBlock = (
@@ -802,6 +811,7 @@ export default function AccountPage() {
         </div>
       </div>
 
+      {deleteOpen && <DeleteAccountSheet onClose={() => setDeleteOpen(false)} />}
       {passwordOpen && canChangePassword && (
         <ChangePasswordSheet onClose={() => setPasswordOpen(false)} />
       )}

@@ -15,7 +15,7 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
-import type { SerializableChatMessage, ParseResult, BotCard, MessageStatus } from '@/shared/types/message';
+import type { SerializableChatMessage, ParseResult, BotCard, MessageStatus, ChatSaveAttempt } from '@/shared/types/message';
 
 function col(userId: string) {
   return collection(getDb(), 'messages', userId, 'items');
@@ -37,6 +37,7 @@ function toSerializable(id: string, data: Record<string, unknown>): Serializable
     expenseId: data.expenseId as string | undefined,
     incomeId:  data.incomeId  as string | undefined,
     card:      data.card      as BotCard | undefined,
+    saveAttempt: data.saveAttempt as ChatSaveAttempt | undefined,
     createdAt: toISO(data.createdAt),
     updatedAt: data.updatedAt ? toISO(data.updatedAt) : undefined,
   };
@@ -107,7 +108,7 @@ export async function addMessage(input: AddMessageInput): Promise<SerializableCh
 export async function updateMessage(
   userId: string,
   messageId: string,
-  updates: Partial<Pick<SerializableChatMessage, 'status' | 'expenseId' | 'incomeId' | 'parsed' | 'card' | 'text'>>
+  updates: Partial<Pick<SerializableChatMessage, 'status' | 'expenseId' | 'incomeId' | 'parsed' | 'card' | 'text' | 'saveAttempt'>>
 ): Promise<void> {
   const clean = Object.fromEntries(
     Object.entries({ ...updates, updatedAt: serverTimestamp() }).filter(([, v]) => v !== undefined)

@@ -14,12 +14,14 @@ import { addNotification } from '@/features/notifications/store/notificationsSli
 
 import { useChatMessages } from '@/features/chat/hooks/useChatMessages';
 import { useLearnedKeywords } from '@/features/chat/hooks/useLearnedKeywords';
+import { extractLearnableKeyword } from '@/features/chat/parser/keywordLearning';
+import { learnKeyword } from '@/features/chat/parser/learning';
 
 import { parseChatMessage, ChatSessionChangedError } from '@/features/chat/services/parseChatMessage';
 import { deleteExpense, fetchMonthExpenses } from '@/features/expenses/services/expensesService';
 import { deleteMessage, updateMessage } from '@/features/chat/services/messagesService';
 import { collectBotContext } from '@/features/chat/bot/context';
-import { respondToUserMessage, saveErrorPhrase, unconfirmedSavePhrase } from '@/features/chat/bot/respond';
+import { alreadyDeletedPhrase, respondToUserMessage, saveErrorPhrase, unconfirmedSavePhrase } from '@/features/chat/bot/respond';
 import { addMessage } from '@/features/chat/services/messagesService';
 import {
   shouldSendMorningGreeting,
@@ -48,6 +50,12 @@ import { UserBubble, type UserBubbleStatus } from '@/features/chat/components/Us
 import { answeredMessageIds, chatRecoveryAction, isChatOperationCommitted } from '@/features/chat/services/chatSaveRecovery';
 import { SavedCard } from '@/features/chat/components/BotCard/SavedCard';
 import { ClarifyCard } from '@/features/chat/components/BotCard/ClarifyCard';
+import { ReceiptCard } from '@/features/chat/components/BotCard/ReceiptCard';
+import { parseReceiptPhoto, readReceiptCard, saveReceipt, type ReceiptCardData } from '@/features/chat/services/receiptChat';
+import { compressReceiptPhoto } from '@/features/chat/services/receiptImage';
+import type { ReceiptGroup } from '@/features/ai/receiptParser/receipt';
+import { addExpense } from '@/features/expenses/services/expensesService';
+import { isAppManagedSavingsCategory } from '@/features/categories/policy/categoryPolicy';
 import { EnvelopesCard } from '@/features/chat/components/BotCard/EnvelopesCard';
 import { Typing } from '@/features/chat/components/Typing';
 import { useT } from '@/shared/hooks/useT';
@@ -68,7 +76,7 @@ import { activateStarterCategories, needsStarterCategories } from '@/features/ca
 import { StarterCategoriesCard } from '@/features/chat/components/BotCard/StarterCategoriesCard';
 import { readStarterCard } from '@/features/chat/components/BotCard/starterCardData';
 import { createStarterFlow } from '@/features/chat/services/starterFlow';
-import { recordExpense } from '@/features/expenses/store/suggestionMemorySlice';
+import { recordExpense, recordSplitExpense } from '@/features/expenses/store/suggestionMemorySlice';
 
 function msgTime(iso: string): string {
   return format(parseISO(iso), 'HH:mm');
@@ -229,6 +237,11 @@ export default function HomePage() {
   );
   const needsStarter = useMemo(() => needsStarterCategories(expenseCats), [expenseCats]);
   const allIncomeCats = useAppSelector((s) => s.categories.income);
+  // A receipt is split across the user's own categories, never the savings bucket
+  const receiptCategories = useMemo(
+    () => allExpenseCats.filter((category) => !isAppManagedSavingsCategory(category)),
+    [allExpenseCats],
+  );
   const expenseFolders = useAppSelector((s) => s.categories.folders.expense);
   const incomeFolders = useAppSelector((s) => s.categories.folders.income);
   const savingsGoals = useAppSelector((s) => s.savings.list);
@@ -391,7 +404,8 @@ export default function HomePage() {
     language,
     botText: starterBotText,
     failureText,
-  }), [appStore, sendLock, dispatch, learned, language, replyToParsed, starterBotText, failureText]);
+    multiIntro: (count) => t('chat.multi.intro', { n: count }),
+  }), [appStore, sendLock, dispatch, learned, language, replyToParsed, starterBotText, failureText, t]);
 
   const handleSend = useCallback(async (text: string) => {
     if (!userId || !categoriesReady || sendingRef.current) return;
@@ -426,6 +440,98 @@ export default function HomePage() {
       sendingRef.current = false;
     }
   }, [userId, categoriesReady, buildEnrichedCtx, dispatch, failureText, appStore, starterFlow]);
+
+  // ── Receipt photos ───────────────────────────────────────────────────────
+  // The photo is compressed on the phone, read by the server, and dropped:
+  // only the draft lives on, in the card, until the user saves or discards it.
+  const receiptTexts = {
+    photo: t('chat.receipt.userText'),
+    bot: t('chat.receipt.botText'),
+    photoFailed: t('chat.receipt.photoFailed'),
+    setupFirst: t('chat.receipt.setupFirst'),
+    unconfirmed: t('chat.receipt.unconfirmed'),
+  };
+  const handlePhoto = useCallback(async (file: File) => {
+    if (!userId || !categoriesReady || sendingRef.current) return;
+    sendingRef.current = true;
+    dispatch(setTyping(true));
+    const botSays = (text: string) => addMessage({ userId, senderId: 'bot', kind: 'bot', status: 'saved', text });
+    try {
+      // Setup restarts the ORIGINAL text; a photo is not stored, so ask for setup first
+      if (needsStarterCategories(appStore.getState().categories.expense)) { await botSays(receiptTexts.setupFirst); return; }
+      let image: string;
+      try { image = await compressReceiptPhoto(file); }
+      catch { await botSays(receiptTexts.photoFailed); return; }
+      const userMsg = await addMessage({ userId, senderId: userId, kind: 'user', text: receiptTexts.photo, status: 'pending', receipt: true });
+      const outcome = await parseReceiptPhoto(image, { userId, language });
+      if (appStore.getState().auth.user?.id !== userId) return;
+      await updateMessage(userId, userMsg.id, { status: 'clarifying' });
+      if (appStore.getState().auth.user?.id !== userId) return;
+      if (outcome.kind === 'receipt') {
+        const data: ReceiptCardData = { ...outcome.receipt, userMsgId: userMsg.id };
+        await addMessage({ userId, senderId: 'bot', kind: 'bot', status: 'clarifying', text: receiptTexts.bot, card: { kind: 'receipt', data } });
+      } else {
+        await botSays(outcome.kind === 'needs_categories' ? receiptTexts.setupFirst : outcome.message);
+      }
+    } catch (err) {
+      if (err instanceof ChatSessionChangedError || appStore.getState().auth.user?.id !== userId) return;
+      console.error('chat receipt failed', err);
+      void addMessage({ userId, senderId: 'bot', kind: 'bot', status: 'saved', text: failureText });
+    } finally {
+      if (appStore.getState().auth.user?.id === userId) dispatch(setTyping(false));
+      sendingRef.current = false;
+    }
+  // receiptTexts is rebuilt from `t` each render; `t` is the stable dependency
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, categoriesReady, dispatch, appStore, language, failureText, t]);
+
+  /** Save = one expense with splits under the photo message's operation id; tapping it again is the retry. */
+  const handleReceiptSave = useCallback(async (cardMsgId: string, data: ReceiptCardData, groups: ReceiptGroup[]) => {
+    if (!userId || sendingRef.current) return;
+    sendingRef.current = true;
+    dispatch(setTyping(true));
+    const unconfirmed = receiptTexts.unconfirmed;
+    const deletedText = alreadyDeletedPhrase(language);
+    try {
+      void updateMessage(userId, data.userMsgId, { status: 'saving' }).catch(() => {});
+      const result = await saveReceipt({
+        userId, card: data, groups, language, addExpense,
+        categories: appStore.getState().categories.expense,
+      });
+      if (result.status === 'saved') {
+        dispatch(prependExpense(result.expense));
+        dispatch(recordSplitExpense({
+          merchant: data.merchant ?? undefined,
+          categoryIds: [...new Set(groups.map((group) => group.categoryId!))],
+          date: data.date,
+        }));
+        await updateMessage(userId, data.userMsgId, { status: 'saved', expenseId: result.expense.id });
+        await addMessage(result.card);
+      } else {
+        await updateMessage(userId, data.userMsgId, { status: result.status === 'deleted' ? 'undone' : 'failed' });
+        await addMessage({ userId, senderId: 'bot', kind: 'bot', status: 'saved', text: result.status === 'deleted' ? deletedText : unconfirmed });
+      }
+      if (result.status !== 'unconfirmed') {
+        dispatch(removeMessage(cardMsgId));
+        await deleteMessage(userId, cardMsgId).catch(() => {});
+      }
+    } catch (err) {
+      if (appStore.getState().auth.user?.id !== userId) return;
+      console.error('chat receipt save failed', err);
+      void addMessage({ userId, senderId: 'bot', kind: 'bot', status: 'saved', text: unconfirmed });
+    } finally {
+      if (appStore.getState().auth.user?.id === userId) dispatch(setTyping(false));
+      sendingRef.current = false;
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, dispatch, appStore, language, t]);
+
+  const handleReceiptCancel = useCallback(async (cardMsgId: string, data: ReceiptCardData) => {
+    if (!userId || sendingRef.current) return;
+    dispatch(removeMessage(cardMsgId));
+    await updateMessage(userId, data.userMsgId, { status: 'undone' }).catch(() => {});
+    await deleteMessage(userId, cardMsgId).catch(() => {});
+  }, [userId, dispatch]);
 
   // Same shape and same compiler bail-out as handleExpenseClarifyChip below; deps are complete.
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
@@ -544,6 +650,9 @@ export default function HomePage() {
           folderId: appStore.getState().categories.expense.find((category) => category.id === savedCategoryId)?.folderId ?? undefined,
           date: context.parsedDate ?? toLocalDateKey(new Date()),
         }));
+        // An explicit choice teaches the message's word («Later» files, it does not choose)
+        const keyword = originalMessage.parsed?.merchantOnly ? null : extractLearnableKeyword(originalMessage.text);
+        if (keyword && savedCategoryId !== 'unsorted') void learnKeyword(userId, keyword, savedCategoryId).catch(() => {});
       }
       for (const botMsg of reply.messages) await addMessage(botMsg);
       if (reply.expense) {
@@ -684,7 +793,8 @@ export default function HomePage() {
   const settledClarifyIds = useMemo(() => {
     const settled = new Set(messages.filter((m) => m.kind === 'user' && (m.status === 'saved' || m.status === 'undone')).map((m) => m.id));
     return new Set(messages
-      .filter((m) => m.card?.kind === 'clarify' && settled.has((m.card.data as { userMsgId?: string }).userMsgId ?? ''))
+      .filter((m) => (m.card?.kind === 'clarify' || m.card?.kind === 'receipt')
+        && settled.has((m.card.data as { userMsgId?: string }).userMsgId ?? ''))
       .map((m) => m.id));
   }, [messages]);
   const cleanedCardsRef = useRef(new Set<string>());
@@ -761,7 +871,7 @@ export default function HomePage() {
 
   return (
     <>
-    <ChatScreen onSend={handleSend} onPlus={() => router.push('/expenses/new')} disabled={typing || !categoriesReady}>
+    <ChatScreen onSend={handleSend} onPhoto={handlePhoto} onPlus={() => router.push('/expenses/new')} disabled={typing || !categoriesReady}>
       {/* Pinned today hero */}
       <PinnedToday
         spent={displaySpent}
@@ -807,6 +917,7 @@ export default function HomePage() {
                   <UserBubble
                     text={msg.text}
                     time={time}
+                    derived={!!msg.derivedFrom}
                     status={recovery === 'retry_parse' ? 'failed' : msg.status as UserBubbleStatus}
                     tail={tail}
                   />
@@ -907,6 +1018,23 @@ export default function HomePage() {
               );
             }
 
+            if (msg.card?.kind === 'receipt') {
+              const receipt = readReceiptCard(msg.card.data);
+              if (!receipt || settledClarifyIds.has(msg.id)) return null;
+              return (
+                <BotCardBubble key={msg.id} tail={tail}>
+                  <ReceiptCard
+                    data={receipt}
+                    categories={receiptCategories}
+                    folders={expenseFolders}
+                    busy={typing}
+                    onSave={(groups) => handleReceiptSave(msg.id, receipt, groups)}
+                    onCancel={() => { void handleReceiptCancel(msg.id, receipt); }}
+                  />
+                </BotCardBubble>
+              );
+            }
+
             if (msg.card?.kind === 'clarify') {
               if (settledClarifyIds.has(msg.id)) return null;
               const d = msg.card.data as Record<string, unknown>;
@@ -934,6 +1062,7 @@ export default function HomePage() {
                       unknownNote={context.parsedNote}
                       storeName={context.storeName}
                       isRepeat={Boolean(d.isRepeat)}
+                      rememberWord={d.rememberWord as string | undefined}
                       suggestSplit={Boolean(d.suggestSplit)}
                       categories={allExpenseCats}
                       onSelectChip={(chip) => handleExpenseClarifyChip(context, chip)}

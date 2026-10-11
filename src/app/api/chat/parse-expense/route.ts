@@ -1,5 +1,5 @@
 import { resolveChatAuthorization } from '@/features/ai/chatAuth';
-import { ExpenseParserCapacityError, parseExpenseText } from '@/features/ai/expenseParser/parseExpenseText';
+import { ExpenseParserCapacityError, parseExpenseItems } from '@/features/ai/expenseParser/parseExpenseText';
 import { missingCategoryMessage } from '@/features/ai/expenseParser/categoryClarification';
 import { readSiriRequest, SiriRequestError } from '@/features/ai/siriRequest';
 import { consumeAiQuota, consumeChatRequestQuota, recordAiCooldown } from '@/features/ai/siriRateLimit';
@@ -68,9 +68,9 @@ export async function POST(request: Request): Promise<Response> {
   const merchantDraft = parseMerchantDraft(input.text, context.currency, input.todayKey);
   if (merchantDraft) return json({ ok: true, expense: merchantDraft });
 
-  let parsed;
+  let items;
   try {
-    parsed = await parseExpenseText({ text: input.text, todayKey: input.todayKey,
+    items = await parseExpenseItems({ text: input.text, todayKey: input.todayKey,
       categories: context.categories.map(({ id, name }) => ({ id, name })),
       defaultCurrency: context.currency, language: context.language });
   } catch (error) {
@@ -82,15 +82,21 @@ export async function POST(request: Request): Promise<Response> {
     reportServerFailure({ route: ROUTE, stage: 'parser', error });
     return json({ ok: false, error: 'parser_unavailable' }, 503);
   }
-  const validation = validateParsedExpense(parsed, { categories: context.categories, todayKey: input.todayKey });
-  if (!validation.valid) {
+  // All or nothing: a list with one unreadable purchase is asked about as a
+  // whole, never recorded minus the item that failed
+  const expenses = [];
+  for (const parsed of items) {
+    const validation = validateParsedExpense(parsed, { categories: context.categories, todayKey: input.todayKey });
+    if (validation.valid) { expenses.push(validation.expense); continue; }
     const categoryRequired = validation.reason === 'invalid_category'
       || (parsed.amount !== null && parsed.amount > 0 && !!parsed.suggestedCategoryName);
+    const detail = categoryRequired ? missingCategory(parsed.suggestedCategoryName)
+      : parsed.clarificationQuestion || (context.language === 'ru'
+        ? 'Уточни сумму, валюту, категорию и дату и отправь расход целиком ещё раз.'
+        : 'Clarify the amount, currency, category and date, then send the complete expense again.');
+    const label = items.length > 1 ? (parsed.description ?? parsed.merchant) : null;
     return json({ ok: false, error: categoryRequired ? 'category_required' : 'clarification_required',
-      message: categoryRequired ? missingCategory(parsed.suggestedCategoryName)
-        : parsed.clarificationQuestion || (context.language === 'ru'
-          ? 'Уточни сумму, валюту, категорию и дату и отправь расход целиком ещё раз.'
-          : 'Clarify the amount, currency, category and date, then send the complete expense again.') }, 422);
+      message: label ? `«${label}»: ${detail}` : detail }, 422);
   }
-  return json({ ok: true, expense: validation.expense });
+  return json(expenses.length === 1 ? { ok: true, expense: expenses[0] } : { ok: true, expenses });
 }

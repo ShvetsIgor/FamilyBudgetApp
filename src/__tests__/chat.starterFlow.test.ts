@@ -12,7 +12,7 @@ import type { ParseResult, SerializableChatMessage, StarterCardData } from '@/sh
 
 vi.mock('@/shared/lib/firebase', () => ({ getFirebaseAuth: () => ({ currentUser: null }), getDb: () => ({}) }));
 
-import { createStarterFlow, type StarterFlowDeps } from '@/features/chat/services/starterFlow';
+import { createStarterFlow, derivedItemText, type StarterFlowDeps } from '@/features/chat/services/starterFlow';
 import type { ChatParseOutcome } from '@/features/chat/services/parseChatMessage';
 import type { StarterActivation } from '@/features/categories/services/starterCategories';
 
@@ -66,6 +66,7 @@ function harness({ categories = [] as Category[], outcome = { kind: 'parsed', pa
     language: 'en' as const,
     botText: 'Pick categories first',
     failureText: 'Could not save',
+    multiIntro: (n: number) => `Expenses: ${n}`,
     today: () => '2026-10-10',
   };
   const flow = createStarterFlow(deps as unknown as StarterFlowDeps);
@@ -262,5 +263,40 @@ describe('account switch mid-flow', () => {
     });
     await h.flow.sendExpense('alice', 'coffee 20');
     expect(h.deps.addMessage).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('a list message («хлеб 12, кофе 18»)', () => {
+  const bread: ParseResult = { amount: 12, currency: 'ILS', categoryId: 'bakery', confidence: 'high', note: 'хлеб' };
+  const coffee: ParseResult = { amount: 18, currency: 'USD', categoryId: 'coffee', confidence: 'high', storeName: 'Aroma' };
+
+  it('splits into one message per purchase, each replied to on its own', async () => {
+    const h = harness({ categories: [cat('bakery')], outcome: { kind: 'multi', items: [bread, coffee] } });
+    await h.flow.sendExpense('alice', 'хлеб 12, кофе 18 долларов в Ароме');
+
+    // The list itself is processed; each purchase is its own pending message with the list's id
+    expect(h.deps.updateMessage).toHaveBeenCalledWith('alice', 'm0', { status: 'saved' });
+    const items = h.deps.addMessage.mock.calls.map(([input]) => input).filter((input) => input.derivedFrom);
+    expect(items).toEqual([
+      expect.objectContaining({ kind: 'user', status: 'pending', derivedFrom: 'm0', text: 'хлеб · 12 ₪' }),
+      expect.objectContaining({ kind: 'user', status: 'pending', derivedFrom: 'm0', text: 'Aroma · 18 $' }),
+    ]);
+    const replies = h.deps.reply.mock.calls as unknown as [string, SerializableChatMessage, ParseResult][];
+    expect(replies.map(([, msg, p]) => [msg.id, p])).toEqual([
+      ['m2', bread], ['m3', coffee],
+    ]);
+    expect(h.deps.parse).toHaveBeenCalledTimes(1); // one AI call for the whole list
+  });
+
+  it('stops creating items once the account changes', async () => {
+    const h = harness({ categories: [cat('bakery')], outcome: { kind: 'multi', items: [bread, coffee] } });
+    h.deps.reply.mockImplementationOnce(async () => { h.session.uid = 'bob'; });
+    await h.flow.sendExpense('alice', 'хлеб 12, кофе 18');
+    expect(h.deps.addMessage.mock.calls.filter(([input]) => input.derivedFrom)).toHaveLength(1);
+    expect(h.deps.reply).toHaveBeenCalledTimes(1);
+  });
+
+  it('labels an item without a word by its amount alone', () => {
+    expect(derivedItemText({ amount: 7, currency: 'RUB', categoryId: 'x', confidence: 'high' })).toBe('7 ₽');
   });
 });

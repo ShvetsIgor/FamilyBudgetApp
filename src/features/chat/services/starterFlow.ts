@@ -15,6 +15,7 @@ import {
 } from '@/features/categories/store/categoriesSlice';
 import { starterContinuationMessage } from '@/features/chat/components/BotCard/starterCardData';
 import { toLocalDateKey } from '@/shared/utils/dateKey';
+import { getCurrencySymbol } from '@/shared/utils/currency';
 import { ChatSessionChangedError, type ChatParseOutcome } from './parseChatMessage';
 
 /**
@@ -42,8 +43,17 @@ export interface StarterFlowDeps {
   language: Language;
   botText: string;
   failureText: string;
+  /** «Found N expenses — confirm each», in the user's language */
+  multiIntro(count: number): string;
   /** Local YYYY-MM-DD; injectable for tests. */
   today?(): string;
+}
+
+/** «хлеб · 12 ₪» — what one purchase of a list reads as in the chat. */
+export function derivedItemText(parsed: ParseResult): string {
+  const label = parsed.note ?? parsed.storeName;
+  const money = `${parsed.amount} ${getCurrencySymbol(parsed.currency ?? 'ILS')}`;
+  return label ? `${label} · ${money}` : money;
 }
 
 export function createStarterFlow(deps: StarterFlowDeps) {
@@ -68,6 +78,23 @@ export function createStarterFlow(deps: StarterFlowDeps) {
     if (!isCurrent(uid)) return;
     if (outcome.kind === 'parsed') {
       await deps.reply(uid, userMsg, outcome.parsed);
+      return;
+    }
+    if (outcome.kind === 'multi') {
+      // Each purchase becomes its own message: its own card, its own
+      // operation id (no list item can be booked twice), its own retry.
+      await deps.updateMessage(uid, userMsg.id, { status: 'saved' });
+      if (!isCurrent(uid)) return;
+      await deps.addMessage({ userId: uid, senderId: 'bot', kind: 'bot', status: 'saved', text: deps.multiIntro(outcome.items.length) });
+      for (const parsed of outcome.items) {
+        if (!isCurrent(uid)) return;
+        const item = await deps.addMessage({
+          userId: uid, senderId: uid, kind: 'user', status: 'pending', derivedFrom: userMsg.id,
+          text: derivedItemText(parsed),
+        });
+        if (!isCurrent(uid)) return;
+        await deps.reply(uid, item, parsed);
+      }
       return;
     }
     await deps.updateMessage(uid, userMsg.id, { status: 'clarifying' });

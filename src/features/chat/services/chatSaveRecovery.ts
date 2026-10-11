@@ -27,8 +27,10 @@ export function chatRecoveryAction(
   /** A bot message follows it. Older chats leave answered messages «pending». */
   answered = false,
 ): ChatRecoveryAction {
-  // While this session is working on the chat, nothing is abandoned yet
-  if (message.kind !== 'user' || busy) return 'none';
+  // While this session is working on the chat, nothing is abandoned yet. A
+  // receipt photo is not stored, so it cannot be re-read; its card's own Save
+  // button is the retry (same operation id).
+  if (message.kind !== 'user' || busy || message.receipt) return 'none';
   if (message.status === 'failed') return message.saveAttempt ? 'retry_save' : 'retry_parse';
   if (message.status === 'saving') {
     const started = Date.parse(message.saveAttempt?.startedAt ?? message.updatedAt ?? message.createdAt);

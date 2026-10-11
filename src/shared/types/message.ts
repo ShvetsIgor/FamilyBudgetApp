@@ -14,7 +14,7 @@ export interface ChatSaveAttempt {
   startedAt: string;
 }
 
-export type BotCardKind = 'morning' | 'saved' | 'clarify' | 'weekly' | 'envelopes' | 'goal' | 'undone' | 'alert' | 'future' | 'starter';
+export type BotCardKind = 'morning' | 'saved' | 'clarify' | 'weekly' | 'envelopes' | 'goal' | 'undone' | 'alert' | 'future' | 'starter' | 'receipt';
 
 export interface BotCard {
   kind: BotCardKind;
@@ -105,6 +105,10 @@ export interface SerializableChatMessage {
   incomeId?: string;
   card?: BotCard;
   saveAttempt?: ChatSaveAttempt;
+  /** One purchase split out of a list message («хлеб 12, кофе 18»): the list's id */
+  derivedFrom?: string;
+  /** A receipt photo was sent. The photo itself is never stored, so it cannot be re-parsed. */
+  receipt?: boolean;
 
   status: MessageStatus;
   createdAt: string;

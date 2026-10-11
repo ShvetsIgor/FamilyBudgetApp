@@ -32,11 +32,8 @@ export function acceptedReferenceDate(raw: unknown, todayKey: string): string | 
   return age >= 0 && age <= REFERENCE_DATE_MAX_AGE_DAYS ? raw : null;
 }
 
-/**
- * Bound actual streamed bytes, not the caller-controlled Content-Length.
- * `acceptReferenceDate` is chat-only: Siri always parses relative to now.
- */
-export async function readSiriRequest(request: Request, { acceptReferenceDate = false } = {}) {
+/** Bound actual streamed bytes, not the caller-controlled Content-Length. */
+export async function readLimitedJson(request: Request, maxBytes: number): Promise<unknown> {
   const reader = request.body?.getReader();
   if (!reader) throw new SiriRequestError(400, 'A JSON body is required.');
   const chunks: Uint8Array[] = [];
@@ -46,7 +43,7 @@ export async function readSiriRequest(request: Request, { acceptReferenceDate = 
       const { done, value } = await reader.read();
       if (done) break;
       size += value.byteLength;
-      if (size > 8192) {
+      if (size > maxBytes) {
         await reader.cancel();
         throw new SiriRequestError(413, 'Request body is too large.');
       }
@@ -56,9 +53,23 @@ export async function readSiriRequest(request: Request, { acceptReferenceDate = 
   const bytes = new Uint8Array(size);
   let offset = 0;
   for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; }
-  let body;
-  try { body = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)); }
+  try { return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)); }
   catch { throw new SiriRequestError(400, 'A valid JSON body is required.'); }
+}
+
+/** Today in the caller's time zone; an unknown zone is a 400, never a server-local guess. */
+export function todayKeyFor(timeZone: unknown): string {
+  if (typeof timeZone !== 'string' || !timeZone || timeZone.length > 100) {
+    throw new SiriRequestError(400, 'A valid timeZone is required, for example Asia/Jerusalem.');
+  }
+  try { return toZonedDateKey(new Date(), timeZone); }
+  catch { throw new SiriRequestError(400, 'A valid timeZone is required, for example Asia/Jerusalem.'); }
+}
+
+/** `acceptReferenceDate` is chat-only: Siri always parses relative to now. */
+export async function readSiriRequest(request: Request, { acceptReferenceDate = false } = {}) {
+  // Shape-checked field by field below
+  const body = await readLimitedJson(request, 8192) as Record<string, string | undefined> | null;
   if (!body || typeof body !== 'object' || Array.isArray(body)
     || typeof body.text !== 'string' || !body.text.trim() || body.text.length > 2000) {
     throw new SiriRequestError(400, 'Text must contain between 1 and 2000 characters.');
@@ -70,9 +81,7 @@ export async function readSiriRequest(request: Request, { acceptReferenceDate = 
     || body.requestId.length < 1 || body.requestId.length > 128 || /[^A-Za-z0-9_-]/.test(body.requestId))) {
     throw new SiriRequestError(400, 'requestId must contain 1 to 128 letters, digits, underscores or hyphens.');
   }
-  let todayKey: string;
-  try { todayKey = toZonedDateKey(new Date(), body.timeZone); }
-  catch { throw new SiriRequestError(400, 'A valid timeZone is required, for example Asia/Jerusalem.'); }
+  let todayKey = todayKeyFor(body.timeZone);
   if (acceptReferenceDate) todayKey = acceptedReferenceDate(body.referenceDate, todayKey) ?? todayKey;
   return { text: body.text.trim() as string, timeZone: body.timeZone as string, requestId: body.requestId as string | undefined, todayKey };
 }

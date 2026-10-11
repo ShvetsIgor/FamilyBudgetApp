@@ -683,7 +683,8 @@
       "newFolder": "New folder",
       "folderName": "Folder name",
       "createFolder": "Create folder",
-      "usuallySplit": "You usually split {store}"
+      "usuallySplit": "You usually split {store}",
+      "rememberWord": "I’ll remember “{word}” for next time"
     },
     "weekly": {
       "envelopes": "Envelopes",
@@ -701,7 +702,8 @@
       "voiceUnsupported": "Voice input is not supported in this browser",
       "help": "Show input examples",
       "send": "Send",
-      "listening": "Listening…"
+      "listening": "Listening…",
+      "receipt": "Photograph a receipt"
     },
     "help": {
       "title": "How to use",
@@ -829,6 +831,23 @@
       "unconfirmed": "Save not confirmed.",
       "unprocessed": "Message not processed.",
       "retry": "Retry"
+    },
+    "multi": {
+      "intro": "Expenses in this message: {n} — confirm each one."
+    },
+    "receipt": {
+      "title": "Receipt",
+      "userText": "📷 Receipt photo",
+      "botText": "I read the receipt — check the categories and save.",
+      "unrecognized": "Not recognized — choose a category",
+      "chooseCategory": "Choose a category",
+      "changeCategory": "Category “{name}” — change",
+      "assignHint": "Choose a category for every amount, then you can save.",
+      "save": "Save {amount}",
+      "cancel": "Don’t save",
+      "photoFailed": "Couldn’t open the photo. Try another one or type the expense.",
+      "setupFirst": "You need categories first: type any expense, like “coffee 20”, and I’ll offer a set. Then send the receipt again.",
+      "unconfirmed": "Couldn’t confirm the save. Tap “Save” on the card again — it won’t be recorded twice."
     }
   },
   "onboarding": {

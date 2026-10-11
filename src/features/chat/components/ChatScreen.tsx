@@ -8,10 +8,11 @@ interface ChatScreenProps {
   children: React.ReactNode;
   onSend: (text: string) => void;
   onPlus?: () => void;
+  onPhoto?: (file: File) => void;
   disabled?: boolean;
 }
 
-export function ChatScreen({ children, onSend, onPlus, disabled }: ChatScreenProps) {
+export function ChatScreen({ children, onSend, onPlus, onPhoto, disabled }: ChatScreenProps) {
   const C = useChatTokens();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -39,7 +40,7 @@ export function ChatScreen({ children, onSend, onPlus, disabled }: ChatScreenPro
         <div className="h-3" />
       </div>
 
-      <Composer onSend={onSend} onPlus={onPlus} disabled={disabled} />
+      <Composer onSend={onSend} onPlus={onPlus} onPhoto={onPhoto} disabled={disabled} />
     </div>
   );
 }

@@ -2,7 +2,9 @@ import type { Currency, Language } from '@/shared/types';
 import { toLocalDateKey } from '@/shared/utils/dateKey';
 import { missingCategoryMessage } from './categoryClarification';
 import {
+  buildExpenseListJsonSchema,
   buildExpenseParserJsonSchema,
+  MAX_EXPENSE_ITEMS,
   PARSER_CURRENCIES,
   type ParsedExpenseResult,
   type ParserCurrency,
@@ -67,6 +69,28 @@ export interface ParseExpenseTextInput {
 }
 
 export async function parseExpenseText(input: ParseExpenseTextInput): Promise<ParsedExpenseResult> {
+  const { content, categoryIds } = await requestParse(input, 'single');
+  return sanitizeParsedResult(content, input.defaultCurrency, input.language, categoryIds);
+}
+
+/**
+ * Chat: one message may hold several separate purchases. Each item gets the
+ * same sanitizing as a single expense; an empty or oversized list comes back
+ * as ONE clarification, never as a partial list that silently drops a purchase.
+ */
+export async function parseExpenseItems(input: ParseExpenseTextInput): Promise<ParsedExpenseResult[]> {
+  const { content, categoryIds } = await requestParse(input, 'list');
+  let raw: unknown;
+  try { raw = JSON.parse(content); } catch { return [fallbackClarification(input.language)]; }
+  // A model that ignores the wrapper and answers one object is still one expense
+  const items = raw && typeof raw === 'object' && Array.isArray((raw as { expenses?: unknown }).expenses)
+    ? (raw as { expenses: unknown[] }).expenses : [raw];
+  if (items.length === 0) return [fallbackClarification(input.language)];
+  if (items.length > MAX_EXPENSE_ITEMS) return [tooManyItems(input.language)];
+  return items.map((item) => sanitizeParsedResult(JSON.stringify(item), input.defaultCurrency, input.language, categoryIds));
+}
+
+async function requestParse(input: ParseExpenseTextInput, mode: 'single' | 'list'): Promise<{ content: string; categoryIds: string[] }> {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     throw new ExpenseParserError('GROQ_API_KEY is not configured');
@@ -77,7 +101,7 @@ export async function parseExpenseText(input: ParseExpenseTextInput): Promise<Pa
 
   const todayKey = input.todayKey ?? toLocalDateKey(new Date());
   const categoryIds = input.categories.map((c) => c.id);
-  const jsonSchema = buildExpenseParserJsonSchema(categoryIds);
+  const jsonSchema = mode === 'list' ? buildExpenseListJsonSchema(categoryIds) : buildExpenseParserJsonSchema(categoryIds);
 
   const controller = new AbortController();
   // Keep the deadline active through response-body reading, not just headers.
@@ -94,7 +118,7 @@ export async function parseExpenseText(input: ParseExpenseTextInput): Promise<Pa
         model: MODEL,
         temperature: 0,
         messages: [
-          { role: 'system', content: buildSystemPrompt(input, todayKey) },
+          { role: 'system', content: buildSystemPrompt(input, todayKey, mode) },
           { role: 'user', content: input.text },
         ],
         response_format: { type: 'json_schema', json_schema: jsonSchema },
@@ -113,8 +137,7 @@ export async function parseExpenseText(input: ParseExpenseTextInput): Promise<Pa
     if (typeof rawContent !== 'string') {
       throw new ExpenseParserError('Groq response missing message content');
     }
-
-    return sanitizeParsedResult(rawContent, input.defaultCurrency, input.language, categoryIds);
+    return { content: rawContent, categoryIds };
   } catch (err) {
     if (controller.signal.aborted) {
       throw new ExpenseParserError('Groq request timed out after 15 seconds', { cause: err });
@@ -126,13 +149,15 @@ export async function parseExpenseText(input: ParseExpenseTextInput): Promise<Pa
   }
 }
 
-function buildSystemPrompt(input: ParseExpenseTextInput, todayKey: string): string {
+function buildSystemPrompt(input: ParseExpenseTextInput, todayKey: string, mode: 'single' | 'list'): string {
   const categoryLines = input.categories.length > 0
     ? input.categories.map((c) => `- ${c.id}: ${c.name}`).join('\n')
     : '(the user currently has no active categories — categoryId must be null)';
 
   return [
-    'You extract a single expense from a short message written by the owner of a personal/family budget app.',
+    mode === 'list'
+      ? `You extract the expenses in a short message written by the owner of a personal/family budget app. Return each separate purchase as its own item in "expenses" (at most ${MAX_EXPENSE_ITEMS}); every rule below applies to each item.`
+      : 'You extract a single expense from a short message written by the owner of a personal/family budget app.',
     `Today's local date is ${todayKey} (YYYY-MM-DD). Resolve relative dates ("yesterday", "вчера") against it.`,
     'The message may be in Russian, English, or Hebrew.',
     '',
@@ -147,7 +172,9 @@ function buildSystemPrompt(input: ParseExpenseTextInput, todayKey: string): stri
     '5. date: an explicit or clearly implied YYYY-MM-DD, or null if the message gives no date (the app defaults to today itself).',
     '6. confidence: your own 0–1 confidence that this can be safely recorded as-is.',
     '7. If the amount is missing or the message is too ambiguous to safely create an expense, set needsClarification true.',
-    'This endpoint supports one expense only. Income, transfers, refunds and multiple separate expenses must ask for clarification; never turn income into an expense, sum separate purchases or silently drop one of them.',
+    mode === 'list'
+      ? 'Several separate purchases become several items, each with its own amount; one purchase is exactly one item. Never sum separate purchases, never split one purchase, never drop one. A date or currency stated once for the whole message applies to every item. Income, transfers and refunds are not expenses: return one item with needsClarification true.'
+      : 'This endpoint supports one expense only. Income, transfers, refunds and multiple separate expenses must ask for clarification; never turn income into an expense, sum separate purchases or silently drop one of them.',
     `8. clarificationQuestion: a short question in ${input.language === 'ru' ? 'Russian' : 'English'}, only when needsClarification is true, otherwise null.`,
     '',
     'Active categories (id: name):',
@@ -237,6 +264,15 @@ function sanitizeParsedResult(
     type: 'expense',
     amount, currency, merchant, description, categoryId, suggestedCategoryName, date,
     confidence, needsClarification, clarificationQuestion,
+  };
+}
+
+function tooManyItems(language: Language): ParsedExpenseResult {
+  return {
+    ...fallbackClarification(language),
+    clarificationQuestion: language === 'ru'
+      ? `За раз записываю до ${MAX_EXPENSE_ITEMS} расходов — разбей список на части.`
+      : `I record up to ${MAX_EXPENSE_ITEMS} expenses at a time — send the list in parts.`,
   };
 }
 

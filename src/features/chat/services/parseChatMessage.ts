@@ -5,8 +5,11 @@ import { parseMessage, type ParserContext } from '@/features/chat/parser/parse';
 import { detectMerchant } from '@/features/chat/parser/pipeline';
 import { PARSER_CURRENCIES } from '@/features/ai/expenseParser/schema';
 import { exactMerchant, type ChatExpenseDraft } from '@/features/chat/parser/merchantDraft';
+import { matchLearnedKeyword } from '@/features/chat/parser/keywordLearning';
 
 export type ChatParseOutcome = { kind: 'parsed'; parsed: ParseResult }
+  /** Several separate purchases in one message, each still to be confirmed */
+  | { kind: 'multi'; items: ParseResult[] }
   | { kind: 'clarification'; message: string }
   /** The account has no active expense category: the chat offers starter setup. */
   | { kind: 'needs_categories' };
@@ -24,6 +27,11 @@ export function toChatParseResult(expense: ChatExpenseDraft): ParseResult {
     ...(merchant ? { storeId: merchant.id, storeGroup: merchant.storeGroup } : {}),
     ...(expense.merchantOnly ? { merchantOnly: true } : {}),
   };
+}
+
+function isUsableDraft(expense: ChatExpenseDraft | undefined): expense is ChatExpenseDraft {
+  return !!expense && expense.amount > 0 && PARSER_CURRENCIES.includes(expense.currency) && !!expense.date
+    && (!!expense.categoryId || (expense.categoryId === null && expense.merchantOnly === true));
 }
 
 /**
@@ -61,10 +69,19 @@ export async function parseChatMessage(text: string, context: ParserContext & {
     });
     const body = await response.json();
     assertSession();
-    if (response.ok && body.ok === true && body.expense?.amount > 0
-      && PARSER_CURRENCIES.includes(body.expense.currency) && body.expense.date
-      && (body.expense.categoryId || (body.expense.categoryId === null && body.expense.merchantOnly === true))) {
-      return { kind: 'parsed', parsed: toChatParseResult(body.expense) };
+    // A word the user taught leads the choice; a dictionary supermarket keeps its own memory
+    const withLearned = (parsed: ParseResult, source: string): ParseResult => {
+      const learnedHit = parsed.merchantOnly ? null : matchLearnedKeyword(source, context.learned);
+      return learnedHit ? { ...parsed, learnedCategoryId: learnedHit.categoryId } : parsed;
+    };
+    if (response.ok && body.ok === true && isUsableDraft(body.expense)) {
+      return { kind: 'parsed', parsed: withLearned(toChatParseResult(body.expense), text) };
+    }
+    // Every item must be usable — a list is never recorded minus one purchase
+    if (response.ok && body.ok === true && Array.isArray(body.expenses) && body.expenses.length > 1
+      && body.expenses.every(isUsableDraft)) {
+      return { kind: 'multi', items: (body.expenses as ChatExpenseDraft[]).map((expense) =>
+        withLearned(toChatParseResult(expense), expense.description ?? expense.merchant ?? '')) };
     }
     if (response.status === 422 && body.reason === 'no_categories') return { kind: 'needs_categories' };
     if (response.status === 422 && typeof body.message === 'string') {

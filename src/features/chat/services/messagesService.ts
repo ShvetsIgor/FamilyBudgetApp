@@ -38,6 +38,8 @@ function toSerializable(id: string, data: Record<string, unknown>): Serializable
     incomeId:  data.incomeId  as string | undefined,
     card:      data.card      as BotCard | undefined,
     saveAttempt: data.saveAttempt as ChatSaveAttempt | undefined,
+    derivedFrom: data.derivedFrom as string | undefined,
+    receipt: data.receipt as boolean | undefined,
     createdAt: toISO(data.createdAt),
     updatedAt: data.updatedAt ? toISO(data.updatedAt) : undefined,
   };
@@ -53,6 +55,8 @@ export interface AddMessageInput {
   expenseId?: string;
   incomeId?: string;
   card?: BotCard;
+  derivedFrom?: string;
+  receipt?: boolean;
 }
 
 export function subscribeMessages(

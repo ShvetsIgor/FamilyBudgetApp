@@ -1,10 +1,13 @@
 // @vitest-environment node
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ auth: vi.fn(), parser: vi.fn(), context: vi.fn(), quota: vi.fn(), requests: vi.fn(),
-  save: vi.fn(), report: vi.fn(), capacity: vi.fn(), cooldown: vi.fn() }));
+  save: vi.fn(), report: vi.fn(), capacity: vi.fn(), cooldown: vi.fn(),
+  items: null as null | ((input: unknown) => Promise<unknown[]>) }));
 vi.mock('@/features/ai/chatAuth', () => ({ resolveChatAuthorization: mocks.auth }));
 vi.mock('@/features/ai/expenseParser/parseExpenseText', async (original) => ({
-  ...await original<typeof import('@/features/ai/expenseParser/parseExpenseText')>(), parseExpenseText: mocks.parser }));
+  ...await original<typeof import('@/features/ai/expenseParser/parseExpenseText')>(), parseExpenseText: mocks.parser,
+  // The chat route asks for a list; single-item tests keep using mocks.parser, list tests set mocks.items
+  parseExpenseItems: async (input: unknown) => mocks.items ? mocks.items(input) : [await mocks.parser(input)] }));
 vi.mock('@/features/ai/siriContext', () => ({ loadSiriContext: mocks.context, SiriProfileError: class extends Error {} }));
 vi.mock('@/features/ai/siriRateLimit', () => ({ consumeAiQuota: mocks.quota, consumeChatRequestQuota: mocks.requests,
   recordAiCooldown: mocks.cooldown }));
@@ -23,6 +26,7 @@ beforeEach(() => {
   mocks.requests.mockResolvedValue({ allowed: true });
   mocks.context.mockResolvedValue({ currency: 'ILS', language: 'ru', categories: [{ id: 'food', name: 'Продукты', type: 'expense' }] });
   mocks.parser.mockResolvedValue(expense);
+  mocks.items = null;
 });
 afterEach(() => vi.useRealTimers());
 it('returns a validated draft and never saves a financial record', async () => {
@@ -215,4 +219,21 @@ it('bounds referenceDate by the request time zone', async () => {
   mocks.parser.mockClear();
   await POST(request({ text: 'Вчера молоко 25.5 долларов', timeZone: 'America/Toronto', referenceDate: '2026-10-11' }));
   expect(mocks.parser).toHaveBeenCalledWith(expect.objectContaining({ todayKey: '2026-10-10' }));
+});
+
+it('returns every purchase of a list message as its own validated draft', async () => {
+  const coffee = { ...expense, description: 'Кофе', amount: 18 };
+  mocks.items = async () => [expense, coffee];
+  const response = await POST(request({ text: 'молоко 25.5 долларов, кофе 18', timeZone: 'Asia/Jerusalem' }));
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({ ok: true, expenses: [expense, coffee] });
+  expect(mocks.quota).toHaveBeenCalledTimes(1); // one AI call for the whole list
+  expect(mocks.save).not.toHaveBeenCalled();
+});
+it('asks about a list as a whole when one purchase is unreadable — never records the rest', async () => {
+  mocks.items = async () => [expense, { ...expense, description: 'Хлеб', amount: null, needsClarification: true,
+    clarificationQuestion: 'Сколько стоил хлеб?' }];
+  const response = await POST(request({ text: 'молоко 25.5, хлеб', timeZone: 'Asia/Jerusalem' }));
+  expect(response.status).toBe(422);
+  expect(await response.json()).toEqual({ ok: false, error: 'clarification_required', message: '«Хлеб»: Сколько стоил хлеб?' });
 });

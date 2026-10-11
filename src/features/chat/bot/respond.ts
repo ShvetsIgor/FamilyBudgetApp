@@ -5,6 +5,7 @@ import { addExpense } from '@/features/expenses/services/expensesService';
 import { addIncome } from '@/features/income/services/incomeService';
 import { updateMessage } from '@/features/chat/services/messagesService';
 import { chatOperationId } from '@/features/chat/services/chatSaveRecovery';
+import { extractLearnableKeyword } from '@/features/chat/parser/keywordLearning';
 import { getPresetDisplayName } from '@/features/categories/config/categoryLabels';
 import type { SerializableChatMessage, ParseResult } from '@/shared/types/message';
 import type { BotContext } from './context';
@@ -319,9 +320,10 @@ export async function respondToUserMessage(
 
   // Split-combo members are deliberately NOT candidates here — they are the
   // parts of a divided receipt, not a category for the whole of it.
+  // The user's own taught word outranks the model's guess
   const candidateIds = splitHabit ? [] : [
-    parsed.categoryId,
     parsed.learnedCategoryId,
+    parsed.categoryId,
     ...merchantSuggestions,
     ...draft.suggestedCategories.map((suggestion) => suggestion.categoryId),
   ].filter((id): id is string => Boolean(id));
@@ -362,6 +364,9 @@ export async function respondToUserMessage(
           parsedNote: parsed.note,
           isRepeat: draft.hasMerchantHistory || (!!parsed.merchantOnly && !!memory.merchants[merchantKey.toLowerCase().trim()]?.length),
           hasSplitPreset: draft.splitPresets.length > 0,
+          // Shown as «I'll remember …» — only when choosing will actually teach it
+          rememberWord: !parsed.merchantOnly && !parsed.learnedCategoryId
+            ? extractLearnableKeyword(userMsg.text) ?? undefined : undefined,
         },
       },
       status: 'clarifying',

@@ -82,3 +82,25 @@ export function buildExpenseParserJsonSchema(categoryIds: readonly string[]) {
     },
   } as const;
 }
+
+/** Most separate purchases one chat message may record; more is a list to send in parts. */
+export const MAX_EXPENSE_ITEMS = 5;
+
+/**
+ * Chat variant: the same strict item schema, wrapped in `expenses` so «хлеб 12,
+ * кофе 18» comes back as two items instead of a refusal. Siri keeps the single
+ * schema — it saves without a confirmation step, one expense at a time.
+ */
+export function buildExpenseListJsonSchema(categoryIds: readonly string[]) {
+  const item = buildExpenseParserJsonSchema(categoryIds).schema;
+  return {
+    name: 'expense_list_parse_result',
+    strict: true,
+    schema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: { expenses: { type: 'array', items: item } },
+      required: ['expenses'],
+    },
+  } as const;
+}

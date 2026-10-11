@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Plus, Mic, Send } from 'lucide-react';
+import { Plus, Mic, Send, Camera } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
 import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { useT } from '@/shared/hooks/useT';
@@ -10,11 +10,13 @@ import { HelpSheet } from './HelpSheet';
 interface ComposerProps {
   onSend: (text: string) => void;
   onPlus?: () => void;
+  /** A receipt photo picked from the camera or the library */
+  onPhoto?: (file: File) => void;
   disabled?: boolean;
   variant?: 'mobile' | 'desktop';
 }
 
-export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: ComposerProps) {
+export function Composer({ onSend, onPlus, onPhoto, disabled, variant = 'mobile' }: ComposerProps) {
   const C = useChatTokens();
   const t = useT();
   const language = useAppSelector((s) => s.ui.language);
@@ -22,6 +24,7 @@ export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: Compo
   const [helpOpen, setHelpOpen] = useState(false);
   const [listening, setListening] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const photoRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
 
   // Web Speech API — client-side, free, no backend required
@@ -137,6 +140,34 @@ export function Composer({ onSend, onPlus, disabled, variant = 'mobile' }: Compo
             className="flex-1 bg-transparent text-[14.5px] font-bold outline-hidden"
             style={{ color: C.fg }}
           />
+          {onPhoto && (
+            <>
+              {/* No `capture`: iOS then offers both the camera and the photo library */}
+              <input
+                ref={photoRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                data-testid="receipt-photo-input"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = '';
+                  if (file && !disabled) onPhoto(file);
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => photoRef.current?.click()}
+                disabled={disabled}
+                className="fb-touch-target flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all active:scale-90 disabled:opacity-35"
+                style={{ color: C.sub }}
+                aria-label={t('chat.composer.receipt')}
+                title={t('chat.composer.receipt')}
+              >
+                <Camera size={19} strokeWidth={2.1} />
+              </button>
+            </>
+          )}
           <button
             type="button"
             onClick={() => setHelpOpen(true)}

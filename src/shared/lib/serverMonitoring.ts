@@ -1,7 +1,7 @@
 import 'server-only';
 import * as Sentry from '@sentry/nextjs';
 
-export type MonitoredRoute = 'chat_parse' | 'siri_expense' | 'account_delete';
+export type MonitoredRoute = 'chat_parse' | 'siri_expense' | 'account_delete' | 'receipt_parse';
 export type FailureStage = 'auth' | 'request_check' | 'rate_limit' | 'context' | 'parser' | 'save';
 
 const SAFE_TOKEN = /^[A-Za-z0-9_-]{1,64}$/;

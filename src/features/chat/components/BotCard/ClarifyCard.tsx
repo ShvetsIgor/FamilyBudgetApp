@@ -25,6 +25,8 @@ interface ClarifyCardProps {
   storeName?: string;
   isRepeat?: boolean;
   isTagLearning?: boolean;
+  /** The word choosing a category will teach, shown so learning is never silent */
+  rememberWord?: string;
   /** Merchant is habitually split — lead with split, don't offer whole-amount chips. */
   suggestSplit?: boolean;
   categories?: Category[];
@@ -82,7 +84,7 @@ function DoorAction({ icon: Icon, label, onClick, C, primary }: {
 }
 
 export function ClarifyCard({
-  amount, currency, dateLabel, chips, unknownNote, storeName, isRepeat, isTagLearning, suggestSplit, categories,
+  amount, currency, dateLabel, chips, unknownNote, storeName, isRepeat, isTagLearning, rememberWord, suggestSplit, categories,
   onSelectChip, onAllCategories, onOtherText, onSplit, onDefer, onCreateFolder,
 }: ClarifyCardProps) {
   const C = useChatTokens();
@@ -343,6 +345,11 @@ export function ClarifyCard({
       {isTagLearning && !selectedParent && !otherMode && !createFolderMode && (
         <p className="m-0 mt-2 text-xs font-bold" style={{ color: C.sub }}>
           {t('chat.clarify.promise')}
+        </p>
+      )}
+      {!isTagLearning && rememberWord && !otherMode && !createFolderMode && (
+        <p className="m-0 mt-2 text-xs font-bold" style={{ color: C.sub }}>
+          {t('chat.clarify.rememberWord', { word: rememberWord })}
         </p>
       )}
     </div>

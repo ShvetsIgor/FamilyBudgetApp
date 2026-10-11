@@ -10,9 +10,11 @@ interface UserBubbleProps {
   time?: string;
   status?: UserBubbleStatus;
   tail?: boolean;
+  /** One purchase split out of a list message: quieter, marked as part of it */
+  derived?: boolean;
 }
 
-export function UserBubble({ text, time, status = 'sent', tail = true }: UserBubbleProps) {
+export function UserBubble({ text, time, status = 'sent', tail = true, derived = false }: UserBubbleProps) {
   const C = useChatTokens();
   return (
     <div
@@ -20,17 +22,21 @@ export function UserBubble({ text, time, status = 'sent', tail = true }: UserBub
       style={{ margin: tail ? '6px 14px 2px' : '2px 14px' }}
     >
       <div
-        className="inline-flex max-w-[78%] items-baseline gap-2 text-[14.5px] font-bold leading-[1.4]"
+        className={`inline-flex max-w-[78%] items-baseline gap-2 font-bold leading-[1.4] ${derived ? 'text-[13px]' : 'text-[14.5px]'}`}
         style={{
           background: `linear-gradient(160deg, ${C.primary} 0%, ${C.primaryDeep} 100%)`,
           color: 'white',
-          padding: '9px 14px',
+          opacity: derived ? 0.88 : undefined,
+          padding: derived ? '6px 12px' : '9px 14px',
           borderRadius: RAD.bubble,
           borderBottomRightRadius: tail ? 6 : RAD.bubble,
           boxShadow: SHADOW.user,
         }}
       >
-        <span>{text}</span>
+        <span>
+          {derived && <span aria-hidden className="mr-1 opacity-70">↳</span>}
+          {text}
+        </span>
         <span className="inline-flex items-baseline gap-0.5 opacity-80">
           {time && (
             <span className="text-[10px] font-bold tabular-nums">{time}</span>

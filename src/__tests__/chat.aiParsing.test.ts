@@ -105,3 +105,24 @@ it('sends the original writing day as referenceDate only when one is given', asy
   await parseChatMessage('кофе 20', { ...context, referenceDate: undefined });
   expect(Object.keys(JSON.parse(fetchMock.mock.calls[1][1].body)).sort()).toEqual(['text', 'timeZone']);
 });
+it('ranks a word the user taught ahead of the model, but never for a dictionary supermarket', async () => {
+  const learned = { 'шмулик': { categoryId: 'nanny' } };
+  const taught = await parseChatMessage('Шмулик 50', { ...context, learned });
+  expect(taught).toMatchObject({ kind: 'parsed', parsed: { learnedCategoryId: 'nanny', categoryId: 'food' } });
+  if (taught.kind === 'parsed') expect(taught.parsed.confirmed).toBeUndefined();
+
+  fetchMock.mockResolvedValue(Response.json({ ok: true, expense: { ...expense, categoryId: null, merchant: 'Rami Levy', merchantOnly: true } }));
+  const store = await parseChatMessage('Рами Леви 50', { ...context, learned: { 'рами леви': { categoryId: 'nanny' } } });
+  if (store.kind === 'parsed') expect(store.parsed.learnedCategoryId).toBeUndefined();
+});
+
+it('returns a list only when every purchase is usable, matching taught words per item', async () => {
+  const bread = { ...expense, description: 'Шмулик', merchant: null, amount: 50, currency: 'ILS' };
+  fetchMock.mockResolvedValue(Response.json({ ok: true, expenses: [expense, bread] }));
+  const result = await parseChatMessage('молоко 25.5 долларов, шмулик 50', { ...context, learned: { 'шмулик': { categoryId: 'nanny' } } });
+  expect(result).toMatchObject({ kind: 'multi', items: [{ amount: 25.5, currency: 'USD' }, { amount: 50, learnedCategoryId: 'nanny' }] });
+  if (result.kind === 'multi') expect(result.items[0].learnedCategoryId).toBeUndefined();
+
+  fetchMock.mockResolvedValue(Response.json({ ok: true, expenses: [expense, { ...bread, currency: 'EUR' }] }));
+  expect(await parseChatMessage('молоко 25.5, шмулик 50 евро', context)).toMatchObject({ kind: 'clarification' });
+});

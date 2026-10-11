@@ -2,7 +2,7 @@ import path from 'node:path';
 import { test, expect, type Page, type APIRequestContext } from '@playwright/test';
 import { format } from 'date-fns';
 import { ALICE, AUTH_EMULATOR, E2E_PROJECT_ID, FIRESTORE_EMULATOR_HOST, FIRESTORE_EMULATOR_PORT, PASSWORD } from './constants';
-import { login } from './helpers';
+import { cardFor, login } from './helpers';
 
 // Real auth, chat and Firestore writes; only the Groq-backed parse responses are stubbed.
 const base = `http://${FIRESTORE_EMULATOR_HOST}:${FIRESTORE_EMULATOR_PORT}/v1/projects/${E2E_PROJECT_ID}/databases/(default)/documents`;
@@ -27,11 +27,6 @@ async function expenses(request: APIRequestContext, uid: string) {
   return ((await (await request.get(`${base}/expenses/${uid}/items?pageSize=200`, { headers: owner })).json()).documents ?? []) as
     { fields: Record<string, { stringValue?: string; integerValue?: string; doubleValue?: number; arrayValue?: { values?: { mapValue: { fields: Record<string, { stringValue?: string; doubleValue?: number; integerValue?: string }> } }[] } }> }[];
 }
-/** The visible clarify card for one amount — earlier specs leave other cards in Alice's chat. */
-const cardFor = (page: Page, amount: string) => page.locator('div')
-  .filter({ has: page.getByText(amount, { exact: true }) })
-  .filter({ has: page.getByRole('button', { name: 'Split receipt', exact: true }) })
-  .filter({ visible: true }).last();
 const amountOf = (field?: { integerValue?: string; doubleValue?: number }) => Number(field?.integerValue ?? field?.doubleValue);
 
 test('one message with two purchases becomes two confirmable expenses', async ({ page, request }) => {

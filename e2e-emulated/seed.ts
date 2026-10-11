@@ -108,6 +108,12 @@ export async function seedEmulators(): Promise<SeededUsers> {
       type: 'income', order: 0, isPrivate: false,
     });
 
+    // Bob: an expense category the user created, with no folder — the edit-save regression
+    await setDoc(doc(db, 'categories', bobUid, 'expense', 'cat-hobby'), {
+      userId: bobUid, name: 'Hobby', icon: 'box', color: '#8AA9D6',
+      type: 'expense', order: 0, isPrivate: false,
+    });
+
     // Carol: a brand-new library-first account — no expense categories yet
     await setDoc(doc(db, 'users', carolUid), profile(carolUid, CAROL.name, CAROL.email, { expenseLibraryMode: true }));
 

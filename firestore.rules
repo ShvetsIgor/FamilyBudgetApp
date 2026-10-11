@@ -28,6 +28,15 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
+    // Owner writes need the owner's profile. Account deletion removes the
+    // profile before the data, so a write from another device whose ID token
+    // has not expired yet is refused instead of landing as an orphan nobody
+    // can read. existsAfter: a batch that creates the profile may write too.
+    // Writes only — reads stay one rule evaluation without the extra lookup.
+    function ownerWrite(uid) {
+      return isOwner(uid) && existsAfter(/databases/$(database)/documents/users/$(uid));
+    }
+
     function readerFamilyId() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.familyId;
     }
@@ -44,7 +53,8 @@ service cloud.firestore {
     // ── Per-user collections ─────────────────────────────────────────────
 
     match /budgets/{uid} {
-      allow read, write: if isOwner(uid);
+      allow read: if isOwner(uid);
+      allow write: if ownerWrite(uid);
     }
 
     match /categories/{uid}/{type}/{categoryId} {
@@ -52,11 +62,13 @@ service cloud.firestore {
       // a time; private categories stay hidden. Listing stays owner-only.
       allow get: if isOwner(uid)
         || (sameFamilyAs(uid) && resource.data.isPrivate != true);
-      allow list, write: if isOwner(uid);
+      allow list: if isOwner(uid);
+      allow write: if ownerWrite(uid);
     }
 
     match /categoryFolders/{uid}/{type}/{folderId} {
-      allow read, write: if isOwner(uid);
+      allow read: if isOwner(uid);
+      allow write: if ownerWrite(uid);
     }
 
     match /expenses/{uid}/items/{expenseId} {
@@ -64,11 +76,11 @@ service cloud.firestore {
       // List queries must filter privacy == 'regular' so the rule is provable.
       allow read: if isOwner(uid)
         || (sameFamilyAs(uid) && resource.data.privacy == 'regular');
-      allow create, delete: if isOwner(uid);
+      allow create, delete: if ownerWrite(uid);
       // Family members may react to a non-secret expense: only the reactions
       // map may change, only the reactor's OWN key inside it, and the value
       // must be a short string (an emoji), or absent (reaction removed).
-      allow update: if isOwner(uid)
+      allow update: if ownerWrite(uid)
         || (sameFamilyAs(uid)
             && resource.data.privacy == 'regular'
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions'])
@@ -85,23 +97,27 @@ service cloud.firestore {
       // List queries must filter privacy == 'regular' so the rule is provable.
       allow read: if isOwner(uid)
         || (sameFamilyAs(uid) && resource.data.privacy == 'regular');
-      allow write: if isOwner(uid);
+      allow write: if ownerWrite(uid);
     }
 
     match /messages/{uid}/items/{messageId} {
-      allow read, write: if isOwner(uid);
+      allow read: if isOwner(uid);
+      allow write: if ownerWrite(uid);
     }
 
     match /monthlyStats/{uid}/months/{month} {
-      allow read, write: if isOwner(uid);
+      allow read: if isOwner(uid);
+      allow write: if ownerWrite(uid);
     }
 
     match /recurringIncome/{uid}/items/{itemId} {
-      allow read, write: if isOwner(uid);
+      allow read: if isOwner(uid);
+      allow write: if ownerWrite(uid);
     }
 
     match /recurringPayments/{uid}/items/{itemId} {
-      allow read, write: if isOwner(uid);
+      allow read: if isOwner(uid);
+      allow write: if ownerWrite(uid);
     }
 
     match /savingsGoals/{uid}/goals/{goalId} {
@@ -150,10 +166,10 @@ service cloud.firestore {
       // Family list queries must filter isPrivate == false to be provable.
       allow read: if isOwner(uid)
         || (sameFamilyAs(uid) && resource.data.isPrivate != true);
-      allow create, delete: if isOwner(uid);
+      allow create, delete: if ownerWrite(uid);
       // Family members may contribute to (or roll back their own
       // contribution on) a non-private goal. The owner keeps full control.
-      allow update: if isOwner(uid)
+      allow update: if ownerWrite(uid)
         || (sameFamilyAs(uid)
             && resource.data.isPrivate != true
             && request.resource.data.diff(resource.data).affectedKeys()
@@ -165,7 +181,8 @@ service cloud.firestore {
     }
 
     match /storeProfiles/{uid}/profiles/{storeId} {
-      allow read, write: if isOwner(uid);
+      allow read: if isOwner(uid);
+      allow write: if ownerWrite(uid);
     }
 
     // ── User profiles ────────────────────────────────────────────────────
@@ -216,12 +233,14 @@ service cloud.firestore {
 
       // Client entry retry receipts survive deletion so old chat actions cannot recreate money.
       match /entryOperations/{operationId} {
-        allow read, create: if isOwner(uid);
+        allow read: if isOwner(uid);
+        allow create: if ownerWrite(uid);
         allow update, delete: if false;
       }
 
       match /learnedKeywords/{keyword} {
-        allow read, write: if isOwner(uid);
+        allow read: if isOwner(uid);
+        allow write: if ownerWrite(uid);
       }
 
       // Bearer secrets never belong in Firestore. The client stores only
@@ -229,7 +248,7 @@ service cloud.firestore {
       // Family profile access above does not extend to these documents.
       match /shortcutTokens/{tokenId} {
         allow read, delete: if isOwner(uid);
-        allow create: if isOwner(uid)
+        allow create: if ownerWrite(uid)
           && request.resource.data.keys().hasAll(['tokenHash', 'label', 'createdAt', 'lastUsedAt'])
           && request.resource.data.keys().hasOnly(['tokenHash', 'label', 'createdAt', 'lastUsedAt'])
           && request.resource.data.tokenHash is string

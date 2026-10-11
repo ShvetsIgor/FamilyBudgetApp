@@ -59,6 +59,7 @@ export function CategoryEditorSheet({
   const [selectedPresetId, setSelectedPresetId] = useState<string | undefined>(undefined);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const nameInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -78,6 +79,7 @@ export function CategoryEditorSheet({
     setSelectedPresetId(undefined);
     setSuggestionsOpen(false);
     setSaving(false);
+    setSaveError(false);
   }, [open, initial, budget, folderIdProp, lang]);
 
   const matchedSuggestions = useMemo(() => {
@@ -102,6 +104,7 @@ export function CategoryEditorSheet({
     const cleanName = normalizeName(initial?.name && !nameEdited ? initial.name : name);
     if (!cleanName || saving) return;
     setSaving(true);
+    setSaveError(false);
     try {
       await onSave({
         id: initial?.id,
@@ -121,6 +124,10 @@ export function CategoryEditorSheet({
         await onBudgetChange(budgetVal);
       }
       onClose();
+    } catch (error) {
+      // A rejected write used to vanish here: the sheet stayed open, nothing said why
+      console.error('category save failed', error);
+      setSaveError(true);
     } finally {
       setSaving(false);
     }
@@ -349,6 +356,9 @@ export function CategoryEditorSheet({
             </div>
           </label>
 
+          {saveError && (
+            <p role="alert" className="m-0 text-sm font-semibold text-red-500">{t('categories.editor.saveFailed')}</p>
+          )}
           <button
             onClick={handleSave}
             disabled={!name.trim() || saving}

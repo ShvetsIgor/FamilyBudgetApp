@@ -79,12 +79,13 @@ async function leaveFamily(db: Firestore, uid: string, familyId: string): Promis
  * - Siri tokens first, so nothing new is written through Shortcuts;
  * - the family next — an owner with members is refused before anything is
  *   touched, so a refusal never leaves a half-deleted account;
- * - data, then the profile, then the Auth user LAST: until then the client's
- *   token still works and a failed run can simply be repeated (every step is
- *   idempotent).
- * Firestore does not check revocation, so a write from another signed-in
- * device in the minutes before its token expires can still land; it would
- * be orphaned (no Auth user can read it) and is documented, not prevented.
+ * - then the profile DOCUMENT: firestore.rules refuses owner writes once it
+ *   is gone (`ownerWrite`), so another device whose ID token has not expired
+ *   yet can no longer leave orphaned data behind;
+ * - then the data and the profile's subcollections, and the Auth user LAST:
+ *   until then the client's token still works and a failed run can simply be
+ *   repeated (every step is idempotent; a repeat finds no profile and skips
+ *   the family step, which already ran).
  */
 export async function deleteAccount(uid: string, deps: Deps = { db: getAdminDb(), auth: getAdminAuth() }): Promise<void> {
   const { db, auth } = deps;
@@ -110,6 +111,8 @@ export async function deleteAccount(uid: string, deps: Deps = { db: getAdminDb()
   const inviteSnaps = await Promise.all(inviteQueries);
   await Promise.all(inviteSnaps.flatMap((snap) => snap.docs.map((invite) => invite.ref.delete())));
 
+  // From here on every owner write is refused by the rules
+  await profileRef.delete();
   for (const root of USER_DATA_ROOTS) await db.recursiveDelete(db.doc(`${root}/${uid}`));
   await db.recursiveDelete(profileRef);
 

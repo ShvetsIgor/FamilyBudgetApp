@@ -72,6 +72,9 @@ describe('deleteAccount', () => {
     for (const root of USER_DATA_ROOTS) expect(recursive).toContain(`recursive ${root}/me`);
     expect(recursive.at(-1)).toBe('recursive users/me');
     expect(store.log.at(-1)).toBe('auth delete');
+    // The profile document goes BEFORE the data: the rules refuse owner writes without it
+    expect(store.log.indexOf('delete users/me')).toBeLessThan(store.log.indexOf('recursive expenses/me'));
+    expect(store.log.indexOf('delete users/me')).toBeGreaterThan(store.log.indexOf('recursive users/me/shortcutTokens'));
   });
 
   it('refuses a family owner with members before touching anything', async () => {

@@ -12,6 +12,7 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
+import { toUpdatePayload } from '@/shared/lib/firestoreUpdate';
 import type { Category, CategoryFolder, CategoryType } from '@/shared/types';
 import {
   DEFAULT_EXPENSE_CATEGORIES,
@@ -58,7 +59,9 @@ export async function addCategoryWithId(userId: string, id: string, data: Omit<C
 
 export async function updateCategory(userId: string, category: Category): Promise<void> {
   const { id, ...data } = category;
-  await updateDoc(doc(getDb(), 'categories', userId, data.type, id), data);
+  // A category without a folder carries folderId: undefined, which updateDoc
+  // rejects — the editor's Save then failed silently and looked dead.
+  await updateDoc(doc(getDb(), 'categories', userId, data.type, id), toUpdatePayload(data));
 }
 
 /** Hard-deletes a category. Only call when the category has never been used in any expense. */

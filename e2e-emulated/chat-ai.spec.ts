@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { ALICE, E2E_PROJECT_ID, FIRESTORE_EMULATOR_HOST, FIRESTORE_EMULATOR_PORT } from './constants';
-import { login } from './helpers';
+import { cardFor, login } from './helpers';
 import { format } from 'date-fns';
 
 // Real auth, chat persistence and expense writes against emulators; only Groq's
@@ -103,4 +103,7 @@ test('supermarket shorthand offers Groceries and works again after confirmation 
     .filter((key) => key.startsWith('suggestionMemory_v2_'))
     .map((key) => JSON.parse(localStorage.getItem(key)!).merchants['рами леви']));
   expect(history).toContainEqual([expect.objectContaining({ categoryId: 'cat-groceries', count: 1 })]);
+  // Leave Alice's chat without an open card: later specs share it
+  await cardFor(page, '100 ₪').getByRole('button', { name: 'Groceries', exact: true }).click();
+  await expect(cardFor(page, '100 ₪')).toHaveCount(0);
 });

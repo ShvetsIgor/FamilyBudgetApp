@@ -100,6 +100,35 @@ describe('server-only usage counters', () => {
   });
 });
 
+describe('owner writes need a profile (deleted accounts)', () => {
+  // Account deletion removes users/{uid} before the data; another device
+  // whose ID token has not expired yet must not leave orphaned entries.
+  it('an owner without a profile cannot write any personal data, but can still read', async () => {
+    const db = ctx('ghost');
+    await assertFails(setDoc(doc(db, 'expenses', 'ghost', 'items', 'e1'), { userId: 'ghost', amount: 5 }));
+    await assertFails(setDoc(doc(db, 'messages', 'ghost', 'items', 'm1'), { text: 'late' }));
+    await assertFails(setDoc(doc(db, 'categories', 'ghost', 'expense', 'c1'), { name: 'x' }));
+    await assertFails(setDoc(doc(db, 'users', 'ghost', 'learnedKeywords', 'кофе'), { categoryId: 'c1' }));
+    await assertFails(setDoc(doc(db, 'users', 'ghost', 'entryOperations', 'chat-1'), { kind: 'expense', entryId: 'e1' }));
+    await assertFails(setDoc(doc(db, 'budgets', 'ghost'), { limits: {} }));
+    await assertSucceeds(getDocs(collection(db, 'expenses', 'ghost', 'items')));
+  });
+
+  it('an owner with a profile writes as before', async () => {
+    const db = ctx('mallory');
+    await assertSucceeds(setDoc(doc(db, 'expenses', 'mallory', 'items', 'e1'), { userId: 'mallory', amount: 5, privacy: 'regular' }));
+    await assertSucceeds(setDoc(doc(db, 'messages', 'mallory', 'items', 'm1'), { text: 'hi' }));
+  });
+
+  it('a batch that creates the profile may write data in the same commit', async () => {
+    const db = ctx('newbie');
+    const batch = writeBatch(db);
+    batch.set(doc(db, 'users', 'newbie'), { id: 'newbie', email: 'newbie@x.com', familyId: null, accountType: 'personal' });
+    batch.set(doc(db, 'categories', 'newbie', 'income', 'salary'), { name: 'Salary', type: 'income' });
+    await assertSucceeds(batch.commit());
+  });
+});
+
 describe('personal shortcut tokens', () => {
   const tokenData = () => ({
     tokenHash: 'a'.repeat(64), label: 'Siri iPhone', createdAt: serverTimestamp(), lastUsedAt: null,

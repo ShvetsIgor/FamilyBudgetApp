@@ -11,6 +11,7 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { getDb } from '@/shared/lib/firebase';
+import { toUpdatePayload } from '@/shared/lib/firestoreUpdate';
 import type { CategoryFolder, CategoryType } from '@/shared/types';
 
 function foldersRef(userId: string, type: CategoryType) {
@@ -47,7 +48,7 @@ export async function addFolderWithId(
 
 export async function updateFolder(userId: string, folder: CategoryFolder): Promise<void> {
   const { id, ...data } = folder;
-  await updateDoc(doc(getDb(), 'categoryFolders', userId, data.type, id), data);
+  await updateDoc(doc(getDb(), 'categoryFolders', userId, data.type, id), toUpdatePayload(data));
 }
 
 export async function deleteFolder(userId: string, folderId: string, type: CategoryType): Promise<void> {

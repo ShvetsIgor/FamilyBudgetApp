@@ -471,7 +471,8 @@
       "tagsHint": "(for search)",
       "addTagPlaceholder": "Add tag, Enter",
       "deleteCategory": "Delete category",
-      "suggestionAria": "Pick suggestion {label}"
+      "suggestionAria": "Pick suggestion {label}",
+      "saveFailed": "Couldn’t save. Check your connection and try again."
     },
     "confirmArchive": "Archive this category?",
     "confirmReset": "Reset all categories to defaults? Your custom categories and sections will be deleted.",

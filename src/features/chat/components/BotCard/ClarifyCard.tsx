@@ -36,6 +36,12 @@ interface ClarifyCardProps {
   onSplit?: () => void;
   onDefer?: () => void;
   onCreateFolder?: (name: string) => void;
+  /**
+   * Another chat operation is running (e.g. the next card of a list is still
+   * being written). Its taps would be ignored by the one-operation guard, so
+   * the card says so instead of looking dead.
+   */
+  busy?: boolean;
 }
 
 /** Quiet text-style action in the clarify card's secondary row (44pt target). */
@@ -85,7 +91,7 @@ function DoorAction({ icon: Icon, label, onClick, C, primary }: {
 
 export function ClarifyCard({
   amount, currency, dateLabel, chips, unknownNote, storeName, isRepeat, isTagLearning, rememberWord, suggestSplit, categories,
-  onSelectChip, onAllCategories, onOtherText, onSplit, onDefer, onCreateFolder,
+  onSelectChip, onAllCategories, onOtherText, onSplit, onDefer, onCreateFolder, busy = false,
 }: ClarifyCardProps) {
   const C = useChatTokens();
   const t = useT();
@@ -138,6 +144,8 @@ export function ClarifyCard({
   const hasChips = currentChips.length > 0;
 
   const handleChipClick = (chip: ClarifyChip) => {
+    // The fieldset already blocks taps in browsers; this keeps the guard explicit
+    if (busy) return;
     haptic('tap');
     // In tag-learning mode chips are folders — select directly, no drill-down
     if (!isTagLearning && !selectedParent && categories) {
@@ -175,7 +183,8 @@ export function ClarifyCard({
   };
 
   return (
-    <div className="p-3.5">
+    // A disabled fieldset disables every button inside it, keyboard and screen reader included
+    <fieldset disabled={busy} aria-busy={busy} className="m-0 min-w-0 border-0 p-3.5 transition-opacity" style={{ opacity: busy ? 0.55 : 1 }}>
       <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
         <p className="text-lg font-extrabold" style={{ color: C.fg }}>{amount} {currency}</p>
         {dateLabel && <p className="text-xs" style={{ color: C.sub }}>{dateLabel}</p>}
@@ -352,6 +361,6 @@ export function ClarifyCard({
           {t('chat.clarify.rememberWord', { word: rememberWord })}
         </p>
       )}
-    </div>
+    </fieldset>
   );
 }

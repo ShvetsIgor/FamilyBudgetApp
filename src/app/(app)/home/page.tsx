@@ -1063,6 +1063,7 @@ export default function HomePage() {
                       storeName={context.storeName}
                       isRepeat={Boolean(d.isRepeat)}
                       rememberWord={d.rememberWord as string | undefined}
+                      busy={typing}
                       suggestSplit={Boolean(d.suggestSplit)}
                       categories={allExpenseCats}
                       onSelectChip={(chip) => handleExpenseClarifyChip(context, chip)}
@@ -1089,6 +1090,7 @@ export default function HomePage() {
                     chips={d.chips as { id: string; name: string; icon: string; color: string }[]}
                     unknownNote={d.parsedNote as string | undefined}
                     categories={allIncomeCats}
+                    busy={typing}
                     onSelectChip={(chip) => handleIncomeClarifyChip(incomeContext, chip)}
                     onAllCategories={() => setIncomeCategorySheet(incomeContext)}
                   />

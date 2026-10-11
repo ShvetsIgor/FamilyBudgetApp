@@ -23,3 +23,14 @@ export async function logout(page: Page) {
   await page.waitForURL('**/auth/login', { timeout: 20_000 });
   await expect(page.locator('#login-email')).toBeVisible({ timeout: 15_000 });
 }
+
+/**
+ * The visible clarify card for one amount. Chat specs share Alice's chat, so a
+ * page-wide «Groceries» can belong to another spec's card — scope to the card.
+ */
+export function cardFor(page: Page, amount: string) {
+  return page.locator('div')
+    .filter({ has: page.getByText(amount, { exact: true }) })
+    .filter({ has: page.getByRole('button', { name: 'Split receipt', exact: true }) })
+    .filter({ visible: true }).last();
+}

@@ -6,7 +6,7 @@ import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { getFirebaseAuth, getDb, isFirebaseConfigured } from '@/shared/lib/firebase';
 import { useDispatch, useStore } from 'react-redux';
 import type { RootState, AppDispatch } from '@/store/store';
-import { beginSession, setUser, setLoading, setEmailVerified } from '@/features/auth/store/authSlice';
+import { beginSession, setUser, setLoading, setEmailVerified, setSessionLoadFailed } from '@/features/auth/store/authSlice';
 import { setCurrency, setDarkMode, setLanguage, setTheme, setWeekStart, hydrateBudgetPreferences } from '@/features/ui/store/uiSlice';
 import { setCategories, setFolders } from '@/features/categories/store/categoriesSlice';
 import { hydrateSuggestionMemory } from '@/features/expenses/store/suggestionMemorySlice';
@@ -31,6 +31,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // The Firebase user whose profile is loaded or loading. The SDK keeps one
     // User object per sign-in, so the same object again is a token refresh.
     let sessionUser: User | null = null;
+    // A signed-in user whose load failed: retried until it works, or until the
+    // account changes. Firebase fires no token event for a network that came back.
+    let retryUser: User | null = null;
+    let retryAttempts = 0;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+
+    function retryNow() {
+      if (retryUser) void syncUser(retryUser);
+    }
 
     // onIdTokenChanged also fires hourly and on every getIdToken(true). Those
     // change claims, not the profile: reloading it (and re-reading every
@@ -47,6 +56,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     async function syncUser(firebaseUser: User | null) {
+      clearTimeout(retryTimer);
+      if (firebaseUser !== retryUser) { retryUser = null; retryAttempts = 0; }
       sessionUser = firebaseUser;
       stopWaitingForProfile?.();
       stopWaitingForProfile = undefined;
@@ -57,7 +68,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      if (appStore.getState().auth.user?.id !== firebaseUser.uid) {
+      // A retry keeps the failure screen up instead of flashing the loader
+      if (appStore.getState().auth.user?.id !== firebaseUser.uid && firebaseUser !== retryUser) {
         dispatch(beginSession());
       }
       try {
@@ -108,18 +120,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dispatch(setCategories({ type: 'income', categories: seeded.income }));
         dispatch(setFolders({ type: 'expense', folders: seeded.expenseFolders }));
         dispatch(setFolders({ type: 'income', folders: seeded.incomeFolders }));
+        retryUser = null;
+        retryAttempts = 0;
 
       } catch (err) {
         if (!isCurrent()) return;
         console.error('[AuthProvider] error:', err);
         // Let the next token change retry the load instead of passing as a refresh
         sessionUser = null;
-        if (!appStore.getState().auth.user) dispatch(setUser(null));
+        // A failed READ says nothing about the session. Reporting «no user» here
+        // sent a signed-in person to the login screen on any network hiccup.
+        if (!appStore.getState().auth.user) dispatch(setSessionLoadFailed());
         else dispatch(setLoading(false));
+        retryUser = firebaseUser;
+        retryTimer = setTimeout(retryNow, Math.min(3_000 * 2 ** retryAttempts, 30_000));
+        retryAttempts += 1;
       }
     }
     const unsubscribe = onIdTokenChanged(auth, onToken);
-    return () => { generation++; stopWaitingForProfile?.(); unsubscribe(); };
+    window.addEventListener('online', retryNow);
+    return () => {
+      generation++;
+      clearTimeout(retryTimer);
+      window.removeEventListener('online', retryNow);
+      stopWaitingForProfile?.();
+      unsubscribe();
+    };
   }, [dispatch, appStore]);
 
   return <>{children}</>;

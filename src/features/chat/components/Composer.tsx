@@ -119,7 +119,7 @@ export function Composer({ onSend, onPlus, onPhoto, disabled, variant = 'mobile'
         </button>
 
         <div
-          className="flex flex-1 items-center gap-2 transition-all"
+          className="fb-composer-pill flex min-w-0 flex-1 items-center gap-2 transition-all"
           style={{
             background: C.card,
             borderRadius: isDesktop ? 14 : 22,
@@ -137,10 +137,13 @@ export function Composer({ onSend, onPlus, onPhoto, disabled, variant = 'mobile'
             onKeyDown={handleKey}
             placeholder={listening ? t('chat.composer.listening') : t('chat.composer.placeholder')}
             disabled={disabled}
-            className="flex-1 bg-transparent text-[14.5px] font-bold outline-hidden"
+            // min-w-0: an <input> never shrinks below its intrinsic ~20ch width
+            // otherwise, and the row pushed the send button off a phone screen
+            className="min-w-0 flex-1 bg-transparent text-[14.5px] font-bold outline-hidden"
             style={{ color: C.fg }}
           />
-          {onPhoto && (
+          {/* A photo is sent from an empty composer; while typing the text needs the room */}
+          {onPhoto && !focused && (
             <>
               {/* No `capture`: iOS then offers both the camera and the photo library */}
               <input

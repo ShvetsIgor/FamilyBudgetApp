@@ -1,5 +1,6 @@
 'use client';
 import { useT } from '@/shared/hooks/useT';
+import { useIsDesktop } from '@/shared/hooks/useIsDesktop';
 
 import { useState, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
@@ -36,36 +37,50 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [userId, dispatch, t]);
 
+  // One tree, not two hidden by CSS. `display: none` stops painting, not React:
+  // the hidden copy of every page still mounted and ran its effects, so each
+  // Firestore read and subscription, each background migration and the chat's
+  // save recovery all happened twice on every device.
+  const isDesktop = useIsDesktop();
+  const bell = bellOpen && <NotificationsPanel onClose={() => setBellOpen(false)} />;
+
+  if (!isDesktop) {
+    return (
+      <>
+        {/* Mobile/tablet — contextual header + persistent primary navigation. */}
+        <div className="flex flex-col overflow-hidden" style={{ height: '100dvh' }}>
+          <UpdateBanner />
+          <ChatHeader
+            onBell={() => setBellOpen((v) => !v)}
+            onClearChat={isChat ? handleClearChat : undefined}
+          />
+          {isPlanRoute(pathname) && <PlanTabs />}
+          <main className={isChat
+            ? 'flex-1 flex flex-col overflow-hidden'
+            : 'flex-1 overflow-y-auto md:px-6 md:*:mx-auto md:*:w-full md:*:max-w-[760px]'}>
+            {/* No transition on tab switches — on iOS a tab bar swaps screens
+                instantly; motion belongs to modal presentation (see the
+                .fb-sheet-enter overlays), not to lateral navigation. An animated
+                wrapper here also became a stacking/containing block and pushed
+                the full-screen entry sheets under the header. */}
+            {children}
+          </main>
+          <MobileBottomNav onMore={() => setMenuOpen(true)} />
+          {menuOpen && (
+            <div className="fixed inset-0 z-50">
+              <MenuOverlay onClose={() => setMenuOpen(false)} />
+            </div>
+          )}
+        </div>
+        {bell}
+      </>
+    );
+  }
+
   return (
     <>
-      {/* Mobile/tablet — contextual header + persistent primary navigation. */}
-      <div className="flex flex-col overflow-hidden lg:hidden" style={{ height: '100dvh' }}>
-        <UpdateBanner />
-        <ChatHeader
-          onBell={() => setBellOpen((v) => !v)}
-          onClearChat={isChat ? handleClearChat : undefined}
-        />
-        {isPlanRoute(pathname) && <PlanTabs />}
-        <main className={isChat
-          ? 'flex-1 flex flex-col overflow-hidden'
-          : 'flex-1 overflow-y-auto md:px-6 md:*:mx-auto md:*:w-full md:*:max-w-[760px]'}>
-          {/* No transition on tab switches — on iOS a tab bar swaps screens
-              instantly; motion belongs to modal presentation (see the
-              .fb-sheet-enter overlays), not to lateral navigation. An animated
-              wrapper here also became a stacking/containing block and pushed
-              the full-screen entry sheets under the header. */}
-          {children}
-        </main>
-        <MobileBottomNav onMore={() => setMenuOpen(true)} />
-        {menuOpen && (
-          <div className="fixed inset-0 z-50">
-            <MenuOverlay onClose={() => setMenuOpen(false)} />
-          </div>
-        )}
-      </div>
-
       {/* Desktop (≥lg) */}
-      <div className="hidden lg:flex h-screen overflow-hidden">
+      <div className="flex h-screen overflow-hidden">
         <Sidebar />
         <div className="relative flex flex-1 overflow-hidden">
           {isChat ? (
@@ -82,7 +97,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <AddDrawer />
       </div>
-      {bellOpen && <NotificationsPanel onClose={() => setBellOpen(false)} />}
+      {bell}
     </>
   );
 }

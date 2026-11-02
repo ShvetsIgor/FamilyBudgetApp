@@ -64,6 +64,10 @@ interface Props {
   initialUserMsgId?: string;
   /** Opens the compact flow directly in split mode after explicit user choice. */
   initialMode?: EntryMode;
+  /** Amounts already assigned on a receipt card, carried into the split rows. */
+  initialSplits?: { categoryId: string; amount: number }[];
+  /** Opened to correct a receipt card: closing returns to the card, nothing is deleted. */
+  keepChatMessage?: boolean;
 }
 
 export function FastExpenseEntry({
@@ -79,6 +83,8 @@ export function FastExpenseEntry({
   initialDate,
   initialUserMsgId,
   initialMode,
+  initialSplits,
+  keepChatMessage = false,
 }: Props) {
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -137,7 +143,7 @@ export function FastExpenseEntry({
   function initSplits(): SplitRow[] {
     const source = initialExpense?.splits?.length
       ? initialExpense.splits.map((sp: SplitItem) => ({ categoryId: sp.categoryId, amount: sp.amount }))
-      : [];
+      : initialSplits ?? [];
 
     return source
       .map((sp) => {
@@ -188,7 +194,8 @@ export function FastExpenseEntry({
   const [showCategoryEditor, setShowCategoryEditor] = useState(false);
   const [inlineCreating, setInlineCreating] = useState(false);
   const [categorySheetMode, setCategorySheetMode] = useState<EntryMode | null>(
-    fromChat && initialMode === 'split' ? 'split' : null,
+    // Rows carried over from a receipt are the point of opening: don't cover them with the picker
+    fromChat && initialMode === 'split' && !initialSplits?.length ? 'split' : null,
   );
   const [newCategoryFolderId, setNewCategoryFolderId] = useState<string | null>(null);
   const [returnToCategorySheetMode, setReturnToCategorySheetMode] = useState<EntryMode | null>(null);
@@ -355,7 +362,7 @@ export function FastExpenseEntry({
 
   // Cancel from chat-driven Split → remove originating chat bubble (saves nothing)
   const handleClose = useCallback(async () => {
-    if (fromChat && initialUserMsgId && user) {
+    if (fromChat && initialUserMsgId && user && !keepChatMessage) {
       dispatch(removeChatMessage(initialUserMsgId));
       try {
         const { deleteMessage } = await import('@/features/chat/services/messagesService');
@@ -363,7 +370,7 @@ export function FastExpenseEntry({
       } catch { /* ignore */ }
     }
     router.back();
-  }, [fromChat, initialUserMsgId, user, dispatch, router]);
+  }, [fromChat, initialUserMsgId, keepChatMessage, user, dispatch, router]);
 
   function changeCategory(cat: Category, folder?: CategoryPickerFolder | null) {
     setSelectedCatId(cat.id);

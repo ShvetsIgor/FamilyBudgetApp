@@ -375,6 +375,14 @@ textarea { font-size: 16px; }
   outline-offset: 3px;
 }
 
+/* The chat input has no box of its own: the ring belongs on the rounded pill
+   around it, not as a rectangle inside it. */
+.fb-composer-pill input:focus-visible { outline: none; }
+.fb-composer-pill:has(input:focus-visible) {
+  outline: 3px solid hsl(var(--ring) / 0.42);
+  outline-offset: 2px;
+}
+
 /* Shared minimum for controls that are rendered as icon-only touch targets. */
 .fb-touch-target {
   min-width: 44px;

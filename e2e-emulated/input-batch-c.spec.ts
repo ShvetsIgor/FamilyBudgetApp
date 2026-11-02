@@ -94,6 +94,8 @@ test('a receipt photo becomes one expense split across confirmed categories', as
     } } });
   });
   await login(page, ALICE.email);
+  // A person cannot tap the camera while categories load; a test can, so wait
+  await expect(page.getByPlaceholder('Add expense…').filter({ visible: true })).toBeEnabled({ timeout: 20_000 });
   await page.getByTestId('receipt-photo-input').first().setInputFiles(path.join(__dirname, '../ai-evals/fixtures/receipt-shufersal.jpg'));
 
   await expect(page.getByText('Shufersal Deal').filter({ visible: true })).toBeVisible();
@@ -118,4 +120,46 @@ test('a receipt photo becomes one expense split across confirmed categories', as
   await page.reload();
   await expect(page.getByText('Receipt · 2 categories').filter({ visible: true })).toBeVisible();
   await expect(page.getByRole('button', { name: /^Save ₪/ })).toHaveCount(0);
+});
+
+test('a misread receipt is corrected in the form: closing keeps the card, saving settles it', async ({ page, request }) => {
+  const uid = await aliceUid(request);
+  await page.route('**/api/chat/parse-receipt', (route) => route.fulfill({ json: { ok: true, receipt: {
+    merchant: 'Misread Market', date: today, currency: 'ILS', total: 60,
+    groups: [
+      { categoryId: 'cat-groceries', amount: 40, names: ['Milk'] },
+      { categoryId: 'cat-therapy', amount: 20, names: ['Tea'] },
+    ],
+  } } }));
+  await login(page, ALICE.email);
+  // A person cannot tap the camera while categories load; a test can, so wait
+  await expect(page.getByPlaceholder('Add expense…').filter({ visible: true })).toBeEnabled({ timeout: 20_000 });
+  await page.getByTestId('receipt-photo-input').first().setInputFiles(path.join(__dirname, '../ai-evals/fixtures/receipt-shufersal.jpg'));
+  const edit = page.getByRole('button', { name: 'Fix in the form' }).filter({ visible: true });
+  await expect(edit).toBeVisible();
+
+  await edit.click();
+  await page.waitForURL(/\/expenses\/new\?.*keep=1/);
+  expect(page.url()).toContain('splits=');
+  await expect(page.getByText('Misread Market').filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByText(/Groceries/).filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByText(/Therapy/).filter({ visible: true }).first()).toBeVisible();
+
+  // Closing the form comes back to the untouched card and photo message
+  await page.goBack();
+  await expect(edit).toBeVisible();
+  await expect(page.getByText('📷 Receipt photo').filter({ visible: true }).last()).toBeVisible();
+
+  // Saving from the form books one expense and the card is gone, also after a reload
+  await edit.click();
+  await page.waitForURL(/\/expenses\/new\?.*keep=1/);
+  await page.getByRole('button', { name: /^Save receipt/ }).filter({ visible: true }).click();
+  await page.waitForURL('**/home');
+  await expect(edit).toHaveCount(0);
+  const saved = (await expenses(request, uid)).filter((e) => e.fields.store?.stringValue === 'Misread Market');
+  expect(saved).toHaveLength(1);
+  expect(amountOf(saved[0].fields.amount)).toBe(60);
+  await page.reload();
+  await expect(page.getByText('Misread Market').filter({ visible: true }).first()).toBeVisible();
+  await expect(edit).toHaveCount(0);
 });

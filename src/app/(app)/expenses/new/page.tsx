@@ -7,6 +7,17 @@ import { openQuickAdd } from '@/features/quickadd/store/quickAddSlice';
 import { FastExpenseEntry } from '@/features/expenses/components/FastExpenseEntry';
 import { PARSER_CURRENCIES } from '@/features/ai/expenseParser/schema';
 
+/** `categoryId:amount,…` from a receipt card. A malformed part is dropped, never guessed. */
+function parseSplitParam(raw: string | null) {
+  if (!raw) return undefined;
+  return raw.split(',').flatMap((part) => {
+    const separator = part.lastIndexOf(':');
+    const categoryId = part.slice(0, separator);
+    const amount = Number(part.slice(separator + 1));
+    return categoryId && Number.isFinite(amount) && amount > 0 ? [{ categoryId, amount }] : [];
+  });
+}
+
 export default function NewExpensePage() {
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -31,6 +42,8 @@ export default function NewExpensePage() {
   const initialDate = searchParams.get('date') ?? undefined;
   const initialUserMsgId = searchParams.get('userMsgId') ?? undefined;
   const initialMode = searchParams.get('mode') === 'split' ? 'split' as const : undefined;
+  const initialSplits = parseSplitParam(searchParams.get('splits'));
+  const keepChatMessage = searchParams.get('keep') === '1';
 
   return (
     <FastExpenseEntry
@@ -45,6 +58,8 @@ export default function NewExpensePage() {
       initialDate={initialDate}
       initialUserMsgId={initialUserMsgId}
       initialMode={initialMode}
+      initialSplits={initialSplits}
+      keepChatMessage={keepChatMessage}
     />
   );
 }

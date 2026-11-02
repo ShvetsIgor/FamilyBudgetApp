@@ -45,9 +45,6 @@ export function DesktopChatHeader() {
           <p className="text-[15px] font-black leading-tight" style={{ color: C.fg }}>
             {t('chat.desktop.personalBudget')}
           </p>
-          <p className="text-[11px] font-bold" style={{ color: C.sage }}>
-            {t('chat.desktop.botLocal')}
-          </p>
         </div>
 
         {/* Clear chat */}

@@ -560,7 +560,11 @@
     "verifyCheck": "I have verified my email",
     "verifySent": "Email sent. Open the link, then return here to check.",
     "verifyPending": "The email is not verified yet. Open the link in your inbox first.",
-    "verifyError": "Could not complete verification. Please try again later."
+    "verifyError": "Could not complete verification. Please try again later.",
+    "sessionRetry": {
+      "title": "Can’t reach the server",
+      "text": "Your account is fine: your data will load as soon as the connection is back."
+    }
   },
   "notifications": {
     "title": "Notifications",
@@ -757,6 +761,16 @@
         "title": "Voice input",
         "desc": "Tap the mic in the chat bar and dictate an expense — the text types itself. Recognition follows the app language. Tap again to stop.",
         "example": "🎤 “Dabbah 1000”"
+      },
+      "tip11": {
+        "title": "Receipt photo",
+        "desc": "Tap the camera in the chat bar and photograph a receipt. I’ll read the total, date and purchases and sort them into your categories. Nothing is saved until you check it. The photo itself is not stored.",
+        "example": "📷 → check categories → Save"
+      },
+      "tip12": {
+        "title": "Several expenses at once",
+        "desc": "List purchases in one message, up to five at a time. Each becomes its own expense with its own card.",
+        "example": "bread 12, coffee 18"
       }
     },
     "menu": {
@@ -787,7 +801,6 @@
       "commands": "Commands",
       "paletteHint": "↵ open · ESC close · local search",
       "personalBudget": "Personal budget",
-      "botLocal": "● bot runs locally · offline",
       "searchShortcut": "Search (⌘K)",
       "cheatTitle": "HOW TO WRITE",
       "firstStepsTitle": "FIRST STEPS",
@@ -815,7 +828,7 @@
       "categoriesLink": "Categories"
     },
     "emptyTitle": "Write your first expense",
-    "emptyHint": "For example: «coffee 30» or «Shufersal 250»",
+    "emptyHint": "For example: «coffee 30» or «Shufersal 250». You can also send a receipt photo.",
     "emptyExample": "coffee 30",
     "starter": {
       "title": "First, categories",
@@ -848,7 +861,8 @@
       "cancel": "Don’t save",
       "photoFailed": "Couldn’t open the photo. Try another one or type the expense.",
       "setupFirst": "You need categories first: type any expense, like “coffee 20”, and I’ll offer a set. Then send the receipt again.",
-      "unconfirmed": "Couldn’t confirm the save. Tap “Save” on the card again — it won’t be recorded twice."
+      "unconfirmed": "Couldn’t confirm the save. Tap “Save” on the card again — it won’t be recorded twice.",
+      "edit": "Fix in the form"
     }
   },
   "onboarding": {

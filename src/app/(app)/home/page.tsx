@@ -526,6 +526,25 @@ export default function HomePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, dispatch, appStore, language, t]);
 
+  /**
+   * The form saves under the same operation id and marks the photo message
+   * saved, which settles this card; closing the form comes back to it intact.
+   * Merged like the save itself; an unassigned amount stays as the form's remainder.
+   */
+  const handleReceiptEdit = useCallback((data: ReceiptCardData, groups: ReceiptGroup[]) => {
+    const assigned = new Map<string, number>();
+    for (const group of groups) {
+      if (group.categoryId) assigned.set(group.categoryId, Math.round(((assigned.get(group.categoryId) ?? 0) + group.amount) * 100) / 100);
+    }
+    const params = new URLSearchParams({
+      fromChat: 'true', mode: 'split', keep: '1',
+      amount: String(data.total), currency: data.currency, date: data.date, userMsgId: data.userMsgId,
+    });
+    if (data.merchant) params.set('storeName', data.merchant);
+    if (assigned.size > 0) params.set('splits', [...assigned].map(([id, amount]) => `${id}:${amount}`).join(','));
+    router.push(`/expenses/new?${params.toString()}`);
+  }, [router]);
+
   const handleReceiptCancel = useCallback(async (cardMsgId: string, data: ReceiptCardData) => {
     if (!userId || sendingRef.current) return;
     dispatch(removeMessage(cardMsgId));
@@ -1029,6 +1048,7 @@ export default function HomePage() {
                     folders={expenseFolders}
                     busy={typing}
                     onSave={(groups) => handleReceiptSave(msg.id, receipt, groups)}
+                    onEdit={(groups) => handleReceiptEdit(receipt, groups)}
                     onCancel={() => { void handleReceiptCancel(msg.id, receipt); }}
                   />
                 </BotCardBubble>

@@ -32,8 +32,10 @@ const data: ReceiptCardData = {
 afterEach(() => { store.dispatch(setLanguage('en')); });
 
 describe('ReceiptCard', () => {
+  const onEdit = vi.fn();
   const renderCard = (onSave = vi.fn().mockResolvedValue(undefined), card = data) => {
-    render(<Provider store={store}><ReceiptCard data={card} categories={cats} folders={[]} onSave={onSave} onCancel={vi.fn()} /></Provider>);
+    onEdit.mockClear();
+    render(<Provider store={store}><ReceiptCard data={card} categories={cats} folders={[]} onSave={onSave} onEdit={onEdit} onCancel={vi.fn()} /></Provider>);
     return onSave;
   };
 
@@ -59,6 +61,12 @@ describe('ReceiptCard', () => {
       { categoryId: 'household', amount: 14.9, names: ['Dish soap'] },
       { categoryId: 'groceries', amount: 32, names: ['Coffee'] },
     ]);
+  });
+
+  it('hands what is assigned so far to the form when the model misread something', () => {
+    renderCard();
+    fireEvent.click(screen.getByRole('button', { name: 'Fix in the form' }));
+    expect(onEdit).toHaveBeenCalledWith(data.groups);
   });
 
   it('treats a category archived since the photo as not chosen', () => {

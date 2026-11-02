@@ -19,7 +19,8 @@ test('editing a created category without a folder saves', async ({ page, request
   await name.fill('Hobby club');
   const save = page.getByRole('button', { name: 'Save', exact: true }).filter({ visible: true });
   await save.click();
-  await expect(save).toHaveCount(0); // the sheet closed: the save went through
+  // Not just the label: while saving it reads «Saving…», so wait for the sheet itself
+  await expect(name).toHaveCount(0); // the sheet closed: the save went through
 
   const doc = await (await request.get(`${base}/categories/${uid}/expense/cat-hobby`, { headers: { Authorization: 'Bearer owner' } })).json();
   expect(doc.fields.name.stringValue).toBe('Hobby club');

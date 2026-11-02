@@ -17,6 +17,7 @@ import { fetchFamily, fetchFamilyMembers, fetchPendingInvite } from '@/features/
 import { checkFamilyActivity } from '@/features/family/services/familyActivityService';
 import { AppShell } from '@/shared/components/AppShell';
 import { LoadingScreen } from '@/shared/components/LoadingScreen';
+import { SessionRetryScreen } from '@/features/auth/components/SessionRetryScreen';
 import { requestNotificationPermission } from '@/shared/hooks/useNotifications';
 import { useRecurringNotifications } from '@/features/recurring/hooks/useRecurringNotifications';
 import { VerifyEmailBanner } from '@/features/auth/components/VerifyEmailBanner';
@@ -26,7 +27,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const t = useT();
   const dispatch = useAppDispatch();
   const appStore = useAppStore();
-  const { user, initialized, emailVerified } = useAppSelector((s) => s.auth);
+  const { user, initialized, emailVerified, sessionLoadFailed } = useAppSelector((s) => s.auth);
   const currency = useAppSelector((s) => s.ui.currency);
   const recurringStatus = useAppSelector((s) => s.recurring.status);
   const family = useAppSelector((s) => s.family.family);
@@ -38,10 +39,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [onboardingDone, setOnboardingDone] = useState(false);
 
   useEffect(() => {
-    if (initialized && !user) {
+    if (initialized && !user && !sessionLoadFailed) {
       router.replace('/auth/login');
     }
-  }, [initialized, user, router]);
+  }, [initialized, user, sessionLoadFailed, router]);
 
   // Load recurring payments once on app start
   useEffect(() => {
@@ -158,7 +159,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useRecurringNotifications();
 
   if (!initialized) return <LoadingScreen />;
-  if (!user) return null;
+  if (!user) return sessionLoadFailed ? <SessionRetryScreen /> : null;
 
   const showOnboarding = user?.onboarded === false && !onboardingDone;
 

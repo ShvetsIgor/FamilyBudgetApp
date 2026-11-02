@@ -22,6 +22,8 @@ interface ReceiptCardProps {
   folders: CategoryFolder[];
   busy?: boolean;
   onSave: (groups: ReceiptGroup[]) => Promise<void>;
+  /** The model misread something: continue in the form with what is assigned so far. */
+  onEdit: (groups: ReceiptGroup[]) => void;
   onCancel: () => void;
 }
 
@@ -30,7 +32,7 @@ interface ReceiptCardProps {
  * pre-fills: every amount — above all the part it could not read — gets a
  * category the user can see and change, and nothing is saved before that.
  */
-export function ReceiptCard({ data, categories, folders, busy, onSave, onCancel }: ReceiptCardProps) {
+export function ReceiptCard({ data, categories, folders, busy, onSave, onEdit, onCancel }: ReceiptCardProps) {
   const C = useChatTokens();
   const t = useT();
   const locale = useDateFnsLocale();
@@ -124,7 +126,16 @@ export function ReceiptCard({ data, categories, folders, busy, onSave, onCancel 
         {saving && <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />}
         {t('chat.receipt.save', { amount: `${sym} ${data.total}` })}
       </button>
-      <div className="mt-1 flex justify-center">
+      <div className="mt-1 flex flex-wrap justify-center gap-x-3">
+        <button
+          type="button"
+          onClick={() => onEdit(data.groups.map((group, i) => ({ ...group, categoryId: picks[i] })))}
+          disabled={saving || busy}
+          className="min-h-11 rounded-lg px-2 text-[12.5px] font-bold active:opacity-50 disabled:opacity-40"
+          style={{ color: C.sub }}
+        >
+          {t('chat.receipt.edit')}
+        </button>
         <button
           type="button"
           onClick={onCancel}

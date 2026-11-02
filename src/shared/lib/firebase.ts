@@ -1,6 +1,6 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator, type Auth } from 'firebase/auth';
-import { getFirestore, initializeFirestore, connectFirestoreEmulator, persistentLocalCache, type Firestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, connectFirestoreEmulator, persistentLocalCache, persistentMultipleTabManager, type Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? '',
@@ -50,7 +50,9 @@ export function getDb(): Firestore {
       // The emulator has no persistence layer; a plain instance connects cleanly.
       _db = USE_EMULATOR
         ? getFirestore(app)
-        : initializeFirestore(app, { localCache: persistentLocalCache() });
+        // Multi-tab: with the default single-tab manager a second tab, or a reload
+        // racing the old page's lease, silently fell back to an empty memory cache.
+        : initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
     } catch {
       _db = getFirestore(app);
     }

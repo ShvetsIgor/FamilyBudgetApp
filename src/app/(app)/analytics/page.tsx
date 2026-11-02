@@ -128,7 +128,9 @@ export default function AnalyticsPage() {
   // Analytics aggregates by categoryId only — folderId is UI-only and must not affect domain layer
   const topCats = aggregateTopCategories(months, categories, 6);
 
-  const totalSpend = topCats.reduce((s, c) => s + c.total, 0);
+  // The whole period, not the sum of the top rows: with more than six categories
+  // that understated the «total» card and overstated every share.
+  const totalSpend = months.reduce((s, m) => s + m.totalExpenses, 0);
   const thisMonth = months[months.length - 1];
   const lastMonth = months[months.length - 2];
   const momChange = thisMonth && lastMonth && lastMonth.totalExpenses > 0

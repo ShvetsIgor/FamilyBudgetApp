@@ -7,7 +7,7 @@ import { fetchMonthStats, fetchLastNMonths, toOwnCurrency, type MonthStats } fro
 import { saveBudget } from '@/features/budget/services/budgetService';
 import { setBudgetLimit } from '@/features/budget/store/budgetSlice';
 import { formatAmount, blockInvalidAmountKeys } from '@/shared/utils/currency';
-import { aggregateTopCategories } from '@/features/categories/utils/statsAggregation';
+import { aggregateTopCategories, pieSlices } from '@/features/categories/utils/statsAggregation';
 import { CategoryIcon } from '@/features/categories/components/CategoryIcon';
 import { cn } from '@/shared/utils/cn';
 import { useT } from '@/shared/hooks/useT';
@@ -84,8 +84,8 @@ export default function StatisticsPage() {
   useEffect(() => { load(); }, [load]);
 
   // Stats aggregate by categoryId only — folders are UI-only and must not affect domain/analytics layer
-  const parentPieData = stats
-    ? aggregateTopCategories([stats], categories, 8).map((item) => ({
+  const categoryRows = stats
+    ? aggregateTopCategories([stats], categories).map((item) => ({
         catId: item.catId,
         name: t.cat(item.name),
         amount: item.total,
@@ -94,7 +94,10 @@ export default function StatisticsPage() {
       }))
     : [];
 
-  const pieData = parentPieData;
+  // The lists show every category; only the chart folds the smallest into one slice
+  const pieData = pieSlices(categoryRows, 8, (amount) => ({
+    catId: '__rest', name: t('stats.restCategories'), amount, color: '#9CA3AF', icon: 'box',
+  }));
 
   const barData = history.map((m) => ({
     name: m.month.slice(5),
@@ -133,7 +136,7 @@ export default function StatisticsPage() {
 
   const categoryList = (
     <div className="flex flex-col gap-3">
-      {pieData.map((d) => {
+      {categoryRows.map((d) => {
         const limit = showBudget ? (budgetLimits[d.catId] ?? 0) : 0;
         const pct = limit > 0 ? Math.min(100, (d.amount / limit) * 100) : 0;
         const overBudget = limit > 0 && d.amount > limit;
@@ -306,7 +309,7 @@ export default function StatisticsPage() {
                     <div className="rounded-2xl border border-border bg-card p-5">
                       <h2 className="text-sm font-semibold mb-4">{t('stats.byCategory')}</h2>
                       <div className="flex flex-col gap-3">
-                        {pieData.map((d) => {
+                        {categoryRows.map((d) => {
                           const pct = stats && stats.totalExpenses > 0 ? (d.amount / stats.totalExpenses) * 100 : 0;
                           return (
                             <div key={d.catId} className="flex items-center gap-3">

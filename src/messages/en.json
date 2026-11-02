@@ -184,14 +184,15 @@
     "save": "Save",
     "limitPlaceholder": "Monthly limit (0 to remove)",
     "noData": "No data for this period",
-    "editHint": "Tap a category limit to edit"
+    "editHint": "Tap a category limit to edit",
+    "restCategories": "Everything else"
   },
   "analytics": {
     "title": "Analytics",
     "avgMonth": "Avg / month",
     "vsLastMonth": "vs last month",
     "trend": "6-Month Trend",
-    "topCategories": "Top Categories (6 months)",
+    "topCategories": "Top Categories",
     "byDow": "Spending by Day of Week",
     "noData": "Not enough data yet",
     "addMore": "Add expenses to see analytics",

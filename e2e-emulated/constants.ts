@@ -14,5 +14,7 @@ export const ALICE = { email: 'alice@e2e.test', name: 'Alice' };
 export const BOB = { email: 'bob@e2e.test', name: 'Bob' };
 /** No expense categories at all — exercises the first-expense starter card. */
 export const CAROL = { email: 'carol@e2e.test', name: 'Carol' };
+/** Spends across ten categories this month — more than any top list shows. */
+export const ERIN = { email: 'erin@e2e.test', name: 'Erin' };
 /** Owns a little data and is deleted by the account-deletion spec. */
 export const DAVE = { email: 'dave@e2e.test', name: 'Dave' };

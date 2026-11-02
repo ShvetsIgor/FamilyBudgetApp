@@ -11,7 +11,7 @@ import { initializeTestEnvironment, type RulesTestEnvironment } from '@firebase/
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import {
   E2E_PROJECT_ID, AUTH_EMULATOR, FIRESTORE_EMULATOR_HOST, FIRESTORE_EMULATOR_PORT,
-  PASSWORD, ALICE, BOB, CAROL, DAVE,
+  PASSWORD, ALICE, BOB, CAROL, DAVE, ERIN,
 } from './constants';
 
 async function createAuthUser(email: string, password: string): Promise<string> {
@@ -33,6 +33,7 @@ export interface SeededUsers {
   bobUid: string;
   carolUid: string;
   daveUid: string;
+  erinUid: string;
 }
 
 function profile(uid: string, name: string, email: string, extra: Record<string, unknown> = {}) {
@@ -50,6 +51,7 @@ export async function seedEmulators(): Promise<SeededUsers> {
   const bobUid = await createAuthUser(BOB.email, PASSWORD);
   const carolUid = await createAuthUser(CAROL.email, PASSWORD);
   const daveUid = await createAuthUser(DAVE.email, PASSWORD);
+  const erinUid = await createAuthUser(ERIN.email, PASSWORD);
 
   const testEnv: RulesTestEnvironment = await initializeTestEnvironment({
     projectId: E2E_PROJECT_ID,
@@ -117,6 +119,19 @@ export async function seedEmulators(): Promise<SeededUsers> {
     // Carol: a brand-new library-first account — no expense categories yet
     await setDoc(doc(db, 'users', carolUid), profile(carolUid, CAROL.name, CAROL.email, { expenseLibraryMode: true }));
 
+    // Erin: ten categories this month, ₪10…₪100, ₪550 in total
+    await setDoc(doc(db, 'users', erinUid), profile(erinUid, ERIN.name, ERIN.email));
+    for (let i = 1; i <= 10; i += 1) {
+      await setDoc(doc(db, 'categories', erinUid, 'expense', `erin-cat-${i}`), {
+        userId: erinUid, name: `Erin ${i}`, icon: 'box', color: '#8AA9D6', type: 'expense', order: i, isPrivate: false,
+      });
+      await setDoc(doc(db, 'expenses', erinUid, 'items', `erin-exp-${i}`), {
+        userId: erinUid, amount: i * 10, currency: 'ILS', categoryId: `erin-cat-${i}`,
+        date: Timestamp.now(), paymentMethod: 'card', tags: [], privacy: 'regular', splits: [],
+        isRecurring: false, createdAt: Timestamp.now(), updatedAt: Timestamp.now(),
+      });
+    }
+
     // Dave: a little of everything the deletion must remove
     await setDoc(doc(db, 'users', daveUid), profile(daveUid, DAVE.name, DAVE.email));
     await setDoc(doc(db, 'categories', daveUid, 'expense', 'cat-food'), {
@@ -133,5 +148,5 @@ export async function seedEmulators(): Promise<SeededUsers> {
   });
 
   await testEnv.cleanup();
-  return { aliceUid, bobUid, carolUid, daveUid };
+  return { aliceUid, bobUid, carolUid, daveUid, erinUid };
 }

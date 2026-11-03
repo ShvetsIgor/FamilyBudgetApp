@@ -65,7 +65,6 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
 
   const initial = memberInitial(user?.name, user?.email);
   const displayMembers = familyMembers.slice(0, 4);
-  const onlineCount = displayMembers.length || 1;
 
   useEffect(() => {
     const panel = panelRef.current;
@@ -226,7 +225,7 @@ export function MenuOverlay({ onClose }: MenuOverlayProps) {
           </div>
           <p className="m-0 flex-1 text-[12px] font-bold" style={{ color: C.sub }}>
             {familyMembers.length > 0
-              ? t('chat.menu.online').replace('{n}', String(onlineCount))
+              ? t('chat.menu.online').replace('{n}', String(familyMembers.length))
               : t('chat.menu.onlyYou')}
           </p>
           <button

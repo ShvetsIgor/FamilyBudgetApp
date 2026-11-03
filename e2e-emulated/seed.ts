@@ -11,7 +11,7 @@ import { initializeTestEnvironment, type RulesTestEnvironment } from '@firebase/
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import {
   E2E_PROJECT_ID, AUTH_EMULATOR, FIRESTORE_EMULATOR_HOST, FIRESTORE_EMULATOR_PORT,
-  PASSWORD, ALICE, BOB, CAROL, DAVE, ERIN,
+  PASSWORD, ALICE, BOB, CAROL, DAVE, ERIN, FRANK,
 } from './constants';
 
 async function createAuthUser(email: string, password: string): Promise<string> {
@@ -34,6 +34,7 @@ export interface SeededUsers {
   carolUid: string;
   daveUid: string;
   erinUid: string;
+  frankUid: string;
 }
 
 function profile(uid: string, name: string, email: string, extra: Record<string, unknown> = {}) {
@@ -52,6 +53,7 @@ export async function seedEmulators(): Promise<SeededUsers> {
   const carolUid = await createAuthUser(CAROL.email, PASSWORD);
   const daveUid = await createAuthUser(DAVE.email, PASSWORD);
   const erinUid = await createAuthUser(ERIN.email, PASSWORD);
+  const frankUid = await createAuthUser(FRANK.email, PASSWORD);
 
   const testEnv: RulesTestEnvironment = await initializeTestEnvironment({
     projectId: E2E_PROJECT_ID,
@@ -132,6 +134,20 @@ export async function seedEmulators(): Promise<SeededUsers> {
       });
     }
 
+    // Frank: one purchase yesterday, which on the 1st is in the previous month
+    await setDoc(doc(db, 'users', frankUid), profile(frankUid, FRANK.name, FRANK.email));
+    await setDoc(doc(db, 'categories', frankUid, 'expense', 'cat-food'), {
+      userId: frankUid, name: 'Food', icon: 'box', color: '#8AA9D6', type: 'expense', order: 0, isPrivate: false,
+    });
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(12, 0, 0, 0);
+    await setDoc(doc(db, 'expenses', frankUid, 'items', 'frank-yesterday'), {
+      userId: frankUid, amount: 137, currency: 'ILS', categoryId: 'cat-food',
+      date: Timestamp.fromDate(yesterday), paymentMethod: 'card', tags: [], privacy: 'regular', splits: [],
+      isRecurring: false, createdAt: Timestamp.now(), updatedAt: Timestamp.now(),
+    });
+
     // Dave: a little of everything the deletion must remove
     await setDoc(doc(db, 'users', daveUid), profile(daveUid, DAVE.name, DAVE.email));
     await setDoc(doc(db, 'categories', daveUid, 'expense', 'cat-food'), {
@@ -148,5 +164,5 @@ export async function seedEmulators(): Promise<SeededUsers> {
   });
 
   await testEnv.cleanup();
-  return { aliceUid, bobUid, carolUid, daveUid, erinUid };
+  return { aliceUid, bobUid, carolUid, daveUid, erinUid, frankUid };
 }

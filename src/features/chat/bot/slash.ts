@@ -3,7 +3,8 @@ import { getDateFnsLocale } from '@/shared/utils/dateLocale';
 import { toLocalMonthKey } from '@/shared/utils/dateKey';
 import { addMessage } from '@/features/chat/services/messagesService';
 import { getPresetDisplayName } from '@/features/categories/config/categoryLabels';
-import type { BotContext } from './context';
+import { spentByCategory } from '@/features/budget/utils/envelopes';
+import type { DigestContext } from './context';
 import { makeT } from '@/shared/utils/makeT';
 import type { EnvelopesCardData } from '@/features/chat/components/BotCard/EnvelopesCard';
 import type { WeeklyCardData } from '@/features/chat/components/BotCard/WeeklyCard';
@@ -13,16 +14,12 @@ export function isSlashCommand(text: string): boolean {
   return text.trim().startsWith('/');
 }
 
-export async function handleSlashCommand(
-  text: string,
-  ctx: BotContext & {
-    allExpenses: Array<{ amount: number; categoryId: string; date: string }>;
-    monthBudget: number;
-    budgetLimits: Record<string, number>;
-    dailyBudget: number;
-    firstGoalName?: string;
-  }
-): Promise<void> {
+/** The reports add expenses up, so they need them loaded; /help does not. */
+export function slashCommandNeedsExpenses(text: string): boolean {
+  return ['/неделя', '/week', '/баланс', '/balance'].includes(text.trim().toLowerCase());
+}
+
+export async function handleSlashCommand(text: string, ctx: DigestContext): Promise<void> {
   const cmd = text.trim().toLowerCase();
   const { userId, categoriesById, currency, allExpenses, budgetLimits, language } = ctx;
 
@@ -43,7 +40,7 @@ export async function handleSlashCommand(
 
   // /неделя — reuse weekly summary logic
   if (cmd === '/неделя' || cmd === '/week') {
-    await sendWeeklySummary(ctx as any);
+    await sendWeeklySummary(ctx);
     return;
   }
 
@@ -53,24 +50,21 @@ export async function handleSlashCommand(
     const monthLabel = format(new Date(), 'LLLL yyyy', { locale: getDateFnsLocale(ctx.language) });
 
     // Spending per category this month (local calendar month, not UTC)
-    const catSpent: Record<string, number> = {};
-    allExpenses
-      .filter((e) => toLocalMonthKey(e.date) === monthStr)
-      .forEach((e) => {
-        catSpent[e.categoryId] = (catSpent[e.categoryId] ?? 0) + e.amount;
-      });
+    const catSpent = spentByCategory(allExpenses.filter((e) => toLocalMonthKey(e.date) === monthStr));
 
-    // Build envelopes — union of limits and spending
-    const catIds = new Set([...Object.keys(budgetLimits), ...Object.keys(catSpent)]);
+    // Union of limits and spending. Money spent in a since-deleted category is
+    // still shown; a limit left behind by one budgets nothing.
+    const liveLimits = Object.keys(budgetLimits).filter((catId) => categoriesById.has(catId));
+    const catIds = new Set([...liveLimits, ...Object.keys(catSpent)]);
     const envelopes = Array.from(catIds)
       .map((catId) => {
         const cat = categoriesById.get(catId);
         return {
-          name: getPresetDisplayName(catId, language) ?? cat?.name ?? catId,
+          name: getPresetDisplayName(catId, language) ?? cat?.name ?? makeT(language).cat('Other'),
           icon: cat?.icon ?? 'box',
           color: cat?.color ?? '#E07A5F',
           spent: catSpent[catId] ?? 0,
-          limit: budgetLimits[catId] ?? 0,
+          limit: cat ? budgetLimits[catId] ?? 0 : 0,
           currency: sym,
         };
       })

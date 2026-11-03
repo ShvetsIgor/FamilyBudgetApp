@@ -1,7 +1,9 @@
+import { subDays } from 'date-fns';
 import { store } from '@/store/store';
 import { addNotification } from '@/features/notifications/store/notificationsSlice';
 import { getPresetDisplayName } from '@/features/categories/config/categoryLabels';
-import type { BotContext } from './context';
+import type { DigestContext } from './context';
+import { toLocalDateKey } from '@/shared/utils/dateKey';
 import { makeT } from '@/shared/utils/makeT';
 import type { MorningCardData } from '@/features/chat/components/BotCard/MorningCard';
 
@@ -26,20 +28,23 @@ export function markMorningGreetingSent(): void {
   } catch {}
 }
 
-export async function sendMorningGreeting(ctx: BotContext): Promise<void> {
+/** Pure so the arithmetic can be pinned without a store or a clock. */
+export function buildMorningCard(ctx: DigestContext, now: Date): MorningCardData {
   const bt = makeT(ctx.language);
-  const { currency, categoriesById, todaySpent, language } = ctx;
+  const { currency, categoriesById, language, dailyBudget, todayFree } = ctx;
 
   const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
   const sym = symMap[currency] ?? currency;
 
-  const yesterdayExpenses = (ctx as unknown as Record<string, unknown>).yesterdayExpenses as Array<{ amount: number; categoryId: string }> ?? [];
+  // subDays, not «now − 24 h»: a day is 23 hours long when the clocks go forward
+  const yesterdayStr = toLocalDateKey(subDays(now, 1));
+  const yesterdayExpenses = ctx.allExpenses.filter((e) => toLocalDateKey(e.date) === yesterdayStr);
   const yesterdayAmount = yesterdayExpenses.reduce((s, e) => s + e.amount, 0);
 
   const catFreq: Record<string, number> = {};
   yesterdayExpenses.forEach((e) => {
     const cat = categoriesById.get(e.categoryId);
-    const displayName = getPresetDisplayName(e.categoryId, language) ?? cat?.name ?? e.categoryId;
+    const displayName = getPresetDisplayName(e.categoryId, language) ?? cat?.name ?? bt.cat('Other');
     const name = displayName.toLowerCase();
     if (name) catFreq[name] = (catFreq[name] ?? 0) + 1;
   });
@@ -49,16 +54,19 @@ export async function sendMorningGreeting(ctx: BotContext): Promise<void> {
     .map(([n]) => n)
     .join(bt('chat.bot.andJoiner'));
 
-  const dailyBudget = (ctx as unknown as Record<string, unknown>).dailyBudget as number ?? 0;
-  const todayFree = Math.max(0, dailyBudget - todaySpent);
-
-  const cardData: MorningCardData = {
+  return {
     yesterdayAmount,
     yesterdayCatNames: topCatNames,
     todayFree,
     currency: sym,
     hasBudget: dailyBudget > 0,
   };
+}
+
+export async function sendMorningGreeting(ctx: DigestContext, now: Date = new Date()): Promise<void> {
+  const bt = makeT(ctx.language);
+  const cardData = buildMorningCard(ctx, now);
+  const { yesterdayAmount, todayFree, currency: sym } = cardData;
 
   store.dispatch(addNotification({
     kind: 'morning',

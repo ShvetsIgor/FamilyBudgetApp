@@ -10,6 +10,7 @@ import { formatAmount } from '@/shared/utils/currency';
 import { aggregateTopCategories } from '@/features/categories/utils/statsAggregation';
 import { useT } from '@/shared/hooks/useT';
 import { toLocalDateKey, toLocalMonthKey } from '@/shared/utils/dateKey';
+import { daysCountedInMonth } from '@/features/analytics/utils/daysCountedInMonth';
 import { monthStatsFromExpenses, isRecurringExpense } from '@/features/analytics/utils/monthStatsFromExpenses';
 import { toOwnCurrency, foreignTotals } from '@/features/stats/services/statsService';
 import { formatCurrencyTotals, groupByCurrency } from '@/shared/utils/currencyTotals';
@@ -148,10 +149,7 @@ export default function AnalyticsPage() {
 
   // Avg daily per month for comparison chart
   const avgDailyByMonth = months.map((m) => {
-    const daysInM = new Date(m.month + '-01').getMonth() === new Date().getMonth() &&
-      new Date(m.month + '-01').getFullYear() === new Date().getFullYear()
-      ? new Date().getDate()
-      : new Date(parseInt(m.month.slice(0, 4)), parseInt(m.month.slice(5)), 0).getDate();
+    const daysInM = daysCountedInMonth(m.month, new Date());
     return { name: m.month.slice(5), avgDay: daysInM > 0 ? Math.round(m.totalExpenses / daysInM) : 0 };
   });
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { mergeExpenses } from '@/features/expenses/store/expensesSlice';
@@ -76,8 +76,8 @@ export default function BudgetPage() {
   const categoriesStatus = useAppSelector((s) => s.categories.status);
 
   const envelopes = useMemo(
-    () => buildEnvelopes(expensesList, budgetLimits, expCategories, monthStr),
-    [expensesList, budgetLimits, expCategories, monthStr]
+    () => buildEnvelopes(expensesList, budgetLimits, expCategories, monthStr, currency),
+    [expensesList, budgetLimits, expCategories, monthStr, currency]
   );
 
   // One-time prune of orphaned limits (deleted custom categories, folder-keyed
@@ -153,7 +153,7 @@ export default function BudgetPage() {
         {/* Architectural header */}
         <div className="px-4 pt-6 pb-4 lg:px-0 lg:pt-0" style={{ borderBottom: '2px solid hsl(var(--foreground))', background: 'hsl(var(--card))' }}>
           <p style={{ fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
-            {format(new Date(monthStr + '-01'), 'LLLL yyyy', { locale: dfLocale })}
+            {format(parseISO(monthStr + '-01'), 'LLLL yyyy', { locale: dfLocale })}
           </p>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
             <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1 }}>

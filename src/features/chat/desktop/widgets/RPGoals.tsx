@@ -1,18 +1,36 @@
 'use client';
+import { useEffect } from 'react';
+import { differenceInCalendarDays, parseISO } from 'date-fns';
 import { useT } from '@/shared/hooks/useT';
 import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { RPCard } from './RPCard';
-import { useAppSelector } from '@/store/store';
+import { useAppDispatch, useAppSelector, useAppStore } from '@/store/store';
 import Link from 'next/link';
+import { fetchGoals } from '@/features/savings/services/savingsService';
+import { setGoals } from '@/features/savings/store/savingsSlice';
+import { getCurrencySymbol } from '@/shared/utils/currency';
 
 export function RPGoals() {
   const C = useChatTokens();
   const t = useT();
   const goals = useAppSelector((s) => s.savings?.list ?? []);
-  const currency = useAppSelector((s) => s.ui.currency);
-  const sym = currency === 'ILS' ? '₪' : currency === 'USD' ? '$' : '€';
+  const userId = useAppSelector((s) => s.auth.user?.id);
+  const status = useAppSelector((s) => s.savings?.status);
+  const dispatch = useAppDispatch();
+  const appStore = useAppStore();
 
-  const activeGoals = goals.filter((g) => !g.deadline || new Date(g.deadline) > new Date()).slice(0, 3);
+  // Nothing else loads goals before /savings, and an unloaded list would read
+  // as «no goals» here
+  useEffect(() => {
+    if (!userId || status !== 'idle') return;
+    fetchGoals(userId)
+      .then((list) => { if (appStore.getState().auth.user?.id === userId) dispatch(setGoals(list)); })
+      .catch(() => {});
+  }, [userId, status, dispatch, appStore]);
+
+  const activeGoals = goals
+    .filter((g) => !g.deadline || differenceInCalendarDays(parseISO(g.deadline), new Date()) >= 0)
+    .slice(0, 3);
 
   if (activeGoals.length === 0) {
     return (
@@ -27,6 +45,7 @@ export function RPGoals() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {activeGoals.map((goal) => {
           const pct = goal.targetAmount > 0 ? Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100)) : 0;
+          const sym = getCurrencySymbol(goal.currency);
           return (
             <div key={goal.id}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>

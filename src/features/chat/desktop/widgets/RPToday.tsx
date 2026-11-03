@@ -5,13 +5,14 @@ import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { RPCard } from './RPCard';
 import { usePinnedToday } from '../usePinnedToday';
 import { useAppSelector } from '@/store/store';
+import { getCurrencySymbol } from '@/shared/utils/currency';
 
 export function RPToday() {
   const C = useChatTokens();
   const t = useT();
   const { spent, left, pct, dailyLimit } = usePinnedToday();
   const currency = useAppSelector((s) => s.ui.currency);
-  const sym = currency === 'ILS' ? '₪' : currency === 'USD' ? '$' : '€';
+  const sym = getCurrencySymbol(currency);
 
   return (
     <RPCard title={t('chat.desktop.todayTitle')} accentColor={C.primary} action={{ label: t('chat.desktop.details'), href: '/expenses' }}>

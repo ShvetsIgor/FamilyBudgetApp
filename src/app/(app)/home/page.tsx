@@ -23,17 +23,10 @@ import { deleteMessage, updateMessage } from '@/features/chat/services/messagesS
 import { collectBotContext } from '@/features/chat/bot/context';
 import { alreadyDeletedPhrase, respondToUserMessage, saveErrorPhrase, unconfirmedSavePhrase } from '@/features/chat/bot/respond';
 import { addMessage } from '@/features/chat/services/messagesService';
-import {
-  shouldSendMorningGreeting,
-  markMorningGreetingSent,
-  sendMorningGreeting,
-} from '@/features/chat/bot/morning';
-import {
-  shouldSendWeeklySummary,
-  markWeeklySummarySent,
-  sendWeeklySummary,
-} from '@/features/chat/bot/weekly';
-import { isSlashCommand, handleSlashCommand } from '@/features/chat/bot/slash';
+import { loadDigestMonths, sendDueDigests } from '@/features/chat/bot/digest';
+import { isSlashCommand, handleSlashCommand, slashCommandNeedsExpenses } from '@/features/chat/bot/slash';
+import { collectDigestContext } from '@/features/chat/bot/context';
+import { computeDailyBudget } from '@/features/budget/utils/dailyBudget';
 
 import { ChatScreen } from '@/features/chat/components/ChatScreen';
 import { CategoryFolderPickerSheet } from '@/features/categories/components/CategoryFolderPickerSheet';
@@ -123,16 +116,10 @@ export default function HomePage() {
   const budgetMode = useAppSelector((s) => s.ui.budgetMode);
   const budgetDailyLimit = useAppSelector((s) => s.ui.budgetDailyLimit);
   const budgetMonthlyLimit = useAppSelector((s) => s.ui.budgetMonthlyLimit);
-  const budgetLimits = useAppSelector((s) => s.budget.limits);
-  const monthBudget = useAppSelector((s) =>
-    Object.values(s.budget.limits).reduce((acc, v) => acc + v, 0)
-  );
 
   const now = new Date();
   const todayStr = toLocalDateKey(now);
   const monthStr = toLocalMonthKey(now);
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const remainingDays = daysInMonth - now.getDate() + 1;
 
   const todaySpent = useAppSelector((s) =>
     splitOwnCurrency(
@@ -150,18 +137,14 @@ export default function HomePage() {
     splitOwnCurrency(s.income.list.filter((i) => toLocalMonthKey(i.date) === monthStr), currency).ownTotal
   );
 
-  // Compute daily budget based on selected mode
-  const autoDaily = monthIncome > 0
-    ? Math.max(0, Math.round((monthIncome - monthSpent) / remainingDays))
-    : 0;
-
-  const dailyBudget = (() => {
-    if (budgetMode === 'daily') return budgetDailyLimit;
-    if (budgetMode === 'monthly') return budgetMonthlyLimit > 0
-      ? Math.max(0, Math.round((budgetMonthlyLimit - monthSpent) / remainingDays))
-      : 0;
-    return autoDaily; // 'auto'
-  })();
+  const dailyBudget = computeDailyBudget({
+    mode: budgetMode,
+    dailyLimit: budgetDailyLimit,
+    monthlyLimit: budgetMonthlyLimit,
+    monthSpent,
+    monthIncome,
+    now,
+  });
 
   // PinnedToday display values
   // daily mode tracks today vs the daily limit;
@@ -224,10 +207,6 @@ export default function HomePage() {
   }, [userId, recurringList]);
 
   const allExpenses = useAppSelector((s) => s.expenses.list);
-  const ownCurrencyExpenses = useMemo(
-    () => allExpenses.filter((expense) => expense.currency === currency),
-    [allExpenses, currency],
-  );
   const expenseCats = useAppSelector((s) => s.categories.expense);
   // A selector that filters returns a fresh array on every store action and
   // would re-render the whole chat screen; the filter belongs in a memo.
@@ -244,50 +223,32 @@ export default function HomePage() {
   );
   const expenseFolders = useAppSelector((s) => s.categories.folders.expense);
   const incomeFolders = useAppSelector((s) => s.categories.folders.income);
-  const savingsGoals = useAppSelector((s) => s.savings.list);
 
   // Load current month expenses on home mount so todaySpent is accurate
+  const [monthLoadedFor, setMonthLoadedFor] = useState<string | null>(null);
   useEffect(() => {
     if (!userId) return;
     fetchMonthExpenses(userId, toLocalMonthKey(new Date()))
-      .then((list) => dispatch(mergeExpenses(list)))
+      .then((list) => {
+        if (appStore.getState().auth.user?.id !== userId) return;
+        dispatch(mergeExpenses(list));
+        setMonthLoadedFor(userId);
+      })
       .catch(() => {});
-  }, [userId, dispatch]);
+  }, [userId, dispatch, appStore]);
 
-  // Auto-send morning greeting / weekly summary on first daily mount
+  // Morning greeting / weekly summary, once on the first daily mount — and only
+  // once the numbers exist. On a cold start nothing is loaded yet at mount, and
+  // a digest sent then reads «₪0 yesterday» and cannot be sent again today.
+  const incomeReady = useAppSelector((s) => s.income.status === 'ready');
+  const limitsReady = useAppSelector((s) => s.budget.status === 'ready');
+  const digestDataReady = monthLoadedFor === userId && incomeReady && limitsReady;
   const autoSentRef = useRef(false);
   useEffect(() => {
-    if (!userId || autoSentRef.current) return;
+    if (!userId || !digestDataReady || autoSentRef.current) return;
     autoSentRef.current = true;
-
-    const ctx = collectBotContext(appStore.getState());
-    if (!ctx) return;
-
-    const yesterdayStr = toLocalDateKey(new Date(Date.now() - 86_400_000));
-    const yesterdayExpenses = ownCurrencyExpenses.filter((e) => toLocalDateKey(e.date) === yesterdayStr);
-    const firstGoalName = savingsGoals.find((g) => !g.name?.toLowerCase().includes('savings'))?.name;
-
-    const enrichedCtx = {
-      ...ctx,
-      yesterdayExpenses,
-      dailyBudget,
-      monthBudget,
-      budgetLimits,
-      allExpenses: ownCurrencyExpenses,
-      firstGoalName,
-    };
-
-    if (shouldSendMorningGreeting()) {
-      markMorningGreetingSent();
-      sendMorningGreeting(enrichedCtx).catch(() => {});
-    }
-
-    if (shouldSendWeeklySummary()) {
-      markWeeklySummarySent();
-      sendWeeklySummary(enrichedCtx).catch(() => {});
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
+    sendDueDigests(userId).catch(() => {});
+  }, [userId, digestDataReady]);
 
   const sendingRef = useRef(false);
 
@@ -323,18 +284,7 @@ export default function HomePage() {
   // «Create my own category» from the starter card reuses the editor above
   const [starterEditor, setStarterEditor] = useState<{ botMsgId: string; card: StarterCardData } | null>(null);
 
-  const buildEnrichedCtx = useCallback(() => {
-    const ctx = collectBotContext(appStore.getState());
-    if (!ctx) return null;
-    return {
-      ...ctx,
-      allExpenses: ownCurrencyExpenses,
-      monthBudget,
-      budgetLimits,
-      dailyBudget,
-      firstGoalName: savingsGoals.find((g) => !g.name?.toLowerCase().includes('savings'))?.name,
-    };
-  }, [appStore, ownCurrencyExpenses, monthBudget, budgetLimits, dailyBudget, savingsGoals]);
+  const buildEnrichedCtx = useCallback(() => collectDigestContext(appStore.getState()), [appStore]);
 
   const failureText = useMemo(() => saveErrorPhrase(language), [language]);
 
@@ -414,14 +364,16 @@ export default function HomePage() {
     dispatch(setTyping(true));
 
     try {
-      const enrichedCtx = buildEnrichedCtx();
-      if (!enrichedCtx) return;
+      if (!buildEnrichedCtx()) return;
 
       // Slash command — save user message, skip expense parsing
       if (isSlashCommand(text)) {
         await addMessage({ userId, senderId: userId, kind: 'user', text, status: 'saved' });
         await new Promise((r) => setTimeout(r, 150));
-        await handleSlashCommand(text, enrichedCtx);
+        // The reports add up what is loaded, and a week can start last month
+        if (slashCommandNeedsExpenses(text) && !await loadDigestMonths(userId, new Date())) return;
+        const reportCtx = buildEnrichedCtx();
+        if (reportCtx) await handleSlashCommand(text, reportCtx);
         return;
       }
 

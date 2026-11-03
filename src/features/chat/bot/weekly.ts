@@ -3,7 +3,8 @@ import { getDateFnsLocale } from '@/shared/utils/dateLocale';
 import { store } from '@/store/store';
 import { addNotification } from '@/features/notifications/store/notificationsSlice';
 import { getPresetDisplayName } from '@/features/categories/config/categoryLabels';
-import type { BotContext } from './context';
+import { spentByCategory } from '@/features/budget/utils/envelopes';
+import type { DigestContext } from './context';
 import { makeT } from '@/shared/utils/makeT';
 import type { WeeklyCardData, WeeklyEnvelope } from '@/features/chat/components/BotCard/WeeklyCard';
 import { toLocalDateKey } from '@/shared/utils/dateKey';
@@ -31,7 +32,8 @@ export function markWeeklySummarySent(): void {
   } catch {}
 }
 
-export async function sendWeeklySummary(ctx: BotContext): Promise<void> {
+/** Pure so the arithmetic can be pinned without a store or a clock. */
+export function buildWeeklyCard(ctx: DigestContext, now: Date): WeeklyCardData {
   const bt = makeT(ctx.language);
   const dayName = (iso: string) => {
     const d = format(parseISO(iso), 'EEEEEE', { locale: getDateFnsLocale(ctx.language) });
@@ -41,40 +43,37 @@ export async function sendWeeklySummary(ctx: BotContext): Promise<void> {
   const catDisplayName = (catId: string, fallback?: string | null): string => {
     const preset = getPresetDisplayName(catId, language);
     if (preset) return preset;
-    return fallback ?? catId;
+    return fallback ?? bt.cat('Other');
   };
 
   const symMap: Record<string, string> = { ILS: '₪', USD: '$', CAD: 'CA$', RUB: '₽' };
   const sym = symMap[currency] ?? currency;
 
-  const now = new Date();
   const weekStart = startOfWeek(now, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
   const weekNum = getISOWeek(now);
   const weekRange = `${format(weekStart, 'd', { locale: getDateFnsLocale(ctx.language) })}–${format(weekEnd, 'd MMMM', { locale: getDateFnsLocale(ctx.language) })}`;
 
-  const allExpenses = (ctx as unknown as Record<string, unknown>).allExpenses as Array<{ amount: number; categoryId: string; date: string }> ?? [];
   const weekStartStr = toLocalDateKey(weekStart);
   const weekEndStr = toLocalDateKey(weekEnd);
-  const weekExpenses = allExpenses.filter((e) => {
+  const weekExpenses = ctx.allExpenses.filter((e) => {
     const expenseDay = toLocalDateKey(e.date);
     return expenseDay >= weekStartStr && expenseDay <= weekEndStr;
   });
   const totalSpent = weekExpenses.reduce((s, e) => s + e.amount, 0);
 
-  const monthBudget = (ctx as unknown as Record<string, unknown>).monthBudget as number ?? 0;
+  // A limit left behind by a deleted category budgets nothing, so it adds nothing
+  const limits = Object.fromEntries(
+    Object.entries(ctx.budgetLimits).filter(([catId, limit]) => limit > 0 && categoriesById.has(catId)),
+  );
+  const monthBudget = Object.values(limits).reduce((sum, limit) => sum + limit, 0);
   const totalBudget = Math.round(monthBudget / 4);
   const saved = Math.max(0, totalBudget - totalSpent);
-  const savingsGoalName = (ctx as unknown as Record<string, unknown>).firstGoalName as string | undefined;
+  const savingsGoalName = ctx.firstGoalName;
 
-  const catSpent: Record<string, number> = {};
-  weekExpenses.forEach((e) => {
-    catSpent[e.categoryId] = (catSpent[e.categoryId] ?? 0) + e.amount;
-  });
+  const catSpent = spentByCategory(weekExpenses);
 
-  const limits = (ctx as unknown as Record<string, unknown>).budgetLimits as Record<string, number> ?? {};
   const envelopes: WeeklyEnvelope[] = Object.entries(limits)
-    .filter(([, lim]) => lim > 0)
     .map(([catId, monthLimit]) => {
       const cat = categoriesById.get(catId);
       return { name: catDisplayName(catId, cat?.name), icon: cat?.icon ?? 'box', color: cat?.color ?? '#E07A5F', spent: catSpent[catId] ?? 0, limit: Math.round(monthLimit / 4) };
@@ -107,7 +106,13 @@ export async function sendWeeklySummary(ctx: BotContext): Promise<void> {
     mostFrequent = `${catDisplayName(topId, topCat?.name)} ×${catCount[topId]}`;
   }
 
-  const cardData: WeeklyCardData = { weekNum, weekRange, totalSpent, totalBudget, saved, savingsGoalName, envelopes, bestDay, worstDay, mostFrequent, currency: sym };
+  return { weekNum, weekRange, totalSpent, totalBudget, saved, savingsGoalName, envelopes, bestDay, worstDay, mostFrequent, currency: sym };
+}
+
+export async function sendWeeklySummary(ctx: DigestContext, now: Date = new Date()): Promise<void> {
+  const bt = makeT(ctx.language);
+  const cardData = buildWeeklyCard(ctx, now);
+  const { weekNum, weekRange, totalSpent, totalBudget, saved, currency: sym } = cardData;
 
   store.dispatch(addNotification({
     kind: 'weekly',

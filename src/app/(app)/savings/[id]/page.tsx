@@ -2,7 +2,8 @@
 
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { differenceInDays, format, parseISO } from 'date-fns';
+import { format, parseISO } from 'date-fns';
+import { goalDaysLeft } from '@/features/savings/utils/goalDays';
 import { Lock, Search, Users } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { removeGoalItem } from '@/features/savings/store/savingsSlice';
@@ -49,7 +50,7 @@ export default function SavingsGoalDetailPage({ params }: { params: Promise<{ id
 
   const pct = Math.min(100, goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0);
   const remaining = Math.max(0, goal.targetAmount - goal.currentAmount);
-  const daysLeft = goal.deadline ? differenceInDays(parseISO(goal.deadline), new Date()) : null;
+  const daysLeft = goal.deadline ? goalDaysLeft(goal.deadline) : null;
   const done = pct >= 100;
 
   async function handleDelete() {

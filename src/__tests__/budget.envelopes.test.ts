@@ -4,8 +4,8 @@
  * one; limits that resolve to no known category are hidden.
  */
 import { describe, it, expect } from 'vitest';
-import { buildEnvelopes } from '@/features/budget/utils/envelopes';
-import type { Category } from '@/shared/types';
+import { buildEnvelopes, spentByCategory } from '@/features/budget/utils/envelopes';
+import type { Category, Currency } from '@/shared/types';
 
 const MONTH = '2026-07';
 
@@ -19,7 +19,8 @@ const exp = (
   categoryId: string,
   date = '2026-07-10T12:00:00.000Z',
   splits: { categoryId: string; amount: number }[] = [],
-) => ({ amount, categoryId, date, splits });
+  currency: Currency = 'ILS',
+) => ({ amount, categoryId, date, splits, currency });
 
 const categories = [cat('groceries', 'Groceries'), cat('coffee', 'Coffee')];
 
@@ -30,6 +31,7 @@ describe('buildEnvelopes', () => {
       { groceries: 500 },
       categories,
       MONTH,
+      'ILS',
     );
     expect(out).toHaveLength(1);
     expect(out[0]).toMatchObject({ catId: 'groceries', spent: 150, limit: 500, name: 'Groceries' });
@@ -41,9 +43,21 @@ describe('buildEnvelopes', () => {
       { groceries: 500, coffee: 100 },
       categories,
       MONTH,
+      'ILS',
     );
     const byId = Object.fromEntries(out.map((e) => [e.catId, e.spent]));
     expect(byId).toEqual({ coffee: 30, groceries: 70 });
+  });
+
+  it('does not count a foreign charge against a limit set in the account currency', () => {
+    const out = buildEnvelopes(
+      [exp(100, 'coffee'), exp(12, 'coffee', undefined, [], 'USD')],
+      { coffee: 200 },
+      categories,
+      MONTH,
+      'ILS',
+    );
+    expect(out[0].spent).toBe(100);
   });
 
   it('hides limits that resolve to no known category', () => {
@@ -52,12 +66,13 @@ describe('buildEnvelopes', () => {
       { coffee: 100, deletedCat: 300, food: 2000 },
       categories,
       MONTH,
+      'ILS',
     );
     expect(out.map((e) => e.catId)).toEqual(['coffee']);
   });
 
   it('shows a zero-spend envelope for a category with a limit but no expenses', () => {
-    const out = buildEnvelopes([], { coffee: 100 }, categories, MONTH);
+    const out = buildEnvelopes([], { coffee: 100 }, categories, MONTH, 'ILS');
     expect(out[0]).toMatchObject({ catId: 'coffee', spent: 0, limit: 100 });
   });
 
@@ -67,7 +82,18 @@ describe('buildEnvelopes', () => {
       { coffee: 100, groceries: 500 },
       categories,
       MONTH,
+      'ILS',
     );
     expect(out.map((e) => e.catId)).toEqual(['coffee', 'groceries']);
+  });
+});
+
+describe('spentByCategory', () => {
+  it('ignores a rounding remainder and adds up to the receipt', () => {
+    const out = spentByCategory([exp(100, 'groceries', undefined, [
+      { categoryId: 'coffee', amount: 60 },
+      { categoryId: 'groceries', amount: 40 },
+    ])]);
+    expect(out).toEqual({ coffee: 60, groceries: 40 });
   });
 });

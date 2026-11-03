@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { format, parseISO, differenceInDays, differenceInMonths } from 'date-fns';
+import { format, parseISO, differenceInMonths } from 'date-fns';
+import { goalDaysLeft } from '@/features/savings/utils/goalDays';
 import { Lock, Plus, Users } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setGoals, addGoalItem, updateGoalItem, removeGoalItem } from '@/features/savings/store/savingsSlice';
@@ -143,7 +144,7 @@ export default function SavingsPage() {
       const goal = list.find((g) => g.id === mode.goal.id) ?? mode.goal;
       const pct = Math.min(100, goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0);
       const remaining = goal.targetAmount - goal.currentAmount;
-      const daysLeft = goal.deadline ? differenceInDays(parseISO(goal.deadline), new Date()) : null;
+      const daysLeft = goal.deadline ? goalDaysLeft(goal.deadline) : null;
       const monthsLeft = goal.deadline ? differenceInMonths(parseISO(goal.deadline), new Date()) : null;
       const done = pct >= 100;
 
@@ -168,7 +169,7 @@ export default function SavingsPage() {
               {done && <p className="text-sm text-emerald-500 font-semibold">{t('savings.achieved')}</p>}
               {daysLeft !== null && !done && (
                 <p className="text-xs text-muted-foreground">
-                  {daysLeft > 0 ? `${daysLeft} ${t('savings.remaining')} · ${format(parseISO(goal.deadline!), 'd MMMM yyyy', { locale: dfLocale })}` : t('savings.remaining')}
+                  {`${daysLeft > 0 ? `${daysLeft} ${t('savings.remaining')} · ` : ''}${format(parseISO(goal.deadline!), 'd MMMM yyyy', { locale: dfLocale })}`}
                 </p>
               )}
               {monthsLeft !== null && !done && monthsLeft > 0 && remaining > 0 && (
@@ -387,7 +388,7 @@ export default function SavingsPage() {
           const goal = list.find((g) => g.id === (mode as { goal: SavingsGoal }).goal.id) ?? (mode as { goal: SavingsGoal }).goal;
           const pct = Math.min(100, goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0);
           const remaining = goal.targetAmount - goal.currentAmount;
-          const daysLeft = goal.deadline ? differenceInDays(parseISO(goal.deadline), new Date()) : null;
+          const daysLeft = goal.deadline ? goalDaysLeft(goal.deadline) : null;
           const monthsLeft = goal.deadline ? differenceInMonths(parseISO(goal.deadline), new Date()) : null;
           const done = pct >= 100;
           return (
@@ -409,7 +410,7 @@ export default function SavingsPage() {
               {done && <p className="text-sm text-emerald-500 font-semibold">{t('savings.achieved')}</p>}
               {daysLeft !== null && !done && (
                 <p className="text-xs text-muted-foreground">
-                  {daysLeft > 0 ? `${daysLeft} ${t('savings.remaining')} · ${format(parseISO(goal.deadline!), 'd MMMM yyyy', { locale: dfLocale })}` : t('savings.remaining')}
+                  {`${daysLeft > 0 ? `${daysLeft} ${t('savings.remaining')} · ` : ''}${format(parseISO(goal.deadline!), 'd MMMM yyyy', { locale: dfLocale })}`}
                 </p>
               )}
               {monthsLeft !== null && !done && monthsLeft > 0 && remaining > 0 && (

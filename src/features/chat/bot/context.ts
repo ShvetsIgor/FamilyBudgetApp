@@ -1,6 +1,7 @@
 import type { SuggestionMemoryState } from '@/features/expenses/store/suggestionMemorySlice';
-import type { Category, CategoryFolder, Currency } from '@/shared/types';
-import { toLocalDateKey } from '@/shared/utils/dateKey';
+import { computeDailyBudget } from '@/features/budget/utils/dailyBudget';
+import type { Category, CategoryFolder, Currency, SerializableExpense } from '@/shared/types';
+import { toLocalDateKey, toLocalMonthKey } from '@/shared/utils/dateKey';
 import { splitOwnCurrency } from '@/shared/utils/currencyTotals';
 import type { RootState } from '@/store/store';
 
@@ -75,5 +76,41 @@ export function collectBotContext(state: RootState): BotContext | null {
     topIncomeCategoryIds,
     todaySpent,
     suggestionMemory: state.suggestionMemory,
+  };
+}
+
+/** What the morning card, the weekly summary and the slash reports add up. */
+export interface DigestContext extends BotContext {
+  /** Account currency only: amounts in different currencies do not add up. */
+  allExpenses: SerializableExpense[];
+  budgetLimits: Record<string, number>;
+  dailyBudget: number;
+  todayFree: number;
+  firstGoalName?: string;
+}
+
+/** Read from the store when it is needed, so the totals cover what has loaded by then. */
+export function collectDigestContext(state: RootState, now: Date = new Date()): DigestContext | null {
+  const ctx = collectBotContext(state);
+  if (!ctx) return null;
+  const month = toLocalMonthKey(now);
+  const inMonth = (entry: { date: string }) => toLocalMonthKey(entry.date) === month;
+  const dailyBudget = computeDailyBudget({
+    mode: state.ui.budgetMode,
+    dailyLimit: state.ui.budgetDailyLimit,
+    monthlyLimit: state.ui.budgetMonthlyLimit,
+    monthSpent: splitOwnCurrency(state.expenses.list.filter(inMonth), ctx.currency).ownTotal,
+    monthIncome: splitOwnCurrency(state.income.list.filter(inMonth), ctx.currency).ownTotal,
+    now,
+  });
+  return {
+    ...ctx,
+    allExpenses: state.expenses.list.filter((expense) => expense.currency === ctx.currency),
+    budgetLimits: state.budget.limits,
+    dailyBudget,
+    // Monthly and auto allowances are worked out from the month's spend, today's
+    // included; only a fixed daily limit still has today's spend to come off.
+    todayFree: state.ui.budgetMode === 'daily' ? Math.max(0, dailyBudget - ctx.todaySpent) : dailyBudget,
+    firstGoalName: state.savings.list.find((goal) => !goal.name?.toLowerCase().includes('savings'))?.name,
   };
 }

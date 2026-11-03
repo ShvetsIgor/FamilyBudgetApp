@@ -6,7 +6,7 @@ import { X, Calendar, Lock } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { addGoalItem, updateGoalItem } from '@/features/savings/store/savingsSlice';
 import { addGoal, updateGoal } from '@/features/savings/services/savingsService';
-import { getCurrencySymbol } from '@/shared/utils/currency';
+import { getCurrencySymbol, parseLocalDate } from '@/shared/utils/currency';
 import { MiniCalendar, toDateInput } from '@/shared/components/MiniCalendar';
 import { useT } from '@/shared/hooks/useT';
 import { useDateFnsLocale } from '@/shared/hooks/useDateFnsLocale';
@@ -61,7 +61,7 @@ export function FastGoalEntry({ initialGoal }: { initialGoal?: SavingsGoal }) {
         color,
         targetAmount: targetNum,
         currency: currency as Currency,
-        deadline: deadline ? new Date(deadline) : undefined,
+        deadline: deadline ? parseLocalDate(deadline) : undefined,
         isPrivate,
       };
       if (initialGoal) {

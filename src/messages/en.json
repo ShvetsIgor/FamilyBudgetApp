@@ -776,7 +776,7 @@
     },
     "menu": {
       "todaySpent": "spent today",
-      "online": "Family online · {n}",
+      "online": "Family · {n}",
       "onlyYou": "Just you"
     },
     "confirmClearChat": "Clear the entire chat history? Expenses, incomes and savings will remain.",

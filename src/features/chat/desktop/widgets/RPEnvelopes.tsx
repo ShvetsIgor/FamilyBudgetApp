@@ -4,6 +4,9 @@ import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { RPCard } from './RPCard';
 import { useAppSelector } from '@/store/store';
 import Link from 'next/link';
+import { buildEnvelopes } from '@/features/budget/utils/envelopes';
+import { getCurrencySymbol } from '@/shared/utils/currency';
+import { toLocalMonthKey } from '@/shared/utils/dateKey';
 
 export function RPEnvelopes() {
   const C = useChatTokens();
@@ -12,22 +15,12 @@ export function RPEnvelopes() {
   const expenses = useAppSelector((s) => s.expenses.list ?? []);
   const categories = useAppSelector((s) => s.categories.expense);
   const currency = useAppSelector((s) => s.ui.currency);
-  const sym = currency === 'ILS' ? '₪' : currency === 'USD' ? '$' : '€';
+  const sym = getCurrencySymbol(currency);
 
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const monthExpenses = expenses.filter(
-    (expense) => expense.currency === currency && expense.date >= monthStart,
-  );
-
-  const envelopes = Object.entries(budgetLimits)
+  // The panel has room for four: the fullest ones, the same numbers as /budget
+  const envelopes = buildEnvelopes(expenses, budgetLimits, categories, toLocalMonthKey(new Date()), currency)
     .slice(0, 4)
-    .map(([catId, limit]) => {
-      const cat = categories.find((c) => c.id === catId);
-      const spent = monthExpenses.filter((e) => e.categoryId === catId).reduce((s, e) => s + e.amount, 0);
-      const pct = Math.min(100, Math.round((spent / limit) * 100));
-      return { catId, name: cat?.name ?? catId, color: cat?.color ?? C.primary, spent, limit, pct };
-    });
+    .map((env) => ({ ...env, pct: Math.min(100, Math.round((env.spent / env.limit) * 100)) }));
 
   if (envelopes.length === 0) {
     return (
@@ -38,7 +31,7 @@ export function RPEnvelopes() {
   }
 
   return (
-    <RPCard title={t('chat.desktop.envelopesTitle')} accentColor={C.sage} action={{ label: t('chat.desktop.all'), href: '/categories' }}>
+    <RPCard title={t('chat.desktop.envelopesTitle')} accentColor={C.sage} action={{ label: t('chat.desktop.all'), href: '/budget' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {envelopes.map((env) => (
           <div key={env.catId}>

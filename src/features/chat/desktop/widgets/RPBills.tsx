@@ -4,19 +4,18 @@ import { useChatTokens } from '@/features/chat/styles/useChatTokens';
 import { RPCard } from './RPCard';
 import { useAppSelector } from '@/store/store';
 import Link from 'next/link';
-import { parseISO, differenceInDays } from 'date-fns';
+import { parseISO, differenceInCalendarDays } from 'date-fns';
+import { getCurrencySymbol } from '@/shared/utils/currency';
 
 export function RPBills() {
   const C = useChatTokens();
   const t = useT();
   const recurring = useAppSelector((s) => s.recurring?.list ?? []);
-  const currency = useAppSelector((s) => s.ui.currency);
-  const sym = currency === 'ILS' ? '₪' : currency === 'USD' ? '$' : '€';
 
   const now = new Date();
   const upcoming = recurring
     .filter((r) => r.isActive)
-    .map((r) => ({ ...r, daysLeft: differenceInDays(parseISO(r.nextDueDate), now) }))
+    .map((r) => ({ ...r, daysLeft: differenceInCalendarDays(parseISO(r.nextDueDate), now) }))
     .filter((r) => r.daysLeft <= 14)
     .sort((a, b) => a.daysLeft - b.daysLeft)
     .slice(0, 4);
@@ -37,10 +36,10 @@ export function RPBills() {
             <div style={{ flex: 1, minWidth: 0 }}>
               <span style={{ fontSize: 12, fontWeight: 700, color: C.fg, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bill.name}</span>
               <span style={{ fontSize: 10, fontWeight: 600, color: bill.daysLeft <= 3 ? '#C97B84' : C.sub }}>
-                {bill.daysLeft === 0 ? t('chat.desktop.today') : bill.daysLeft === 1 ? t('chat.desktop.tomorrow') : t('chat.desktop.inDays', { n: bill.daysLeft })}
+                {bill.daysLeft < 0 ? t('recurring.overdueDays', { n: -bill.daysLeft }) : bill.daysLeft === 0 ? t('chat.desktop.today') : bill.daysLeft === 1 ? t('chat.desktop.tomorrow') : t('chat.desktop.inDays', { n: bill.daysLeft })}
               </span>
             </div>
-            <span style={{ fontSize: 12, fontWeight: 800, color: C.fg, marginLeft: 8 }}>{sym}{bill.amount.toLocaleString()}</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: C.fg, marginLeft: 8 }}>{getCurrencySymbol(bill.currency)}{bill.amount.toLocaleString()}</span>
           </div>
         ))}
       </div>

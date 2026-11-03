@@ -16,5 +16,7 @@ export const BOB = { email: 'bob@e2e.test', name: 'Bob' };
 export const CAROL = { email: 'carol@e2e.test', name: 'Carol' };
 /** Spends across ten categories this month — more than any top list shows. */
 export const ERIN = { email: 'erin@e2e.test', name: 'Erin' };
+/** Spent yesterday and has a monthly budget: the morning card must say so on a cold start. */
+export const FRANK = { email: 'frank@e2e.test', name: 'Frank' };
 /** Owns a little data and is deleted by the account-deletion spec. */
 export const DAVE = { email: 'dave@e2e.test', name: 'Dave' };

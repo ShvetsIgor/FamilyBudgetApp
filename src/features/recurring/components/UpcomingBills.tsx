@@ -59,15 +59,15 @@ export function UpcomingBills({ maxItems, compact = false, embedded = false }: P
   const { markPaid } = useRecurringActions();
 
   const monthEnd = endOfMonth(new Date());
-  const upcoming = list
+  const dueThisMonth = list
     .filter((r) => {
       if (!r.isActive) return false;
       const due = parseISO(r.nextDueDate);
       const days = differenceInCalendarDays(due, new Date());
       return days >= -7 && due <= monthEnd;
     })
-    .sort((a, b) => parseISO(a.nextDueDate).getTime() - parseISO(b.nextDueDate).getTime())
-    .slice(0, maxItems);
+    .sort((a, b) => parseISO(a.nextDueDate).getTime() - parseISO(b.nextDueDate).getTime());
+  const upcoming = dueThisMonth.slice(0, maxItems);
 
   if (upcoming.length === 0) return null;
 
@@ -150,9 +150,14 @@ export function UpcomingBills({ maxItems, compact = false, embedded = false }: P
   // non-compact — mobile expenses page style
   return (
     <div className="flex flex-col gap-1 mx-4 mb-2">
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1 mb-1">
-        {t('recurring.upcomingBills')}
-      </p>
+      <div className="flex items-center justify-between px-1 mb-1">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+          {t('recurring.upcomingBills')}
+        </p>
+        {dueThisMonth.length > upcoming.length && (
+          <Link href="/recurring" className="text-xs text-primary hover:underline">{t('recurring.seeAll')}</Link>
+        )}
+      </div>
       <div className="rounded-2xl border border-dashed border-border bg-muted/30 divide-y divide-border overflow-hidden">
         {rows}
       </div>
